@@ -6,6 +6,7 @@ MINGW32_MODE         = no
 USE_NDS              = no
 USE_ANDROID          = no
 USE_LINUX            = yes
+USE_OSX              = yes
 MAJOR_VERSION        = 0
 MINOR_VERSION        = 0
 MODIF_VERSION        = 0

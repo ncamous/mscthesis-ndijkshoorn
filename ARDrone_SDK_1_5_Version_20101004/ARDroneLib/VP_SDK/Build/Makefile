@@ -85,12 +85,12 @@ before_check:
 define GENERIC_RULES_TEMPLATE
   ifneq ($(1),dll)
     build_$(1): before_check
-	@$(MAKE) -f $(1).makefile $(MAKECMDGOALS)
+	$(MAKE) -f $(1).makefile $(MAKECMDGOALS)
   endif
 endef
 
 build_dll: before_check
-	@$(MAKE) -f app.makefile $(MAKECMDGOALS)
+	$(MAKE) -f app.makefile $(MAKECMDGOALS)
 
 
 # Build rules for each target
@@ -121,7 +121,8 @@ ifeq ($(USE_LIBPLF),yes)
    GENERIC_CFLAGS+= -DOS_LINUX
 endif
 
-GENERIC_LDFLAGS+=-Wl,--warn-common
+#GENERIC_LDFLAGS+=-Wl,--warn-common
+GENERIC_LDFLAGS+=-Wl
 
 ifeq ("$(BUILD_MODE)","PROD_MODE")
   GENERIC_CFLAGS+=-O3 -DCOMPIL_MODE_PROD
@@ -211,6 +212,20 @@ ifeq ("$(USE_BONJOUR)","yes")
 	-DNOT_HAVE_DAEMON=1			\
 	-Dsigset_t=cyg_uint32
 endif
+
+ifeq ("$(USE_OSX)","yes")
+  GENERIC_CFLAGS+=      \
+     -F/Library/Frameworks -I/Library/Frameworks/GLib.framework/Headers -I/Library/Frameworks/GDK.framework/Headers -I/Library/Frameworks/GTK.framework/Headers \
+     -F/Library/Frameworks -F/Library/Frameworks -framework GLib -framework GDK -framework GTK -I/Library/Frameworks/GLib.framework/Headers -lm
+
+#  GENERIC_CFLAGS+='gtk-config --cflags --libs'
+
+
+#  GENERIC_CFLAGS+=				\
+#    -I/Library/Frameworks/GDK.framework/headers/  \
+#	-I/Library/Frameworks/GLib.framework/headers/
+endif
+
 
 define ADD_DEFINE_FLAG_TEMPLATE
   ifeq ($$($(1)),yes)

@@ -3,8 +3,8 @@
 # Common build definitions (CUSTOM)
 #########################################################
 
-RELEASE_BUILD        = yes
-QUIET_BUILD          = yes
+RELEASE_BUILD        = no
+QUIET_BUILD          = no
 
 #########################################################
 # System utility definitions (STATIC)
@@ -52,9 +52,9 @@ SDK_FLAGS+="QUIET_BUILD=$(QUIET_BUILD)"
 SDK_FLAGS+="RELEASE_BUILD=$(RELEASE_BUILD)"
 SDK_FLAGS+="SDK_VERSION=$(SDK_VERSION)"
 
-ifeq ($(filter NO_COM=%,$(TMP_SDK_FLAGS)),)
-  SDK_FLAGS+="NO_COM=no"
-endif
+#ifeq ($(filter NO_COM=%,$(TMP_SDK_FLAGS)),)
+#  SDK_FLAGS+="NO_COM=no"
+#endif
 
 #########################################################
 # PC_TARGET specific definitions (STATIC)
@@ -96,10 +96,10 @@ ifdef PC_TARGET
      endif
   endif
 
-  ifneq ("$(USE_MINGW32)","yes")
-    GENERIC_CFLAGS+=$(shell pkg-config --cflags gtk+-2.0)
-    GENERIC_LIBS+=$(shell pkg-config --libs gtk+-2.0)
-  endif
+  #ifneq ("$(USE_MINGW32)","yes")
+  #  GENERIC_CFLAGS+=$(shell pkg-config --cflags gtk+-2.0)
+  #  GENERIC_LIBS+=$(shell pkg-config --libs gtk+-2.0)
+  #endif
 
   ifeq ("$(USE_LINUX)","yes")
      SDK_FLAGS+="USE_LINUX=yes"
@@ -130,6 +130,12 @@ ifdef PC_TARGET
      SDK_FLAGS+="NDK_PLATFORM_VERSION=android-5"
   else
      SDK_FLAGS+="USE_ANDROID=no"
+  endif
+  
+  ifeq ("$(USE_OSX)","yes")
+     SDK_FLAGS+="USE_OSX=yes"
+  else
+     SDK_FLAGS+="USE_OSX=no"
   endif
 
   ifeq ($(filter USE_BLUEZ=%,$(TMP_SDK_FLAGS)),)
