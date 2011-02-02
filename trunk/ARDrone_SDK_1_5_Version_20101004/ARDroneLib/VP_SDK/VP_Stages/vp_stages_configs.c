@@ -117,7 +117,7 @@ uart0_serial_config = {
   .sync             = 1,
   .sync_done        = 0,
   .initial_baudrate = VP_COM_BAUDRATE_115200,
-  .baudrate         = VP_COM_BAUDRATE_460800,
+  .baudrate         = VP_COM_BAUDRATE_230400,
 };
 
 
@@ -132,7 +132,7 @@ uart1_serial_config = {
   .sync             = 1,
   .sync_done        = 0,
   .initial_baudrate = VP_COM_BAUDRATE_115200,
-  .baudrate         = VP_COM_BAUDRATE_460800,
+  .baudrate         = VP_COM_BAUDRATE_230400,
 };
 #endif // ! __NDS__
 

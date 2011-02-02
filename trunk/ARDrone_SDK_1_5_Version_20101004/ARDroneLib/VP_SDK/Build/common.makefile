@@ -173,12 +173,14 @@ endif
 
 GENERIC_LIB_PATHS+=					\
 	-L$(OS_TARGET_DIR)/install/lib			\
-	-L$(SDK_TARGET_DIR)
+	-L$(SDK_TARGET_DIR) \
+	-L../../Soft/Build/targets_versions/ardrone_lib_PROD_MODE_vlib_Darwin_10.6.0_gcc_4.2.1/ardrone_tool
 
 INITIAL_GENERIC_LIBS:=$(GENERIC_LIBS)
 
 GENERIC_LIBS+=						\
-	-lsdk
+	-lsdk \
+	-framework sdl
 
 GENERIC_BINARIES_LIBS_DEPS=$(SDK_TARGET_DIR)/libsdk.a
 
@@ -259,7 +261,8 @@ else
 	            -liw
          endif
         GENERIC_LIBS+=					\
-	       -lSDL						\
+#	       -lSDL						\
+			"-framework sdl" \
 	       -lGL						\
 	       -lGLU
       endif

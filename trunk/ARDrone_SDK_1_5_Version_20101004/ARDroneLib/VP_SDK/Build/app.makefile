@@ -30,5 +30,5 @@ export GENERIC_LIBRARY_TARGET_DIR=$(GENERIC_BINARIES_TARGET_DIR)
 
 
 all $(MAKECMDGOALS):
-	@$(MAKE) -f generic.makefile $(MAKECMDGOALS)
+	$(MAKE) -f generic.makefile $(MAKECMDGOALS)
 

@@ -30,7 +30,11 @@
 
 #include <VP_Api/vp_api.h>
 
+#ifdef __APPLE__
 #include <SDL/SDL.h>
+#else
+#include <SDL/SDL.h>
+#endif
 
 #if defined(_CK4215_) && defined(WIN32)
 #include <SDL/SDL_syswm.h>

@@ -31,6 +31,8 @@
 extern int inet_addr(const char *);
 #endif
 
+#define MSG_NOSIGNAL 0x2000
+
 C_RESULT vp_com_open_socket(vp_com_socket_t* sck, Read* read, Write* write)
 {
   C_RESULT res = VP_COM_OK;
