@@ -4,18 +4,26 @@ settings = {};
 settings.usarsim_ip = 'localhost';
 settings.usarsim_port = 3000;
 
-addpath('usarsim');
-init ();
+addpath('interfaces/usarsim', 'ardrone', 'ui');
 
 
-% COMMUNCATIONS
-%communication_start ();
-%communication_send ('INIT {ClassName USARBot.ARDrone}{Location 0.0,0.0,0.8}{Name ARDrone}');
+% ARDRONE
+%ardrone ();
+
+
+% INTERFACE
+%interface ();
 
 
 % CONTROLS
 %controls_start ();
+%ardrone_set ('AltitudeVelocity', 0.1);
 
 
 % GUI
-ui_start ();
+%ui ();
+%mainGUIdata  = guidata(ui);
+%global ui_imagebox;
+%ui_imagebox = mainGUIdata.imageBox;
+%ui_display_image('7');
+image_receiver ();
