@@ -3,54 +3,59 @@
 #include "windows.h"
 #include "botinterface.h"
 
-mysocket::mysocket(int PortNo, char *IPAddress, botinterface *i)
+bool mysocket::WSARunning = false;
+int mysocket::nr_open_sockets = false;
+
+mysocket::mysocket(int id, int PortNo, char *IPAddress, int buffersize, botinterface *i)
 {
 	bool result;
-	connected = false;
+	this->id = id;
 	this->i = i;
+	this->buffersize = buffersize;
 
-	result = ConnectToHost(PortNo, IPAddress);
+	connected = false;
+
+	result = open(PortNo, IPAddress);
 
 	if (result)
 	{
 		connected = true;
-		StartListener();
+		Sleep(10);
+		start_listener();
 	}
 }
 
 
 mysocket::~mysocket(void)
 {
-	CloseConnection();
+	close();
 }
 
 
-int mysocket::Send(char *message)
+int mysocket::send(char *message)
 {
-	return send(s, message, strlen(message), 0);
+	return ::send(s, message, strlen(message), 0);
 }
 
 
-static DWORD WINAPI ReceiveThread(void* Param)
+static DWORD WINAPI receive_thread(void* Param)
 {
 	mysocket* This = (mysocket*) Param; 
 
 	int bytes;
 	bytes = SOCKET_ERROR;
 	char *cServerMessage;
-	cServerMessage = new char[600];
+	cServerMessage = new char[This->buffersize];
 
-	while(bytes = recv(This->s, cServerMessage, 599, 0))
+	while(bytes = recv(This->s, cServerMessage, This->buffersize, 0))
 	{
 		if(bytes == SOCKET_ERROR)
 		{
-			//CloseConnection();
 			return 0;
 		}
     
 		if (bytes == 0 || bytes == WSAECONNRESET)
 		{
-			//CloseConnection();
 			return 0;
 		}
 
@@ -60,47 +65,29 @@ static DWORD WINAPI ReceiveThread(void* Param)
 			continue;
 		}
 
-		This->i->control_receive(cServerMessage, bytes);
-		delete [] cServerMessage;
-		cServerMessage = new char[600];
-		Sleep(100); // Don't consume too much CPU power.
+		This->i->socket_callback(This->id, cServerMessage, bytes);
+
+		//Sleep(1); // Don't consume too much CPU power.
 	}
 
 	return 0;
 }
 
-int mysocket::StartListener(void)
+int mysocket::start_listener(void)
 {
 	DWORD ThreadID;
-	h = CreateThread( NULL, 0, ReceiveThread, (void*) this, 0, &ThreadID);
+	h = CreateThread( NULL, 0, receive_thread, (void*) this, 0, &ThreadID);
 
 	return 1;
 }
 
 
-bool mysocket::ConnectToHost(int PortNo, char* IPAddress)
+bool mysocket::open(int PortNo, char* IPAddress)
 {
-    //Start up Winsock
+	if (!WSARunning)
+		winsock_start();
 
-    WSADATA wsadata;
-
-    int error = WSAStartup(0x0202, &wsadata);
-
-    //Did something happen?
-
-    if (error)
-        return false;
-
-    //Did we get the right Winsock version?
-
-    if (wsadata.wVersion != 0x0202)
-    {
-        WSACleanup(); //Clean up Winsock
-
-        return false;
-    }
-
-    //Fill out the information needed to initialize a socket�
+     //Fill out the information needed to initialize a socket�
 
     SOCKADDR_IN target; //Socket address information
 
@@ -128,20 +115,59 @@ bool mysocket::ConnectToHost(int PortNo, char* IPAddress)
 
     }
     else
+	{
+		nr_open_sockets++;
         return true; //Success
-
+	}
 }
 
 //CLOSECONNECTION � shuts down the socket and closes any connection on it
 
-void mysocket::CloseConnection ()
+void mysocket::close()
 {
     //Close the socket if it exists
-
-    if (s)
+    if (s) {
         closesocket(s);
+		connected = false;
 
-    WSACleanup(); //Clean up Winsock
+		if (--nr_open_sockets <= 0)
+			winsock_stop();
+	}
+}
 
-	connected = false;
+bool mysocket::winsock_start()
+{
+	if (WSARunning)
+		return false;
+
+   //Start up Winsock
+
+    WSADATA wsadata;
+
+    int error = WSAStartup(0x0202, &wsadata);
+
+    //Did something happen?
+
+    if (error)
+        return false;
+
+    //Did we get the right Winsock version?
+
+    if (wsadata.wVersion != 0x0202)
+    {
+        WSACleanup(); //Clean up Winsock
+
+        return false;
+    }
+
+	return true;
+}
+
+
+void mysocket::winsock_stop()
+{
+	if (WSARunning && nr_open_sockets <= 0) {
+		WSACleanup();
+		nr_open_sockets = 0;
+	}
 }
