@@ -19,9 +19,6 @@
     <Filter Include="Source Files\bots">
       <UniqueIdentifier>{5ee885f2-6ee4-4cf2-a5ee-f4523dfdf0d6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\interfaces">
-      <UniqueIdentifier>{e6d83bdb-b775-475f-a509-78f72631f6df}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -30,24 +27,15 @@
     <ClCompile Include="mysocket.cpp">
       <Filter>Source Files\socket</Filter>
     </ClCompile>
-    <ClCompile Include="bot.cpp">
-      <Filter>Source Files\bots</Filter>
-    </ClCompile>
     <ClCompile Include="bot_ardrone.cpp">
       <Filter>Source Files\bots</Filter>
     </ClCompile>
-    <ClCompile Include="botinterface.cpp">
-      <Filter>Source Files\interfaces</Filter>
-    </ClCompile>
-    <ClCompile Include="botinterface_usarsim.cpp">
-      <Filter>Source Files\interfaces</Filter>
+    <ClCompile Include="bot_ardrone_usarsim.cpp">
+      <Filter>Source Files\bots</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="global.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="bot.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="bot_ardrone.h">
@@ -56,10 +44,10 @@
     <ClInclude Include="botinterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="botinterface_usarsim.h">
+    <ClInclude Include="mysocket.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="mysocket.h">
+    <ClInclude Include="bot_ardrone_usarsim.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -61,17 +61,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="bot.cpp" />
-    <ClCompile Include="botinterface.cpp" />
-    <ClCompile Include="botinterface_usarsim.cpp" />
+    <ClCompile Include="bot_ardrone_usarsim.cpp" />
     <ClCompile Include="bot_ardrone.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mysocket.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bot.h" />
     <ClInclude Include="botinterface.h" />
-    <ClInclude Include="botinterface_usarsim.h" />
+    <ClInclude Include="bot_ardrone_usarsim.h" />
     <ClInclude Include="bot_ardrone.h" />
     <ClInclude Include="global.h" />
     <ClInclude Include="mysocket.h" />

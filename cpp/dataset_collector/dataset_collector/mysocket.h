@@ -8,23 +8,30 @@ class botinterface;
 #define SCK_VERSION1            0x0101
 #define SCK_VERSION2            0x0202
 
-static DWORD WINAPI ReceiveThread(void* Param);
+static DWORD WINAPI receive_thread(void* Param);
 
 class mysocket
 {
-	HANDLE h;
-
-	int mysocket::StartListener(void);
-	bool mysocket::ConnectToHost(int PortNo, char *IPAddress);
-	void mysocket::CloseConnection ();
-
 public:
-	mysocket::mysocket(int PortNo, char *IPAddress, botinterface *i);
+	mysocket::mysocket(int id, int PortNo, char *IPAddress, int buffersize, botinterface *i);
 	~mysocket(void);
-	int mysocket::Send(char *message);
+	int send(char *message);
 
-	SOCKET s;
+	int id;
 	bool connected;
 	botinterface *i;
+	SOCKET s;
+	int buffersize;
+	static bool WSARunning;
+	static int nr_open_sockets;
+
+private:
+	int start_listener(void);
+	bool open(int PortNo, char *IPAddress);
+	void close();
+	bool mysocket::winsock_start();
+	void mysocket::winsock_stop();
+
+	HANDLE h;
 };
 

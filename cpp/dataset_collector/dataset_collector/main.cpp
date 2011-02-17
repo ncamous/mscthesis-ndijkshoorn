@@ -1,17 +1,13 @@
-#include <stdlib.h>
 #include <Windows.h>
 #include "global.h"
 #include "bot_ardrone.h"
-#include "botinterface_usarsim.h"
 
 int main(int argc, char *argv[])
 {
-	botinterface_usarsim i;
-	bot_ardrone ardrone(&i);
+	bot_ardrone ardrone(BOT_ARDRONE_INTERFACE_USARSIM);
 
-	Sleep(3);
+	ardrone.control_set(BOT_ARDRONE_AltitudeVelocity, (float) 0.3);
+	ardrone.control_update();
 
-	ardrone.set(BOT_ARDRONE_AltitudeVelocity, (float) 0.3);
-
-	Sleep(9999);
+	Sleep(20000);
 }
