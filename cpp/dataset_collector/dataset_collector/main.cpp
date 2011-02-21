@@ -1,4 +1,3 @@
-#include <Windows.h>
 #include "global.h"
 #include "bot_ardrone.h"
 
