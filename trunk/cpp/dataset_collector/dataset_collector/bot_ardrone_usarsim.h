@@ -6,6 +6,8 @@
 #define BOT_ARDRONE_USARSIM_SOCKET_CAM 2
 
 class bot_ardrone;
+struct bot_ardrone_control;
+struct bot_ardrone_frame;
 
 class bot_ardrone_usarsim : public botinterface
 {
@@ -14,15 +16,13 @@ public:
 	~bot_ardrone_usarsim(void);
 
 	void init();
+	void control_update(bot_ardrone_control &control);
 	void control_send(char *message);
 	void socket_callback(int id, char *message, int bytes);
+	void process_measurement(char *message, int bytes);
+	void process_cam(char *message, int bytes);
 
-	int cam_header_size;
-	char cam_header[4];
-
-	int cam_image_dest_size;
-	int cam_image_size;
-	char *cam_image;
+	bot_ardrone_frame *frame;
 
 private:
 	bot_ardrone *bot;

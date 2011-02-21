@@ -25,7 +25,6 @@ bot_ardrone::bot_ardrone(int botinterface)
 
 	}
 
-
 	i->init();
 }
 
@@ -37,42 +36,32 @@ bot_ardrone::~bot_ardrone(void)
 
 void bot_ardrone::control_set(int opt, float val)
 {
-	controls[opt] = val;
+	control.velocity[opt] = val;
 }
 
 
 void bot_ardrone::control_update()
 {
-	char msg[200];
-	sprintf_s(msg, 200, "DRIVE {AltitudeVelocity %f} {LinearVelocity %f} {LateralVelocity %f} {RotationalVelocity %f} {Normalized false}\r\n",
-		controls[BOT_ARDRONE_AltitudeVelocity],
-		controls[BOT_ARDRONE_LinearVelocity],
-		controls[BOT_ARDRONE_LateralVelocity],
-		controls[BOT_ARDRONE_RotationalVelocity]);
-
-	printf("%s\n", msg);
-
-	i->control_send(msg);
+	i->control_update(control);
 }
 
 
 void bot_ardrone::control_reset()
 {
-	controls[BOT_ARDRONE_AltitudeVelocity] = 0.0;
-	controls[BOT_ARDRONE_LinearVelocity] = 0.0;
-	controls[BOT_ARDRONE_LateralVelocity] = 0.0;
-	controls[BOT_ARDRONE_RotationalVelocity] = 0.0;
+	control.velocity[BOT_ARDRONE_AltitudeVelocity] = 0.0;
+	control.velocity[BOT_ARDRONE_LinearVelocity] = 0.0;
+	control.velocity[BOT_ARDRONE_LateralVelocity] = 0.0;
+	control.velocity[BOT_ARDRONE_RotationalVelocity] = 0.0;
 }
 
 
-void bot_ardrone::measurement_received()
+void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 {
-
-
+	printf("battery: %i\n", m->battery);
 }
 
 
-void bot_ardrone::cam_received(char *image, int bytes)
+void bot_ardrone::cam_received(bot_ardrone_frame *frame)
 {
 	char filename[20];
 	sprintf_s(filename, 20, "img/%i.jpg", TMP_img_nr++);
@@ -80,6 +69,6 @@ void bot_ardrone::cam_received(char *image, int bytes)
 	//printf("OK %i\n", TMP_img_nr);
 
 	ofstream f(filename, ios::out | ios::binary);
-	f.write(image, bytes);
+	f.write(frame->data, frame->data_size);
 	f.close();
 }
