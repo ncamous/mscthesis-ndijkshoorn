@@ -1,13 +1,38 @@
 #include "global.h"
 #include "bot_ardrone.h"
 #include "bot_ardrone_usarsim.h"
-#include <fstream>
+#include "bot_ardrone_recorder.h"
 
 using namespace std;
 
+clock_t bot_ardrone::start_clock = 0;
+
+
+bot_ardrone_control::bot_ardrone_control()
+{
+	memset(this, 0, sizeof(bot_ardrone_control));
+}
+
+bot_ardrone_measurement::bot_ardrone_measurement()
+{
+	memset(this, 0, sizeof(bot_ardrone_measurement));
+	time = bot_ardrone::get_clock();
+}
+
+bot_ardrone_frame::bot_ardrone_frame()
+{
+	memset(this, 0, sizeof(bot_ardrone_frame));
+	time = bot_ardrone::get_clock();
+}
+
+
 bot_ardrone::bot_ardrone(int botinterface)
 {
-	TMP_img_nr = 1;
+	start_clock = clock();
+	i = NULL;
+	recorder = NULL;
+	record = false;
+	playback = false;
 
 	control_reset();
 
@@ -21,11 +46,11 @@ bot_ardrone::bot_ardrone(int botinterface)
 			break;
 
 		default:
-			printf("BOT_ARDRONE: INTERFACE NOT FOUND\n");
-
+			printf("ARDRONE: NO INTERFACE USED\n");
 	}
 
-	i->init();
+	if (i != NULL)
+		i->init();
 }
 
 
@@ -34,15 +59,37 @@ bot_ardrone::~bot_ardrone(void)
 }
 
 
-void bot_ardrone::control_set(int opt, float val)
+void bot_ardrone::control_set(int type, int opt, float val)
 {
-	control.velocity[opt] = val;
+	switch(type)
+	{
+		case BOT_ARDRONE_Velocity:
+			control.velocity[opt] = val;
+			break;
+
+		default:
+			break;
+	}
 }
 
 
 void bot_ardrone::control_update()
 {
-	i->control_update(control);
+	control.time = get_clock();
+
+	control_update(&control);
+}
+
+
+void bot_ardrone::control_update(bot_ardrone_control *c)
+{
+	printf("%f - ARDRONE: control update!\n", c->time);
+
+	if(record)
+		recorder->record_control(&control);
+
+	if (i != NULL)
+		i->control_update(control);
 }
 
 
@@ -57,18 +104,45 @@ void bot_ardrone::control_reset()
 
 void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 {
-	printf("battery: %i\n", m->battery);
+	printf("%f - ARDRONE: measurement received!\n", m->time);
+
+	if (record)
+		recorder->record_measurement(m);
 }
 
 
-void bot_ardrone::cam_received(bot_ardrone_frame *frame)
+void bot_ardrone::frame_received(bot_ardrone_frame *f)
 {
-	char filename[20];
-	sprintf_s(filename, 20, "img/%i.jpg", TMP_img_nr++);
+	printf("%f - ARDRONE: frame received: %s!\n", f->time, f->filename);
 
-	//printf("OK %i\n", TMP_img_nr);
+	if (record)
+		recorder->record_frame(f);
+}
 
-	ofstream f(filename, ios::out | ios::binary);
-	f.write(frame->data, frame->data_size);
-	f.close();
+
+float bot_ardrone::get_clock()
+{
+	return (float) (clock() - start_clock) / CLOCKS_PER_SEC;
+}
+
+
+void bot_ardrone::set_record()
+{
+	if (recorder == NULL)
+	{
+		recorder = new bot_ardrone_recorder((bot_ardrone*) this);
+		recorder->prepare_dataset();
+		record = true;
+	}
+}
+
+
+void bot_ardrone::set_playback(char *dataset)
+{
+	if (recorder == NULL)
+	{
+		recorder = new bot_ardrone_recorder((bot_ardrone*) this);
+		recorder->playback(dataset);
+		playback = true;
+	}
 }

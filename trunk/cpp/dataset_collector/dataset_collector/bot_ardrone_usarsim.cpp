@@ -2,6 +2,7 @@
 #include "bot_ardrone_usarsim.h"
 #include "bot_ardrone.h"
 #include "mysocket.h"
+#include <string>
 
 using namespace std;
 
@@ -13,7 +14,7 @@ bot_ardrone_usarsim::bot_ardrone_usarsim(bot_ardrone *bot)
 
 	/* sockets */
 	control_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CONTROL, DEFAULT_USARIM_PORT, DEFAULT_USARSIM_IP, 300, (botinterface*) this);
-	//cam_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CAM, DEFAULT_UPIS_PORT, DEFAULT_USARSIM_IP, 3000, (botinterface*) this);
+	cam_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CAM, DEFAULT_UPIS_PORT, DEFAULT_USARSIM_IP, 3000, (botinterface*) this);
 }
 
 
@@ -56,7 +57,7 @@ void bot_ardrone_usarsim::socket_callback(int id, char *message, int bytes)
 			break;
 
 		case BOT_ARDRONE_USARSIM_SOCKET_CAM:
-			process_cam(message, bytes);
+			process_frame(message, bytes);
 			break;
 	}
 }
@@ -105,7 +106,6 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 
 		val = message_str.substr(tmppos1+1, tmppos2-tmppos1-1);
 		offset = tmppos2 + 1;
-		//printf("[%s] = [%s]\n", key.c_str(), val.c_str());
 
 
 		/**/
@@ -137,11 +137,11 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 }
 
 
-void bot_ardrone_usarsim::process_cam(char *message, int bytes)
+void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 {
 	int copy_len;
 
-	printf("received %i bytes\n", bytes);
+	//printf("received %i bytes\n", bytes);
 
 	if (frame == NULL)
 		frame = new bot_ardrone_frame;
@@ -158,8 +158,8 @@ void bot_ardrone_usarsim::process_cam(char *message, int bytes)
 			frame->dest_size = (frame->dest_size << 8) + frame->header[2];
 			frame->dest_size = (frame->dest_size << 8) + frame->header[3];
 			frame->dest_size = (frame->dest_size << 8) + frame->header[4];
-			printf("IMG SIZE: %i\n", frame->dest_size);
-			printf("IMG TYPE: %i\n", frame->header[0]);
+			//printf("IMG SIZE: %i\n", frame->dest_size);
+			//printf("IMG TYPE: %i\n", frame->header[0]);
 			frame->data = new char[frame->dest_size];
 		}
 
@@ -178,7 +178,7 @@ void bot_ardrone_usarsim::process_cam(char *message, int bytes)
 
 	// image complete
 	if (/*cam_image_size > 5000 && bytes != 5000*/ frame->dest_size > 0 && frame->data_size >= frame->dest_size) {
-		bot->cam_received(frame);
+		bot->frame_received(frame);
 		// delete struct here
 		frame = NULL;
 

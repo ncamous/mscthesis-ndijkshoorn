@@ -33,6 +33,9 @@
     <ClCompile Include="bot_ardrone_usarsim.cpp">
       <Filter>Source Files\bots</Filter>
     </ClCompile>
+    <ClCompile Include="bot_ardrone_recorder.cpp">
+      <Filter>Source Files\bots</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="global.h">
@@ -48,6 +51,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="bot_ardrone_usarsim.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bot_ardrone_recorder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
