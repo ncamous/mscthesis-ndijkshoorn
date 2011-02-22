@@ -2,39 +2,54 @@
 
 #include "botinterface.h"
 #include "bot_ardrone_usarsim.h"
+#include "bot_ardrone_recorder.h"
+#include <time.h>
 
+#define BOT_ARDRONE_EVENT_CONTROL 0
+#define BOT_ARDRONE_EVENT_MEASUREMENT 1
+#define BOT_ARDRONE_EVENT_FRAME 2
+
+#define BOT_ARDRONE_Velocity 0
 #define BOT_ARDRONE_AltitudeVelocity 0
 #define BOT_ARDRONE_LinearVelocity 1
 #define BOT_ARDRONE_LateralVelocity 2
 #define BOT_ARDRONE_RotationalVelocity 3
 
-#define BOT_ARDRONE_INTERFACE_USARSIM 0
-#define BOT_ARDRONE_INTERFACE_ARDRONELIB 1
+#define BOT_ARDRONE_INTERFACE_NONE 0
+#define BOT_ARDRONE_INTERFACE_USARSIM 1
+#define BOT_ARDRONE_INTERFACE_ARDRONELIB 2
 
 #define BOT_ARDRONE_MEASUREMENT_SEN 0
 #define BOT_ARDRONE_MEASUREMENT_STA 0
 
+
 struct bot_ardrone_control {
+	float time;
 	float velocity[4];
+
+	bot_ardrone_control();
 };
 
 struct bot_ardrone_measurement {
+	float time;
 	int type;
 	double groundtruth_loc[3];
 	double groundtruth_or[3];
 	int battery;
 
-	bot_ardrone_measurement() : type(0),battery(0){}
+	bot_ardrone_measurement();
 };
 
 struct bot_ardrone_frame {
+	float time;
 	char header[4];
 	char *data;
 	int header_size;
 	int data_size;
 	int dest_size;
+	char filename[20];
 
-	bot_ardrone_frame() : header_size(0),data_size(0),dest_size(0){}
+	bot_ardrone_frame();
 };
 
 class bot_ardrone
@@ -42,14 +57,20 @@ class bot_ardrone
 public:
 	bot_ardrone(int botinterface);
 	~bot_ardrone(void);
-	void control_set(int opt, float val);
+	void control_set(int type, int opt, float val);
 	void control_update();
+	void control_update(bot_ardrone_control *c);
 	void control_reset();
 	void measurement_received(bot_ardrone_measurement *m);
-	void cam_received(bot_ardrone_frame *frame);
+	void frame_received(bot_ardrone_frame *f);
+	static float get_clock();
+	void set_record();
+	void set_playback(char *dataset);
 
+	static clock_t start_clock;
 	bot_ardrone_usarsim *i;
 	bot_ardrone_control control;
-	int TMP_img_nr;
+	bot_ardrone_recorder *recorder;
+	bool record, playback;
 };
 

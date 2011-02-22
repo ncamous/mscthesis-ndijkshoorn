@@ -20,7 +20,7 @@ public:
 	void control_send(char *message);
 	void socket_callback(int id, char *message, int bytes);
 	void process_measurement(char *message, int bytes);
-	void process_cam(char *message, int bytes);
+	void process_frame(char *message, int bytes);
 
 	bot_ardrone_frame *frame;
 
