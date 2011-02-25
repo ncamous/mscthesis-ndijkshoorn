@@ -4,6 +4,7 @@
 
 #define BOT_ARDRONE_USARSIM_SOCKET_CONTROL 1
 #define BOT_ARDRONE_USARSIM_SOCKET_CAM 2
+#define BOT_ARDRONE_USARSIM_FRAME_REQDELAY 100
 
 class bot_ardrone;
 struct bot_ardrone_control;
@@ -27,6 +28,6 @@ public:
 private:
 	bot_ardrone *bot;
 	mysocket *control_socket;
-	mysocket *cam_socket;
+	mysocket *frame_socket;
 };
 

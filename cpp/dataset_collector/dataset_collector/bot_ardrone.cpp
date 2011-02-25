@@ -23,6 +23,8 @@ bot_ardrone_frame::bot_ardrone_frame()
 {
 	memset(this, 0, sizeof(bot_ardrone_frame));
 	time = bot_ardrone::get_clock();
+
+	this->data = new char[BOT_ARDRONE_FRAME_BUFFER];
 }
 
 
@@ -51,6 +53,8 @@ bot_ardrone::bot_ardrone(int botinterface)
 
 	if (i != NULL)
 		i->init();
+
+	Sleep(100);
 }
 
 
@@ -83,7 +87,8 @@ void bot_ardrone::control_update()
 
 void bot_ardrone::control_update(bot_ardrone_control *c)
 {
-	printf("%f - ARDRONE: control update!\n", c->time);
+	if (PRINT_DEBUG)
+		printf("%f - ARDRONE: control update!\n", c->time);
 
 	if(record)
 		recorder->record_control(&control);
@@ -104,7 +109,8 @@ void bot_ardrone::control_reset()
 
 void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 {
-	printf("%f - ARDRONE: measurement received!\n", m->time);
+	if (PRINT_DEBUG)
+		printf("%f - ARDRONE: measurement received!\n", m->time);
 
 	if (record)
 		recorder->record_measurement(m);
@@ -113,7 +119,8 @@ void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 
 void bot_ardrone::frame_received(bot_ardrone_frame *f)
 {
-	printf("%f - ARDRONE: frame received: %s!\n", f->time, f->filename);
+	if (PRINT_DEBUG)
+		printf("%f - ARDRONE: frame received: %s!\n", f->time, f->filename);
 
 	if (record)
 		recorder->record_frame(f);

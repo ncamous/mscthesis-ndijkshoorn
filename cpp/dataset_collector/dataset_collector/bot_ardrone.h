@@ -22,6 +22,8 @@
 #define BOT_ARDRONE_MEASUREMENT_SEN 0
 #define BOT_ARDRONE_MEASUREMENT_STA 0
 
+#define BOT_ARDRONE_FRAME_BUFFER 30720
+
 
 struct bot_ardrone_control {
 	float time;
@@ -42,12 +44,11 @@ struct bot_ardrone_measurement {
 
 struct bot_ardrone_frame {
 	float time;
-	char header[4];
 	char *data;
 	int header_size;
 	int data_size;
 	int dest_size;
-	char filename[20];
+	char filename[25];
 
 	bot_ardrone_frame();
 };
