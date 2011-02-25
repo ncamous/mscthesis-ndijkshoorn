@@ -10,11 +10,11 @@ bot_ardrone_usarsim::bot_ardrone_usarsim(bot_ardrone *bot)
 {
 	this->bot = bot;
 
-	frame = NULL;
+	frame = new bot_ardrone_frame;
 
 	/* sockets */
-	control_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CONTROL, DEFAULT_USARIM_PORT, DEFAULT_USARSIM_IP, 300, (botinterface*) this);
-	cam_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CAM, DEFAULT_UPIS_PORT, DEFAULT_USARSIM_IP, 3000, (botinterface*) this);
+	control_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CONTROL, USARIM_PORT, USARSIM_IP, NULL, USARSIM_CONTROL_BLOCKSIZE, (botinterface*) this);
+	frame_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CAM, UPIS_PORT, USARSIM_IP, frame->data, USARSIM_FRAME_BLOCKSIZE, (botinterface*) this);
 }
 
 
@@ -25,7 +25,10 @@ bot_ardrone_usarsim::~bot_ardrone_usarsim(void)
 
 void bot_ardrone_usarsim::init(void)
 {
-	control_send("INIT {ClassName USARBot.ARDrone} {Location 0.0,0.0,0.8}\r\n");
+	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,0.0,0.8}\r\n");
+	control_send("SET {Type Viewports} {Config SingleView} {Viewport1 Camera2}\r\n");
+	//control_send("SET {Type Camera} {Robot ARDrone} {Name Camera2} {Client 10.0.0.2}\r\n");
+	//control_send("SET {Type Viewports} {Config QuadView} {Viewport1 Camera} {Viewport2 Camera2}\r\n");
 }
 
 
@@ -71,6 +74,7 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 	int i;
 
 	message[bytes] = '\0';
+
 	string message_str(message);
 	string key, val, tmp;
 
@@ -139,9 +143,54 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 
 void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 {
-	int copy_len;
+	// update frame size and buffer pointer
+	frame->data_size += bytes;
+	frame_socket->buffer += bytes;
 
-	//printf("received %i bytes\n", bytes);
+	// we dont know image size (bytes) yet
+	if (frame->dest_size == 0 && frame->data_size >= 5)
+	{
+		frame->dest_size = (frame->dest_size << 8) + frame->data[1];
+		frame->dest_size = (frame->dest_size << 8) + frame->data[2];
+		frame->dest_size = (frame->dest_size << 8) + frame->data[3];
+		frame->dest_size = (frame->dest_size << 8) + frame->data[4];
+	}
+
+	// image complete
+	if (frame->dest_size > 0 && frame->data_size-5 >= frame->dest_size) {
+		if (!frame_socket->bytes_waiting())
+		{
+			/*if (frame->data_size-5 > frame->dest_size)
+			{
+				printf("TEST TYPE: %i\n", frame->data[frame->dest_size + 5]);
+				Sleep(4000);
+			}*/
+
+			// remove header
+			frame->data += 5;
+			frame->data_size -= 5;
+
+			bot->frame_received(frame);
+
+			// delete struct here
+			frame = NULL;
+
+			// request new image
+			frame = new bot_ardrone_frame;
+			frame_socket->buffer = frame->data;
+
+			Sleep(BOT_ARDRONE_USARSIM_FRAME_REQDELAY);
+			frame_socket->send("OK");
+			Sleep(20);
+		}
+	}
+}
+
+
+/*
+void bot_ardrone_usarsim::process_frame(char *message, int bytes)
+{
+	int copy_len;
 
 	if (frame == NULL)
 		frame = new bot_ardrone_frame;
@@ -160,7 +209,7 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 			frame->dest_size = (frame->dest_size << 8) + frame->header[4];
 			//printf("IMG SIZE: %i\n", frame->dest_size);
 			//printf("IMG TYPE: %i\n", frame->header[0]);
-			frame->data = new char[frame->dest_size];
+			frame->data = new char[frame->dest_size + 4*USARSIM_FRAME_BLOCKSIZE]; // reserve extra space
 		}
 
 		// we have bytes left for the image
@@ -171,21 +220,24 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 
 	// copy to image
 	if (frame->dest_size > 0 && bytes > 0) {
-		copy_len = min(bytes, frame->dest_size - frame->data_size);
-		memcpy(&frame->data[frame->data_size], message, copy_len);
+		memcpy(&frame->data[frame->data_size], message, bytes);
 		frame->data_size += bytes;
 	}
 
 	// image complete
-	if (/*cam_image_size > 5000 && bytes != 5000*/ frame->dest_size > 0 && frame->data_size >= frame->dest_size) {
-		bot->frame_received(frame);
-		// delete struct here
-		frame = NULL;
+	if (frame->dest_size > 0 && frame->data_size >= frame->dest_size) {
+		if (!frame_socket->bytes_waiting())
+		{
+			bot->frame_received(frame);
 
-		// request new image
-		Sleep(80);
-		cam_socket->send("OK");
-		Sleep(20);
+			// delete struct here
+			frame = NULL;
+
+			// request new image
+			Sleep(BOT_ARDRONE_USARSIM_FRAME_REQDELAY);
+			frame_socket->send("OK");
+			Sleep(20);
+		}
 	}
-
 }
+*/

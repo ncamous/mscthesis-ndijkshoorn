@@ -6,14 +6,23 @@
 bool mysocket::WSARunning = false;
 int mysocket::nr_open_sockets = false;
 
-mysocket::mysocket(int id, int PortNo, char *IPAddress, int buffersize, botinterface *i)
+mysocket::mysocket(int id, int PortNo, char *IPAddress, char *argbuffer, int buffersize, botinterface *i)
 {
 	bool result;
 	this->id = id;
 	this->i = i;
-	this->buffersize = buffersize;
-
 	connected = false;
+	this->buffersize = buffersize;
+	if (!argbuffer)
+	{
+		use_local_buffer = true;
+		buffer = NULL;
+	}
+	else
+	{
+		use_local_buffer = false;
+		buffer = argbuffer;
+	}
 
 	result = open(PortNo, IPAddress);
 
@@ -44,10 +53,11 @@ static DWORD WINAPI receive_thread(void* Param)
 
 	int bytes;
 	bytes = SOCKET_ERROR;
-	char *cServerMessage;
-	cServerMessage = new char[This->buffersize];
 
-	while(bytes = recv(This->s, cServerMessage, This->buffersize, 0))
+	if (This->use_local_buffer)
+		This->buffer = new char[This->buffersize];
+
+	while(bytes = recv(This->s, This->buffer, This->buffersize, 0))
 	{
 		if(bytes == SOCKET_ERROR)
 		{
@@ -65,13 +75,26 @@ static DWORD WINAPI receive_thread(void* Param)
 			continue;
 		}
 
-		This->i->socket_callback(This->id, cServerMessage, bytes);
-
-		//Sleep(1); // Don't consume too much CPU power.
+		This->i->socket_callback(This->id, This->buffer, bytes);
 	}
 
 	return 0;
 }
+
+bool mysocket::bytes_waiting()
+{
+	u_long iMode = 1;
+	int bytes = SOCKET_ERROR;
+	char buffer;
+
+	ioctlsocket(s, FIONBIO, &iMode);
+	bytes = recv(s, &buffer, 1, MSG_PEEK);
+	iMode = 0;
+	ioctlsocket(s, FIONBIO, &iMode);
+
+	return (bytes == 1);
+}
+
 
 int mysocket::start_listener(void)
 {
@@ -92,11 +115,8 @@ bool mysocket::open(int PortNo, char* IPAddress)
     SOCKADDR_IN target; //Socket address information
 
     target.sin_family = AF_INET; // address family Internet
-
     target.sin_port = htons (PortNo); //Port to connect on
-
     target.sin_addr.s_addr = inet_addr (IPAddress); //Target IP
-
 
     s = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP); //Create socket
 
@@ -107,12 +127,9 @@ bool mysocket::open(int PortNo, char* IPAddress)
     }  
 
     //Try connecting...
-
-
     if (connect(s, (SOCKADDR *)&target, sizeof(target)) == SOCKET_ERROR)
     {
         return false; //Couldn't connect
-
     }
     else
 	{
@@ -121,7 +138,6 @@ bool mysocket::open(int PortNo, char* IPAddress)
 	}
 }
 
-//CLOSECONNECTION � shuts down the socket and closes any connection on it
 
 void mysocket::close()
 {
@@ -141,22 +157,18 @@ bool mysocket::winsock_start()
 		return false;
 
    //Start up Winsock
-
     WSADATA wsadata;
 
     int error = WSAStartup(0x0202, &wsadata);
-
     //Did something happen?
 
     if (error)
         return false;
 
     //Did we get the right Winsock version?
-
     if (wsadata.wVersion != 0x0202)
     {
         WSACleanup(); //Clean up Winsock
-
         return false;
     }
 

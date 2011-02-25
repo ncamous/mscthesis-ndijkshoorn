@@ -164,7 +164,7 @@ void bot_ardrone_recorder::playback(char *dataset)
 
 			case BOT_ARDRONE_EVENT_FRAME:
 			{
-				char filename[25];
+				char filename[30];
 				string tmpstring;
 				bot_ardrone_frame f;
 				doc["time"] >> f.time;
@@ -172,18 +172,17 @@ void bot_ardrone_recorder::playback(char *dataset)
 				doc["data_size"] >> f.data_size;
 				doc["dest_size"] >> f.dest_size;
 				doc["filename"] >> tmpstring;
-				strcpy_s(f.filename, 20, tmpstring.c_str());
+				strcpy_s(f.filename, 30, tmpstring.c_str());
 
-				sprintf_s(filename, 25, "%s/%s", dataset_dir, f.filename);
+				sprintf_s(filename, 30, "%s/%s", dataset_dir, f.filename);
 				ifstream frame_in(filename, ios::in | ios::binary);
 				
 				// data buffer
-				f.data = new char[f.dest_size];
-
-				frame_in.read(f.data, f.dest_size);
+				frame_in.read(f.data, f.data_size);
 				frame_in.close();
 
 				bot->frame_received(&f);
+
 				break;
 			}
 		}
@@ -199,11 +198,11 @@ void bot_ardrone_recorder::prepare_dataset()
 	int i = 1;
 	char filename[25];
 
-	sprintf_s(filename, 25, "dataset/%03d", i++);
+	sprintf_s(filename, 25, "dataset/%03d", i);
 
 	while ((_access(filename, 0)) == 0)
 	{
-		sprintf_s(filename, 25, "dataset/%03d", i++);
+		sprintf_s(filename, 25, "dataset/%03d", ++i);
 	}
 
 	sprintf_s(dataset_dir, 25, "%s", filename);
