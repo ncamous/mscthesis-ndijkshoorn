@@ -66,9 +66,13 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 	yaml << YAML::Key << "event" << YAML::Value << BOT_ARDRONE_EVENT_MEASUREMENT;
 	yaml << YAML::Key << "time" << YAML::Value << m->time;
 	yaml << YAML::Key << "type" << YAML::Value << m->type;
-	yaml << YAML::Key << "groundtruth_loc" << YAML::Value << m->groundtruth_loc;
-	yaml << YAML::Key << "groundtruth_or" << YAML::Value << m->groundtruth_or;
 	yaml << YAML::Key << "battery" << YAML::Value << m->battery;
+	yaml << YAML::Key << "sensor" << YAML::Value << m->sensor;
+	yaml << YAML::Key << "gt_loc" << YAML::Value << m->gt_loc;
+	yaml << YAML::Key << "gt_or" << YAML::Value << m->gt_or;
+	yaml << YAML::Key << "ins_loc" << YAML::Value << m->ins_loc;
+	yaml << YAML::Key << "ins_or" << YAML::Value << m->ins_or;
+	yaml << YAML::Key << "sonar" << YAML::Value << m->sonar;
 	yaml << YAML::EndMap;
 
 	fout << yaml.c_str();
@@ -101,18 +105,16 @@ void bot_ardrone_recorder::record_frame(bot_ardrone_frame *f)
 	yaml << YAML::BeginMap;
 	yaml << YAML::Key << "event" << YAML::Value << BOT_ARDRONE_EVENT_FRAME;
 	yaml << YAML::Key << "time" << YAML::Value << f->time;
-	yaml << YAML::Key << "header_size" << YAML::Value << f->header_size;
 	yaml << YAML::Key << "data_size" << YAML::Value << f->data_size;
-	yaml << YAML::Key << "dest_size" << YAML::Value << f->dest_size;
 	yaml << YAML::Key << "filename" << YAML::Value << f->filename;
 	yaml << YAML::EndMap;
+
+	fout << yaml.c_str();
+	fout << '\n';
 
 	ofstream frame_out(filename, ios::out | ios::binary);
 	frame_out.write(f->data, f->data_size);
 	frame_out.close();
-
-	fout << yaml.c_str();
-	fout << '\n';
 }
 
 
@@ -144,9 +146,13 @@ void bot_ardrone_recorder::playback(char *dataset)
 				bot_ardrone_measurement m;
 				doc["time"] >> m.time;
 				doc["type"] >> m.type;
-				doc["groundtruth_loc"] >> m.groundtruth_loc;
-				doc["groundtruth_or"] >> m.groundtruth_or;
+				doc["sensor"] >> m.sensor;
 				doc["battery"] >> m.battery;
+				doc["gt_loc"] >> m.gt_loc;
+				doc["gt_or"] >> m.gt_or;
+				doc["ins_loc"] >> m.ins_loc;
+				doc["ins_or"] >> m.ins_or;
+				doc["sonar"] >> m.sonar;
 
 				bot->measurement_received(&m);
 				break;
@@ -168,15 +174,13 @@ void bot_ardrone_recorder::playback(char *dataset)
 				string tmpstring;
 				bot_ardrone_frame f;
 				doc["time"] >> f.time;
-				doc["header_size"] >> f.header_size;
 				doc["data_size"] >> f.data_size;
-				doc["dest_size"] >> f.dest_size;
 				doc["filename"] >> tmpstring;
 				strcpy_s(f.filename, 30, tmpstring.c_str());
 
 				sprintf_s(filename, 30, "%s/%s", dataset_dir, f.filename);
 				ifstream frame_in(filename, ios::in | ios::binary);
-				
+
 				// data buffer
 				frame_in.read(f.data, f.data_size);
 				frame_in.close();

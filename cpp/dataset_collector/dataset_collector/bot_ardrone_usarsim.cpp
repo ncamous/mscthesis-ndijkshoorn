@@ -1,8 +1,8 @@
 #include "global.h"
 #include "bot_ardrone_usarsim.h"
 #include "bot_ardrone.h"
+#include "usarsim_msgparser.h"
 #include "mysocket.h"
-#include <string>
 
 using namespace std;
 
@@ -13,7 +13,7 @@ bot_ardrone_usarsim::bot_ardrone_usarsim(bot_ardrone *bot)
 	frame = new bot_ardrone_frame;
 
 	/* sockets */
-	control_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CONTROL, USARIM_PORT, USARSIM_IP, NULL, USARSIM_CONTROL_BLOCKSIZE, (botinterface*) this);
+	control_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CONTROL, usarsim_PORT, USARSIM_IP, NULL, USARSIM_CONTROL_BLOCKSIZE, (botinterface*) this);
 	frame_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CAM, UPIS_PORT, USARSIM_IP, frame->data, USARSIM_FRAME_BLOCKSIZE, (botinterface*) this);
 }
 
@@ -56,7 +56,10 @@ void bot_ardrone_usarsim::socket_callback(int id, char *message, int bytes)
 	switch (id)
 	{
 		case BOT_ARDRONE_USARSIM_SOCKET_CONTROL:
-			process_measurement(message, bytes);
+			if (bytes >= USARSIM_CONTROL_BLOCKSIZE)
+				printf("ERROR: USARSIM MEASUREMENT BUFFER FULL!\n");
+			else
+				process_measurement(message, bytes);
 			break;
 
 		case BOT_ARDRONE_USARSIM_SOCKET_CAM:
@@ -68,76 +71,68 @@ void bot_ardrone_usarsim::socket_callback(int id, char *message, int bytes)
 
 void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 {
-	string type;
-	size_t found;
-	size_t tmppos1, tmppos2;
-	int i;
+	int pos;
+	int lineoffset = 0;
 
 	message[bytes] = '\0';
+	string msg(message);
 
-	string message_str(message);
-	string key, val, tmp;
-
-	type = message_str.substr(0, 3);
-
-	// skip NFO's
-	if (strcmp(type.c_str(), "NFO") == 0)
-		return;
-
-
-	bot_ardrone_measurement m;
-	int offset = 0;
-
-
-	// type
-	if (strcmp(type.c_str(), "STA") == 0)
-		m.type = BOT_ARDRONE_MEASUREMENT_STA;
-	else if (strcmp(type.c_str(), "SEN") == 0)
-		m.type = BOT_ARDRONE_MEASUREMENT_SEN;
-
-
-	while ((found = message_str.find('{', offset)) != string::npos)
+	while ((pos = msg.find('\n', lineoffset)) != string::npos)
 	{
-		tmppos1 = message_str.find(' ', found + 2);
-		if (tmppos1 == string::npos)
-			break;
+		// get line
+		string line(message, lineoffset, pos-lineoffset-1);
+		lineoffset = pos+1;
 
-		key = message_str.substr(found+1, tmppos1-found-1);
+		string type(line, 0, 3);
 
-		tmppos2 = message_str.find('}', tmppos1+2);
-		if (tmppos2 == string::npos)
-			break;
+		// skip NFO's en RES'
+		if (type == "NFO" || type == "RES")
+			return;
 
-		val = message_str.substr(tmppos1+1, tmppos2-tmppos1-1);
-		offset = tmppos2 + 1;
+		bot_ardrone_measurement m;
 
-
-		/**/
-		if (strcmp(key.c_str(), "Battery") == 0)
+		// BOT_ARDRONE_MEASUREMENT_STA
+		if (type == "STA")
 		{
-			m.battery = atoi(val.c_str());
+			m.type = BOT_ARDRONE_MEASUREMENT_STA;
+			m.battery = usarsim_msgparser_int(&line, "{Battery");
 		}
 
-		if (strcmp(key.c_str(), "Location") == 0)
+		// BOT_ARDRONE_MEASUREMENT_SEN
+		else if (type == "SEN")
 		{
-			tmppos1 = 0;
-			for(i = 0; i < 3; i++)
+			m.type = BOT_ARDRONE_MEASUREMENT_SEN;
+			m.sensor = usarsim_msgparser_type(&line);
+
+			if (m.sensor == BOT_ARDRONE_SENSOR_UNKNOW)
+				printf("UNKNOW SENSOR TYPE\n");
+
+			switch (m.sensor)
 			{
-				if (i < 2)
-					tmppos2 = val.find(',', tmppos1);
-				else
-					tmppos2 = val.length();
+				case BOT_ARDRONE_SENSOR_GT:
+				{
+					usarsim_msgparser_double3(&line, "{Location", m.gt_loc);
+					usarsim_msgparser_double3(&line, "{Orientation", m.gt_or);
+					break;
+				}
 
-				tmp = val.substr(tmppos1, tmppos2-tmppos1);
+				case BOT_ARDRONE_SENSOR_INS:
+				{
+					usarsim_msgparser_double3(&line, "{Location", m.ins_loc);
+					usarsim_msgparser_double3(&line, "{Orientation", m.ins_or);
+					break;
+				}
 
-				m.groundtruth_loc[i] = strtod(tmp.c_str(), NULL);
-				tmppos1 = tmppos2 + 1;
+				case BOT_ARDRONE_SENSOR_SONAR:
+				{
+					m.sonar = usarsim_msgparser_double(&line, "Name Sonar1 Range");
+					break;
+				}
 			}
 		}
-		/**/
-	}
 
-	bot->measurement_received(&m);
+		bot->measurement_received(&m);
+	} // get line
 }
 
 
@@ -160,12 +155,6 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 	if (frame->dest_size > 0 && frame->data_size-5 >= frame->dest_size) {
 		if (!frame_socket->bytes_waiting())
 		{
-			/*if (frame->data_size-5 > frame->dest_size)
-			{
-				printf("TEST TYPE: %i\n", frame->data[frame->dest_size + 5]);
-				Sleep(4000);
-			}*/
-
 			// remove header
 			frame->data += 5;
 			frame->data_size -= 5;
@@ -185,59 +174,3 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 		}
 	}
 }
-
-
-/*
-void bot_ardrone_usarsim::process_frame(char *message, int bytes)
-{
-	int copy_len;
-
-	if (frame == NULL)
-		frame = new bot_ardrone_frame;
-
-	// we dont know image size (bytes) yet
-	if (frame->dest_size == 0)
-	{
-		copy_len = min(5 - frame->header_size, bytes);
-		memcpy(&frame->header[frame->header_size], message, copy_len);
-		frame->header_size += copy_len;
-
-		if (frame->header_size == 5) {
-			frame->dest_size = (frame->dest_size << 8) + frame->header[1];
-			frame->dest_size = (frame->dest_size << 8) + frame->header[2];
-			frame->dest_size = (frame->dest_size << 8) + frame->header[3];
-			frame->dest_size = (frame->dest_size << 8) + frame->header[4];
-			//printf("IMG SIZE: %i\n", frame->dest_size);
-			//printf("IMG TYPE: %i\n", frame->header[0]);
-			frame->data = new char[frame->dest_size + 4*USARSIM_FRAME_BLOCKSIZE]; // reserve extra space
-		}
-
-		// we have bytes left for the image
-		bytes -= copy_len;
-		if (bytes > 0)
-			message = &message[copy_len];
-	}
-
-	// copy to image
-	if (frame->dest_size > 0 && bytes > 0) {
-		memcpy(&frame->data[frame->data_size], message, bytes);
-		frame->data_size += bytes;
-	}
-
-	// image complete
-	if (frame->dest_size > 0 && frame->data_size >= frame->dest_size) {
-		if (!frame_socket->bytes_waiting())
-		{
-			bot->frame_received(frame);
-
-			// delete struct here
-			frame = NULL;
-
-			// request new image
-			Sleep(BOT_ARDRONE_USARSIM_FRAME_REQDELAY);
-			frame_socket->send("OK");
-			Sleep(20);
-		}
-	}
-}
-*/

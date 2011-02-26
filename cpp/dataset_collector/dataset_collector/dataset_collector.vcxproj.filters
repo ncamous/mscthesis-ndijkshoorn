@@ -19,6 +19,9 @@
     <Filter Include="Source Files\bots">
       <UniqueIdentifier>{5ee885f2-6ee4-4cf2-a5ee-f4523dfdf0d6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\usarsim">
+      <UniqueIdentifier>{760f9833-1465-402a-be0d-9714b8e1590a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -35,6 +38,9 @@
     </ClCompile>
     <ClCompile Include="bot_ardrone_recorder.cpp">
       <Filter>Source Files\bots</Filter>
+    </ClCompile>
+    <ClCompile Include="usarsim_ msgparser.cpp">
+      <Filter>Source Files\usarsim</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -54,6 +60,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="bot_ardrone_recorder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="usarsim_msgparser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

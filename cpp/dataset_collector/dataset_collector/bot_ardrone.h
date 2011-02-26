@@ -20,7 +20,12 @@
 #define BOT_ARDRONE_INTERFACE_ARDRONELIB 2
 
 #define BOT_ARDRONE_MEASUREMENT_SEN 0
-#define BOT_ARDRONE_MEASUREMENT_STA 0
+#define BOT_ARDRONE_MEASUREMENT_STA 1
+
+#define BOT_ARDRONE_SENSOR_UNKNOW 0
+#define BOT_ARDRONE_SENSOR_GT 1
+#define BOT_ARDRONE_SENSOR_INS 2
+#define BOT_ARDRONE_SENSOR_SONAR 3
 
 #define BOT_ARDRONE_FRAME_BUFFER 30720
 
@@ -35,9 +40,13 @@ struct bot_ardrone_control {
 struct bot_ardrone_measurement {
 	float time;
 	int type;
-	double groundtruth_loc[3];
-	double groundtruth_or[3];
+	int sensor;
+	double sonar;
 	int battery;
+	double gt_loc[3];
+	double gt_or[3];
+	double ins_loc[3];
+	double ins_or[3];
 
 	bot_ardrone_measurement();
 };
@@ -45,7 +54,6 @@ struct bot_ardrone_measurement {
 struct bot_ardrone_frame {
 	float time;
 	char *data;
-	int header_size;
 	int data_size;
 	int dest_size;
 	char filename[25];
