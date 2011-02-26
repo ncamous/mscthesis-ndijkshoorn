@@ -67,6 +67,7 @@
     <ClCompile Include="bot_ardrone.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mysocket.cpp" />
+    <ClCompile Include="usarsim_ msgparser.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="botinterface.h" />
@@ -75,6 +76,7 @@
     <ClInclude Include="bot_ardrone.h" />
     <ClInclude Include="global.h" />
     <ClInclude Include="mysocket.h" />
+    <ClInclude Include="usarsim_msgparser.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

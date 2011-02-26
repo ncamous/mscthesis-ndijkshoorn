@@ -1,6 +1,7 @@
 #pragma once
 #include "botinterface.h"
 #include "mysocket.h"
+#include <string>
 
 #define BOT_ARDRONE_USARSIM_SOCKET_CONTROL 1
 #define BOT_ARDRONE_USARSIM_SOCKET_CAM 2
@@ -9,6 +10,8 @@
 class bot_ardrone;
 struct bot_ardrone_control;
 struct bot_ardrone_frame;
+
+using namespace std;
 
 class bot_ardrone_usarsim : public botinterface
 {
@@ -30,4 +33,3 @@ private:
 	mysocket *control_socket;
 	mysocket *frame_socket;
 };
-
