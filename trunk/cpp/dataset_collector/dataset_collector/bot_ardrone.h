@@ -40,14 +40,24 @@ struct bot_ardrone_control {
 
 struct bot_ardrone_measurement {
 	float time;
-	int type;
-	int sensor;
-	double sonar;
-	int battery;
-	double gt_loc[3];
-	double gt_or[3];
-	double ins_loc[3];
-	double ins_or[3];
+	bool usarsim;
+	//int type; // message type: actually dont want this
+
+	/* usarsim only */
+	int sensor; // dont want this: all sensors at one!
+	float gt_loc[3];
+	float gt_or[3];
+	float gt_vel[3];
+
+	int ctrl_state;		/*!< Flying state (landed, flying, hovering, etc.) defined in CTRL_STATES enum. */
+	int altitude;		/*!< UAV's altitude in mm */
+	int battery;		/*!< battery voltage filtered (mV) */
+
+	/*!< UAV's pitch in milli-degrees: pitch, roll, yaw */
+	float ins_or[3];
+
+	/*!< UAV's estimated linear velocity: x, y, z */
+	float ins_vel[3];
 
 	bot_ardrone_measurement();
 };

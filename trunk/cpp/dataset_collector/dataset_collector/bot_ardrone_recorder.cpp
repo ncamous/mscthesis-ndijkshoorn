@@ -5,17 +5,6 @@
 
 
 /* operators */
-YAML::Emitter& operator << (YAML::Emitter& out, const double *d)
-{
-	int i;
-	out << YAML::BeginSeq;
-	for(i = 0; i < 3; i++)
-		out << d[i];
-	out << YAML::EndSeq;
-	return out;
-}
-
-
 YAML::Emitter& operator << (YAML::Emitter& out, const float *f)
 {
 	int i;
@@ -24,14 +13,6 @@ YAML::Emitter& operator << (YAML::Emitter& out, const float *f)
 		out << f[i];
 	out << YAML::EndSeq;
 	return out;
-}
-
-
-void operator >> (const YAML::Node& node, double *d)
-{
-	int i;
-	for(i = 0; i < 3; i++)
-		node[i] >> d[i];
 }
 
 
@@ -83,14 +64,20 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 	fprintf (file_out, "---\n");
 	fprintf (file_out, "event: %i\n", BOT_ARDRONE_EVENT_MEASUREMENT);
 	fprintf (file_out, "time: %f\n", m->time);
-	fprintf (file_out, "type: %i\n", m->type);
+
+	// usarsim only
+	if (m->usarsim)
+	{
+		fprintf (file_out, "sensor: %i\n", m->sensor); // dont want this
+		fprintf (file_out, "gt_loc:\n  - %f\n  - %f\n  - %f\n", m->gt_loc[0], m->gt_loc[1], m->gt_loc[2]);
+		fprintf (file_out, "gt_or:\n  - %f\n  - %f\n  - %f\n", m->gt_or[0], m->gt_or[1], m->gt_or[2]);
+		fprintf (file_out, "gt_vel:\n  - %f\n  - %f\n  - %f\n", m->gt_vel[0], m->gt_vel[1], m->gt_vel[2]);
+	}
+
 	fprintf (file_out, "battery: %i\n", m->battery);
-	fprintf (file_out, "sensor: %i\n", m->sensor);
-	fprintf (file_out, "gt_loc:\n  - %f\n  - %f\n  - %f\n", m->gt_loc[0], m->gt_loc[1], m->gt_loc[2]);
-	fprintf (file_out, "gt_or:\n  - %f\n  - %f\n  - %f\n", m->gt_or[0], m->gt_or[1], m->gt_or[2]);
-	fprintf (file_out, "ins_loc:\n  - %f\n  - %f\n  - %f\n", m->ins_loc[0], m->ins_loc[1], m->ins_loc[2]);
+	fprintf (file_out, "altitude: %i\n", m->altitude);
 	fprintf (file_out, "ins_or:\n  - %f\n  - %f\n  - %f\n", m->ins_or[0], m->ins_or[1], m->ins_or[2]);
-	fprintf (file_out, "sonar: %f\n", m->sonar);
+	fprintf (file_out, "ins_vel:\n  - %f\n  - %f\n  - %f\n", m->ins_vel[0], m->ins_vel[1], m->ins_vel[2]);
 }
 
 
@@ -149,6 +136,7 @@ void bot_ardrone_recorder::record_frame(bot_ardrone_frame *f)
 
 void bot_ardrone_recorder::playback(char *dataset)
 {
+	/*
 	char filename[25];
 
 	sprintf_s(dataset_dir, 25, "dataset/%s", dataset);
@@ -220,6 +208,7 @@ void bot_ardrone_recorder::playback(char *dataset)
 			}
 		}
 	}
+	*/
 }
 
 

@@ -31,13 +31,15 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(SolutionDir)/ArDrone_properties.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(SolutionDir)/ArDrone_properties.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>../yaml/include;../ardronewin32;../ardronewin32/Navdata;../ardronewin32/UI;../ardronewin32/Video;C:\Program Files\Microsoft SDKs\Windows\v7.0A\Include;C:\Program Files\Microsoft DirectX SDK %28June 2010%29\Include;C:\Users\Nick\Documents\Thesis\code\SDL-1.2.14\include;$(IncludePath)</IncludePath>
+    <IncludePath>../yaml/include;../ardronewin32;../ardronewin32/Navdata;../ardronewin32/UI;../ardronewin32/Video;C:\Program Files\Microsoft SDKs\Windows\v7.0A\Include;C:\Program Files\Microsoft DirectX SDK %28June 2010%29\Include;C:\Users\Nick\Documents\Thesis\code\SDL-1.2.14\include;$(ARDroneLibDir)\Soft\Common;$(ARDroneLibDir)\VP_SDK;$(ARDroneLibDir)\Soft\Lib;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LibraryPath>../yaml/lib;$(OutDir);C:\Program Files\Microsoft SDKs\Windows\v7.1\Lib;C:\Program Files\Microsoft DirectX SDK %28June 2010%29\Lib\x86;C:\Users\Nick\Documents\Thesis\code\SDL-1.2.14\lib;$(LibraryPath)</LibraryPath>
