@@ -14,7 +14,7 @@ bot_ardrone_usarsim::bot_ardrone_usarsim(bot_ardrone *bot)
 
 	/* sockets */
 	control_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CONTROL, usarsim_PORT, USARSIM_IP, NULL, USARSIM_CONTROL_BLOCKSIZE, (botinterface*) this);
-	//frame_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CAM, UPIS_PORT, USARSIM_IP, frame->data, USARSIM_FRAME_BLOCKSIZE, (botinterface*) this);
+	frame_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CAM, UPIS_PORT, USARSIM_IP, frame->data, USARSIM_FRAME_BLOCKSIZE, (botinterface*) this);
 }
 
 
@@ -32,15 +32,17 @@ void bot_ardrone_usarsim::init(void)
 }
 
 
-void bot_ardrone_usarsim::control_update(bot_ardrone_control &control)
+void bot_ardrone_usarsim::control_update(void *control)
 {
+	bot_ardrone_control *control_struct = (bot_ardrone_control*) control;
+
 	char msg[200];
 
 	sprintf_s(msg, 200, "DRIVE {AltitudeVelocity %f} {LinearVelocity %f} {LateralVelocity %f} {RotationalVelocity %f} {Normalized false}\r\n",
-		control.velocity[BOT_ARDRONE_AltitudeVelocity],
-		control.velocity[BOT_ARDRONE_LinearVelocity],
-		control.velocity[BOT_ARDRONE_LateralVelocity],
-		control.velocity[BOT_ARDRONE_RotationalVelocity]);
+		control_struct->velocity[BOT_ARDRONE_AltitudeVelocity],
+		control_struct->velocity[BOT_ARDRONE_LinearVelocity],
+		control_struct->velocity[BOT_ARDRONE_LateralVelocity],
+		control_struct->velocity[BOT_ARDRONE_RotationalVelocity]);
 
 	control_send(msg);
 }
@@ -118,7 +120,7 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 
 				case BOT_ARDRONE_SENSOR_INS:
 				{
-					printf("%s\n", message);
+					//printf("%s\n", message);
 					usarsim_msgparser_double3(&line, "{Location", m.ins_loc);
 					usarsim_msgparser_double3(&line, "{Orientation", m.ins_or);
 					break;

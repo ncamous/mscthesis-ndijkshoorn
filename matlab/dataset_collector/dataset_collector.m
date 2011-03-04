@@ -8,11 +8,11 @@ addpath('interfaces/usarsim', 'ardrone', 'ui');
 
 
 % ARDRONE
-%ardrone ();
+ardrone ();
 
 
 % INTERFACE
-%interface ();
+interface ();
 
 
 % CONTROLS
@@ -26,4 +26,4 @@ addpath('interfaces/usarsim', 'ardrone', 'ui');
 %global ui_imagebox;
 %ui_imagebox = mainGUIdata.imageBox;
 %ui_display_image('7');
-image_receiver ();
+%image_receiver ();

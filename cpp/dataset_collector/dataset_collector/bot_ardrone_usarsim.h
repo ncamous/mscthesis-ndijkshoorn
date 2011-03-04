@@ -9,6 +9,7 @@
 
 class bot_ardrone;
 struct bot_ardrone_control;
+struct bot_ardrone_measurement;
 struct bot_ardrone_frame;
 
 using namespace std;
@@ -20,7 +21,7 @@ public:
 	~bot_ardrone_usarsim(void);
 
 	void init();
-	void control_update(bot_ardrone_control &control);
+	void control_update(void *control);
 	void control_send(char *message);
 	void socket_callback(int id, char *message, int bytes);
 	void process_measurement(char *message, int bytes);

@@ -2,6 +2,7 @@
 
 #include "botinterface.h"
 #include "bot_ardrone_usarsim.h"
+#include "bot_ardrone_ardronelib.h"
 #include "bot_ardrone_recorder.h"
 #include <time.h>
 
@@ -77,7 +78,7 @@ public:
 	void set_playback(char *dataset);
 
 	static clock_t start_clock;
-	bot_ardrone_usarsim *i;
+	botinterface *i;
 	bot_ardrone_control control;
 	bot_ardrone_recorder *recorder;
 	bool record, playback;
