@@ -111,7 +111,7 @@ inline C_RESULT demo_navdata_client_process( const navdata_unpacked_t* const nav
 				*/
 
 		/** ======= INSERT USER CODE HERE ========== **/
-		bot_ardrone_ardronelib_process_navdata(nd);	
+		bot_ardrone_ardronelib_navdata_callback(nd);	
 
 		return C_OK;
 }

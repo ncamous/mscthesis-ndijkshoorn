@@ -341,7 +341,9 @@ int test_drone_connection()
 								); 
 
 	/* Request version file */
-		bytes_to_send = _snprintf(buffer,sizeof(buffer),"%s",			"USER anonymous\r\nCWD /\r\nPWD\r\nTYPE A\r\nPASV\r\nRETR version.txt\r\n");		ftp_write(&ftp_client,buffer,&bytes_to_send);
+		bytes_to_send = _snprintf(buffer,sizeof(buffer),"%s",
+			"USER anonymous\r\nCWD /\r\nPWD\r\nTYPE A\r\nPASV\r\nRETR version.txt\r\n");
+		ftp_write(&ftp_client,buffer,&bytes_to_send);
 		/* Dirty. We should wait for data to arrive with some kind of synchronization
 		or make the socket blocking.*/
 		Sleep(1000);
@@ -407,9 +409,7 @@ int ardronewin32()
 	  WSADATA wsaData = {0};
 	  int iResult = 0;
 
-	  argv[0] = "Yes";
-
-	  printf("This is C code\n");
+	  argv[0] = "Dummy";
 
 	/* Initializes Windows socket subsystem */
 		iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -422,7 +422,7 @@ int ardronewin32()
 			#endif
  
 	/* 	Initializes communication sockets	*/	
-		res = test_drone_connection();
+		res = test_drone_connection(); // Nick disabled the press enter (wait)
 		if(res!=0){
 			printf("%s","Could not detect the drone version ... press <Enter> to try connecting anyway.\n");
 			getchar();

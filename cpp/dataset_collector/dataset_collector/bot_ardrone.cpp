@@ -17,6 +17,7 @@ bot_ardrone_measurement::bot_ardrone_measurement()
 {
 	memset(this, 0, sizeof(bot_ardrone_measurement));
 	time = bot_ardrone::get_clock();
+	usarsim = false;
 }
 
 bot_ardrone_frame::bot_ardrone_frame()

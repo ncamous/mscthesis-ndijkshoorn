@@ -9,6 +9,6 @@
 
 #include <ardrone_tool/Navdata/ardrone_navdata_client.h>
 
-extern void bot_ardrone_ardronelib_process_navdata(navdata_demo_t*);
+extern void bot_ardrone_ardronelib_navdata_callback(const navdata_demo_t *navdata);
 
 #endif // _NAVDATA_H_
