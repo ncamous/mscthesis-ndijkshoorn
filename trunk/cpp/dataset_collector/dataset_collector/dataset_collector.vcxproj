@@ -36,17 +36,22 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>../yaml/include;../ardronewin32;../ardronewin32/Navdata;../ardronewin32/UI;../ardronewin32/Video;C:\Program Files\Microsoft SDKs\Windows\v7.0A\Include;C:\Program Files\Microsoft DirectX SDK %28June 2010%29\Include;C:\Users\Nick\Documents\Thesis\code\SDL-1.2.14\include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LibraryPath>../yaml/lib;$(OutDir);C:\Program Files\Microsoft SDKs\Windows\v7.1\Lib;C:\Program Files\Microsoft DirectX SDK %28June 2010%29\Lib\x86;C:\Users\Nick\Documents\Thesis\code\SDL-1.2.14\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\yaml\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ws2_32.lib;..\yaml\lib\yamlcppd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;..\yaml\lib\yamlcppd.lib;ardronewin32.lib;ArDroneAPI.lib;dinput8.lib;dxguid.lib;comctl32.lib;dxerr.lib;winmm.lib;d3d9.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -63,6 +68,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bot_ardrone_ardronelib.cpp" />
     <ClCompile Include="bot_ardrone_recorder.cpp" />
     <ClCompile Include="bot_ardrone_usarsim.cpp" />
     <ClCompile Include="bot_ardrone.cpp" />
@@ -72,6 +78,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="botinterface.h" />
+    <ClInclude Include="bot_ardrone_ardronelib.h" />
     <ClInclude Include="bot_ardrone_recorder.h" />
     <ClInclude Include="bot_ardrone_usarsim.h" />
     <ClInclude Include="bot_ardrone.h" />

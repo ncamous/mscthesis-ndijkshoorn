@@ -45,6 +45,7 @@ bot_ardrone::bot_ardrone(int botinterface)
 			break;
 
 		case BOT_ARDRONE_INTERFACE_ARDRONELIB:
+			i = new bot_ardrone_ardronelib((bot_ardrone*) this);
 			break;
 
 		default:
@@ -94,7 +95,7 @@ void bot_ardrone::control_update(bot_ardrone_control *c)
 		recorder->record_control(&control);
 
 	if (i != NULL)
-		i->control_update(control);
+		i->control_update((void*) &control);
 }
 
 
