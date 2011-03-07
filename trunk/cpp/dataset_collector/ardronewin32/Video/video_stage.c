@@ -98,6 +98,9 @@ C_RESULT output_rendering_device_stage_transform( void *cfg, vp_api_io_data_t *i
   /* Get a reference to the last decoded picture */
   pixbuf_data      = (uint8_t*)in->buffers[0];
   
+		
+  
+  
 			/** ======= INSERT USER CODE HERE ========== **/
 		
 				// Send the decoded video frame to the DirectX renderer.
@@ -110,8 +113,11 @@ C_RESULT output_rendering_device_stage_transform( void *cfg, vp_api_io_data_t *i
 				D3DChangeTexture(pixbuf_data);
 
 			/** ======= INSERT USER CODE HERE ========== **/
-			bot_ardrone_ardronelib_video_callback(pixbuf_data, vec->controller.width,vec->controller.height);
- 
+		
+
+
+  
+  
   vp_os_mutex_unlock(&video_update_lock);
   return (VP_SUCCESS);
 }
@@ -255,7 +261,7 @@ DEFINE_THREAD_ROUTINE(video_stage, data)
 				  int loop = VP_SUCCESS;
 				  out.status = VP_API_STATUS_PROCESSING;
 
-				  ardrone_at_zap(ZAP_CHANNEL_VERT);
+				  //ardrone_at_zap(ZAP_CHANNEL_VERT);
 
 				  while( !ardrone_tool_exit() && (loop == VP_SUCCESS) )
 				  {

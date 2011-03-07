@@ -13,8 +13,8 @@ bot_ardrone_usarsim::bot_ardrone_usarsim(bot_ardrone *bot)
 	frame = new bot_ardrone_frame;
 
 	/* sockets */
-	control_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CONTROL, USARSIM_PORT, USARSIM_IP, NULL, USARSIM_CONTROL_BUFSIZE, (botinterface*) this);
-	frame_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CAM, UPIS_PORT, USARSIM_IP, frame->data, USARSIM_FRAME_BUFSIZE, (botinterface*) this);
+	control_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CONTROL, usarsim_PORT, USARSIM_IP, NULL, USARSIM_CONTROL_BLOCKSIZE, (botinterface*) this);
+	frame_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CAM, UPIS_PORT, USARSIM_IP, frame->data, USARSIM_FRAME_BLOCKSIZE, (botinterface*) this);
 }
 
 
@@ -58,7 +58,7 @@ void bot_ardrone_usarsim::socket_callback(int id, char *message, int bytes)
 	switch (id)
 	{
 		case BOT_ARDRONE_USARSIM_SOCKET_CONTROL:
-			if (bytes >= USARSIM_CONTROL_BUFSIZE)
+			if (bytes >= USARSIM_CONTROL_BLOCKSIZE)
 				printf("ERROR: USARSIM MEASUREMENT BUFFER FULL!\n");
 			else
 				process_measurement(message, bytes);
@@ -92,19 +92,18 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 			return;
 
 		bot_ardrone_measurement m;
-		m.usarsim = true;
 
 		// BOT_ARDRONE_MEASUREMENT_STA
 		if (type == "STA")
 		{
-			//m.type = BOT_ARDRONE_MEASUREMENT_STA;
+			m.type = BOT_ARDRONE_MEASUREMENT_STA;
 			m.battery = usarsim_msgparser_int(&line, "{Battery");
 		}
 
 		// BOT_ARDRONE_MEASUREMENT_SEN
 		else if (type == "SEN")
 		{
-			//m.type = BOT_ARDRONE_MEASUREMENT_SEN;
+			m.type = BOT_ARDRONE_MEASUREMENT_SEN;
 			m.sensor = usarsim_msgparser_type(&line);
 
 			if (m.sensor == BOT_ARDRONE_SENSOR_UNKNOW)
@@ -114,24 +113,22 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 			{
 				case BOT_ARDRONE_SENSOR_GT:
 				{
-					usarsim_msgparser_float3(&line, "{Location", m.gt_loc);
-					usarsim_msgparser_float3(&line, "{Orientation", m.gt_or);
-					// todo velocity / acceleration
+					usarsim_msgparser_double3(&line, "{Location", m.gt_loc);
+					usarsim_msgparser_double3(&line, "{Orientation", m.gt_or);
 					break;
 				}
 
 				case BOT_ARDRONE_SENSOR_INS:
 				{
 					//printf("%s\n", message);
-					//usarsim_msgparser_float3(&line, "{Location", m.ins_loc);
-					usarsim_msgparser_float3(&line, "{Orientation", m.ins_or);
-					// todo velocity / acceleration
+					usarsim_msgparser_double3(&line, "{Location", m.ins_loc);
+					usarsim_msgparser_double3(&line, "{Orientation", m.ins_or);
 					break;
 				}
 
 				case BOT_ARDRONE_SENSOR_SONAR:
 				{
-					m.altitude = (int)usarsim_msgparser_float(&line, "Name Sonar1 Range");
+					m.sonar = usarsim_msgparser_double(&line, "Name Sonar1 Range");
 					break;
 				}
 			}
@@ -155,14 +152,11 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 		frame->dest_size = (frame->dest_size << 8) + frame->data[2];
 		frame->dest_size = (frame->dest_size << 8) + frame->data[3];
 		frame->dest_size = (frame->dest_size << 8) + frame->data[4];
-
-		frame->time = bot->get_clock();
 	}
 
 	// image complete
 	if (frame->dest_size > 0 && frame->data_size-5 >= frame->dest_size) {
-		// bytes left to recieve
-		if (BOT_ARDRONE_USARSIM_USERAW || !frame_socket->bytes_waiting())
+		if (!frame_socket->bytes_waiting())
 		{
 			// remove header
 			frame->data += 5;
@@ -170,9 +164,11 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 
 			bot->frame_received(frame);
 
-			// reset frame
-			//frame = new bot_ardrone_frame;
-			reset_frame(frame); // this is faster
+			// delete struct here
+			frame = NULL;
+
+			// request new image
+			frame = new bot_ardrone_frame;
 			frame_socket->buffer = frame->data;
 
 			Sleep(BOT_ARDRONE_USARSIM_FRAME_REQDELAY);
@@ -180,13 +176,4 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 			Sleep(20);
 		}
 	}
-}
-
-
-void bot_ardrone_usarsim::reset_frame(bot_ardrone_frame *f)
-{
-	f->time = 0.0f;
-	f->data_size = f->dest_size = 0;
-	f->filename[0] = '\0';
-	f->data = f->data_start;
 }
