@@ -1,29 +1,8 @@
+#include "global.h"
 #include "bot_ardrone_recorder.h"
 #include "bot_ardrone.h"
 #include "yaml.h"
 #include <io.h>
-
-
-/* operators */
-YAML::Emitter& operator << (YAML::Emitter& out, const float *f)
-{
-	int i;
-	out << YAML::BeginSeq;
-	for(i = 0; i < 3; i++)
-		out << f[i];
-	out << YAML::EndSeq;
-	return out;
-}
-
-
-void operator >> (const YAML::Node& node, float *f)
-{
-	int i;
-	for(i = 0; i < 3; i++)
-		node[i] >> f[i];
-}
-/* end operators */
-
 
 
 bot_ardrone_recorder::bot_ardrone_recorder(bot_ardrone *bot)
@@ -42,40 +21,21 @@ bot_ardrone_recorder::~bot_ardrone_recorder(void)
 
 void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 {
-	/*
-	YAML::Emitter yaml;
-	yaml << YAML::BeginMap;
-	yaml << YAML::Key << "event" << YAML::Value << BOT_ARDRONE_EVENT_MEASUREMENT;
-	yaml << YAML::Key << "time" << YAML::Value << m->time;
-	yaml << YAML::Key << "type" << YAML::Value << m->type;
-	yaml << YAML::Key << "battery" << YAML::Value << m->battery;
-	yaml << YAML::Key << "sensor" << YAML::Value << m->sensor;
-	yaml << YAML::Key << "gt_loc" << YAML::Value << m->gt_loc;
-	yaml << YAML::Key << "gt_or" << YAML::Value << m->gt_or;
-	yaml << YAML::Key << "ins_loc" << YAML::Value << m->ins_loc;
-	yaml << YAML::Key << "ins_or" << YAML::Value << m->ins_or;
-	yaml << YAML::Key << "sonar" << YAML::Value << m->sonar;
-	yaml << YAML::EndMap;
-
-	fout << yaml.c_str();
-	fout << '\n';
-	*/
-
 	fprintf (file_out, "---\n");
-	fprintf (file_out, "event: %i\n", BOT_ARDRONE_EVENT_MEASUREMENT);
-	fprintf (file_out, "time: %f\n", m->time);
+	fprintf (file_out, "e: %i\n", BOT_ARDRONE_EVENT_MEASUREMENT);
+	fprintf (file_out, "t: %f\n", m->time);
 
 	// usarsim only
 	if (m->usarsim)
 	{
-		fprintf (file_out, "sensor: %i\n", m->sensor); // dont want this
+		fprintf (file_out, "s: %i\n", m->sensor); // dont want this
 		fprintf (file_out, "gt_loc:\n  - %f\n  - %f\n  - %f\n", m->gt_loc[0], m->gt_loc[1], m->gt_loc[2]);
 		fprintf (file_out, "gt_or:\n  - %f\n  - %f\n  - %f\n", m->gt_or[0], m->gt_or[1], m->gt_or[2]);
 		fprintf (file_out, "gt_vel:\n  - %f\n  - %f\n  - %f\n", m->gt_vel[0], m->gt_vel[1], m->gt_vel[2]);
 	}
 
-	fprintf (file_out, "battery: %i\n", m->battery);
-	fprintf (file_out, "altitude: %i\n", m->altitude);
+	fprintf (file_out, "bat: %i\n", m->battery);
+	fprintf (file_out, "alt: %i\n", m->altitude);
 	fprintf (file_out, "ins_or:\n  - %f\n  - %f\n  - %f\n", m->ins_or[0], m->ins_or[1], m->ins_or[2]);
 	fprintf (file_out, "ins_vel:\n  - %f\n  - %f\n  - %f\n", m->ins_vel[0], m->ins_vel[1], m->ins_vel[2]);
 }
@@ -83,22 +43,10 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 
 void bot_ardrone_recorder::record_control(bot_ardrone_control *c)
 {
-	/*
-	YAML::Emitter yaml;
-	yaml << YAML::BeginMap;
-	yaml << YAML::Key << "event" << YAML::Value << BOT_ARDRONE_EVENT_CONTROL;
-	yaml << YAML::Key << "time" << YAML::Value << c->time;
-	yaml << YAML::Key << "velocity" << YAML::Value << c->velocity;
-	yaml << YAML::EndMap;
-
-	fout << yaml.c_str();
-	fout << '\n';
-	*/
-
 	fprintf (file_out, "---\n");
-	fprintf (file_out, "event: %i\n", BOT_ARDRONE_EVENT_CONTROL);
-	fprintf (file_out, "time: %f\n", c->time);
-	fprintf (file_out, "velocity:\n  - %f\n  - %f\n  - %f\n", c->velocity[0], c->velocity[1], c->velocity[2]);
+	fprintf (file_out, "e: %i\n", BOT_ARDRONE_EVENT_CONTROL);
+	fprintf (file_out, "t: %f\n", c->time);
+	fprintf (file_out, "v:\n  - %f\n  - %f\n  - %f\n", c->velocity[0], c->velocity[1], c->velocity[2]);
 }
 
 
@@ -106,27 +54,14 @@ void bot_ardrone_recorder::record_frame(bot_ardrone_frame *f)
 {
 	char filename[25];
 
-	sprintf_s(f->filename, 20, "%06d.jpg", frame_counter++);
+	sprintf_s(f->filename, 20, "%06d%s", frame_counter++, BOT_ARDRONE_RECORDER_FRAME_EXT);
 	sprintf_s(filename, 25, "%s/%s", dataset_dir, f->filename);
 
-	/*
-	YAML::Emitter yaml;
-	yaml << YAML::BeginMap;
-	yaml << YAML::Key << "event" << YAML::Value << BOT_ARDRONE_EVENT_FRAME;
-	yaml << YAML::Key << "time" << YAML::Value << f->time;
-	yaml << YAML::Key << "data_size" << YAML::Value << f->data_size;
-	yaml << YAML::Key << "filename" << YAML::Value << f->filename;
-	yaml << YAML::EndMap;
-
-	fout << yaml.c_str();
-	fout << '\n';
-	*/
-
 	fprintf (file_out, "---\n");
-	fprintf (file_out, "event: %i\n", BOT_ARDRONE_EVENT_FRAME);
-	fprintf (file_out, "time: %f\n", f->time);
-	fprintf (file_out, "data_size: %i\n", f->data_size);
-	fprintf (file_out, "filename: %s\n", f->filename);
+	fprintf (file_out, "e: %i\n", BOT_ARDRONE_EVENT_FRAME);
+	fprintf (file_out, "t: %f\n", f->time);
+	fprintf (file_out, "s: %i\n", f->data_size);
+	fprintf (file_out, "f: %s\n", f->filename);
 
 	ofstream frame_out(filename, ios::out | ios::binary);
 	frame_out.write(f->data, f->data_size);
@@ -154,17 +89,16 @@ void bot_ardrone_recorder::playback(char *dataset)
 
     while(parser.GetNextDocument(doc))
 	{
-		doc["event"] >> event_type;
+		doc["e"] >> event_type;
 
 		switch (event_type)
 		{
 			case BOT_ARDRONE_EVENT_MEASUREMENT:
 			{
 				bot_ardrone_measurement m;
-				doc["time"] >> m.time;
-				doc["type"] >> m.type;
-				doc["sensor"] >> m.sensor;
-				doc["battery"] >> m.battery;
+				doc["time"] >> m.t;
+				doc["sensor"] >> m.s;
+				doc["bat:"] >> m.b;
 				doc["gt_loc"] >> m.gt_loc;
 				doc["gt_or"] >> m.gt_or;
 				doc["ins_loc"] >> m.ins_loc;
@@ -178,8 +112,8 @@ void bot_ardrone_recorder::playback(char *dataset)
 			case BOT_ARDRONE_EVENT_CONTROL:
 			{
 				bot_ardrone_control c;
-				doc["time"] >> c.time;
-				doc["velocity"] >> c.velocity;
+				doc["time"] >> c.t;
+				doc["velocity"] >> c.v;
 
 				bot->control_update(&c);
 				break;
@@ -240,3 +174,25 @@ void bot_ardrone_recorder::prepare_dataset()
 
 	printf("Created dataset %03d\n", i);
 }
+
+
+
+/* operators */
+YAML::Emitter& operator << (YAML::Emitter& out, const float *f)
+{
+	int i;
+	out << YAML::BeginSeq;
+	for(i = 0; i < 3; i++)
+		out << f[i];
+	out << YAML::EndSeq;
+	return out;
+}
+
+
+void operator >> (const YAML::Node& node, float *f)
+{
+	int i;
+	for(i = 0; i < 3; i++)
+		node[i] >> f[i];
+}
+/* end operators */

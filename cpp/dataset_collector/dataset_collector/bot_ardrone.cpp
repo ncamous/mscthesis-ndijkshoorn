@@ -25,7 +25,8 @@ bot_ardrone_frame::bot_ardrone_frame()
 	memset(this, 0, sizeof(bot_ardrone_frame));
 	time = bot_ardrone::get_clock();
 
-	this->data = new char[BOT_ARDRONE_FRAME_BUFFER];
+	this->data = new char[USARSIM_FRAME_BUFSIZE];
+	this->data_start = this->data; // important
 }
 
 
@@ -114,8 +115,8 @@ void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 	if (PRINT_DEBUG)
 		printf("%f - ARDRONE: measurement received!\n", m->time);
 
-	if (record)
-		recorder->record_measurement(m);
+	//if (record)
+	//	recorder->record_measurement(m);
 }
 
 
