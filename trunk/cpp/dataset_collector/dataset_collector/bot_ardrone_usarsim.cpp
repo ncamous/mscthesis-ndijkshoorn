@@ -13,8 +13,8 @@ bot_ardrone_usarsim::bot_ardrone_usarsim(bot_ardrone *bot)
 	frame = new bot_ardrone_frame;
 
 	/* sockets */
-	control_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CONTROL, usarsim_PORT, USARSIM_IP, NULL, USARSIM_CONTROL_BLOCKSIZE, (botinterface*) this);
-	frame_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CAM, UPIS_PORT, USARSIM_IP, frame->data, USARSIM_FRAME_BLOCKSIZE, (botinterface*) this);
+	control_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CONTROL, USARSIM_PORT, USARSIM_IP, NULL, USARSIM_CONTROL_BUFSIZE, (botinterface*) this);
+	frame_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CAM, UPIS_PORT, USARSIM_IP, frame->data, USARSIM_FRAME_BUFSIZE, (botinterface*) this);
 }
 
 
@@ -58,7 +58,7 @@ void bot_ardrone_usarsim::socket_callback(int id, char *message, int bytes)
 	switch (id)
 	{
 		case BOT_ARDRONE_USARSIM_SOCKET_CONTROL:
-			if (bytes >= USARSIM_CONTROL_BLOCKSIZE)
+			if (bytes >= USARSIM_CONTROL_BUFSIZE)
 				printf("ERROR: USARSIM MEASUREMENT BUFFER FULL!\n");
 			else
 				process_measurement(message, bytes);
@@ -155,11 +155,14 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 		frame->dest_size = (frame->dest_size << 8) + frame->data[2];
 		frame->dest_size = (frame->dest_size << 8) + frame->data[3];
 		frame->dest_size = (frame->dest_size << 8) + frame->data[4];
+
+		frame->time = bot->get_clock();
 	}
 
 	// image complete
 	if (frame->dest_size > 0 && frame->data_size-5 >= frame->dest_size) {
-		if (!frame_socket->bytes_waiting())
+		// bytes left to recieve
+		if (BOT_ARDRONE_USARSIM_USERAW || !frame_socket->bytes_waiting())
 		{
 			// remove header
 			frame->data += 5;
@@ -167,11 +170,9 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 
 			bot->frame_received(frame);
 
-			// delete struct here
-			frame = NULL;
-
-			// request new image
-			frame = new bot_ardrone_frame;
+			// reset frame
+			//frame = new bot_ardrone_frame;
+			reset_frame(frame); // this is faster
 			frame_socket->buffer = frame->data;
 
 			Sleep(BOT_ARDRONE_USARSIM_FRAME_REQDELAY);
@@ -179,4 +180,13 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 			Sleep(20);
 		}
 	}
+}
+
+
+void bot_ardrone_usarsim::reset_frame(bot_ardrone_frame *f)
+{
+	f->time = 0.0f;
+	f->data_size = f->dest_size = 0;
+	f->filename[0] = '\0';
+	f->data = f->data_start;
 }

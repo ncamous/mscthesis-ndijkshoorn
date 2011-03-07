@@ -24,8 +24,7 @@ int main(int argc, char *argv[])
 
 
 	/**** RECORD ****/
-	bot_ardrone ardrone(BOT_ARDRONE_INTERFACE_ARDRONELIB);
+	bot_ardrone ardrone(BOT_ARDRONE_INTERFACE_USARSIM /*BOT_ARDRONE_INTERFACE_ARDRONELIB*/);
 	ardrone.set_record();
-
 	Sleep(10000);
 }

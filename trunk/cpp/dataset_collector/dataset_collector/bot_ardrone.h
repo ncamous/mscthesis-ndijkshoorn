@@ -28,8 +28,6 @@
 #define BOT_ARDRONE_SENSOR_INS 2
 #define BOT_ARDRONE_SENSOR_SONAR 3
 
-#define BOT_ARDRONE_FRAME_BUFFER 30720
-
 
 struct bot_ardrone_control {
 	float time;
@@ -64,6 +62,7 @@ struct bot_ardrone_measurement {
 
 struct bot_ardrone_frame {
 	float time;
+	char *data_start;
 	char *data;
 	int data_size;
 	int dest_size;
