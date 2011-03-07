@@ -80,34 +80,3 @@ void usarsim_msgparser_double3(string *input, char *tag, double *d)
 		d[i] = atof(value.substr(offset).c_str());
 	}
 }
-
-
-float usarsim_msgparser_float(string *input, char *tag)
-{
-	string value;
-
-	if (usarsim_msgparser_value(input, &string(tag), &value))
-		return (float)atof(value.c_str());
-	else
-		return 0.0;
-}
-
-
-void usarsim_msgparser_float3(string *input, char *tag, float *d)
-{
-	string value;
-	int i;
-	int pos;
-	int offset = 0;
-
-	if (usarsim_msgparser_value(input, &string(tag), &value))
-	{
-		for (i=0; i < 2; i++)
-		{
-			pos = value.find(',', offset);
-			d[i] = (float)atof(value.substr(offset, pos-offset).c_str());
-			offset = pos + 1;
-		}
-		d[i] = (float)atof(value.substr(offset).c_str());
-	}
-}

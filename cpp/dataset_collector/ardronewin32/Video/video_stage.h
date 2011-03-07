@@ -14,6 +14,4 @@
 the video socket and decoding the video stream. */
 PROTO_THREAD_ROUTINE(video_stage, data);
 
-extern void bot_ardrone_ardronelib_video_callback(unsigned char* rgbtexture, int w, int h);
-
 #endif
