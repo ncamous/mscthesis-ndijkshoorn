@@ -1,10 +1,10 @@
-folder = 'C:/Users/Nick/Documents/Thesis/code/cpp/dataset_collector/dataset_collector/dataset/004';
-nr_images = 53;
-
+folder = 'C:/Users/Nick/Documents/Thesis/code/cpp/dataset_collector/dataset_collector/dataset/005';
+nr_images = 155;
+byte_order_rgb = 0;
 %width=176; % 176
 %height=38; % 144, but i only stored a part of the buffer at the moment (friday)
-N=width*height;
-%DRONE_VIDEO_MAX_WIDTH=640;
+%N=width*height;
+%DRONE_VIDEO_MAX_WIDTH=640;gggfsa
 %DRONE_VIDEO_MAX_HEIGHT=480;
 
 for i = 1:nr_images
@@ -33,9 +33,15 @@ for i = 1:nr_images
         index = byteoffset + (j-1)*width*3;
         %for k=1:DRONE_VIDEO_MAX_WIDTH
         for k=1:width
-            C(j,k,1) = x(index+2);
-            C(j,k,2) = x(index+1);
-            C(j,k,3) = x(index);
+            if byte_order_rgb == 1
+                C(j,k,1) = x(index);
+                C(j,k,2) = x(index+1);
+                C(j,k,3) = x(index+2);  
+            else
+                C(j,k,1) = x(index+2);
+                C(j,k,2) = x(index+1);
+                C(j,k,3) = x(index);
+            end
             index = index + 3;
         end
 	end
