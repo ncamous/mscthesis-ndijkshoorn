@@ -102,18 +102,31 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 
 	m.battery = n->navdata_demo.vbat_flying_percentage;
 	m.altitude = n->navdata_demo.altitude;
-	m.ins_or[0] = n->navdata_demo.theta;
-	m.ins_or[1] = n->navdata_demo.phi;
-	m.ins_or[2] = n->navdata_demo.psi;
+	m.or[0] = n->navdata_demo.theta;
+	m.or[1] = n->navdata_demo.phi;
+	m.or[2] = n->navdata_demo.psi;
 
-	m.ins_accel[0] = n->navdata_phys_measures.phys_gyros[1]; // x-dir
-	m.ins_accel[1] = n->navdata_phys_measures.phys_gyros[0]; // y-dir
-	m.ins_accel[2] = n->navdata_phys_measures.phys_gyros[2]; // z-dir
+	m.accel[0] = n->navdata_phys_measures.phys_gyros[1]; // x-dir
+	m.accel[1] = n->navdata_phys_measures.phys_gyros[0]; // y-dir
+	m.accel[2] = n->navdata_phys_measures.phys_gyros[2] * 10.0f; // z-dir
 
-	// useless?
-	m.ins_vel[0] = n->navdata_demo.vx;
-	m.ins_vel[1] = n->navdata_demo.vy;
-	m.ins_vel[2] = n->navdata_demo.vz;
+				FILE *file_out;
+					char *filename = "gyros.csv";
+					fopen_s (&file_out, filename , "a");
+
+					fprintf(file_out, "%f,%f,%f\n",
+						m.accel[0],
+						m.accel[1],
+						m.accel[2]
+					);
+
+					fclose(file_out);
+
+	// how reliable is this?
+	m.vel[0] = n->navdata_demo.vx;
+	m.vel[1] = n->navdata_demo.vy;
+	//m.ins_vel[2] = n->navdata_demo.vz; // is always zero
+	m.vel[2] = n->navdata_altitude.altitude_vz;
 
 	bot->measurement_received(&m);
 }

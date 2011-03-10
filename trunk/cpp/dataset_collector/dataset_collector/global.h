@@ -15,6 +15,7 @@
 #define BOT_ARDRONE_FRAME_BUFSIZE 80000		// at least: 176*144*3 + 4 bytes
 #define USARIM_FRAME_USERAW true
 #define USARSIM_FRAME_EXT "raw"
+#define BOT_ARDRONE_BATTERYLIFE 720 // 720s, 12 minutes
 
 	/* USARSim */
 	#define BOT_ARDRONE_USARSIM_FRAME_BLOCKSIZE 8000

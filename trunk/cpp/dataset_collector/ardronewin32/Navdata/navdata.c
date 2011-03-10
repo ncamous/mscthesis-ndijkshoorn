@@ -91,16 +91,10 @@ inline C_RESULT demo_navdata_client_process( const navdata_unpacked_t* const nav
 
     navdata_unpacked_t *nd = (navdata_unpacked_t*)navdata;
 
+	/*
 	FILE *file_out;
 	char *filename = "gyros.csv";
 	fopen_s (&file_out, filename , "a");
-
-	/* velocity and acceleration */
-	/*printf("RAW: %f, %f, %f\n",
-		navdata->navdata_phys_measures.phys_gyros[0],
-		navdata->navdata_phys_measures.phys_gyros[1],
-		navdata->navdata_phys_measures.phys_gyros[2]
-	);*/
 
 	fprintf(file_out, "%f,%f,%f,%f,%f,%f\n",
 		navdata->navdata_phys_measures.phys_gyros[1],
@@ -109,17 +103,11 @@ inline C_RESULT demo_navdata_client_process( const navdata_unpacked_t* const nav
 
 		navdata->navdata_demo.vx,
 		navdata->navdata_demo.vy,
-		navdata->navdata_demo.vz
+		navdata->navdata_altitude.altitude_vz
 	);
 
-	fclose(file_out);
-
-	/*printf("ANGLES: %f, %f, %f\n",
-		navdata->navdata_demo.theta,
-		navdata->navdata_demo.phi,
-		navdata->navdata_demo.psi
-	);*/
-
+	fclose(file_out)
+		*/
 
 
 	/** ======= INSERT USER CODE HERE ========== **/
