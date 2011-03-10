@@ -1,6 +1,6 @@
-folder = 'C:/Users/Nick/Documents/Thesis/code/cpp/dataset_collector/dataset_collector/dataset/005';
-nr_images = 155;
-byte_order_rgb = 0;
+folder = 'C:/Users/Nick/Documents/Thesis/code/cpp/dataset_collector/dataset_collector/dataset/001';
+nr_images = 200;
+byte_order_rgb = 1;
 %width=176; % 176
 %height=38; % 144, but i only stored a part of the buffer at the moment (friday)
 %N=width*height;

@@ -28,7 +28,7 @@ bot_ardrone_ardronelib* bot_ardrone_ardronelib::instance()
 }
 
 
-void bot_ardrone_ardronelib_process_navdata(navdata_demo_t *n)
+void bot_ardrone_ardronelib_process_navdata(navdata_unpacked_t *n)
 {
 	bot_ardrone_ardronelib::instance()->process_measurement(n);
 }
@@ -76,7 +76,7 @@ void bot_ardrone_ardronelib::control_update(void *control)
 
 	ardronewin32_progress(
 		c->hover?0:1,
-		-1.0f * c->velocity[BOT_ARDRONE_LateralVelocity],
+		c->velocity[BOT_ARDRONE_LateralVelocity],
 		c->velocity[BOT_ARDRONE_LinearVelocity],
 		c->velocity[BOT_ARDRONE_AltitudeVelocity],
 		c->velocity[BOT_ARDRONE_RotationalVelocity]
@@ -96,18 +96,24 @@ void bot_ardrone_ardronelib::land()
 }
 
 
-void bot_ardrone_ardronelib::process_measurement(navdata_demo_t *n)
+void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 {
 	bot_ardrone_measurement m;
 
-	m.battery = n->vbat_flying_percentage;
-	m.altitude = n->altitude;
-	m.ins_or[0] = n->theta;
-	m.ins_or[1] = n->phi;
-	m.ins_or[2] = n->psi;
-	m.ins_vel[0] = n->vx;
-	m.ins_vel[1] = n->vy;
-	m.ins_vel[2] = n->vz;
+	m.battery = n->navdata_demo.vbat_flying_percentage;
+	m.altitude = n->navdata_demo.altitude;
+	m.ins_or[0] = n->navdata_demo.theta;
+	m.ins_or[1] = n->navdata_demo.phi;
+	m.ins_or[2] = n->navdata_demo.psi;
+
+	m.ins_accel[0] = n->navdata_phys_measures.phys_gyros[1]; // x-dir
+	m.ins_accel[1] = n->navdata_phys_measures.phys_gyros[0]; // y-dir
+	m.ins_accel[2] = n->navdata_phys_measures.phys_gyros[2]; // z-dir
+
+	// useless?
+	m.ins_vel[0] = n->navdata_demo.vx;
+	m.ins_vel[1] = n->navdata_demo.vy;
+	m.ins_vel[2] = n->navdata_demo.vz;
 
 	bot->measurement_received(&m);
 }
