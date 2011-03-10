@@ -3,11 +3,11 @@
 #include <windows.h>
 #include <string>
 #include "navdata_common.h"
+#include "ardrone_api.h"
 
 
 #define DRONE_VIDEO_MAX_WIDTH 640
 #define DRONE_VIDEO_MAX_HEIGHT 480
-
 
 class bot_ardrone;
 struct bot_ardrone_control;
@@ -20,7 +20,7 @@ using namespace std;
 
 // C application calls these functions
 extern "C" {
-	void bot_ardrone_ardronelib_process_navdata(navdata_demo_t *n);
+	void bot_ardrone_ardronelib_process_navdata(navdata_unpacked_t *n);
 	void bot_ardrone_ardronelib_process_frame(unsigned char* rgbtexture, int w, int h);
 };
 
@@ -42,7 +42,7 @@ public:
 	void land();
 
 	/* handlers */
-	void process_measurement(navdata_demo_t *n);
+	void process_measurement(navdata_unpacked_t *n);
 	void process_frame(unsigned char* rgbtexture, int w, int h);
 
 	static bot_ardrone_ardronelib* instance();

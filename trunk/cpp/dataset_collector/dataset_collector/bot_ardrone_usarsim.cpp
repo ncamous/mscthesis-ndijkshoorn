@@ -25,7 +25,7 @@ bot_ardrone_usarsim::~bot_ardrone_usarsim(void)
 
 void bot_ardrone_usarsim::init(void)
 {
-	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,0.0,25.0}\r\n");
+	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,0.0,0.8}\r\n");
 	control_send("SET {Type Viewports} {Config SingleView} {Viewport1 Camera2}\r\n");
 	//control_send("SET {Type Camera} {Robot ARDrone} {Name Camera2} {Client 10.0.0.2}\r\n");
 	//control_send("SET {Type Viewports} {Config QuadView} {Viewport1 Camera} {Viewport2 Camera2}\r\n");
@@ -134,6 +134,10 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 					m.altitude = (int) (usarsim_msgparser_float(&line, "Name Sonar1 Range")*100.0f);
 					break;
 				}
+
+				case BOT_ARDRONE_SENSOR_ACCEL:
+					printf("%s\n", line);
+					break;
 			}
 		}
 

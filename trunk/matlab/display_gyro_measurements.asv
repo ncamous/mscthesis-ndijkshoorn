@@ -1,0 +1,12 @@
+filename = 'C:/Users/Nick/Documents/Thesis/code/cpp/dataset_collector/dataset_collector/gyros.csv';
+
+M = csvread(filename)';
+
+% x
+subplot(2,2,1), plot(M(1,:));
+
+% y
+subplot(2,2,2), plot(M(2,:));
+
+% z
+subplot(2,2,3), plot(M(3,:));

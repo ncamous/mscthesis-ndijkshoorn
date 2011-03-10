@@ -28,6 +28,7 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 	fprintf (file_out, "alt: %i\n", m->altitude);
 
 	fprintf (file_out, "ins_or:\n  - %f\n  - %f\n  - %f\n", m->ins_or[0], m->ins_or[1], m->ins_or[2]);
+	fprintf (file_out, "ins_accel:\n  - %f\n  - %f\n  - %f\n", m->ins_accel[0], m->ins_accel[1], m->ins_accel[2]);
 	fprintf (file_out, "ins_vel:\n  - %f\n  - %f\n  - %f\n", m->ins_vel[0], m->ins_vel[1], m->ins_vel[2]);
 
 	/* USARSim only */
@@ -52,7 +53,7 @@ void bot_ardrone_recorder::record_control(bot_ardrone_control *c)
 void bot_ardrone_recorder::record_frame(bot_ardrone_frame *f)
 {
 	char filename[25];
-	printf("recorded frame %i\n", frame_counter);
+	//printf("recorded frame %i\n", frame_counter);
 
 	sprintf_s(f->filename, 20, "%06d.%s", frame_counter++, USARSIM_FRAME_EXT);
 	sprintf_s(filename, 25, "%s/%s", dataset_dir, f->filename);

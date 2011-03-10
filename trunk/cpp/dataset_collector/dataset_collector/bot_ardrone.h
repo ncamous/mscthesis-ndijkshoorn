@@ -27,6 +27,7 @@
 #define BOT_ARDRONE_SENSOR_GT 1
 #define BOT_ARDRONE_SENSOR_INS 2
 #define BOT_ARDRONE_SENSOR_SONAR 3
+#define BOT_ARDRONE_SENSOR_ACCEL 4
 
 
 struct bot_ardrone_control {
@@ -41,12 +42,23 @@ struct bot_ardrone_control {
 
 struct bot_ardrone_measurement {
 	float time;
+	int altitude;		// mm
+	int battery;		// percentage (0-100%)
 
-	int altitude;		// UAV's altitude in mm
-	int battery;		// Format: unknown?
+	/* Acceleration: x, y, z (x direction = F/B, y direction is L/R, z  direction is U/D
+	 * measurement from navdata->navdata_phys_measures.phys_gyros
+	 */
+	float ins_accel[3];
 
-	float ins_vel[3];	// UAV's estimated linear velocity: x, y, z
-	float ins_or[3];	// UAV's pitch, roll, yaw
+	/* Orientation: pitch, roll, yaw (milli-degrees)
+	 * measured by an angular speed sensor */
+	float ins_or[3];
+
+	/* estimated linear velocity: x, y, z (mm/s)
+	 * The linear speeds (vx/vy/vz) are given in the local frame
+	 * (so you only have to apply a psi rotation to get
+	 * them on the ground frame) */
+	float ins_vel[3];
 
 	/* USARSim only */
 	bool usarsim;

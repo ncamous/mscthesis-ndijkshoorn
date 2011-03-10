@@ -34,6 +34,8 @@ int usarsim_msgparser_type(string *input)
 			sensor = BOT_ARDRONE_SENSOR_INS;
 		else if (value == "Sonar")
 			sensor = BOT_ARDRONE_SENSOR_SONAR;
+		else if (value == "Accel")
+			sensor = BOT_ARDRONE_SENSOR_ACCEL;
 	}
 
 	return sensor;

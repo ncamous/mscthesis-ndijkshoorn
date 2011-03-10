@@ -7,6 +7,7 @@ using namespace std;
 
 clock_t bot_ardrone::start_clock = 0;
 
+#undef memset
 
 bot_ardrone_control::bot_ardrone_control()
 {

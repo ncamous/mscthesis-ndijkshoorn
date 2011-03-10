@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include <string>
 #include "bot_ardrone.h"
+#include "global.h"
 
 using namespace std;
 
@@ -19,19 +20,19 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam  
 			switch (kd->vkCode)
 			{
 				case VK_UP:
-					keyboard_bot->control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_LinearVelocity, 1.0f);
+					keyboard_bot->control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_LinearVelocity, BOT_ARDRONE_KEYBOARD_VEL_MIN);
 					break;
 
 				case VK_DOWN:
-					keyboard_bot->control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_LinearVelocity, -1.0f);
+					keyboard_bot->control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_LinearVelocity, BOT_ARDRONE_KEYBOARD_VEL_MAX);
 					break;
 
 				case VK_LEFT:
-					keyboard_bot->control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_LateralVelocity, -1.0f);
+					keyboard_bot->control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_LateralVelocity, BOT_ARDRONE_KEYBOARD_VEL_MIN);
 					break;
 
 				case VK_RIGHT:
-					keyboard_bot->control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_LateralVelocity, 1.0f);
+					keyboard_bot->control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_LateralVelocity, BOT_ARDRONE_KEYBOARD_VEL_MAX);
 					break;
 
 				case VK_Q:
@@ -43,11 +44,11 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam  
 					break;
 
 				case VK_LSHIFT:
-					keyboard_bot->control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_RotationalVelocity, -1.0f);
+					keyboard_bot->control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_RotationalVelocity, BOT_ARDRONE_KEYBOARD_VEL_MIN);
 					break;
 
 				case VK_RSHIFT:
-					keyboard_bot->control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_RotationalVelocity, 1.0f);
+					keyboard_bot->control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_RotationalVelocity, BOT_ARDRONE_KEYBOARD_VEL_MAX);
 					break;
 
 				case VK_SPACE:
