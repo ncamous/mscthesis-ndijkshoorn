@@ -21,8 +21,8 @@ int main(int argc, char *argv[])
 
 
 	/**** RECORD ****/
-	bot_ardrone ardrone(BOT_ARDRONE_INTERFACE_ARDRONELIB);
-	//bot_ardrone ardrone(BOT_ARDRONE_INTERFACE_USARSIM);
+	//bot_ardrone ardrone(BOT_ARDRONE_INTERFACE_ARDRONELIB);
+	bot_ardrone ardrone(BOT_ARDRONE_INTERFACE_USARSIM);
 	//ardrone.set_record();
 	bot_ardrone_keyboard kb(&ardrone);
 	return 0;

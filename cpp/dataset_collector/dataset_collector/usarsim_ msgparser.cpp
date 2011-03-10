@@ -28,13 +28,13 @@ int usarsim_msgparser_type(string *input)
 
 	if (usarsim_msgparser_value(input, &string("{Type"), &value))
 	{
-		if (value == "GroundTruth")
+		if (value == "!GroundTruth")
 			sensor = BOT_ARDRONE_SENSOR_GT;
-		else if (value == "INS")
-			sensor = BOT_ARDRONE_SENSOR_INS;
-		else if (value == "Sonar")
+		else if (value == "IMU")
+			sensor = BOT_ARDRONE_SENSOR_IMU;
+		else if (value == "!Sonar")
 			sensor = BOT_ARDRONE_SENSOR_SONAR;
-		else if (value == "Accel")
+		else if (value == "!Accel")
 			sensor = BOT_ARDRONE_SENSOR_ACCEL;
 	}
 
@@ -73,6 +73,9 @@ void usarsim_msgparser_float3(string *input, char *tag, float *f)
 
 	if (usarsim_msgparser_value(input, &string(tag), &value))
 	{
+		printf("%s\n", value.c_str());
+
+
 		for (i=0; i < 2; i++)
 		{
 			pos = value.find(',', offset);

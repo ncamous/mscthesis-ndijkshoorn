@@ -25,7 +25,7 @@
 
 #define BOT_ARDRONE_SENSOR_UNKNOW 0
 #define BOT_ARDRONE_SENSOR_GT 1
-#define BOT_ARDRONE_SENSOR_INS 2
+#define BOT_ARDRONE_SENSOR_IMU 2
 #define BOT_ARDRONE_SENSOR_SONAR 3
 #define BOT_ARDRONE_SENSOR_ACCEL 4
 
@@ -45,20 +45,20 @@ struct bot_ardrone_measurement {
 	int altitude;		// mm
 	int battery;		// percentage (0-100%)
 
-	/* Acceleration: x, y, z (x direction = F/B, y direction is L/R, z  direction is U/D
+	/* Acceleration: x, y, z mm/s^2, cm/s^2 (x direction = F/B, y direction is L/R, z  direction is U/D
 	 * measurement from navdata->navdata_phys_measures.phys_gyros
 	 */
-	float ins_accel[3];
+	float accel[3];
 
 	/* Orientation: pitch, roll, yaw (milli-degrees)
 	 * measured by an angular speed sensor */
-	float ins_or[3];
+	float or[3];
 
 	/* estimated linear velocity: x, y, z (mm/s)
 	 * The linear speeds (vx/vy/vz) are given in the local frame
 	 * (so you only have to apply a psi rotation to get
 	 * them on the ground frame) */
-	float ins_vel[3];
+	float vel[3];
 
 	/* USARSim only */
 	bool usarsim;

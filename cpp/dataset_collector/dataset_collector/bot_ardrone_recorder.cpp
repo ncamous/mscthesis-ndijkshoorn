@@ -27,9 +27,9 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 	fprintf (file_out, "bat: %i\n", m->battery);
 	fprintf (file_out, "alt: %i\n", m->altitude);
 
-	fprintf (file_out, "ins_or:\n  - %f\n  - %f\n  - %f\n", m->ins_or[0], m->ins_or[1], m->ins_or[2]);
-	fprintf (file_out, "ins_accel:\n  - %f\n  - %f\n  - %f\n", m->ins_accel[0], m->ins_accel[1], m->ins_accel[2]);
-	fprintf (file_out, "ins_vel:\n  - %f\n  - %f\n  - %f\n", m->ins_vel[0], m->ins_vel[1], m->ins_vel[2]);
+	fprintf (file_out, "or:\n  - %f\n  - %f\n  - %f\n", m->or[0], m->or[1], m->or[2]);
+	fprintf (file_out, "accel:\n  - %f\n  - %f\n  - %f\n", m->accel[0], m->accel[1], m->accel[2]);
+	fprintf (file_out, "vel:\n  - %f\n  - %f\n  - %f\n", m->vel[0], m->vel[1], m->vel[2]);
 
 	/* USARSim only */
 	if (m->usarsim)
@@ -105,7 +105,7 @@ void bot_ardrone_recorder::playback(char *dataset)
 				doc["gt_loc"] >> m.gt_loc;
 				doc["gt_or"] >> m.gt_or;
 				doc["ins_loc"] >> m.ins_loc;
-				doc["ins_or"] >> m.ins_or;
+				doc["or"] >> m.or;
 				doc["sonar"] >> m.sonar;
 
 				bot->measurement_received(&m);

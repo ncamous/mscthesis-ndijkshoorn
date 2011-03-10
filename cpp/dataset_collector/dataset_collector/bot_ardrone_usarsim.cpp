@@ -99,7 +99,7 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 		if (type == "STA")
 		{
 			m.type = BOT_ARDRONE_MEASUREMENT_STA;
-			m.battery = usarsim_msgparser_int(&line, "{Battery");
+			m.battery = (int) (((float)usarsim_msgparser_int(&line, "{Battery") / (float)BOT_ARDRONE_BATTERYLIFE)*100.0f);
 		}
 
 		// BOT_ARDRONE_MEASUREMENT_SEN
@@ -108,8 +108,8 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 			m.type = BOT_ARDRONE_MEASUREMENT_SEN;
 			m.sensor = usarsim_msgparser_type(&line);
 
-			if (m.sensor == BOT_ARDRONE_SENSOR_UNKNOW)
-				printf("UNKNOW SENSOR TYPE\n");
+			/*if (m.sensor == BOT_ARDRONE_SENSOR_UNKNOW)
+				printf("UNKNOW SENSOR TYPE\n");*/
 
 			switch (m.sensor)
 			{
@@ -120,23 +120,31 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 					break;
 				}
 
-				case BOT_ARDRONE_SENSOR_INS:
+				case BOT_ARDRONE_SENSOR_IMU:
 				{
-					//usarsim_msgparser_float3(&line, "{Location", m.ins_loc);
-					//ins_vel?
-					usarsim_msgparser_float3(&line, "{Orientation", m.ins_or);
+					//printf("%s\n", line.c_str());
+					float test[3];
+					//usarsim_msgparser_float3(&line, "{Location", m.loc);
+					usarsim_msgparser_float3(&line, "{Orientation", test);
+					
+					printf("--%f, %f, %f\n", test);
+
 					break;
 				}
 
 				case BOT_ARDRONE_SENSOR_SONAR:
 				{
 					// is this ok?
-					m.altitude = (int) (usarsim_msgparser_float(&line, "Name Sonar1 Range")*100.0f);
+					m.altitude = (int) (usarsim_msgparser_float(&line, "Name Sonar1 Range")*1000.0f);
 					break;
 				}
 
 				case BOT_ARDRONE_SENSOR_ACCEL:
-					printf("%s\n", line);
+					usarsim_msgparser_float3(&line, "{Acceleration", m.accel);
+					m.accel[0] *= 100.0f; // m -> cm
+					m.accel[1] *= 100.0f;
+					m.accel[2] *= 100.0f;
+
 					break;
 			}
 		}
