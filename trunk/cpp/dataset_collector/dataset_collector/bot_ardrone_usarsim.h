@@ -3,6 +3,8 @@
 #include "mysocket.h"
 #include <string>
 
+#define pi 3.14159265f
+
 #define BOT_ARDRONE_USARSIM_SOCKET_CONTROL 1
 #define BOT_ARDRONE_USARSIM_SOCKET_FRAME 2
 

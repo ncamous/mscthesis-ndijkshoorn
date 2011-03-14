@@ -77,7 +77,7 @@
     <ClCompile Include="bot_ardrone.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mysocket.cpp" />
-    <ClCompile Include="usarsim_ msgparser.cpp" />
+    <ClCompile Include="usarsim_msgparser.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="botinterface.h" />

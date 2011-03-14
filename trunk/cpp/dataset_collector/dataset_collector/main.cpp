@@ -21,16 +21,22 @@ int main(int argc, char *argv[])
 
 
 	/**** RECORD ****/
-	//bot_ardrone ardrone(BOT_ARDRONE_INTERFACE_ARDRONELIB);
-	bot_ardrone ardrone(BOT_ARDRONE_INTERFACE_USARSIM);
-	//ardrone.set_record();
-	bot_ardrone_keyboard kb(&ardrone);
-	return 0;
+	int nr_bots = 0;
+	bot_ardrone *bots[2];
 
-	/*
-	ardrone.take_off();
-	Sleep(3000);
-	ardrone.land();
-	Sleep(30000);
-	*/
+	/* bot 1: REAL ARDRONE */
+	//bot_ardrone ardrone(BOT_ARDRONE_INTERFACE_ARDRONELIB);
+	//ardrone.set_record();
+
+	/* bot 2: USARSim ARDRONE */
+	bot_ardrone ardrone2(BOT_ARDRONE_INTERFACE_USARSIM);
+	ardrone2.set_record();
+
+
+	//bots[nr_bots] = &ardrone; nr_bots++;
+	bots[nr_bots] = &ardrone2; nr_bots++;
+	bot_ardrone_keyboard kb(bots, nr_bots);
+
+
+	return 0;
 }

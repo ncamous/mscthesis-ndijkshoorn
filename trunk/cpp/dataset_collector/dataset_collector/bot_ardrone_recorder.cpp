@@ -23,8 +23,8 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 {
 	fprintf (file_out, "---\n");
 	fprintf (file_out, "e: %i\n", BOT_ARDRONE_EVENT_MEASUREMENT);
+	fprintf (file_out, "s: %i\n", m->sensor);
 	fprintf (file_out, "t: %f\n", m->time);
-	fprintf (file_out, "bat: %i\n", m->battery);
 	fprintf (file_out, "alt: %i\n", m->altitude);
 
 	fprintf (file_out, "or:\n  - %f\n  - %f\n  - %f\n", m->or[0], m->or[1], m->or[2]);
@@ -34,7 +34,7 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 	/* USARSim only */
 	if (m->usarsim)
 	{
-		fprintf (file_out, "type: %i\n", m->type);
+		//fprintf (file_out, "type: %i\n", m->type);
 		fprintf (file_out, "gt_loc:\n  - %f\n  - %f\n  - %f\n", m->gt_loc[0], m->gt_loc[1], m->gt_loc[2]);
 		fprintf (file_out, "gt_or:\n  - %f\n  - %f\n  - %f\n", m->gt_or[0], m->gt_or[1], m->gt_or[2]);
 	}
@@ -101,7 +101,6 @@ void bot_ardrone_recorder::playback(char *dataset)
 				doc["time"] >> m.time;
 				doc["type"] >> m.type;
 				doc["sensor"] >> m.sensor;
-				doc["battery"] >> m.battery;
 				doc["gt_loc"] >> m.gt_loc;
 				doc["gt_or"] >> m.gt_or;
 				doc["ins_loc"] >> m.ins_loc;
