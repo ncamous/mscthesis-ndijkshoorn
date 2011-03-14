@@ -39,14 +39,14 @@
     <ClCompile Include="bot_ardrone_recorder.cpp">
       <Filter>Source Files\bots</Filter>
     </ClCompile>
-    <ClCompile Include="usarsim_ msgparser.cpp">
-      <Filter>Source Files\usarsim</Filter>
-    </ClCompile>
     <ClCompile Include="bot_ardrone_ardronelib.cpp">
       <Filter>Source Files\bots</Filter>
     </ClCompile>
     <ClCompile Include="bot_ardrone_keyboard.cpp">
       <Filter>Source Files\bots</Filter>
+    </ClCompile>
+    <ClCompile Include="usarsim_msgparser.cpp">
+      <Filter>Source Files\usarsim</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

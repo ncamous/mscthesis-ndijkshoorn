@@ -1,0 +1,5 @@
+Process:
+    name: Enaspol_Abeson
+    Description: Temperature of heating water of Abeson tanks
+    controlSamplingPeriod: 1:00:00
+    predictionHorizon: 144:00:00

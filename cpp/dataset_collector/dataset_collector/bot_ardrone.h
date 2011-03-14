@@ -6,6 +6,10 @@
 #include "bot_ardrone_recorder.h"
 #include <time.h>
 
+#define BOT_ARDRONE_STATE_LANDED 0 // landed
+#define BOT_ARDRONE_STATE_HOVER 1 // hover
+#define BOT_ARDRONE_STATE_FLY 2 // flying
+
 #define BOT_ARDRONE_EVENT_CONTROL 0
 #define BOT_ARDRONE_EVENT_MEASUREMENT 1
 #define BOT_ARDRONE_EVENT_FRAME 2
@@ -33,9 +37,7 @@
 struct bot_ardrone_control {
 	float time;
 	float velocity[4];
-	// todo: final var for state?
-	bool hover;
-	bool landed;
+	int state;
 
 	bot_ardrone_control();
 };
@@ -43,7 +45,6 @@ struct bot_ardrone_control {
 struct bot_ardrone_measurement {
 	float time;
 	int altitude;		// mm
-	int battery;		// percentage (0-100%)
 
 	/* Acceleration: x, y, z mm/s^2, cm/s^2 (x direction = F/B, y direction is L/R, z  direction is U/D
 	 * measurement from navdata->navdata_phys_measures.phys_gyros
@@ -87,6 +88,7 @@ public:
 	bot_ardrone(int botinterface);
 	~bot_ardrone(void);
 	void control_set(int type, int opt, float val);
+	float control_get(int type, int opt);
 	void control_update();
 	void control_update(bot_ardrone_control *c);
 	void control_reset();
@@ -103,5 +105,6 @@ public:
 	bot_ardrone_control control;
 	bot_ardrone_recorder *recorder;
 	bool record, playback;
+	int battery;		// percentage (0-100%)
 };
 

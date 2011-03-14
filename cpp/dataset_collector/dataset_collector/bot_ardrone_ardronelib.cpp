@@ -75,7 +75,7 @@ void bot_ardrone_ardronelib::control_update(void *control)
 	bot_ardrone_control *c = (bot_ardrone_control*) control;
 
 	ardronewin32_progress(
-		c->hover?0:1,
+		(c->state == BOT_ARDRONE_STATE_FLY)?0:1,
 		c->velocity[BOT_ARDRONE_LateralVelocity],
 		c->velocity[BOT_ARDRONE_LinearVelocity],
 		c->velocity[BOT_ARDRONE_AltitudeVelocity],
@@ -100,7 +100,8 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 {
 	bot_ardrone_measurement m;
 
-	m.battery = n->navdata_demo.vbat_flying_percentage;
+	bot->battery = n->navdata_demo.vbat_flying_percentage;
+
 	m.altitude = n->navdata_demo.altitude;
 	m.or[0] = n->navdata_demo.theta;
 	m.or[1] = n->navdata_demo.phi;
@@ -110,6 +111,7 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 	m.accel[1] = n->navdata_phys_measures.phys_gyros[0]; // y-dir
 	m.accel[2] = n->navdata_phys_measures.phys_gyros[2] * 10.0f; // z-dir
 
+/*
 				FILE *file_out;
 					char *filename = "gyros.csv";
 					fopen_s (&file_out, filename , "a");
@@ -121,6 +123,7 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 					);
 
 					fclose(file_out);
+*/
 
 	// how reliable is this?
 	m.vel[0] = n->navdata_demo.vx;

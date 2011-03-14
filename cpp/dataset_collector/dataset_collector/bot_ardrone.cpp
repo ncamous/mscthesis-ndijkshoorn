@@ -12,7 +12,7 @@ clock_t bot_ardrone::start_clock = 0;
 bot_ardrone_control::bot_ardrone_control()
 {
 	memset(this, 0, sizeof(bot_ardrone_control));
-	hover = landed = true;
+	state = BOT_ARDRONE_STATE_LANDED;
 }
 
 
@@ -37,8 +37,8 @@ bot_ardrone::bot_ardrone(int botinterface)
 	start_clock = clock();
 	i = NULL;
 	recorder = NULL;
-	record = false;
-	playback = false;
+	record = playback = false;
+	battery = 100;
 
 	control_reset();
 
@@ -57,12 +57,9 @@ bot_ardrone::bot_ardrone(int botinterface)
 	}
 
 	if (i != NULL)
-	{
-		//Sleep(100);
 		i->init();
-	}
 
-	Sleep(500); // just to be safe
+	//Sleep(500); // just to be safe
 }
 
 
@@ -79,11 +76,24 @@ void bot_ardrone::control_set(int type, int opt, float val)
 			val = max(-1.0f, val);
 			val = min(1.0f, val);
 			control.velocity[opt] = val;
-			control.hover = false;
+			control.state = BOT_ARDRONE_STATE_FLY;
 			break;
 
 		default:
 			break;
+	}
+}
+
+
+float bot_ardrone::control_get(int type, int opt)
+{
+	switch(type)
+	{
+		case BOT_ARDRONE_Velocity:
+			return control.velocity[opt];
+
+		default:
+			return 0.0f;
 	}
 }
 
@@ -115,21 +125,21 @@ void bot_ardrone::control_reset()
 	control.velocity[BOT_ARDRONE_LinearVelocity] = 0.0;
 	control.velocity[BOT_ARDRONE_LateralVelocity] = 0.0;
 	control.velocity[BOT_ARDRONE_RotationalVelocity] = 0.0;
-	control.hover = true;
+	control.state = BOT_ARDRONE_STATE_HOVER;
 }
 
 
 void bot_ardrone::take_off()
 {
 	i->take_off();
-	control.landed = false;
+	control.state = BOT_ARDRONE_STATE_HOVER;
 }
 
 
 void bot_ardrone::land()
 {
 	i->land();
-	control.landed = true;
+	control.state = BOT_ARDRONE_STATE_LANDED;
 }
 
 
@@ -137,6 +147,9 @@ void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 {
 	if (PRINT_DEBUG)
 		printf("%f - ARDRONE: measurement received!\n", m->time);
+
+	if (battery < 10)
+		printf("Low battery: %i\\%\n");
 
 	if (record)
 		recorder->record_measurement(m);
@@ -148,7 +161,7 @@ void bot_ardrone::frame_received(bot_ardrone_frame *f)
 	if (PRINT_DEBUG)
 		printf("%f - ARDRONE: frame received: %s!\n", f->time, f->filename);
 
-	if (record)
+	if (record && BOT_ARDRONE_RECORD_FRAMES)
 		recorder->record_frame(f);
 }
 

@@ -90,26 +90,27 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 
 		// skip NFO's en RES'
 		if (type == "NFO" || type == "RES")
+		{
 			return;
-
-		bot_ardrone_measurement m;
-		m.usarsim = true;
+		}
 
 		// BOT_ARDRONE_MEASUREMENT_STA
-		if (type == "STA")
+		else if (type == "STA")
 		{
-			m.type = BOT_ARDRONE_MEASUREMENT_STA;
-			m.battery = (int) (((float)usarsim_msgparser_int(&line, "{Battery") / (float)BOT_ARDRONE_BATTERYLIFE)*100.0f);
+			bot->battery = (int) (((float)usarsim_msgparser_int(&line, "{Battery") / (float)BOT_ARDRONE_BATTERYLIFE)*100.0f);
 		}
 
 		// BOT_ARDRONE_MEASUREMENT_SEN
 		else if (type == "SEN")
 		{
+			bot_ardrone_measurement m;
+			m.usarsim = true;
+
 			m.type = BOT_ARDRONE_MEASUREMENT_SEN;
 			m.sensor = usarsim_msgparser_type(&line);
 
-			/*if (m.sensor == BOT_ARDRONE_SENSOR_UNKNOW)
-				printf("UNKNOW SENSOR TYPE\n");*/
+			if (m.sensor == BOT_ARDRONE_SENSOR_UNKNOW)
+				printf("UNKNOW SENSOR TYPE: %s\n", line.c_str());
 
 			switch (m.sensor)
 			{
@@ -122,12 +123,13 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 
 				case BOT_ARDRONE_SENSOR_IMU:
 				{
-					//printf("%s\n", line.c_str());
-					float test[3];
-					//usarsim_msgparser_float3(&line, "{Location", m.loc);
-					usarsim_msgparser_float3(&line, "{Orientation", test);
+					usarsim_msgparser_float3(&line, "{Orientation", m.or);
 					
-					printf("--%f, %f, %f\n", test);
+					// rad to mili-degrees
+					float rad_deg = 18000.0f / pi;
+					m.or[0] *= m.or[0] * rad_deg;
+					m.or[1] *= m.or[1] * rad_deg;
+					m.or[2] *= m.or[2] * rad_deg;
 
 					break;
 				}
@@ -136,6 +138,7 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 				{
 					// is this ok?
 					m.altitude = (int) (usarsim_msgparser_float(&line, "Name Sonar1 Range")*1000.0f);
+					printf("SONAR SENSOR\n");
 					break;
 				}
 
@@ -147,9 +150,9 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 
 					break;
 			}
-		}
 
-		bot->measurement_received(&m);
+			bot->measurement_received(&m);
+		}
 	} // get line
 }
 
