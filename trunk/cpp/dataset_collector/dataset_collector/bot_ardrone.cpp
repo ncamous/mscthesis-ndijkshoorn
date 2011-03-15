@@ -125,7 +125,8 @@ void bot_ardrone::control_reset()
 	control.velocity[BOT_ARDRONE_LinearVelocity] = 0.0;
 	control.velocity[BOT_ARDRONE_LateralVelocity] = 0.0;
 	control.velocity[BOT_ARDRONE_RotationalVelocity] = 0.0;
-	control.state = BOT_ARDRONE_STATE_HOVER;
+	if (control.state == BOT_ARDRONE_STATE_FLY)
+		control.state = BOT_ARDRONE_STATE_HOVER;
 }
 
 

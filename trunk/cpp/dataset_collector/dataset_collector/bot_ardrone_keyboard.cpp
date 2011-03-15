@@ -67,12 +67,15 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam  
 			break;
 
 		case VK_SPACE:
-			for(i=0; i<keyboard_nr_bots; i++)
+			if (wParam == WM_KEYDOWN)
 			{
-				if (keyboard_bot[i]->control.state == BOT_ARDRONE_STATE_LANDED)
-					keyboard_bot[i]->take_off();
-				else
-					keyboard_bot[i]->land();
+				for(i=0; i<keyboard_nr_bots; i++)
+				{
+					if (keyboard_bot[i]->control.state == BOT_ARDRONE_STATE_LANDED)
+						keyboard_bot[i]->take_off();
+					else
+						keyboard_bot[i]->land();
+				}
 			}
 			break;
 	}

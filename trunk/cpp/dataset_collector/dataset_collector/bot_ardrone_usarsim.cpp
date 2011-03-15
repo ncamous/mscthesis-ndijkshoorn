@@ -25,10 +25,14 @@ bot_ardrone_usarsim::~bot_ardrone_usarsim(void)
 
 void bot_ardrone_usarsim::init(void)
 {
-	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,0.0,0.8}\r\n");
+	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,0.0,1.28}\r\n");
 	control_send("SET {Type Viewports} {Config SingleView} {Viewport1 Camera2}\r\n");
 	//control_send("SET {Type Camera} {Robot ARDrone} {Name Camera2} {Client 10.0.0.2}\r\n");
 	//control_send("SET {Type Viewports} {Config QuadView} {Viewport1 Camera} {Viewport2 Camera2}\r\n");
+
+	// at 50cm height
+	char *msg = "DRIVE {AltitudeVelocity 0.0} {LinearVelocity 0.0} {LateralVelocity 0.0} {RotationalVelocity 0.0} {Normalized false}\r\n";
+	control_send(msg);
 }
 
 
@@ -117,7 +121,7 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 				case BOT_ARDRONE_SENSOR_GT:
 				{
 					usarsim_msgparser_float3(&line, "{Location", m.gt_loc);
-					usarsim_msgparser_float3(&line, "{Orientation", m.gt_or);
+					//usarsim_msgparser_float3(&line, "{Orientation", m.gt_or);
 					break;
 				}
 
@@ -126,25 +130,22 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 					usarsim_msgparser_float3(&line, "{Orientation", m.or);
 					
 					// rad to mili-degrees
-					float rad_deg = 18000.0f / pi;
-					m.or[0] *= m.or[0] * rad_deg;
-					m.or[1] *= m.or[1] * rad_deg;
-					m.or[2] *= m.or[2] * rad_deg;
-
+					float y_bak = m.or[0];
+					m.or[0] = usarsim_msgparser_rad_to_mildeg(m.or[1]);
+					m.or[1] = usarsim_msgparser_rad_to_mildeg(y_bak);
+					m.or[2] = usarsim_msgparser_rad_to_mildeg(m.or[2]);
 					break;
 				}
 
 				case BOT_ARDRONE_SENSOR_SONAR:
 				{
-					// is this ok?
 					m.altitude = (int) (usarsim_msgparser_float(&line, "Name Sonar1 Range")*1000.0f);
-					printf("SONAR SENSOR\n");
 					break;
 				}
 
 				case BOT_ARDRONE_SENSOR_ACCEL:
 					usarsim_msgparser_float3(&line, "{Acceleration", m.accel);
-					m.accel[0] *= 100.0f; // m -> cm
+					m.accel[0] *= -100.0f; // m -> cm
 					m.accel[1] *= 100.0f;
 					m.accel[2] *= 100.0f;
 
