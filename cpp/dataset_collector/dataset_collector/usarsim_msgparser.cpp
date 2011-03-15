@@ -84,3 +84,14 @@ void usarsim_msgparser_float3(string *input, char *tag, float *f)
 		f[i] = (float)atof(value.substr(offset).c_str());
 	}
 }
+
+
+float usarsim_msgparser_rad_to_mildeg(float f)
+{
+	if (f > PI)
+		f -= 2*PI;
+
+	f *= RAD_TO_MILDEG;
+
+	return f;
+}

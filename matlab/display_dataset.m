@@ -1,89 +1,83 @@
 filename = 'C:/Users/Nick/Documents/Thesis/code/cpp/dataset_collector/dataset_collector/dataset/001/output.yaml';
 
-% vars to hold plot data
-plot_alt     = [];
-plot_or      = [];
-plot_accel   = [];
-plot_vel     = [];
+[data_alt, data_or, data_accel, data_vel] = loadDataset(filename, 0);
+
+data2_alt = zeros(1,2);
+data2_or  = zeros(1,4);
+data2_accel=zeros(1,4);
+data2_vel = zeros(1,4);
+
+filename = 'C:/Users/Nick/Documents/Thesis/code/cpp/dataset_collector/dataset_collector/dataset/002/output.yaml';
+
+[data2_alt, data2_or, data2_accel, data2_vel] = loadDataset(filename, 1);
 
 
-% read YAML
-addpath(genpath('yaml'));
-yaml_file = filename;
-
-InitYaml();
-
-import('org.yaml.snakeyaml.Yaml');
-
-yamlreader = Yaml();
-yml = fileread(yaml_file);
-jymlobj = yamlreader.loadAll(yml);
-
-iterator = jymlobj.iterator();
-
-while (iterator.hasNext())
-    field = iterator.next();
-    Data = Hash2Struct(field);
-    
-    % document is measurement
-    if (isfield(Data, 'e') && Data.e == 1)
-        
-        % sonar
-        if (Data.s == 3)
-            plot_alt = [plot_alt; Data.alt];
-        end
-        
-        % IMU (or)
-        if (Data.s == 2)
-            plot_or = [plot_or; Data.or*0.1];
-        end
-        
-        % accel
-        if (Data.s == 4)
-            plot_accel = [plot_accel; Data.accel];
-        end
-    end
-end
-
+%%
 
 
 % ALT
 figure();
-plot(plot_alt);
+plot(data_alt(:,1), data_alt(:,2));
+hold on
+plot(data2_alt(:,1), data2_alt(:,2), 'Color', 'red');
+title('Altitude');
+
+
 
 % OR
-yrange = [-10000, 360000];
+yrange = [-30000, 30000];
 figure();
-
-subplot(3,1,1), plot(plot_or(:,1));
+subplot(3,1,1), plot(data_or(:,1), data_or(:,2)), hold on, plot(data2_or(:,1), data2_or(:,2), 'Color', 'red');
 ylim(yrange);
 title('X orientation');
 
+
 % y
-subplot(3,1,2), plot(plot_or(:,2));
+subplot(3,1,2), plot(data_or(:,1), data_or(:,3)), hold on, plot(data2_or(:,1), data2_or(:,3), 'Color', 'red');
 ylim(yrange);
 title('Y orientation');
 
 % z
-subplot(3,1,3), plot(plot_or(:,3));
-ylim(yrange);
+subplot(3,1,3), plot(data_or(:,1), data_or(:,4)), hold on, plot(data2_or(:,1), data2_or(:,4), 'Color', 'red');
+ylim([-180000 180000]);
 title('Z orientation');
+
 
 
 % ACCEL
 yrange = [-150, 150];
 figure();
 
-subplot(3,1,1), plot(plot_accel(:,1));
+subplot(3,1,1), plot(data_accel(:,1), data_accel(:,2)), hold on, plot(data2_accel(:,1), data2_accel(:,2), 'Color', 'red');
 ylim(yrange);
 title('X acceleration');
 
 % y
-subplot(3,1,2), plot(plot_accel(:,2));
+subplot(3,1,2), plot(data_accel(:,1), data_accel(:,3)), hold on, plot(data2_accel(:,1), data2_accel(:,3), 'Color', 'red');
 ylim(yrange);
 title('Y acceleration');
 
 % z
-subplot(3,1,3), plot(plot_accel(:,3));
+subplot(3,1,3), plot(data_accel(:,1), data_accel(:,4)), hold on, plot(data2_accel(:,1), data2_accel(:,4), 'Color', 'red');
 ylim(yrange);
 title('Z acceleration');
+
+
+
+% VEL
+yrange = [-3000, 3000];
+figure();
+
+subplot(3,1,1), plot(data_vel(:,1), data_vel(:,2)), hold on, plot(data2_vel(:,1), data2_vel(:,2), 'Color', 'red');
+ylim(yrange);
+title('X velocity');
+
+% y
+subplot(3,1,2), plot(data_vel(:,1), data_vel(:,3)), hold on, plot(data2_vel(:,1), data2_vel(:,3), 'Color', 'red');
+ylim(yrange);
+title('Y velocity');
+
+% z
+subplot(3,1,3), plot(data_vel(:,1), data_vel(:,4)), hold on, plot(data2_vel(:,1), data2_vel(:,4), 'Color', 'red');
+ylim(yrange);
+title('Z velocity');

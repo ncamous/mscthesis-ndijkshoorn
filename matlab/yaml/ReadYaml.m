@@ -7,7 +7,7 @@ function YamlStruct = ReadYaml(yaml_file)
 %  %======================================================================
 %{
 		Copyright (c) 2011
-		This program is a result of a joined cooperation of Energocentrum
+		This program s a result of a joined cooperation of Energocentrum
 		PLUS, s.r.o. and Czech Technical University (CTU) in Prague.
         The program is maintained by Energocentrum PLUS, s.r.o. and
         licensed under the terms of MIT license. Full text of the license
