@@ -248,8 +248,8 @@ DEFINE_THREAD_ROUTINE(video_stage, data)
 			  {
 				PRINT("\n   Video stage thread initialisation\n\n");
 
-				// switch to vertical cameram
-				ardrone_at_zap(ZAP_CHANNEL_VERT);
+				// switch to vertical camera
+				//ardrone_at_zap(ZAP_CHANNEL_VERT);
 
 				res = vp_api_open(&pipeline, &pipeline_handle);
 

@@ -1,4 +1,4 @@
-function [data_alt, data_or, data_accel, data_vel] = loadDataset(filename, usarsim_compatibility)
+function [data_alt, data_or, data_accel, data_vel] = loadDataset(filename)
 
     % vars to hold plot data
     data_alt     = [];
@@ -6,9 +6,6 @@ function [data_alt, data_or, data_accel, data_vel] = loadDataset(filename, usars
     data_accel   = [];
     data_vel     = [];
     
-    if (usarsim_compatibility == 1)
-        data_vel = zeros(1,4);
-    end
   
     % read YAML
     addpath(genpath('yaml'));
@@ -32,22 +29,22 @@ function [data_alt, data_or, data_accel, data_vel] = loadDataset(filename, usars
         if (isfield(Data, 'e') && Data.e == 1)
 
             % sonar
-            if (isfield(Data, 'alt') && (usarsim_compatibility == 0 || Data.s == 3))
+            if (isfield(Data, 'alt'))
                 data_alt = [data_alt; Data.t Data.alt];
             end
 
             % IMU (or)
-            if (isfield(Data, 'or') && (usarsim_compatibility == 0 || Data.s == 2))
+            if (isfield(Data, 'or'))
                 data_or = [data_or; Data.t Data.or];
             end
 
             % accel
-            if (isfield(Data, 'accel') && (usarsim_compatibility == 0 || Data.s == 4))
+            if (isfield(Data, 'accel'))
                 data_accel = [data_accel; Data.t Data.accel];
             end
 
             % vel
-            if (isfield(Data, 'vel') && usarsim_compatibility == 0)
+            if (isfield(Data, 'vel'))
                 data_vel = [data_vel; Data.t Data.vel];
             end
         end

@@ -80,6 +80,7 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 {
 	int pos;
 	int lineoffset = 0;
+	bot_ardrone_measurement *m = NULL;
 
 	message[bytes] = '\0';
 	string msg(message);
@@ -107,54 +108,57 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 		// BOT_ARDRONE_MEASUREMENT_SEN
 		else if (type == "SEN")
 		{
-			bot_ardrone_measurement m;
-			m.usarsim = true;
+			if (m == NULL)
+			{
+				m = new bot_ardrone_measurement;
+				m->usarsim = true;
+				m->type = BOT_ARDRONE_MEASUREMENT_SEN;
+			}
 
-			m.type = BOT_ARDRONE_MEASUREMENT_SEN;
-			m.sensor = usarsim_msgparser_type(&line);
+			m->sensor = usarsim_msgparser_type(&line);
 
-			if (m.sensor == BOT_ARDRONE_SENSOR_UNKNOW)
-				printf("UNKNOW SENSOR TYPE: %s\n", line.c_str());
+			//if (m->sensor == BOT_ARDRONE_SENSOR_UNKNOW)
+			//	printf("UNKNOW SENSOR TYPE: %s\n", line.c_str());
 
-			switch (m.sensor)
+			switch (m->sensor)
 			{
 				case BOT_ARDRONE_SENSOR_GT:
 				{
-					usarsim_msgparser_float3(&line, "{Location", m.gt_loc);
+					usarsim_msgparser_float3(&line, "{Location", m->gt_loc);
 					//usarsim_msgparser_float3(&line, "{Orientation", m.gt_or);
 					break;
 				}
 
 				case BOT_ARDRONE_SENSOR_IMU:
 				{
-					usarsim_msgparser_float3(&line, "{Orientation", m.or);
+					usarsim_msgparser_float3(&line, "{Orientation", m->or);
 					
 					// rad to mili-degrees
-					float y_bak = m.or[0];
-					m.or[0] = usarsim_msgparser_rad_to_mildeg(m.or[1]);
-					m.or[1] = usarsim_msgparser_rad_to_mildeg(y_bak);
-					m.or[2] = usarsim_msgparser_rad_to_mildeg(m.or[2]);
+					float y_bak = m->or[0];
+					m->or[0] = usarsim_msgparser_rad_to_mildeg(m->or[1]);
+					m->or[1] = usarsim_msgparser_rad_to_mildeg(y_bak);
+					m->or[2] = usarsim_msgparser_rad_to_mildeg(m->or[2]);
 					break;
 				}
 
 				case BOT_ARDRONE_SENSOR_SONAR:
 				{
-					m.altitude = (int) (usarsim_msgparser_float(&line, "Name Sonar1 Range")*1000.0f);
+					m->altitude = (int) (usarsim_msgparser_float(&line, "Name Sonar1 Range")*1000.0f);
 					break;
 				}
 
 				case BOT_ARDRONE_SENSOR_ACCEL:
-					usarsim_msgparser_float3(&line, "{Acceleration", m.accel);
-					m.accel[0] *= -100.0f; // m -> cm
-					m.accel[1] *= 100.0f;
-					m.accel[2] *= 100.0f;
-
+					usarsim_msgparser_float3(&line, "{Acceleration", m->accel);
+					m->accel[0] *= 100.0f; // m -> mm
+					m->accel[1] *= 100.0f;
+					m->accel[2] *= 100.0f;
 					break;
 			}
-
-			bot->measurement_received(&m);
 		}
 	} // get line
+
+	if (m != NULL)
+		bot->measurement_received(m);
 }
 
 

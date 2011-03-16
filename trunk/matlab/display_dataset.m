@@ -1,6 +1,6 @@
-filename = 'C:/Users/Nick/Documents/Thesis/code/cpp/dataset_collector/dataset_collector/dataset/001/output.yaml';
+filename = 'C:/Users/Nick/Documents/Thesis/code/cpp/dataset_collector/dataset_collector/dataset/003/output.yaml';
 
-[data_alt, data_or, data_accel, data_vel] = loadDataset(filename, 0);
+[data_alt, data_or, data_accel, data_vel] = loadDataset(filename);
 
 data2_alt = zeros(1,2);
 data2_or  = zeros(1,4);
@@ -9,7 +9,7 @@ data2_vel = zeros(1,4);
 
 filename = 'C:/Users/Nick/Documents/Thesis/code/cpp/dataset_collector/dataset_collector/dataset/002/output.yaml';
 
-[data2_alt, data2_or, data2_accel, data2_vel] = loadDataset(filename, 1);
+%[data2_alt, data2_or, data2_accel, data2_vel] = loadDataset(filename);
 
 
 %%
@@ -45,7 +45,7 @@ title('Z orientation');
 
 
 % ACCEL
-yrange = [-150, 150];
+yrange = [-500, 500];
 figure();
 
 subplot(3,1,1), plot(data_accel(:,1), data_accel(:,2)), hold on, plot(data2_accel(:,1), data2_accel(:,2), 'Color', 'red');
