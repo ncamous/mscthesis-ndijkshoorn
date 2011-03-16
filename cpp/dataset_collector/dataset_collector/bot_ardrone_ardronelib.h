@@ -53,4 +53,7 @@ public:
 private:
 	bot_ardrone *bot;
 	HANDLE ardrone_thread;
+
+	// temp
+	int m_counter;
 };

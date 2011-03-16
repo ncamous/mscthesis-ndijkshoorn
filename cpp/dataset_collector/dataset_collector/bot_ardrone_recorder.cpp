@@ -23,7 +23,7 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 {
 	fprintf (file_out, "---\n");
 	fprintf (file_out, "e: %i\n", BOT_ARDRONE_EVENT_MEASUREMENT);
-	fprintf (file_out, "s: %i\n", m->sensor);
+	//fprintf (file_out, "s: %i\n", m->sensor); // USARSim now sends all sensors in a single message
 	fprintf (file_out, "t: %f\n", m->time);
 	fprintf (file_out, "alt: %i\n", m->altitude);
 
@@ -36,7 +36,7 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 	{
 		//fprintf (file_out, "type: %i\n", m->type);
 		fprintf (file_out, "gt_loc:\n  - %f\n  - %f\n  - %f\n", m->gt_loc[0], m->gt_loc[1], m->gt_loc[2]);
-		fprintf (file_out, "gt_or:\n  - %f\n  - %f\n  - %f\n", m->gt_or[0], m->gt_or[1], m->gt_or[2]);
+		//fprintf (file_out, "gt_or:\n  - %f\n  - %f\n  - %f\n", m->gt_or[0], m->gt_or[1], m->gt_or[2]);
 	}
 }
 

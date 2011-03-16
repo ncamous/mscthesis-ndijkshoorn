@@ -75,6 +75,10 @@ were properly set on the drone.
 /// Remote data configuration ///
 ardrone_tool_configure_data_t configure_data[] = {
   { "general:navdata_demo", "FALSE" },
+  { "control:altitude_max", "10000" },
+  { "control:control_vz_max", "1000" },
+  { "control:outdoor", "FALSE" },
+  //{ "control:flight_without_shell", "FALSE" },
   { NULL, NULL }
 };
 
@@ -104,6 +108,7 @@ The parameters to set are stored in the 'configure_data' array.
 
 static void ardrone_tool_end_configure( struct _ardrone_control_event_t* event )
 {
+
   if( event->status == ARDRONE_CONTROL_EVENT_FINISH_SUCCESS )
     configure_index ++;
 
@@ -130,6 +135,7 @@ See 'ardrone_tool_end_configure'
 
 static C_RESULT ardrone_tool_configure()
 {
+
   if( configure_data[configure_index].var != NULL && configure_data[configure_index].value != NULL )
   {
     ack_config.event                        = ACK_CONTROL_MODE;
@@ -202,6 +208,9 @@ C_RESULT ardrone_tool_init(int argc, char **argv)
 	ardrone_at_set_pmode( MiscVar[0] );
 	ardrone_at_set_ui_misc( MiscVar[0], MiscVar[1], MiscVar[2], MiscVar[3] );
 	
+	// switch to vertical camera
+	ardrone_at_zap(ZAP_CHANNEL_VERT);
+
 	return res;
 }
 
