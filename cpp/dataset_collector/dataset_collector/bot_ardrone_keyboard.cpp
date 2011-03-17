@@ -9,7 +9,7 @@ using namespace std;
 HHOOK hHook;
 
 
-LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam   )
+LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 {
 	int i;
 
@@ -78,6 +78,12 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam  
 				}
 			}
 			break;
+		
+		case VK_ESCAPE:
+			exit_dataset_collector = true;
+			UnhookWindowsHookEx(hHook);
+			PostQuitMessage(0);
+			break;
 	}
 
 	return CallNextHookEx(hHook, nCode, wParam, lParam);
@@ -116,9 +122,8 @@ bot_ardrone_keyboard::bot_ardrone_keyboard(bot_ardrone **b, int nr_bots)
 	keyboard_vel = BOT_ARDRONE_KEYBOARD_VEL;
 
 	hHook = SetWindowsHookEx( WH_KEYBOARD_LL, LowLevelKeyboardProc, NULL, 0 );
-	    if (!hHook) {
+	if (!hHook)
         MessageBoxA(NULL, "Unable to SetWindowsHookEx!", "Error!", MB_OK);                                            
-    }
 
 	MSG msg;
 	while (GetMessage(&msg, NULL, 0, 0))

@@ -189,7 +189,7 @@ C_RESULT ardrone_tool_init(int argc, char **argv)
 	// Init subsystems
 	ardrone_timer_reset(&ardrone_tool_timer);
 
-	ardrone_tool_input_init();
+	//ardrone_tool_input_init();
 	ardrone_control_init();
 	ardrone_navdata_client_init();
 
@@ -207,7 +207,7 @@ C_RESULT ardrone_tool_init(int argc, char **argv)
 	// Send start up configuration
 	ardrone_at_set_pmode( MiscVar[0] );
 	ardrone_at_set_ui_misc( MiscVar[0], MiscVar[1], MiscVar[2], MiscVar[3] );
-	
+
 	// switch to vertical camera
 	ardrone_at_zap(ZAP_CHANNEL_VERT);
 

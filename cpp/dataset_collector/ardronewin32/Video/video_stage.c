@@ -258,9 +258,6 @@ DEFINE_THREAD_ROUTINE(video_stage, data)
 				  int loop = VP_SUCCESS;
 				  out.status = VP_API_STATUS_PROCESSING;
 
-				  // CAMERA CHANNEL
-				  ardrone_at_zap(ZAP_CHANNEL_VERT);
-
 				  while( !ardrone_tool_exit() && (loop == VP_SUCCESS) )
 				  {
 					  if( VP_SUCCEEDED(vp_api_run(&pipeline, &out)) ) {
