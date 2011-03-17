@@ -103,19 +103,14 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 {
 	bot_ardrone_measurement m;
 
-	printf("%i t: %f\n", m_counter++, m.time);
-
+	if (bot->battery == NULL)
+		printf("Battery: %i\n", n->navdata_demo.vbat_flying_percentage);
 	bot->battery = n->navdata_demo.vbat_flying_percentage;
 
 	m.altitude = n->navdata_demo.altitude;
 	m.or[0] = n->navdata_demo.theta;
 	m.or[1] = n->navdata_demo.phi;
 	m.or[2] = n->navdata_demo.psi;
-
-	/*
-	m.accel[0] = n->navdata_phys_measures.phys_gyros[1]; // x-dir
-	m.accel[1] = n->navdata_phys_measures.phys_gyros[0]; // y-dir
-	m.accel[2] = n->navdata_phys_measures.phys_gyros[2] * 10.0f; // z-dir*/
 
 	m.accel[0] = n->navdata_phys_measures.phys_accs[0]; // x-dir
 	m.accel[1] = n->navdata_phys_measures.phys_accs[1]; // y-dir

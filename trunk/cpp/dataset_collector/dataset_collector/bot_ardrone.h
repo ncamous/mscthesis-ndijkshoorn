@@ -35,7 +35,7 @@
 
 
 struct bot_ardrone_control {
-	float time;
+	double time;
 	float velocity[4];
 	int state;
 
@@ -43,7 +43,7 @@ struct bot_ardrone_control {
 };
 
 struct bot_ardrone_measurement {
-	float time;
+	double time;
 	int altitude;		// mm
 
 	/* Acceleration: x, y, z mm/s^2 (x direction = F/B, y direction is L/R, z  direction is U/D
@@ -72,7 +72,7 @@ struct bot_ardrone_measurement {
 };
 
 struct bot_ardrone_frame {
-	float time;
+	double time;
 	char *data;
 	char *data_start;
 	int data_size;
@@ -96,7 +96,7 @@ public:
 	void land();
 	void measurement_received(bot_ardrone_measurement *m);
 	void frame_received(bot_ardrone_frame *f);
-	static float get_clock();
+	static double get_clock();
 	void set_record();
 	void set_playback(char *dataset);
 

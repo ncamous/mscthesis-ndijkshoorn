@@ -38,7 +38,7 @@ bot_ardrone::bot_ardrone(int botinterface)
 	i = NULL;
 	recorder = NULL;
 	record = playback = false;
-	battery = 100;
+	battery = NULL;
 
 	control_reset();
 
@@ -58,8 +58,6 @@ bot_ardrone::bot_ardrone(int botinterface)
 
 	if (i != NULL)
 		i->init();
-
-	//Sleep(500); // just to be safe
 }
 
 
@@ -146,6 +144,9 @@ void bot_ardrone::land()
 
 void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 {
+	if (exit_dataset_collector)
+		return;
+
 	if (PRINT_DEBUG)
 		printf("%f - ARDRONE: measurement received!\n", m->time);
 
@@ -159,6 +160,9 @@ void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 
 void bot_ardrone::frame_received(bot_ardrone_frame *f)
 {
+	if (exit_dataset_collector)
+		return;
+
 	if (PRINT_DEBUG)
 		printf("%f - ARDRONE: frame received: %s!\n", f->time, f->filename);
 
@@ -167,9 +171,9 @@ void bot_ardrone::frame_received(bot_ardrone_frame *f)
 }
 
 
-float bot_ardrone::get_clock()
+double bot_ardrone::get_clock()
 {
-	return (float) (clock() - start_clock) / CLOCKS_PER_SEC;
+	return ((double)clock() - start_clock) / CLOCKS_PER_SEC;
 }
 
 

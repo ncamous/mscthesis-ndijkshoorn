@@ -349,7 +349,7 @@ DEFINE_THREAD_ROUTINE(directx_renderer_thread, data)
 
     // Create the application's window
     HWND hWnd = CreateWindow( L"A.R.Drone Video", L"A.R.Drone Video",
-                              WS_OVERLAPPEDWINDOW, 100, 100, 640, 480,
+                              /*WS_OVERLAPPEDWINDOW*/WS_BORDER, 800, 100, WINDOW_WIDTH, WINDOW_HEIGHT,
                               NULL, NULL, wc.hInstance, NULL );
 
     // Initialize Direct3D

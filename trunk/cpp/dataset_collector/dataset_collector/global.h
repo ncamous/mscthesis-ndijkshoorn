@@ -4,7 +4,6 @@
 
 #define PRINT_DEBUG false
 
-
 /* USARSIM */
 #define USARSIM_IP "127.0.0.1"
 #define USARSIM_PORT 3000
@@ -25,3 +24,6 @@
 
 	/* keyboard */
 	#define BOT_ARDRONE_KEYBOARD_VEL 0.5f
+
+
+extern bool exit_dataset_collector;
