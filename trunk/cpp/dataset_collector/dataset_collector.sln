@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual C++ Express 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dataset_collector", "dataset_collector\dataset_collector.vcxproj", "{587234C3-06EA-4431-8DD5-D12A75A4F73E}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "yamlcpp", "yaml\yamlcpp.vcxproj", "{3104AB4E-CD31-4F47-95E9-0E8D9374E15D}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ardronewin32", "ardronewin32\ardronewin32.vcxproj", "{E144B454-A53F-47CF-BDD4-D1695952EEC7}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ArDroneAPI", "ArDroneAPI\ArDroneAPI.vcxproj", "{E84E6B0E-6893-4803-BD17-2D7F85A203AA}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "yamlcpp", "yaml-cpp-0.2.5\yamlcpp.vcxproj", "{3104AB4E-CD31-4F47-95E9-0E8D9374E15D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,10 +19,6 @@ Global
 		{587234C3-06EA-4431-8DD5-D12A75A4F73E}.Debug|Win32.Build.0 = Debug|Win32
 		{587234C3-06EA-4431-8DD5-D12A75A4F73E}.Release|Win32.ActiveCfg = Release|Win32
 		{587234C3-06EA-4431-8DD5-D12A75A4F73E}.Release|Win32.Build.0 = Release|Win32
-		{3104AB4E-CD31-4F47-95E9-0E8D9374E15D}.Debug|Win32.ActiveCfg = Debug|Win32
-		{3104AB4E-CD31-4F47-95E9-0E8D9374E15D}.Debug|Win32.Build.0 = Debug|Win32
-		{3104AB4E-CD31-4F47-95E9-0E8D9374E15D}.Release|Win32.ActiveCfg = Release|Win32
-		{3104AB4E-CD31-4F47-95E9-0E8D9374E15D}.Release|Win32.Build.0 = Release|Win32
 		{E144B454-A53F-47CF-BDD4-D1695952EEC7}.Debug|Win32.ActiveCfg = Debug|Win32
 		{E144B454-A53F-47CF-BDD4-D1695952EEC7}.Debug|Win32.Build.0 = Debug|Win32
 		{E144B454-A53F-47CF-BDD4-D1695952EEC7}.Release|Win32.ActiveCfg = Release|Win32
@@ -31,6 +27,10 @@ Global
 		{E84E6B0E-6893-4803-BD17-2D7F85A203AA}.Debug|Win32.Build.0 = Debug|Win32
 		{E84E6B0E-6893-4803-BD17-2D7F85A203AA}.Release|Win32.ActiveCfg = Release|Win32
 		{E84E6B0E-6893-4803-BD17-2D7F85A203AA}.Release|Win32.Build.0 = Release|Win32
+		{3104AB4E-CD31-4F47-95E9-0E8D9374E15D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3104AB4E-CD31-4F47-95E9-0E8D9374E15D}.Debug|Win32.Build.0 = Debug|Win32
+		{3104AB4E-CD31-4F47-95E9-0E8D9374E15D}.Release|Win32.ActiveCfg = Release|Win32
+		{3104AB4E-CD31-4F47-95E9-0E8D9374E15D}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

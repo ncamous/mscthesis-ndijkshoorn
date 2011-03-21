@@ -1,10 +1,15 @@
 #pragma once
 #include <fstream>
+#include "yaml.h"
 
 class bot_ardrone;
 struct bot_ardrone_measurement;
 struct bot_ardrone_control;
 struct bot_ardrone_frame;
+
+void YAML_double3(const YAML::Node& node, float *f);
+void YAML_float3(const YAML::Node& node, float *f);
+void YAML_float4(const YAML::Node& node, float *f);
 
 using namespace std;
 
@@ -35,4 +40,3 @@ private:
 	/* faster */
 	FILE *file_out;
 };
-

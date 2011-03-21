@@ -4,6 +4,7 @@
 #include "bot_ardrone_usarsim.h"
 #include "bot_ardrone_ardronelib.h"
 #include "bot_ardrone_recorder.h"
+#include "slam.h"
 #include <time.h>
 
 #define BOT_ARDRONE_STATE_LANDED 0 // landed
@@ -106,5 +107,5 @@ public:
 	bot_ardrone_recorder *recorder;
 	bool record, playback;
 	int battery;		// percentage (0-100%)
+	slam *slamcontroller;
 };
-
