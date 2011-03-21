@@ -103,6 +103,8 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 		else if (type == "STA")
 		{
 			bot->battery = (int) (((float)usarsim_msgparser_int(&line, "{Battery") / (float)BOT_ARDRONE_BATTERYLIFE)*100.0f);
+			//if (bot->battery < 100)
+			//	printf("Low battery: %i\n", bot->battery);
 		}
 
 		// BOT_ARDRONE_MEASUREMENT_SEN

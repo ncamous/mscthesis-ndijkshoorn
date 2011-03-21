@@ -39,6 +39,9 @@ for the public-released drones.
 #define WINDOW_WIDTH 200
 #define WINDOW_HEIGHT 175
 
+//#define WINDOW_WIDTH 400
+//#define WINDOW_HEIGHT 320
+
 #define MAJOR_VERSION 1
 #define MINOR_VERSION 3
 #define MODIF_VERSION 0

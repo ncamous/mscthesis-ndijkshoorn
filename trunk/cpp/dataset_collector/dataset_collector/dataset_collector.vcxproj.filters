@@ -22,6 +22,12 @@
     <Filter Include="Source Files\usarsim">
       <UniqueIdentifier>{760f9833-1465-402a-be0d-9714b8e1590a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\slam">
+      <UniqueIdentifier>{02dc0ead-035b-4a7c-9076-a3514856e588}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\slam">
+      <UniqueIdentifier>{fa33e0e3-2513-4fa0-9fc5-2259e236c545}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

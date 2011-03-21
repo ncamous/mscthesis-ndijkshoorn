@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-#define PRINT_DEBUG false
+#define PRINT_DEBUG true
 
 /* USARSIM */
 #define USARSIM_IP "127.0.0.1"
