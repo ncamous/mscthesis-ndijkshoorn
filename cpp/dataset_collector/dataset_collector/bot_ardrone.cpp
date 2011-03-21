@@ -150,9 +150,6 @@ void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 	if (PRINT_DEBUG)
 		printf("%f - ARDRONE: measurement received!\n", m->time);
 
-	if (battery < 10)
-		printf("Low battery: %i\n", battery);
-
 	if (record)
 		recorder->record_measurement(m);
 }

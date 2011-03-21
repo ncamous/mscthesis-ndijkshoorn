@@ -103,9 +103,14 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 {
 	bot_ardrone_measurement m;
 
+	// print initial battery state
 	if (bot->battery == NULL)
 		printf("Battery: %i\n", n->navdata_demo.vbat_flying_percentage);
+
+	// print low battery state
 	bot->battery = n->navdata_demo.vbat_flying_percentage;
+	if (bot->battery < 100)
+		printf("Low battery: %i\n", bot->battery);
 
 	m.altitude = n->navdata_demo.altitude;
 	m.or[0] = n->navdata_demo.theta;

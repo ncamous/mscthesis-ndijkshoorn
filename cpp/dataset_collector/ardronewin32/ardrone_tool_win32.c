@@ -76,7 +76,7 @@ were properly set on the drone.
 ardrone_tool_configure_data_t configure_data[] = {
   { "general:navdata_demo", "FALSE" },
   { "control:altitude_max", "10000" },
-  { "control:control_vz_max", "1000" },
+  { "control:control_vz_max", "1300" },
   { "control:outdoor", "FALSE" },
   //{ "control:flight_without_shell", "FALSE" },
   { NULL, NULL }
@@ -189,7 +189,7 @@ C_RESULT ardrone_tool_init(int argc, char **argv)
 	// Init subsystems
 	ardrone_timer_reset(&ardrone_tool_timer);
 
-	//ardrone_tool_input_init();
+	ardrone_tool_input_init();
 	ardrone_control_init();
 	ardrone_navdata_client_init();
 
