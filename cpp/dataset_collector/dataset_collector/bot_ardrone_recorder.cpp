@@ -34,7 +34,6 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 	/* USARSim only */
 	if (m->usarsim)
 	{
-		//fprintf (file_out, "type: %i\n", m->type);
 		fprintf (file_out, "gt_loc:\n  - %f\n  - %f\n  - %f\n", m->gt_loc[0], m->gt_loc[1], m->gt_loc[2]);
 		//fprintf (file_out, "gt_or:\n  - %f\n  - %f\n  - %f\n", m->gt_or[0], m->gt_or[1], m->gt_or[2]);
 	}
@@ -46,7 +45,7 @@ void bot_ardrone_recorder::record_control(bot_ardrone_control *c)
 	fprintf (file_out, "---\n");
 	fprintf (file_out, "e: %i\n", BOT_ARDRONE_EVENT_CONTROL);
 	fprintf (file_out, "t: %f\n", c->time);
-	fprintf (file_out, "vel:\n  - %f\n  - %f\n  - %f\n", c->velocity[0], c->velocity[1], c->velocity[2]);
+	fprintf (file_out, "vel:\n  - %f\n  - %f\n  - %f\n", c->velocity[0], c->velocity[1], c->velocity[2], c->velocity[3]);
 }
 
 
@@ -82,7 +81,6 @@ void bot_ardrone_recorder::playback(char *dataset)
 	if (fin.is_open())
 		printf("ERROR: DATASET PLAYBACK FILE ALREADY OPEN!\n");
 
-
 	int event_type;
 	YAML::Node doc;
 
@@ -97,15 +95,22 @@ void bot_ardrone_recorder::playback(char *dataset)
 		{
 			case BOT_ARDRONE_EVENT_MEASUREMENT:
 			{
+				continue;
+
 				bot_ardrone_measurement m;
-				/*doc["t"] >> m.time;
+				doc["t"] >> m.time;
 				doc["alt"] >> m.altitude;
-				doc["or"] >> m.or;
-				doc["accel"] >> m.accel;
-				doc["vel"] >> m.vel;*/
+				//doc["or"] >> m.or;
+				YAML_float3(doc["or"], m.or);
+				//doc["accel"] >> m.accel;
+				YAML_float3(doc["accel"], m.accel);
+				//doc["vel"] >> m.vel;
+				YAML_float3(doc["vel"], m.vel);
 
 				// usarsim
 				//doc["gt_loc"] >> m.gt_loc;
+				if (doc.FindValue("gt_loc"))
+					YAML_float3(doc["gt_loc"], m.gt_loc);
 
 				bot->measurement_received(&m);
 				break;
@@ -113,9 +118,11 @@ void bot_ardrone_recorder::playback(char *dataset)
 		
 			case BOT_ARDRONE_EVENT_CONTROL:
 			{
+				continue;
+
 				bot_ardrone_control c;
-				//doc["t"] >> c.time;
-				//doc["vel"] >> c.velocity;
+				doc["t"] >> c.time;
+				YAML_float4(doc["vel"], c.velocity); 
 
 				bot->control_update(&c);
 				break;
@@ -126,9 +133,9 @@ void bot_ardrone_recorder::playback(char *dataset)
 				char filename[30];
 				string tmpstring;
 				bot_ardrone_frame f;
-				//doc["t"] >> f.time;
-				//doc["s"] >> f.data_size;
-				//doc["f"] >> tmpstring;
+				doc["t"] >> f.time;
+				doc["s"] >> f.data_size;
+				doc["f"] >> tmpstring;
 				strcpy_s(f.filename, 30, tmpstring.c_str());
 
 				sprintf_s(filename, 30, "%s/%s", dataset_dir, f.filename);
@@ -179,40 +186,24 @@ void bot_ardrone_recorder::prepare_dataset()
 
 
 /* operators */
-YAML::Emitter& operator << (YAML::Emitter& out, const double d[3])
-{
-	int i;
-	out << YAML::BeginSeq;
-	for(i = 0; i < 3; i++)
-		out << d[i];
-	out << YAML::EndSeq;
-	return out;
-}
-
-
-YAML::Emitter& operator << (YAML::Emitter& out, const float f[3])
-{
-	int i;
-	out << YAML::BeginSeq;
-	for(i = 0; i < 3; i++)
-		out << f[i];
-	out << YAML::EndSeq;
-	return out;
-}
-
-
-void operator >> (const YAML::Node& node, double d[3])
+void YAML_double3(const YAML::Node& node, double *d)
 {
 	int i;
 	for(i = 0; i < 3; i++)
 		node[i] >> d[i];
 }
 
-
-void operator >> (const YAML::Node& node, float f[3])
+void YAML_float3(const YAML::Node& node, float *f)
 {
 	int i;
 	for(i = 0; i < 3; i++)
+		node[i] >> f[i];
+}
+
+void YAML_float4(const YAML::Node& node, float *f)
+{
+	int i;
+	for(i = 0; i < 4; i++)
 		node[i] >> f[i];
 }
 /* end operators */

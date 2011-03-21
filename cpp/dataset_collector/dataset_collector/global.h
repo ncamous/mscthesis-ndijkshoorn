@@ -4,6 +4,11 @@
 
 #define PRINT_DEBUG true
 
+
+/* SLAM */
+#define SLAM_ENABLED true
+
+
 /* USARSIM */
 #define USARSIM_IP "127.0.0.1"
 #define USARSIM_PORT 3000

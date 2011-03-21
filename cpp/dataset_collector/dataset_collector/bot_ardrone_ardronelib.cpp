@@ -142,6 +142,8 @@ void bot_ardrone_ardronelib::process_frame(unsigned char* rgbtexture, int w, int
 		return;
 	}
 
+	frame->time = bot->get_clock(); // get clock time now
+
 	// write width and height to first 4 bytes
 	unsigned short w_bytes = htons(w);
 	unsigned short h_bytes = htons(h);

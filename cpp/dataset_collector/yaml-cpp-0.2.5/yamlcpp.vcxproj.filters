@@ -1,0 +1,216 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Parser">
+      <UniqueIdentifier>{77830a39-6ba8-4852-8650-e80b3ea2fcf1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Representation">
+      <UniqueIdentifier>{da23b1e7-fd49-4376-a7f4-681a2df8ee37}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Scanner">
+      <UniqueIdentifier>{305b6810-f3ca-438f-8abb-73ea1f0c5cbe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Emitter">
+      <UniqueIdentifier>{2a920f69-6f70-4c1f-8b7a-ed49331f75eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Header Files\Parser">
+      <UniqueIdentifier>{c9f7d7b8-b4ee-44eb-8c66-91fa6868f26a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Representation">
+      <UniqueIdentifier>{43becdcd-e767-4548-bdc1-1bc2edad5ef2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Scanner">
+      <UniqueIdentifier>{c80ce78e-f3f7-4574-b362-91c84d236523}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Emitter">
+      <UniqueIdentifier>{cb62937e-f93b-4473-8e78-50e8427f09e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\parser.cpp">
+      <Filter>Source Files\Parser</Filter>
+    </ClCompile>
+    <ClCompile Include="src\parserstate.cpp">
+      <Filter>Source Files\Parser</Filter>
+    </ClCompile>
+    <ClCompile Include="src\aliascontent.cpp">
+      <Filter>Source Files\Representation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\conversion.cpp">
+      <Filter>Source Files\Representation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\iterator.cpp">
+      <Filter>Source Files\Representation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\map.cpp">
+      <Filter>Source Files\Representation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\node.cpp">
+      <Filter>Source Files\Representation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\null.cpp">
+      <Filter>Source Files\Representation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scalar.cpp">
+      <Filter>Source Files\Representation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sequence.cpp">
+      <Filter>Source Files\Representation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tag.cpp">
+      <Filter>Source Files\Representation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\exp.cpp">
+      <Filter>Source Files\Scanner</Filter>
+    </ClCompile>
+    <ClCompile Include="src\regex.cpp">
+      <Filter>Source Files\Scanner</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scanner.cpp">
+      <Filter>Source Files\Scanner</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scanscalar.cpp">
+      <Filter>Source Files\Scanner</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scantag.cpp">
+      <Filter>Source Files\Scanner</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scantoken.cpp">
+      <Filter>Source Files\Scanner</Filter>
+    </ClCompile>
+    <ClCompile Include="src\simplekey.cpp">
+      <Filter>Source Files\Scanner</Filter>
+    </ClCompile>
+    <ClCompile Include="src\stream.cpp">
+      <Filter>Source Files\Scanner</Filter>
+    </ClCompile>
+    <ClCompile Include="src\emitter.cpp">
+      <Filter>Source Files\Emitter</Filter>
+    </ClCompile>
+    <ClCompile Include="src\emitterstate.cpp">
+      <Filter>Source Files\Emitter</Filter>
+    </ClCompile>
+    <ClCompile Include="src\emitterutils.cpp">
+      <Filter>Source Files\Emitter</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ostream.cpp">
+      <Filter>Source Files\Emitter</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\crt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\exceptions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\indentation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\noncopyable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\yaml.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\parser.h">
+      <Filter>Header Files\Parser</Filter>
+    </ClInclude>
+    <ClInclude Include="include\parserstate.h">
+      <Filter>Header Files\Parser</Filter>
+    </ClInclude>
+    <ClInclude Include="src\aliascontent.h">
+      <Filter>Header Files\Representation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\content.h">
+      <Filter>Header Files\Representation</Filter>
+    </ClInclude>
+    <ClInclude Include="include\conversion.h">
+      <Filter>Header Files\Representation</Filter>
+    </ClInclude>
+    <ClInclude Include="include\iterator.h">
+      <Filter>Header Files\Representation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\iterpriv.h">
+      <Filter>Header Files\Representation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ltnode.h">
+      <Filter>Header Files\Representation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\map.h">
+      <Filter>Header Files\Representation</Filter>
+    </ClInclude>
+    <ClInclude Include="include\node.h">
+      <Filter>Header Files\Representation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scalar.h">
+      <Filter>Header Files\Representation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sequence.h">
+      <Filter>Header Files\Representation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tag.h">
+      <Filter>Header Files\Representation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\exp.h">
+      <Filter>Header Files\Scanner</Filter>
+    </ClInclude>
+    <ClInclude Include="src\regex.h">
+      <Filter>Header Files\Scanner</Filter>
+    </ClInclude>
+    <ClInclude Include="src\regeximpl.h">
+      <Filter>Header Files\Scanner</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scanner.h">
+      <Filter>Header Files\Scanner</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scanscalar.h">
+      <Filter>Header Files\Scanner</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scantag.h">
+      <Filter>Header Files\Scanner</Filter>
+    </ClInclude>
+    <ClInclude Include="src\stream.h">
+      <Filter>Header Files\Scanner</Filter>
+    </ClInclude>
+    <ClInclude Include="src\streamcharsource.h">
+      <Filter>Header Files\Scanner</Filter>
+    </ClInclude>
+    <ClInclude Include="src\stringsource.h">
+      <Filter>Header Files\Scanner</Filter>
+    </ClInclude>
+    <ClInclude Include="src\token.h">
+      <Filter>Header Files\Scanner</Filter>
+    </ClInclude>
+    <ClInclude Include="include\emitter.h">
+      <Filter>Header Files\Emitter</Filter>
+    </ClInclude>
+    <ClInclude Include="include\emittermanip.h">
+      <Filter>Header Files\Emitter</Filter>
+    </ClInclude>
+    <ClInclude Include="src\emitterstate.h">
+      <Filter>Header Files\Emitter</Filter>
+    </ClInclude>
+    <ClInclude Include="src\emitterutils.h">
+      <Filter>Header Files\Emitter</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ostream.h">
+      <Filter>Header Files\Emitter</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stlemitter.h">
+      <Filter>Header Files\Emitter</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

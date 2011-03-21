@@ -42,6 +42,7 @@ bot_ardrone::bot_ardrone(int botinterface)
 
 	control_reset();
 
+	/* INTERFACE */
 	switch (botinterface)
 	{
 		case BOT_ARDRONE_INTERFACE_USARSIM:
@@ -58,6 +59,9 @@ bot_ardrone::bot_ardrone(int botinterface)
 
 	if (i != NULL)
 		i->init();
+
+	/* SLAM */
+	slamcontroller = new slam();
 }
 
 
@@ -165,6 +169,9 @@ void bot_ardrone::frame_received(bot_ardrone_frame *f)
 
 	if (record && BOT_ARDRONE_RECORD_FRAMES)
 		recorder->record_frame(f);
+
+	if (SLAM_ENABLED)
+		slamcontroller->process_frame(f);
 }
 
 
