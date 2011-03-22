@@ -68,7 +68,7 @@ C_RESULT ardrone_tool_init_custom(int argc, char **argv)
 		//ardrone_tool_input_add( &dx_gamepad );
 	
 	/* Start all threads of your application */
-		START_THREAD( directx_renderer_thread , NULL);
+		//START_THREAD( directx_renderer_thread , NULL);
 		START_THREAD( video_stage, NULL );
 
 		
@@ -120,7 +120,7 @@ BEGIN_THREAD_TABLE
   THREAD_TABLE_ENTRY( ardrone_control, 20 )
   THREAD_TABLE_ENTRY( navdata_update, 20 )
   THREAD_TABLE_ENTRY( video_stage, 20 )
-  THREAD_TABLE_ENTRY( directx_renderer_thread, 20 )
+  //THREAD_TABLE_ENTRY( directx_renderer_thread, 20 )
 END_THREAD_TABLE
 
 

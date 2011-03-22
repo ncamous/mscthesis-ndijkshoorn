@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-#define PRINT_DEBUG true
+#define PRINT_DEBUG false
 
 
 /* SLAM */
