@@ -105,9 +105,9 @@ C_RESULT output_rendering_device_stage_transform( void *cfg, vp_api_io_data_t *i
 				//  with the decoded frame.
   
 				/* Send the actual video resolution to the rendering module */
-				D3DChangeTextureSize(vec->controller.width,vec->controller.height);
+				//D3DChangeTextureSize(vec->controller.width,vec->controller.height);
 				/* Send video picture to the rendering module */
-				D3DChangeTexture(pixbuf_data);
+				//D3DChangeTexture(pixbuf_data);
 
 			/** ======= INSERT USER CODE HERE ========== **/
 	bot_ardrone_ardronelib_process_frame(pixbuf_data, vec->controller.width, vec->controller.height);
