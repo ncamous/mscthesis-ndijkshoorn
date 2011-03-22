@@ -5,6 +5,9 @@
 #include <io.h>
 
 
+HANDLE bot_ardrone_recorder::ghSemaphore;
+
+
 bot_ardrone_recorder::bot_ardrone_recorder(bot_ardrone *bot)
 {
 	this->bot = bot;
@@ -21,6 +24,8 @@ bot_ardrone_recorder::~bot_ardrone_recorder(void)
 
 void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 {
+	WaitForSingleObject(ghSemaphore, 0L);
+
 	fprintf (file_out, "---\n");
 	fprintf (file_out, "e: %i\n", BOT_ARDRONE_EVENT_MEASUREMENT);
 	//fprintf (file_out, "s: %i\n", m->sensor); // USARSim now sends all sensors in a single message
@@ -37,20 +42,28 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 		fprintf (file_out, "gt_loc:\n  - %f\n  - %f\n  - %f\n", m->gt_loc[0], m->gt_loc[1], m->gt_loc[2]);
 		//fprintf (file_out, "gt_or:\n  - %f\n  - %f\n  - %f\n", m->gt_or[0], m->gt_or[1], m->gt_or[2]);
 	}
+
+	ReleaseSemaphore(ghSemaphore, 1, NULL);
 }
 
 
 void bot_ardrone_recorder::record_control(bot_ardrone_control *c)
 {
+	WaitForSingleObject(ghSemaphore, 0L);
+
 	fprintf (file_out, "---\n");
 	fprintf (file_out, "e: %i\n", BOT_ARDRONE_EVENT_CONTROL);
 	fprintf (file_out, "t: %f\n", c->time);
 	fprintf (file_out, "vel:\n  - %f\n  - %f\n  - %f\n", c->velocity[0], c->velocity[1], c->velocity[2], c->velocity[3]);
+
+	ReleaseSemaphore(ghSemaphore, 1, NULL);
 }
 
 
 void bot_ardrone_recorder::record_frame(bot_ardrone_frame *f)
 {
+	WaitForSingleObject(ghSemaphore, 0L);
+
 	char filename[25];
 	//printf("recorded frame %i\n", frame_counter);
 
@@ -67,6 +80,8 @@ void bot_ardrone_recorder::record_frame(bot_ardrone_frame *f)
 	ofstream frame_out(filename, ios::out | ios::binary);
 	frame_out.write(f->data, f->data_size);
 	frame_out.close();
+
+	ReleaseSemaphore(ghSemaphore, 1, NULL);
 }
 
 
@@ -180,6 +195,20 @@ void bot_ardrone_recorder::prepare_dataset()
 	fopen_s (&file_out, filename , "w");
 
 	printf("Created dataset %03d\n", i);
+
+
+	// Semaphore
+	ghSemaphore = CreateSemaphore( 
+        NULL,           // default security attributes
+        MAX_SEM_COUNT,  // initial count
+        MAX_SEM_COUNT,  // maximum count
+        NULL);          // unnamed semaphore
+
+    if (ghSemaphore == NULL) 
+    {
+        printf("CreateSemaphore error: %d\n", GetLastError());
+        return;
+    }
 }
 
 
