@@ -172,6 +172,7 @@ DEFINE_THREAD_ROUTINE(video_stage, data)
 	  picture.width         = DRONE_VIDEO_MAX_WIDTH;
 	  picture.height        = DRONE_VIDEO_MAX_HEIGHT;
 	  picture.framerate     = 15;
+	  //picture.framerate     = 3;
 
 	  picture.y_buf   = vp_os_malloc( DRONE_VIDEO_MAX_WIDTH * DRONE_VIDEO_MAX_HEIGHT     );
 	  picture.cr_buf  = vp_os_malloc( DRONE_VIDEO_MAX_WIDTH * DRONE_VIDEO_MAX_HEIGHT / 4 );
