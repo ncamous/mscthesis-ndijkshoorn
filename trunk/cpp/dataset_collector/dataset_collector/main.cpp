@@ -19,7 +19,8 @@ int main(int argc, char *argv[])
 
 	/**** PLAYBACK ****/
 	//bot_ardrone ardrone(BOT_ARDRONE_INTERFACE_NONE);
-	//ardrone.set_playback("003");
+	//ardrone.set_playback("004");
+	//Sleep(10000);
 
 
 

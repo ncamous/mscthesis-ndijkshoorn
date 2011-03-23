@@ -4,7 +4,6 @@
 
 #define PRINT_DEBUG false
 
-
 /* SLAM */
 #define SLAM_ENABLED true
 

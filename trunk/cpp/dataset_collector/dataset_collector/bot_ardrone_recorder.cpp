@@ -8,6 +8,15 @@
 HANDLE bot_ardrone_recorder::ghSemaphore;
 
 
+void operator >> (const YAML::Node& node, float *f)
+{
+	int i;
+	int len = node.size();
+
+	for(i = 0; i < len; i++)
+		node[i] >> f[i];
+}
+
 bot_ardrone_recorder::bot_ardrone_recorder(bot_ardrone *bot)
 {
 	this->bot = bot;
@@ -32,14 +41,14 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 	fprintf (file_out, "t: %f\n", m->time);
 	fprintf (file_out, "alt: %i\n", m->altitude);
 
-	fprintf (file_out, "or:\n  - %f\n  - %f\n  - %f\n", m->or[0], m->or[1], m->or[2]);
-	fprintf (file_out, "accel:\n  - %f\n  - %f\n  - %f\n", m->accel[0], m->accel[1], m->accel[2]);
-	fprintf (file_out, "vel:\n  - %f\n  - %f\n  - %f\n", m->vel[0], m->vel[1], m->vel[2]);
+	fprintf (file_out, "or: [%f, %f, %f]\n", m->or[0], m->or[1], m->or[2]);
+	fprintf (file_out, "accel: [%f, %f, %f]\n", m->accel[0], m->accel[1], m->accel[2]);
+	fprintf (file_out, "vel: [%f, %f, %f]\n", m->vel[0], m->vel[1], m->vel[2]);
 
 	/* USARSim only */
 	if (m->usarsim)
 	{
-		fprintf (file_out, "gt_loc:\n  - %f\n  - %f\n  - %f\n", m->gt_loc[0], m->gt_loc[1], m->gt_loc[2]);
+		fprintf (file_out, "gt_loc: [%f, %f, %f]\n", m->gt_loc[0], m->gt_loc[1], m->gt_loc[2]);
 		//fprintf (file_out, "gt_or:\n  - %f\n  - %f\n  - %f\n", m->gt_or[0], m->gt_or[1], m->gt_or[2]);
 	}
 
@@ -54,7 +63,7 @@ void bot_ardrone_recorder::record_control(bot_ardrone_control *c)
 	fprintf (file_out, "---\n");
 	fprintf (file_out, "e: %i\n", BOT_ARDRONE_EVENT_CONTROL);
 	fprintf (file_out, "t: %f\n", c->time);
-	fprintf (file_out, "vel:\n  - %f\n  - %f\n  - %f\n", c->velocity[0], c->velocity[1], c->velocity[2], c->velocity[3]);
+	fprintf (file_out, "vel: [%f, %f, %f, %f]\n", c->velocity[0], c->velocity[1], c->velocity[2], c->velocity[3]);
 
 	ReleaseSemaphore(ghSemaphore, 1, NULL);
 }
@@ -110,22 +119,16 @@ void bot_ardrone_recorder::playback(char *dataset)
 		{
 			case BOT_ARDRONE_EVENT_MEASUREMENT:
 			{
-				continue;
-
 				bot_ardrone_measurement m;
 				doc["t"] >> m.time;
 				doc["alt"] >> m.altitude;
-				//doc["or"] >> m.or;
-				YAML_float3(doc["or"], m.or);
-				//doc["accel"] >> m.accel;
-				YAML_float3(doc["accel"], m.accel);
-				//doc["vel"] >> m.vel;
-				YAML_float3(doc["vel"], m.vel);
+				doc["or"] >> m.or;
+				doc["accel"] >> m.accel;
+				doc["vel"] >> m.vel;
 
 				// usarsim
-				//doc["gt_loc"] >> m.gt_loc;
 				if (doc.FindValue("gt_loc"))
-					YAML_float3(doc["gt_loc"], m.gt_loc);
+					doc["gt_loc"] >> m.gt_loc;
 
 				bot->measurement_received(&m);
 				break;
@@ -133,11 +136,9 @@ void bot_ardrone_recorder::playback(char *dataset)
 		
 			case BOT_ARDRONE_EVENT_CONTROL:
 			{
-				continue;
-
 				bot_ardrone_control c;
 				doc["t"] >> c.time;
-				YAML_float4(doc["vel"], c.velocity); 
+				doc["vel"] >> c.velocity;
 
 				bot->control_update(&c);
 				break;
@@ -205,34 +206,5 @@ void bot_ardrone_recorder::prepare_dataset()
         NULL);          // unnamed semaphore
 
     if (ghSemaphore == NULL) 
-    {
         printf("CreateSemaphore error: %d\n", GetLastError());
-        return;
-    }
 }
-
-
-
-
-/* operators */
-void YAML_double3(const YAML::Node& node, double *d)
-{
-	int i;
-	for(i = 0; i < 3; i++)
-		node[i] >> d[i];
-}
-
-void YAML_float3(const YAML::Node& node, float *f)
-{
-	int i;
-	for(i = 0; i < 3; i++)
-		node[i] >> f[i];
-}
-
-void YAML_float4(const YAML::Node& node, float *f)
-{
-	int i;
-	for(i = 0; i < 4; i++)
-		node[i] >> f[i];
-}
-/* end operators */
