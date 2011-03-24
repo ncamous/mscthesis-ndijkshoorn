@@ -5,7 +5,7 @@
 #define PRINT_DEBUG false
 
 /* SLAM */
-#define SLAM_ENABLED true
+#define SLAM_ENABLED false
 
 
 /* USARSIM */
@@ -27,7 +27,7 @@
 	#define BOT_ARDRONE_USARSIM_FRAME_REQDELAY 60
 
 	/* keyboard */
-	#define BOT_ARDRONE_KEYBOARD_VEL 0.5f
+	#define BOT_ARDRONE_KEYBOARD_VEL 1.0f
 
 
 extern bool exit_dataset_collector;

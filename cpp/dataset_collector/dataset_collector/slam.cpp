@@ -12,7 +12,7 @@ using namespace std;
 slam::slam()
 {
 	frame = NULL;
-	openCV_init = false;
+	CV_ready = false;
 }
 
 
@@ -22,9 +22,9 @@ slam::~slam()
 }
 
 
-void slam::init_openCV()
+void slam::init_CV()
 {
-	openCV_init = true;
+	CV_ready = true;
 
 	/*
 	SurfFeatureDetector( double hessianThreshold=400., int octaves=3, int octaveLayers=4 );
@@ -55,9 +55,8 @@ void slam::init_openCV()
 
 void slam::process_frame(bot_ardrone_frame *f)
 {
-	if (!openCV_init)
-		init_openCV();
-
+	if (!CV_ready)
+		init_CV();
 
 	if (frame == NULL)
 	{

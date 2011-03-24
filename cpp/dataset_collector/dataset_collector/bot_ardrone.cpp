@@ -75,8 +75,8 @@ void bot_ardrone::control_set(int type, int opt, float val)
 	switch(type)
 	{
 		case BOT_ARDRONE_Velocity:
-			val = max(-1.0f, val);
-			val = min(1.0f, val);
+			//val = max(-1.0f, val);
+			//val = min(1.0f, val);
 			control.velocity[opt] = val;
 			control.state = BOT_ARDRONE_STATE_FLY;
 			break;

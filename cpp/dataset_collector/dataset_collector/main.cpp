@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 	/* bot 2: USARSim ARDRONE */
 	bot_ardrone ardrone2(BOT_ARDRONE_INTERFACE_USARSIM);
 	bots[nr_bots++] = &ardrone2;
-	//ardrone2.set_record();
+	ardrone2.set_record();
 
 
 	bot_ardrone_keyboard kb(bots, nr_bots);

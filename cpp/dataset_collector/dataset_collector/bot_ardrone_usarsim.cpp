@@ -29,7 +29,7 @@ void bot_ardrone_usarsim::init(void)
 
 	// ROBOCUP 2006
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -12600.0,800.0,1000.0}\r\n");
-	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -50.4,3.2,-4.0}\r\n");
+	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -73.0,5.6,-4.0}\r\n");
 
 	control_send("SET {Type Viewports} {Config SingleView} {Viewport1 Camera2}\r\n");
 	//control_send("SET {Type Camera} {Robot ARDrone} {Name Camera2} {Client 10.0.0.2}\r\n");
@@ -108,8 +108,6 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 		else if (type == "STA")
 		{
 			bot->battery = (int) (((float)usarsim_msgparser_int(&line, "{Battery") / (float)BOT_ARDRONE_BATTERYLIFE)*100.0f);
-			//if (bot->battery < 100)
-			//	printf("Low battery: %i\n", bot->battery);
 		}
 
 		// BOT_ARDRONE_MEASUREMENT_SEN
@@ -123,9 +121,6 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 			}
 
 			m->sensor = usarsim_msgparser_type(&line);
-
-			//if (m->sensor == BOT_ARDRONE_SENSOR_UNKNOW)
-			//	printf("UNKNOW SENSOR TYPE: %s\n", line.c_str());
 
 			switch (m->sensor)
 			{
@@ -156,9 +151,14 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 
 				case BOT_ARDRONE_SENSOR_ACCEL:
 					usarsim_msgparser_float3(&line, "{Acceleration", m->accel);
-					m->accel[0] *= 100.0f; // m -> mm
-					m->accel[1] *= 100.0f;
-					m->accel[2] *= 100.0f;
+					m->accel[0] *= 1000.0f; // m -> mm
+					m->accel[1] *= 1000.0f;
+					m->accel[2] *= 1000.0f;
+
+					usarsim_msgparser_float3(&line, "{Velocity", m->vel);
+					m->vel[0] *= 1000.0f; // cm -> mm
+					m->vel[1] *= 1000.0f;
+					m->vel[2] *= 1000.0f;
 					break;
 			}
 		}
