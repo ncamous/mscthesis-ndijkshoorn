@@ -95,3 +95,9 @@ float usarsim_msgparser_rad_to_mildeg(float f)
 
 	return f;
 }
+
+
+float usarsim_msgparser_ms2_to_mg(float f)
+{
+	return f * MS2_TO_MG;
+}

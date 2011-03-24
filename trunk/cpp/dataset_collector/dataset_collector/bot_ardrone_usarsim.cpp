@@ -150,10 +150,12 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 				}
 
 				case BOT_ARDRONE_SENSOR_ACCEL:
+					// Accelerations are received in m/s2
+					// a = dv/dt = (vfinal - vinitial) / (tfinal - tinitial) 
 					usarsim_msgparser_float3(&line, "{Acceleration", m->accel);
-					m->accel[0] *= 1000.0f; // m -> mm
-					m->accel[1] *= 1000.0f;
-					m->accel[2] *= 1000.0f;
+					m->accel[0] = usarsim_msgparser_ms2_to_mg(m->accel[0]); // m -> cm
+					m->accel[1] = usarsim_msgparser_ms2_to_mg(m->accel[1]);
+					m->accel[2] = usarsim_msgparser_ms2_to_mg(m->accel[2]);
 
 					usarsim_msgparser_float3(&line, "{Velocity", m->vel);
 					m->vel[0] *= 1000.0f; // cm -> mm
