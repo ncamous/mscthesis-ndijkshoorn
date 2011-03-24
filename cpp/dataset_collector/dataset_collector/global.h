@@ -27,7 +27,7 @@
 	#define BOT_ARDRONE_USARSIM_FRAME_REQDELAY 60
 
 	/* keyboard */
-	#define BOT_ARDRONE_KEYBOARD_VEL 1.0f
+	#define BOT_ARDRONE_KEYBOARD_VEL 4.0f
 
 
 extern bool exit_dataset_collector;

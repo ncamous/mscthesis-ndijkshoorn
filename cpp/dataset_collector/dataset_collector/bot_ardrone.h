@@ -47,8 +47,9 @@ struct bot_ardrone_measurement {
 	double time;
 	int altitude;		// mm
 
-	/* Acceleration: x, y, z mm/s^2 (x direction = F/B, y direction is L/R, z  direction is U/D
-	 * measurement from navdata->navdata_phys_measures.phys_gyros
+	/* Acceleration: x, y, z in mili-g (x direction = F/B, y direction is L/R, z direction is U/D
+	 * measurement from navdata->navdata_phys_measures.phys_accs
+	 * 1 g = 9.80665 m/s2 = 32.17405 ft/s2
 	 */
 	float accel[3];
 

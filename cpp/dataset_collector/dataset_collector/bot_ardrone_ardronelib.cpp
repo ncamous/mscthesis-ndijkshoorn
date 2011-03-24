@@ -117,9 +117,11 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 	m.or[1] = n->navdata_demo.phi;
 	m.or[2] = n->navdata_demo.psi;
 
+	// Accelerations are received in mg
+	// They are displayed in g: conversion gain is 1/1000
 	m.accel[0] = n->navdata_phys_measures.phys_accs[0]; // x-dir
 	m.accel[1] = n->navdata_phys_measures.phys_accs[1]; // y-dir
-	m.accel[2] = n->navdata_phys_measures.phys_accs[2] + /*980.0f*/ 1000.0f; // z-dir: add gravity*/
+	m.accel[2] = n->navdata_phys_measures.phys_accs[2] + 1000.0f; // z-dir, gravity = 1g */
 
 	m.vel[0] = n->navdata_demo.vx;
 	m.vel[1] = n->navdata_demo.vy;
