@@ -11,11 +11,11 @@ class slam
 public:
 	slam(void);
 	~slam(void);
-	void init_openCV();
+	void init_CV();
 	void process_frame(bot_ardrone_frame *f);
 	void find_features(IplImage *img, vector<cv::KeyPoint> &v);
 
-	bool openCV_init;
+	bool CV_ready;
 	IplImage *frame;
 	IplImage *gray;
 	cv::FeatureDetector *fd;

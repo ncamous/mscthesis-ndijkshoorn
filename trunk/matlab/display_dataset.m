@@ -9,7 +9,7 @@ data2_vel = zeros(1,4);
 
 filename = 'C:/Users/Nick/Documents/Thesis/code/cpp/dataset_collector/dataset_collector/dataset/005/output.yaml';
 
-[data2_alt, data2_or, data2_accel, data2_vel] = loadDataset(filename);
+%[data2_alt, data2_or, data2_accel, data2_vel] = loadDataset(filename);
 
 
 %%
@@ -65,7 +65,7 @@ title('Z acceleration');
 
 
 % VEL
-yrange = [-3000, 3000];
+yrange = [-4000, 4000];
 figure();
 
 subplot(3,1,1), plot(data_vel(:,1), data_vel(:,2)), hold on, plot(data2_vel(:,1), data2_vel(:,2), 'Color', 'red');
