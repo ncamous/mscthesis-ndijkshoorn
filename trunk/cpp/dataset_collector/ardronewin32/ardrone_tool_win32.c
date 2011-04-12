@@ -77,8 +77,8 @@ ardrone_tool_configure_data_t configure_data[] = {
   { "general:navdata_demo", "FALSE" },
   { "control:altitude_max", "10000" },
   { "control:control_vz_max", "1300" },
-  { "control:outdoor", "FALSE" },
-  { "video:camif_fps", "5" },
+  //{ "control:outdoor", "FALSE" },
+  //{ "video:camif_fps", "5" },
   //{ "control:flight_without_shell", "FALSE" },
   { NULL, NULL }
 };
@@ -183,6 +183,7 @@ C_RESULT ardrone_tool_setup_com( const char* ssid )
 C_RESULT ardrone_tool_init(int argc, char **argv)
 {
 	C_RESULT res;
+	api_control_gains_t gains;
 
 	//Fill structure AT codec and built the library AT commands.
 	ardrone_at_init( wifi_ardrone_ip, strlen( wifi_ardrone_ip) );
@@ -211,6 +212,10 @@ C_RESULT ardrone_tool_init(int argc, char **argv)
 
 	// switch to vertical camera
 	ardrone_at_zap(ZAP_CHANNEL_VERT);
+
+	// set gains
+	gains.pq_kp = 20000;
+	ardrone_at_set_control_gains(&gains);
 
 	return res;
 }
@@ -439,6 +444,7 @@ int ardronewin32()
 			//WSACleanup(); exit(-1);
 		}
 
+
 		res = ardrone_tool_setup_com( NULL );
 		if( FAILED(res) ){  PRINT("Wifi initialization failed.\n");  return -1;	}
 
@@ -459,7 +465,7 @@ int ardronewin32()
 	  WSACleanup();
 
 	/* Bye bye */
-	system("cls");
+	//system("cls");
 	return VP_SUCCEEDED(res) ? 0 : -1;
 }
 
