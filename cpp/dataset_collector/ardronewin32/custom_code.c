@@ -55,7 +55,7 @@ ARDrone application
 C_RESULT ardrone_tool_init_custom(int argc, char **argv)
 {
 	/* Change the console title */
-		vp_os_mutex_init(&consoleMutex);
+		//vp_os_mutex_init(&consoleMutex);
 		//system("cls");
 		//SetConsoleTitle(TEXT("Parrot A.R. Drone SDK Demo for Windows"));
 
@@ -130,25 +130,3 @@ END_THREAD_TABLE
 	HANDLE hStdout =  NULL;  /* Handle to the output console */
 	CONSOLE_SCREEN_BUFFER_INFO csbiInfo;				/* Information about the output console */
 
-
-
-void ARWin32Demo_SetConsoleCursor(int x,int y)
-{
-	if (hStdout==NULL) hStdout=GetStdHandle(STD_OUTPUT_HANDLE);
-
-	if (hStdout != INVALID_HANDLE_VALUE){
-			GetConsoleScreenBufferInfo(hStdout, &csbiInfo);
-			csbiInfo.dwCursorPosition.X=x;
-			csbiInfo.dwCursorPosition.Y=y;
-			SetConsoleCursorPosition(hStdout,csbiInfo.dwCursorPosition);
-	}
-}
-
-void ARWin32Demo_AcquireConsole(int x,int y)
-{
-	vp_os_mutex_lock(&consoleMutex);
-}
-void ARWin32Demo_ReleaseConsole(int x,int y)
-{
-	vp_os_mutex_unlock(&consoleMutex);
-}

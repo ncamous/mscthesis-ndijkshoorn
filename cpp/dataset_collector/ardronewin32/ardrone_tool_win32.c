@@ -211,11 +211,11 @@ C_RESULT ardrone_tool_init(int argc, char **argv)
 	ardrone_at_set_ui_misc( MiscVar[0], MiscVar[1], MiscVar[2], MiscVar[3] );
 
 	// switch to vertical camera
-	ardrone_at_zap(ZAP_CHANNEL_VERT);
+	//ardrone_at_zap(ZAP_CHANNEL_VERT);
 
 	// set gains
-	gains.pq_kp = 20000;
-	ardrone_at_set_control_gains(&gains);
+	//gains.pq_kp = 20000;
+	//ardrone_at_set_control_gains(&gains);
 
 	return res;
 }
@@ -461,7 +461,7 @@ int ardronewin32()
 
    /**/
       res = ardrone_tool_shutdown();
-    
+
 	  WSACleanup();
 
 	/* Bye bye */
