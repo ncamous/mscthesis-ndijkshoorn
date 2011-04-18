@@ -140,17 +140,17 @@ DEFINE_THREAD_ROUTINE( ardrone_control, nomParams )
 	uint32_t retry, current_ardrone_state;
 	int32_t next_index_in_queue;
 	ardrone_control_event_ptr_t  current_event;
-//#ifdef _WIN32
-//	int timeout_windows=1000;/*milliseconds*/
-//#else
+#ifdef _WIN32
+	int timeout_windows=1000;/*milliseconds*/
+#else
 	struct timeval tv;
-//#endif
+#endif
 	
 	retry = 0;
 	current_event = NULL;
 	
-	tv.tv_sec   = 1;
-	tv.tv_usec  = 0;
+	//tv.tv_sec   = 1;
+	//tv.tv_usec  = 0;
 	
 	DEBUG_PRINT_SDK("Thread control in progress...\n");
 	//control_socket.is_disable = TRUE;
@@ -182,11 +182,11 @@ DEFINE_THREAD_ROUTINE( ardrone_control, nomParams )
 					setsockopt((int32_t)control_socket.priv, 
 								SOL_SOCKET, 
 								SO_RCVTIMEO, 
-								//#ifdef _WIN32 
-								//	(const char*)&timeout_windows, sizeof(timeout_windows)
-								//#else
+								#ifdef _WIN32 
+									(const char*)&timeout_windows, sizeof(timeout_windows)
+								#else
 									(const char*)&tv, sizeof(tv)
-								//#endif
+								#endif
 								); 
 
 					//control_socket.is_disable = FALSE;

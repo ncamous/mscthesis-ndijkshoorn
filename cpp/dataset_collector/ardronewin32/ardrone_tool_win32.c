@@ -77,8 +77,8 @@ ardrone_tool_configure_data_t configure_data[] = {
   { "general:navdata_demo", "FALSE" },
   { "control:altitude_max", "10000" },
   { "control:control_vz_max", "1300" },
-  //{ "control:outdoor", "FALSE" },
-  //{ "video:camif_fps", "5" },
+  { "control:outdoor", "FALSE" },
+  { "video:camif_fps", "5" },
   //{ "control:flight_without_shell", "FALSE" },
   { NULL, NULL }
 };
@@ -183,7 +183,6 @@ C_RESULT ardrone_tool_setup_com( const char* ssid )
 C_RESULT ardrone_tool_init(int argc, char **argv)
 {
 	C_RESULT res;
-	api_control_gains_t gains;
 
 	//Fill structure AT codec and built the library AT commands.
 	ardrone_at_init( wifi_ardrone_ip, strlen( wifi_ardrone_ip) );
@@ -211,11 +210,7 @@ C_RESULT ardrone_tool_init(int argc, char **argv)
 	ardrone_at_set_ui_misc( MiscVar[0], MiscVar[1], MiscVar[2], MiscVar[3] );
 
 	// switch to vertical camera
-	//ardrone_at_zap(ZAP_CHANNEL_VERT);
-
-	// set gains
-	//gains.pq_kp = 20000;
-	//ardrone_at_set_control_gains(&gains);
+	ardrone_at_zap(ZAP_CHANNEL_VERT);
 
 	return res;
 }
@@ -457,7 +452,8 @@ int ardronewin32()
    /* Keeps sending AT commands to control the drone as long as 
 		everything is OK */
       while( VP_SUCCEEDED(res) && ardrone_tool_exit() == FALSE ) {
-        res = ardrone_tool_update();     }
+        res = ardrone_tool_update();
+	  }
 
    /**/
       res = ardrone_tool_shutdown();

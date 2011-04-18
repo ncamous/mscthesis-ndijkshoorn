@@ -54,7 +54,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ws2_32.lib;..\yaml-cpp-0.2.5\lib\yamlcppd.lib;ardronewin32.lib;ArDroneAPI.lib;dinput8.lib;dxguid.lib;comctl32.lib;dxerr.lib;winmm.lib;d3d9.lib;d3dx9.lib;$(OpenCVDir)\lib\opencv_core220d.lib;$(OpenCVDir)\lib\opencv_highgui220d.lib;$(OpenCVDir)\lib\opencv_legacy220d.lib;$(OpenCVDir)\lib\opencv_features2d220d.lib;$(OpenCVDir)\lib\opencv_imgproc220d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;..\yaml-cpp-0.2.5\lib\yamlcppd.lib;ardronewin32.lib;ArDroneAPI.lib;dinput8.lib;dxguid.lib;comctl32.lib;dxerr.lib;winmm.lib;d3d9.lib;d3dx9.lib;$(OpenCVDir)\lib\opencv_core220d.lib;$(OpenCVDir)\lib\opencv_highgui220d.lib;$(OpenCVDir)\lib\opencv_legacy220d.lib;$(OpenCVDir)\lib\opencv_features2d220d.lib;$(OpenCVDir)\lib\opencv_imgproc220d.lib;$(OpenCVDir)\lib\opencv_calib3d220d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

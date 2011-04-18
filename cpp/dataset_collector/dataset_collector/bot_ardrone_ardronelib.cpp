@@ -140,7 +140,7 @@ void bot_ardrone_ardronelib::process_frame(unsigned char* rgbtexture, int w, int
 	// size check
 	if (w*h*3 + 4 > BOT_ARDRONE_FRAME_BUFSIZE)
 	{
-		//printf("ARDRONE FRAME TO LARGE... SKIPPING FRAME\n");
+		printf("ARDRONE FRAME TO LARGE... SKIPPING FRAME (w: %i, h: %i\n", w, h);
 		return;
 	}
 
