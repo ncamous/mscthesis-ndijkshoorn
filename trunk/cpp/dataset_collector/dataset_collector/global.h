@@ -5,7 +5,7 @@
 #define PRINT_DEBUG false
 
 /* SLAM */
-#define SLAM_ENABLED false
+#define SLAM_ENABLED true
 
 
 /* USARSIM */

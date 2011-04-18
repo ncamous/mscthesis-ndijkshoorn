@@ -122,11 +122,3 @@ BEGIN_THREAD_TABLE
   THREAD_TABLE_ENTRY( video_stage, 20 )
   //THREAD_TABLE_ENTRY( directx_renderer_thread, 20 )
 END_THREAD_TABLE
-
-
-
-/* Function to change the cursor place in the console window */
-
-	HANDLE hStdout =  NULL;  /* Handle to the output console */
-	CONSOLE_SCREEN_BUFFER_INFO csbiInfo;				/* Information about the output console */
-

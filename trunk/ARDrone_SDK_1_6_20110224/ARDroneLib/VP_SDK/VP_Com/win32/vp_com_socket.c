@@ -21,10 +21,9 @@ typedef int socklen_t;
 C_RESULT vp_com_open_socket(vp_com_socket_t* sck, Read* read, Write* write)
 {
   C_RESULT res = VP_COM_OK;
-	
+
   BOOL reuseaddroption = TRUE;
   BOOL exclusiveaddroption = FALSE;
-
 
   SOCKET s = -1;
   struct sockaddr_in name = { 0 };
