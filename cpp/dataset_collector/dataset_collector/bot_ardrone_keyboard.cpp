@@ -17,6 +17,13 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 
 	switch (kd->vkCode)
 	{
+		case 83:
+			for(i=0; i<keyboard_nr_bots; i++)
+			{
+				keyboard_bot[i]->enable_stitching = true;
+			}
+			break;
+
 		case VK_OEM_PLUS:
 			if (wParam == WM_KEYDOWN)
 			{

@@ -28,11 +28,13 @@ void slam::init_CV()
 {
 	CV_ready = true;
 
+	frame_counter = 0;
+
 	/*
 	SurfFeatureDetector( double hessianThreshold=400., int octaves=3, int octaveLayers=4 );
 	*/
 
-	fd = new SurfFeatureDetector(2500., 3, 4);
+	fd = new SurfFeatureDetector(/*2500.*/ 1500., 3, 4);
 
 
 	/*
@@ -54,12 +56,12 @@ void slam::init_CV()
 
 	de = new SurfDescriptorExtractor();
 
-	dm = new BruteForceMatcher<L2<float> >();
+	//dm = new BruteForceMatcher<Hamming>();
 
 	canvas = cvCreateImage( cvSize(800,800), 8, 3 );
 
-	tmp_xoffset = 0;
-	tmp_yoffset = 0;
+	tmp_xoffset = 300;
+	tmp_yoffset = 300;
 
 	cvNamedWindow("Image:", CV_WINDOW_AUTOSIZE);
 }
@@ -94,7 +96,7 @@ void slam::process_frame(bot_ardrone_frame *f)
 	// output image
 	//Mat out;
 	// draw grayscale image
-	//cvCvtColor(frame, gray, CV_RGB2GRAY);
+	cvCvtColor(frame, gray, CV_RGB2GRAY);
 
 	//drawKeypoints(gray, keypoints, out);
 
@@ -103,112 +105,118 @@ void slam::process_frame(bot_ardrone_frame *f)
 	Mat descriptors;
     de->compute(gray, keypoints, descriptors);
 
-	if (prev_frame_descriptors == NULL)
+	if (frame_counter > 0)
 	{
-		prev_frame_keypoints = keypoints;
-		prev_frame_descriptors = &descriptors;
-		return;
-	}
+		double ransacReprojThreshold = 3.0;
 
-	Mat H12;
-	vector<DMatch> matches;
-	double ransacReprojThreshold = 3.0;
-	simpleMatching(dm, descriptors, *prev_frame_descriptors, matches);
+		//simpleMatching(descriptors, prev_frame_descriptors, matches);
+		vector<DMatch> matches;
+		dm.match(descriptors, prev_frame_descriptors, matches);
 
+		printf("frame 1 has %i keypoints\n", prev_frame_keypoints.size());
+		printf("frame 2 has %i keypoints\n", keypoints.size());
+		printf("found %i matches\n", matches.size());
 
-	/* calculate transformation (RANSAC) */
-	double tt = (double)cvGetTickCount();
+		if (matches.size() < 4)
+			return;
 
-	vector<int> queryIdxs( matches.size() ), trainIdxs( matches.size() );
-    for( size_t i = 0; i < matches.size(); i++ )
-    {
-        queryIdxs[i] = matches[i].queryIdx;
-        trainIdxs[i] = matches[i].trainIdx;
-    }
+		/* calculate transformation (RANSAC) */
+		double tt = (double)cvGetTickCount();
 
-    if( ransacReprojThreshold >= 0 )
-    {
-        printf("Computing homography (RANSAC)...\n");
+		vector<int> queryIdxs( matches.size() ), trainIdxs( matches.size() );
+		for( size_t i = 0; i < matches.size(); i++ )
+		{
+			queryIdxs[i] = matches[i].queryIdx;
+			trainIdxs[i] = matches[i].trainIdx;
+		}
+	
+		printf("Computing homography (RANSAC)...\n");
 
-        vector<Point2f> points1;
+		vector<Point2f> points1;
 		KeyPoint::convert(keypoints, points1, queryIdxs);
 
-        vector<Point2f> points2;
-
-		KeyPoint::convert(prev_frame_keypoints, points2);
-
-        H12 = findHomography( Mat(points1), Mat(points2), CV_RANSAC, ransacReprojThreshold );
-    }
-
-/*
-    Mat drawImg;
-    if( !H12.empty() ) // filter outliers
-    {
-        vector<char> matchesMask( matches.size(), 0 );
-
-        vector<Point2f> points1;
-		KeyPoint::convert(keypoints, points1, queryIdxs);
-        vector<Point2f> points2;
+		vector<Point2f> points2;
 		KeyPoint::convert(prev_frame_keypoints, points2, trainIdxs);
 
-        Mat points1t;
-		perspectiveTransform(Mat(points1), points1t, H12);
+		//CvMat CvHomography = *cvCreateMat(3, 3, CV_32F);
+		//cvSetIdentity(&CvHomography);
+		Mat homography = findHomography( Mat(points1), Mat(points2), CV_RANSAC, ransacReprojThreshold );
+		CvMat CvHomography = homography;
 
-        for( size_t i1 = 0; i1 < points1.size(); i1++ )
-        {
-            if( norm(points2[i1] - points1t.at<Point2f>((int)i1,0)) < 4 ) // inlier
-                matchesMask[i1] = 1;
-        }
+		//dumpMatrix(homography);
+
+
+		/*CvPoint2D32f srcQuad[4], dstQuad[4];
+		CvMat* warp_matrix = cvCreateMat(3,3,CV_32FC1);
+
+		cvGetPerspectiveTransform(
+			srcQuad,
+			dstQuad,
+			warp_matrix
+		);*/
+
+		tt = (double)cvGetTickCount() - tt;
+
+		//printf( "RANASC transformation time = %gms\n", tt/(cvGetTickFrequency()*1000.));
+
+
+		/* transform current frame */
+		int incX, incY;
+		incX = (int) cvGetReal2D(&CvHomography, 0, 2);
+		incY = (int) cvGetReal2D(&CvHomography, 1, 2);
+
+		if (incX > 40 || incY > 40)
+			return;
+
+		tmp_xoffset += incX;
+		tmp_yoffset += incY;
+
+		if (
+			(tmp_xoffset + frame->width) > 800 ||
+			(tmp_yoffset + frame->height) > 800 ||
+			tmp_xoffset < 0 ||
+			tmp_yoffset < 0)
+			return;
+
+		CvHomography.data.fl[2] = CvHomography.data.fl[5] = 0.0f;
+
+		//IplImage *dst;
+		//dst = cvCloneImage(frame);
+		//dst->origin = frame->origin;
+		//cvZero(dst);
+		IplImage *dst = cvCreateImage(cvSize(frame->width, frame->height), IPL_DEPTH_8U, 3);
+
+		cvWarpPerspective(frame, dst, &CvHomography, CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS, cvScalarAll(0));
+
+		// OK?
+		frame = dst;
 	}
-*/
-
-	tt = (double)cvGetTickCount() - tt;
-
-	printf( "RANASC transformation time = %gms\n", tt/(cvGetTickFrequency()*1000.));
 
 
 	/* store current frame as previous frame */
 	prev_frame_keypoints = keypoints;
-	prev_frame_descriptors = &descriptors;
+	prev_frame_descriptors = descriptors;
+	frame_counter++;
 
-	/* 
-	cvWarpPerspective( const CvArr* src, CvArr* dst, const CvMat* map_matrix,
-                        int flags=CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS,
-                        CvScalar fillval=cvScalarAll(0) );
-	*/
-	IplImage out;
-	cvWarpPerspective( frame, out, H12);
 
+	/* merge with cancas */
 	int x, y;
+	CvScalar s;
 
 	for(x=0; x < frame->width; x++)
     {
         for(y=0;y < frame->height; y++)
         {
-            cvSet2D(canvas, y + tmp_yoffset, x + tmp_xoffset, cvGet2D(frame, y, x));
+			s = cvGet2D(frame, y, x);
+			if (s.val[0] != 0.0 || s.val[1] != 0.0 || s.val[2] != 0.0)
+				cvSet2D(canvas, y + tmp_yoffset, x + tmp_xoffset, s);
         }
     }
-
-	//tmp_xoffset += 10;
-	tmp_yoffset += 10;
 
 	imshow("Image:", canvas);
 	/**/
 
 	cvWaitKey(2);
-}
-
-
-void slam::simpleMatching(DescriptorMatcher *descriptorMatcher, const Mat& descriptors1, const Mat& descriptors2, vector<DMatch>& matches12)
-{
-	double tt = (double)cvGetTickCount();
-
-    vector<DMatch> matches;
-    descriptorMatcher->match(descriptors1, descriptors2, matches12);
-
-	tt = (double)cvGetTickCount() - tt;
-
-	printf( "Matching time = %gms\n", tt/(cvGetTickFrequency()*1000.));
 }
 
 
@@ -222,3 +230,45 @@ void slam::find_features(IplImage *img, vector<cv::KeyPoint> &v)
 
 	printf( "Extraction time = %gms\n", tt/(cvGetTickFrequency()*1000.));
 }
+
+void slam::PrintMat(CvMat *A)
+{
+int i, j;
+for (i = 0; i < A->rows; i++)
+{
+printf("\n"); 
+switch (CV_MAT_DEPTH(A->type))
+{
+case CV_32F:
+case CV_64F:
+for (j = 0; j < A->cols; j++)
+printf ("%8.3f ", (float)cvGetReal2D(A, i, j));
+break;
+case CV_8U:
+case CV_16U:
+for(j = 0; j < A->cols; j++)
+printf ("%6d",(int)cvGetReal2D(A, i, j));
+break;
+default:
+break;
+}
+}
+printf("\n");
+}
+
+void slam::dumpMatrix(const Mat &mat) { 
+    const int t = mat.type(); 
+    for (int i = 0; i < mat.rows; i++) { 
+        for (int j = 0; j < mat.cols; j++) { 
+            switch (t) { 
+            case CV_32F: 
+                printf("%6.4f, ", mat.at<float> (i, j)); 
+                break; 
+            case CV_64F: 
+                printf("%6.4f, ", mat.at<double> (i, j)); 
+                break; 
+            } 
+        } 
+        printf("\n"); 
+    } 
+} 

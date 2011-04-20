@@ -39,6 +39,7 @@ bot_ardrone::bot_ardrone(int botinterface)
 	recorder = NULL;
 	record = playback = false;
 	battery = NULL;
+	enable_stitching = false;
 
 	control_reset();
 
@@ -75,8 +76,6 @@ void bot_ardrone::control_set(int type, int opt, float val)
 	switch(type)
 	{
 		case BOT_ARDRONE_Velocity:
-			//val = max(-1.0f, val);
-			//val = min(1.0f, val);
 			control.velocity[opt] = val;
 			control.state = BOT_ARDRONE_STATE_FLY;
 			break;
@@ -118,6 +117,8 @@ void bot_ardrone::control_update(bot_ardrone_control *c)
 
 	if (i != NULL)
 		i->control_update((void*) &control);
+
+	// if (SLAM_USE_QUEUE)
 }
 
 
@@ -127,6 +128,7 @@ void bot_ardrone::control_reset()
 	control.velocity[BOT_ARDRONE_LinearVelocity] = 0.0;
 	control.velocity[BOT_ARDRONE_LateralVelocity] = 0.0;
 	control.velocity[BOT_ARDRONE_RotationalVelocity] = 0.0;
+
 	if (control.state == BOT_ARDRONE_STATE_FLY)
 		control.state = BOT_ARDRONE_STATE_HOVER;
 }
@@ -156,6 +158,8 @@ void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 
 	if (record)
 		recorder->record_measurement(m);
+
+	// if(SLAM_USE_QUEUE)
 }
 
 
@@ -167,11 +171,26 @@ void bot_ardrone::frame_received(bot_ardrone_frame *f)
 	if (PRINT_DEBUG)
 		printf("%f - ARDRONE: frame received: %s!\n", f->time, f->filename);
 
+	// time since last frame
+	double diffticks = ((double)clock() - lastframe_time) / CLOCKS_PER_SEC;
+	if (diffticks < 0.1)
+	{
+		printf("Skipping frame\n");
+		return;
+	}
+
+	lastframe_time = clock();
+
 	if (record && BOT_ARDRONE_RECORD_FRAMES)
 		recorder->record_frame(f);
 
-	if (SLAM_ENABLED)
-		slamcontroller->process_frame(f);
+	if (SLAM_ENABLED && enable_stitching)
+	{
+		if (SLAM_USE_QUEUE)
+			slam_queue.push(1);
+		else
+			slamcontroller->process_frame(f);
+	}
 }
 
 

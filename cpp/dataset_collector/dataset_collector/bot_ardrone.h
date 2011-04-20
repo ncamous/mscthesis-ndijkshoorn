@@ -5,7 +5,9 @@
 #include "bot_ardrone_ardronelib.h"
 #include "bot_ardrone_recorder.h"
 #include "slam.h"
+
 #include <time.h>
+#include <queue>
 
 #define BOT_ARDRONE_STATE_LANDED 0 // landed
 #define BOT_ARDRONE_STATE_HOVER 1 // hover
@@ -108,5 +110,10 @@ public:
 	bot_ardrone_recorder *recorder;
 	bool record, playback;
 	int battery;		// percentage (0-100%)
+
+	// slam
+	clock_t lastframe_time;
 	slam *slamcontroller;
+	queue<int> slam_queue;
+	bool enable_stitching;
 };
