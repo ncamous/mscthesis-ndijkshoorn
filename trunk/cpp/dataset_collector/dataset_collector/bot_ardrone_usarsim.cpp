@@ -204,7 +204,7 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 			reset_frame(frame);
 			frame_socket->buffer = frame->data;
 
-			Sleep(BOT_ARDRONE_USARSIM_FRAME_REQDELAY);
+			Sleep(BOT_ARDRONE_USARSIM_FRAME_REQDELAY - 20);
 			frame_socket->send("OK");
 			Sleep(20);
 		}
