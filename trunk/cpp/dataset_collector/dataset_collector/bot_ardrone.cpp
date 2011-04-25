@@ -63,6 +63,8 @@ bot_ardrone::bot_ardrone(int botinterface)
 
 	/* SLAM */
 	slamcontroller = new slam();
+	if (SLAM_ENABLED)
+		slamcontroller->run();
 }
 
 
@@ -172,12 +174,12 @@ void bot_ardrone::frame_received(bot_ardrone_frame *f)
 		printf("%f - ARDRONE: frame received: %s!\n", f->time, f->filename);
 
 	// time since last frame
-	double diffticks = ((double)clock() - lastframe_time) / CLOCKS_PER_SEC;
-	if (diffticks < 0.1)
+	/*double diffticks = ((double)clock() - lastframe_time) / CLOCKS_PER_SEC;
+	if (diffticks < BOT_ARDRONE_MIN_FRAME_INTERVAL)
 	{
 		printf("Skipping frame\n");
-		return;
-	}
+		//return;
+	}*/
 
 	lastframe_time = clock();
 
@@ -187,9 +189,16 @@ void bot_ardrone::frame_received(bot_ardrone_frame *f)
 	if (SLAM_ENABLED && enable_stitching)
 	{
 		if (SLAM_USE_QUEUE)
-			slam_queue.push(1);
+		{
+			slam_queue_item queue_item = {FRAME, f};
+			slamcontroller->slam_queue.push(queue_item);
+			//printf("sending slam_queue_pushed, queue size: %i\n", slamcontroller->slam_queue.size());
+			SetEvent(slamcontroller->slam_queue_pushed);
+		}
 		else
+		{
 			slamcontroller->process_frame(f);
+		}
 	}
 }
 
