@@ -29,7 +29,7 @@ void bot_ardrone_usarsim::init(void)
 
 	// ROBOCUP 2006
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -12600.0,800.0,1000.0}\r\n");
-	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -73.0,5.6,-4.0}\r\n");
+	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -19.3,57.1,-4.0}\r\n");
 
 	control_send("SET {Type Viewports} {Config SingleView} {Viewport1 Camera2}\r\n");
 	//control_send("SET {Type Camera} {Robot ARDrone} {Name Camera2} {Client 10.0.0.2}\r\n");
@@ -201,12 +201,17 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 
 			bot->frame_received(frame);
 
-			reset_frame(frame);
+			//reset_frame(frame);
+			frame = new bot_ardrone_frame;
 			frame_socket->buffer = frame->data;
 
-			Sleep(BOT_ARDRONE_USARSIM_FRAME_REQDELAY - 20);
+			if (bot->slamcontroller->slam_queue.empty())
+				Sleep(BOT_ARDRONE_USARSIM_FRAME_REQDELAY - 20);
+			else
+				WaitForSingleObject(bot->slamcontroller->slam_queue_empty, INFINITE);
+
 			frame_socket->send("OK");
-			Sleep(20);
+			Sleep(20); // wait a bit before receiving new frame data
 		}
 	}
 }

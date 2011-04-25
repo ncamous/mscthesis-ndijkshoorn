@@ -6,7 +6,7 @@
 
 /* SLAM */
 #define SLAM_ENABLED true
-#define SLAM_USE_QUEUE false // use a queue to store the controldata and sensor data
+#define SLAM_USE_QUEUE true // use a queue to store the controldata and sensor data
 
 
 /* USARSIM */
@@ -21,11 +21,12 @@
 #define USARSIM_FRAME_EXT "raw"
 #define BOT_ARDRONE_BATTERYLIFE 720 // 720s, 12 minutes
 #define BOT_ARDRONE_RECORD_FRAMES false
+#define BOT_ARDRONE_MIN_FRAME_INTERVAL 0.1
 
 	/* USARSim */
 	#define BOT_ARDRONE_USARSIM_FRAME_BLOCKSIZE 8000
 	#define BOT_ARDONE_USARSIM_CONTROL_BUFSIZE 400
-	#define BOT_ARDRONE_USARSIM_FRAME_REQDELAY 100 // at least 20 ms
+	#define BOT_ARDRONE_USARSIM_FRAME_REQDELAY 200 // at least 20 ms
 
 	/* keyboard */
 	#define BOT_ARDRONE_KEYBOARD_VEL 0.5f
