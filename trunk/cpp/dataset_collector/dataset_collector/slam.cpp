@@ -42,15 +42,13 @@ static DWORD WINAPI process_thread(void* Param)
 
 	slam_queue_item *item;
 
-	/*
-    IplImage* img1 = cvLoadImage("stitch3.jpg");
-    IplImage* img2 = cvLoadImage("stitch2.jpg");
-	IplImage* img3 = cvLoadImage("stitch1.jpg");
+    //IplImage* img1 = cvLoadImage("stitch11.jpg");
+    //IplImage* img2 = cvLoadImage("stitch10.jpg");
+	//IplImage* img3 = cvLoadImage("stitch1.jpg");
 
-	This->process_frame_test(img1);
-	This->process_frame_test(img2);
-	This->process_frame_test(img3);
-	*/
+	//This->process_frame_test(img1);
+	//This->process_frame_test(img2);
+	//This->process_frame_test(img3);
 
 	while (!exit_dataset_collector)
 	{
@@ -78,7 +76,7 @@ static DWORD WINAPI process_thread(void* Param)
 				break;
 			
 			case FRAME:
-				This->process_frame( (bot_ardrone_frame*) item->object );
+				This->process_frame( (bot_ardronBOT_EVENT_FRAME*) item->object );
 				break;
 		}
 	}
@@ -93,7 +91,7 @@ void slam::init_CV()
 
 	frame_counter = 0;
 
-	fd = new SurfFeatureDetector(/*2500.*/ 500., 3, 4);
+	fd = new SurfFeatureDetector(SLAM_SURF_HESSIANTHRESHOLD, 3, 4);
 
 	de = new SurfDescriptorExtractor();
 
@@ -104,7 +102,7 @@ void slam::init_CV()
 	cvNamedWindow("Image:", CV_WINDOW_AUTOSIZE);
 }
 
-void slam::process_frame(bot_ardrone_frame *f)
+void slam::process_frame(bot_ardronBOT_EVENT_FRAME *f)
 {
 	if (!CV_ready)
 		init_CV();
@@ -123,8 +121,10 @@ void slam::process_frame(bot_ardrone_frame *f)
 		gray = cvCreateImage(cvSize(w, h), IPL_DEPTH_8U, 1);
 	}
 
-	int posX, posY;
-	posX = posY = 300;
+	double posX, posY;
+	IplImage *dst;
+	posX = posY = 300.0;
+
 
 	frame->imageData = &f->data[4];
 
@@ -138,7 +138,6 @@ void slam::process_frame(bot_ardrone_frame *f)
 	//Mat out;
 	// draw grayscale image
 	cvCvtColor(frame, gray, CV_RGB2GRAY);
-
 	//drawKeypoints(gray, keypoints, out);
 
 
@@ -150,7 +149,6 @@ void slam::process_frame(bot_ardrone_frame *f)
 	{
 		double ransacReprojThreshold = 3.0;
 
-		//simpleMatching(descriptors, prev_frame_descriptors, matches);
 		vector<DMatch> matches;
 		dm.match(descriptors, prev_frame_descriptors, matches);
 
@@ -181,31 +179,59 @@ void slam::process_frame(bot_ardrone_frame *f)
 
 		prev_frame_h *= homography;
 
-		Mat copy = prev_frame_h.clone();
-		CvMat CvHomography = copy;
+		Mat h = prev_frame_h.clone();
+		double *h_data = (double*) h.data;
 
 
 		/* transform current frame */
-		posX += (int) cvGetReal2D(&CvHomography, 0, 2);
-		posY += (int) cvGetReal2D(&CvHomography, 1, 2);
+		posX += h_data[2];
+		posY += h_data[5];
+		h_data[2] = h_data[5] = 0.0;
 
-		if (
-			(posX + frame->width) > 800 ||
-			(posY + frame->height) > 800 ||
-			posX < 0 ||
-			posY < 0)
+
+		/* get transformed corners to calc dest image size and translation */
+		double corners[] = {
+			0.0, 0.0, 0.0,
+            frame->width, 0.0, 0.0,
+            frame->width, frame->height, 0.0,
+			0.0, frame->height, 0.0,
+		};
+
+		Mat coords = Mat(4, 3, CV_64F, corners);
+		Mat tc = coords * h;
+		double *tc_data = (double*) tc.data;
+
+		double minX, maxX, minY, maxY;
+		minX = min(min(min(tc_data[0], tc_data[3]), tc_data[6]), tc_data[9]);
+		maxX = max(max(max(tc_data[0], tc_data[3]), tc_data[6]), tc_data[9]);
+		minY = min(min(min(tc_data[1], tc_data[4]), tc_data[7]), tc_data[10]);
+		maxY = max(max(max(tc_data[1], tc_data[4]), tc_data[7]), tc_data[10]);
+
+		/* default height */
+		CvSize dst_size = cvSize(max(frame->width, int(maxX - minX)), max(frame->height, int(maxY - minY)));
+
+		/* translate */
+		h_data[2] -= minX;
+		h_data[5] -= minY;
+
+		posX += minX;
+		posY += minY;
+
+		if (posX + dst_size.width > 800.0 || posX < 0.0 || posY + dst_size.height > 800.0 || posY < 0.0)
 			return;
 
-		CvHomography.data.fl[2] = CvHomography.data.fl[5] = 0.0f;
+		dst = cvCreateImage(dst_size, IPL_DEPTH_8U, 3);
+	
+		// copy from canvas to dest image
+		cvGetSubRect( (CvMat*)canvas, (CvMat*)dst, cvRect(int(posX), int(posY), dst_size.width, dst_size.height));
 
-		IplImage *dst = cvCreateImage(cvSize(frame->width, frame->height), IPL_DEPTH_8U, 3);
-
-		cvWarpPerspective(frame, dst, &CvHomography, CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS, cvScalarAll(0));
-
-		// OK?
-		frame = dst;
+		CvMat CvHomography = h;
+		cvWarpPerspective(frame, dst, &CvHomography, CV_INTER_LINEAR);
 	}
-
+	else
+	{
+		dst = frame;
+	}
 
 	/* store current frame as previous frame */
 	prev_frame_keypoints = keypoints;
@@ -215,21 +241,22 @@ void slam::process_frame(bot_ardrone_frame *f)
 
 	/* merge with cancas */
 	int x, y;
-	CvScalar s;
 
-	for(x=0; x < frame->width; x++)
+	/* SLOW?
+	cvSetImageROI(canvas, cvRect(posX, posY, dst->width, dst->height));
+	cvAddWeighted(canvas, 0.0, dst, 1.0, 0.0, canvas);
+	cvResetImageROI(canvas);
+	*/
+
+	for(x=0; x < dst->width; x++)
     {
-        for(y=0;y < frame->height; y++)
+        for(y=0;y < dst->height; y++)
         {
-			s = cvGet2D(frame, y, x);
-			if (s.val[0] != 0.0 || s.val[1] != 0.0 || s.val[2] != 0.0)
-				cvSet2D(canvas, y + posY, x + posX, s);
+			cvSet2D(canvas, y + int(posY), x + int(posX), cvGet2D(dst, y, x));
         }
     }
 
 	imshow("Image:", canvas);
-	/**/
-
 	cvWaitKey(2);
 }
 
@@ -247,7 +274,7 @@ void slam::process_frame_test(IplImage *f)
 		gray = cvCreateImage(cvSize(w, h), IPL_DEPTH_8U, 1);
 	}
 
-	int posX, posY;
+	double posX, posY;
 	posX = posY = 300;
 
 	frame = f;
@@ -300,30 +327,51 @@ void slam::process_frame_test(IplImage *f)
 		vector<Point2f> points2;
 		KeyPoint::convert(prev_frame_keypoints, points2, trainIdxs);
 
-
 		Mat homography = findHomography( Mat(points1), Mat(points2), CV_RANSAC, ransacReprojThreshold );
 
 		prev_frame_h *= homography;
 
-		Mat copy = prev_frame_h.clone();
-		CvMat CvHomography = copy;
+		Mat h = prev_frame_h.clone();
+		double *h_data = (double*) h.data;
 
 
 		/* transform current frame */
-		posX += (int) cvGetReal2D(&CvHomography, 0, 2);
-		posY += (int) cvGetReal2D(&CvHomography, 1, 2);
+		posX += h_data[2];
+		posY += h_data[5];
+		h_data[2] = h_data[5] = 0.0;
 
-		if (
-			(posX + frame->width) > 800 ||
-			(posY + frame->height) > 800 ||
-			posX < 0 ||
-			posY < 0)
-			return;
 
-		CvHomography.data.fl[2] = CvHomography.data.fl[5] = 0.0f;
+		/* get transformed corners to calc dest image size and translation */
+		double corners[] = {
+			0.0, 0.0, 0.0,
+            frame->width, 0.0, 0.0,
+            frame->width, frame->height, 0.0,
+			0.0, frame->height, 0.0,
+		};
 
-		IplImage *dst = cvCreateImage(cvSize(frame->width, frame->height), IPL_DEPTH_8U, 3);
+		Mat coords = Mat(4, 3, CV_64F, corners);
+		Mat tc = coords * h;
+		double *tc_data = (double*) tc.data;
 
+		double minX, maxX, minY, maxY;
+		minX = min(min(min(tc_data[0], tc_data[3]), tc_data[6]), tc_data[9]);
+		maxX = max(max(max(tc_data[0], tc_data[3]), tc_data[6]), tc_data[9]);
+		minY = min(min(min(tc_data[1], tc_data[4]), tc_data[7]), tc_data[10]);
+		maxY = max(max(max(tc_data[1], tc_data[4]), tc_data[7]), tc_data[10]);
+
+		/* default height */
+		CvSize dst_size = cvSize((int) (maxX - minX), (int) (maxY - minY));
+
+		/* translate */
+		h_data[2] -= minX;
+		h_data[5] -= minY;
+
+		posX += minX;
+		posY += minY;
+
+
+		IplImage *dst = cvCreateImage(dst_size, IPL_DEPTH_8U, 3);
+		CvMat CvHomography = h;
 		cvWarpPerspective(frame, dst, &CvHomography, CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS, cvScalarAll(0));
 
 		// OK?
@@ -347,7 +395,7 @@ void slam::process_frame_test(IplImage *f)
         {
 			s = cvGet2D(frame, y, x);
 			if (s.val[0] != 0.0 || s.val[1] != 0.0 || s.val[2] != 0.0)
-				cvSet2D(canvas, y + posY, x + posX, s);
+				cvSet2D(canvas, y + (int) posY, x + (int) posX, s);
         }
     }
 

@@ -36,6 +36,6 @@ int main(int argc, char *argv[])
 
 
 
-	Sleep(100);
+	Sleep(10000);
 	return 0;
 }

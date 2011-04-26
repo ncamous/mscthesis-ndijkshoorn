@@ -82,6 +82,7 @@
     <ClCompile Include="usarsim_msgparser.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="bot.h" />
     <ClInclude Include="botinterface.h" />
     <ClInclude Include="bot_ardrone_ardronelib.h" />
     <ClInclude Include="bot_ardrone_keyboard.h" />

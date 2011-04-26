@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bot.h"
 #include "botinterface.h"
 #include "bot_ardrone_usarsim.h"
 #include "bot_ardrone_ardronelib.h"
@@ -7,14 +8,6 @@
 #include "slam.h"
 
 #include <time.h>
-
-#define BOT_ARDRONE_STATE_LANDED 0 // landed
-#define BOT_ARDRONE_STATE_HOVER 1 // hover
-#define BOT_ARDRONE_STATE_FLY 2 // flying
-
-#define BOT_ARDRONE_EVENT_CONTROL 0
-#define BOT_ARDRONE_EVENT_MEASUREMENT 1
-#define BOT_ARDRONE_EVENT_FRAME 2
 
 #define BOT_ARDRONE_Velocity 0
 #define BOT_ARDRONE_AltitudeVelocity 0
@@ -26,8 +19,8 @@
 #define BOT_ARDRONE_INTERFACE_USARSIM 1
 #define BOT_ARDRONE_INTERFACE_ARDRONELIB 2
 
-#define BOT_ARDRONE_MEASUREMENT_SEN 0
-#define BOT_ARDRONE_MEASUREMENT_STA 1
+#define BOT_ARDRONBOT_EVENT_MEASUREMENT_SEN 0
+#define BOT_ARDRONBOT_EVENT_MEASUREMENT_STA 1
 
 #define BOT_ARDRONE_SENSOR_UNKNOW 0
 #define BOT_ARDRONE_SENSOR_GT 1
@@ -36,15 +29,15 @@
 #define BOT_ARDRONE_SENSOR_ACCEL 4
 
 
-struct bot_ardrone_control {
+struct bot_ardronBOT_EVENT_CONTROL {
 	double time;
 	float velocity[4];
-	int state;
+	bot_state state;
 
-	bot_ardrone_control();
+	bot_ardronBOT_EVENT_CONTROL();
 };
 
-struct bot_ardrone_measurement {
+struct bot_ardronBOT_EVENT_MEASUREMENT {
 	double time;
 	int altitude;		// mm
 
@@ -71,10 +64,10 @@ struct bot_ardrone_measurement {
 	float gt_loc[3];
 	float gt_or[3];
 
-	bot_ardrone_measurement();
+	bot_ardronBOT_EVENT_MEASUREMENT();
 };
 
-struct bot_ardrone_frame {
+struct bot_ardronBOT_EVENT_FRAME {
 	double time;
 	char *data;
 	char *data_start;
@@ -82,7 +75,7 @@ struct bot_ardrone_frame {
 	int dest_size;
 	char filename[25];
 
-	bot_ardrone_frame();
+	bot_ardronBOT_EVENT_FRAME();
 };
 
 class bot_ardrone
@@ -93,19 +86,19 @@ public:
 	void control_set(int type, int opt, float val);
 	float control_get(int type, int opt);
 	void control_update();
-	void control_update(bot_ardrone_control *c);
+	void control_update(bot_ardronBOT_EVENT_CONTROL *c);
 	void control_reset();
 	void take_off();
 	void land();
-	void measurement_received(bot_ardrone_measurement *m);
-	void frame_received(bot_ardrone_frame *f);
+	void measurement_received(bot_ardronBOT_EVENT_MEASUREMENT *m);
+	void frame_received(bot_ardronBOT_EVENT_FRAME *f);
 	static double get_clock();
 	void set_record();
 	void set_playback(char *dataset);
 
 	static clock_t start_clock;
 	botinterface *i;
-	bot_ardrone_control control;
+	bot_ardronBOT_EVENT_CONTROL control;
 	bot_ardrone_recorder *recorder;
 	bool record, playback;
 	int battery;		// percentage (0-100%)
