@@ -1,18 +1,5 @@
 #pragma once
 
-#include "botinterface.h"
+enum bot_state { BOT_STATE_LANDED, BOT_STATE_HOVER, BOT_STATE_FLY };
 
-
-class bot
-{
-public:
-	bot(botinterface *i);
-	~bot(void);
-	void bot::set(int opt, float val);
-	void bot::reset();
-
-	botinterface *i;
-
-protected:
-	void bot::update();
-};
+enum bot_event { BOT_EVENT_CONTROL, BOT_EVENT_MEASUREMENT, BOT_EVENT_FRAME };

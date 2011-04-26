@@ -9,25 +9,25 @@ clock_t bot_ardrone::start_clock = 0;
 
 #undef memset
 
-bot_ardrone_control::bot_ardrone_control()
+bot_ardronBOT_EVENT_CONTROL::bot_ardronBOT_EVENT_CONTROL()
 {
-	memset(this, 0, sizeof(bot_ardrone_control));
-	state = BOT_ARDRONE_STATE_LANDED;
+	memset(this, 0, sizeof(bot_ardronBOT_EVENT_CONTROL));
+	state = BOT_STATE_LANDED;
 }
 
 
-bot_ardrone_measurement::bot_ardrone_measurement()
+bot_ardronBOT_EVENT_MEASUREMENT::bot_ardronBOT_EVENT_MEASUREMENT()
 {
-	memset(this, 0, sizeof(bot_ardrone_measurement));
+	memset(this, 0, sizeof(bot_ardronBOT_EVENT_MEASUREMENT));
 	time = bot_ardrone::get_clock();
 	usarsim = false;
 }
 
 
-bot_ardrone_frame::bot_ardrone_frame()
+bot_ardronBOT_EVENT_FRAME::bot_ardronBOT_EVENT_FRAME()
 {
-	memset(this, 0, sizeof(bot_ardrone_frame));
-	this->data = new char[BOT_ARDRONE_FRAME_BUFSIZE];
+	memset(this, 0, sizeof(bot_ardronBOT_EVENT_FRAME));
+	this->data = new char[BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE];
 	data_start = this->data;
 }
 
@@ -79,7 +79,7 @@ void bot_ardrone::control_set(int type, int opt, float val)
 	{
 		case BOT_ARDRONE_Velocity:
 			control.velocity[opt] = val;
-			control.state = BOT_ARDRONE_STATE_FLY;
+			control.state = BOT_STATE_FLY;
 			break;
 
 		default:
@@ -109,7 +109,7 @@ void bot_ardrone::control_update()
 }
 
 
-void bot_ardrone::control_update(bot_ardrone_control *c)
+void bot_ardrone::control_update(bot_ardronBOT_EVENT_CONTROL *c)
 {
 	if (PRINT_DEBUG)
 		printf("%f - ARDRONE: control update!\n", c->time);
@@ -131,26 +131,26 @@ void bot_ardrone::control_reset()
 	control.velocity[BOT_ARDRONE_LateralVelocity] = 0.0;
 	control.velocity[BOT_ARDRONE_RotationalVelocity] = 0.0;
 
-	if (control.state == BOT_ARDRONE_STATE_FLY)
-		control.state = BOT_ARDRONE_STATE_HOVER;
+	if (control.state == BOT_STATE_FLY)
+		control.state = BOT_STATE_HOVER;
 }
 
 
 void bot_ardrone::take_off()
 {
 	i->take_off();
-	control.state = BOT_ARDRONE_STATE_HOVER;
+	control.state = BOT_STATE_HOVER;
 }
 
 
 void bot_ardrone::land()
 {
 	i->land();
-	control.state = BOT_ARDRONE_STATE_LANDED;
+	control.state = BOT_STATE_LANDED;
 }
 
 
-void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
+void bot_ardrone::measurement_received(bot_ardronBOT_EVENT_MEASUREMENT *m)
 {
 	if (exit_dataset_collector)
 		return;
@@ -165,7 +165,7 @@ void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 }
 
 
-void bot_ardrone::frame_received(bot_ardrone_frame *f)
+void bot_ardrone::frame_received(bot_ardronBOT_EVENT_FRAME *f)
 {
 	if (exit_dataset_collector)
 		return;

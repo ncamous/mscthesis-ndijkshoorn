@@ -37,6 +37,9 @@
     <Filter Include="Header Files\usarsim\socket">
       <UniqueIdentifier>{be0b74b1-9c11-4873-9b8f-b25b0cefc939}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\config">
+      <UniqueIdentifier>{7a960c50-fd13-40a0-b9b9-50f0d27fbb1e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -68,9 +71,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="global.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="slam.h">
       <Filter>Header Files\slam</Filter>
     </ClInclude>
@@ -97,6 +97,12 @@
     </ClInclude>
     <ClInclude Include="botinterface.h">
       <Filter>Header Files\bots</Filter>
+    </ClInclude>
+    <ClInclude Include="bot.h">
+      <Filter>Header Files\bots</Filter>
+    </ClInclude>
+    <ClInclude Include="global.h">
+      <Filter>Header Files\config</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

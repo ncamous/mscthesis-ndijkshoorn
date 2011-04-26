@@ -47,7 +47,7 @@ bot_ardrone_ardronelib::bot_ardrone_ardronelib(bot_ardrone *bot)
 
 	this->bot = bot;
 
-	frame = new bot_ardrone_frame;
+	frame = new bot_ardronBOT_EVENT_FRAME;
 
 	// temp
 	m_counter = 1;
@@ -75,10 +75,10 @@ void bot_ardrone_ardronelib::init(void)
 
 void bot_ardrone_ardronelib::control_update(void *control)
 {
-	bot_ardrone_control *c = (bot_ardrone_control*) control;
+	bot_ardronBOT_EVENT_CONTROL *c = (bot_ardronBOT_EVENT_CONTROL*) control;
 
 	ardronewin32_progress(
-		(c->state == BOT_ARDRONE_STATE_FLY)?1:0,
+		(c->state == BOT_STATE_FLY)?1:0,
 		c->velocity[BOT_ARDRONE_LateralVelocity],
 		-c->velocity[BOT_ARDRONE_LinearVelocity],
 		c->velocity[BOT_ARDRONE_AltitudeVelocity],
@@ -101,7 +101,7 @@ void bot_ardrone_ardronelib::land()
 
 void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 {
-	bot_ardrone_measurement m;
+	bot_ardronBOT_EVENT_MEASUREMENT m;
 
 	// print initial battery state
 	if (bot->battery == NULL)
@@ -144,27 +144,27 @@ void bot_ardrone_ardronelib::process_frame(unsigned char* rgbtexture, int w, int
 	}
 
 	// size check
-	if (w*h*3 + 4 > BOT_ARDRONE_FRAME_BUFSIZE)
+	if (w*h*3 + 4 > BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE)
 	{
 		printf("ARDRONE FRAME TOO LARGE... SKIPPING FRAME (w: %i, h: %i\n", w, h);
 		return;
 	}
 
-	frame = new bot_ardrone_frame;
+	frame = new bot_ardronBOT_EVENT_FRAME;
 	frame->time = bot->get_clock(); // get clock time now
 
 	// write width and height to first 4 bytes
 	unsigned short w_bytes = htons(w);
 	unsigned short h_bytes = htons(h);
-	memcpy_s(frame->data, BOT_ARDRONE_FRAME_BUFSIZE, &w_bytes, 2);
-	memcpy_s(frame->data + 2, BOT_ARDRONE_FRAME_BUFSIZE, &h_bytes, 2);
+	memcpy_s(frame->data, BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE, &w_bytes, 2);
+	memcpy_s(frame->data + 2, BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE, &h_bytes, 2);
 
 	bufpos = 4;
 
 	for(y=0; y<h; y++)
 	{
 		rgb_src = (char *)rgbtexture + y*DRONE_VIDEO_MAX_WIDTH*3;
-		memcpy_s(frame->data + bufpos, BOT_ARDRONE_FRAME_BUFSIZE - bufpos, rgb_src, w*3);
+		memcpy_s(frame->data + bufpos, BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE - bufpos, rgb_src, w*3);
 		bufpos += w*3;
 	}
 

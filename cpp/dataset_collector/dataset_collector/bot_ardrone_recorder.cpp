@@ -31,12 +31,12 @@ bot_ardrone_recorder::~bot_ardrone_recorder(void)
 }
 
 
-void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
+void bot_ardrone_recorder::record_measurement(bot_ardronBOT_EVENT_MEASUREMENT *m)
 {
 	WaitForSingleObject(ghSemaphore, 0L);
 
 	fprintf (file_out, "---\n");
-	fprintf (file_out, "e: %i\n", BOT_ARDRONE_EVENT_MEASUREMENT);
+	fprintf (file_out, "e: %i\n", BOT_EVENT_MEASUREMENT);
 	//fprintf (file_out, "s: %i\n", m->sensor); // USARSim now sends all sensors in a single message
 	fprintf (file_out, "t: %f\n", m->time);
 	fprintf (file_out, "alt: %i\n", m->altitude);
@@ -56,12 +56,12 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 }
 
 
-void bot_ardrone_recorder::record_control(bot_ardrone_control *c)
+void bot_ardrone_recorder::record_control(bot_ardronBOT_EVENT_CONTROL *c)
 {
 	WaitForSingleObject(ghSemaphore, 0L);
 
 	fprintf (file_out, "---\n");
-	fprintf (file_out, "e: %i\n", BOT_ARDRONE_EVENT_CONTROL);
+	fprintf (file_out, "e: %i\n", BOT_EVENT_CONTROL);
 	fprintf (file_out, "t: %f\n", c->time);
 	fprintf (file_out, "vel: [%f, %f, %f, %f]\n", c->velocity[0], c->velocity[1], c->velocity[2], c->velocity[3]);
 
@@ -69,7 +69,7 @@ void bot_ardrone_recorder::record_control(bot_ardrone_control *c)
 }
 
 
-void bot_ardrone_recorder::record_frame(bot_ardrone_frame *f)
+void bot_ardrone_recorder::record_frame(bot_ardronBOT_EVENT_FRAME *f)
 {
 	WaitForSingleObject(ghSemaphore, 0L);
 
@@ -80,7 +80,7 @@ void bot_ardrone_recorder::record_frame(bot_ardrone_frame *f)
 	sprintf_s(filename, 25, "%s/%s", dataset_dir, f->filename);
 
 	fprintf (file_out, "---\n");
-	fprintf (file_out, "e: %i\n", BOT_ARDRONE_EVENT_FRAME);
+	fprintf (file_out, "e: %i\n", BOT_EVENT_FRAME);
 	fprintf (file_out, "t: %f\n", f->time);
 	fprintf (file_out, "s: %i\n", f->data_size);
 	fprintf (file_out, "f: %s\n", f->filename);
@@ -117,9 +117,9 @@ void bot_ardrone_recorder::playback(char *dataset)
 
 		switch (event_type)
 		{
-			case BOT_ARDRONE_EVENT_MEASUREMENT:
+			case BOT_EVENT_MEASUREMENT:
 			{
-				bot_ardrone_measurement m;
+				bot_ardronBOT_EVENT_MEASUREMENT m;
 				doc["t"] >> m.time;
 				doc["alt"] >> m.altitude;
 				doc["or"] >> m.or;
@@ -134,9 +134,9 @@ void bot_ardrone_recorder::playback(char *dataset)
 				break;
 			}
 		
-			case BOT_ARDRONE_EVENT_CONTROL:
+			case BOT_EVENT_CONTROL:
 			{
-				bot_ardrone_control c;
+				bot_ardronBOT_EVENT_CONTROL c;
 				doc["t"] >> c.time;
 				doc["vel"] >> c.velocity;
 
@@ -144,11 +144,11 @@ void bot_ardrone_recorder::playback(char *dataset)
 				break;
 			}
 
-			case BOT_ARDRONE_EVENT_FRAME:
+			case BOT_EVENT_FRAME:
 			{
 				char filename[30];
 				string tmpstring;
-				bot_ardrone_frame f;
+				bot_ardronBOT_EVENT_FRAME f;
 				doc["t"] >> f.time;
 				doc["s"] >> f.data_size;
 				doc["f"] >> tmpstring;

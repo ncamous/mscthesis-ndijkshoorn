@@ -9,7 +9,7 @@
 
 enum slam_queue_type { CONTROL, MEASUREMENT, FRAME };
 
-struct bot_ardrone_frame;
+struct bot_ardronBOT_EVENT_FRAME;
 
 struct slam_queue_item {
 	slam_queue_type type;
@@ -27,7 +27,7 @@ public:
 	~slam(void);
 	void slam::run();
 	void init_CV();
-	void process_frame(bot_ardrone_frame *f);
+	void process_frame(bot_ardronBOT_EVENT_FRAME *f);
 	void process_frame_test(IplImage *f);
 	void find_features(IplImage *img, vector<cv::KeyPoint> &v);
 

@@ -4,9 +4,11 @@
 
 #define PRINT_DEBUG false
 
+
 /* SLAM */
 #define SLAM_ENABLED true
 #define SLAM_USE_QUEUE true // use a queue to store the controldata and sensor data
+#define SLAM_SURF_HESSIANTHRESHOLD 500.0 // need 2000+ for real ARDRONE
 
 
 /* USARSIM */
@@ -16,7 +18,7 @@
 
 
 /* ARDRONE */
-#define BOT_ARDRONE_FRAME_BUFSIZE 80000		// at least: 176*144*3 + 4 bytes
+#define BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE 80000		// at least: 176*144*3 + 4 bytes
 #define USARIM_FRAME_USERAW true
 #define USARSIM_FRAME_EXT "raw"
 #define BOT_ARDRONE_BATTERYLIFE 720 // 720s, 12 minutes

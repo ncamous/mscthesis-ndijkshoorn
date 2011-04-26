@@ -10,11 +10,11 @@ bot_ardrone_usarsim::bot_ardrone_usarsim(bot_ardrone *bot)
 {
 	this->bot = bot;
 
-	frame = new bot_ardrone_frame;
+	frame = new bot_ardronBOT_EVENT_FRAME;
 
 	/* sockets */
 	control_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CONTROL, USARSIM_PORT, USARSIM_IP, NULL, BOT_ARDONE_USARSIM_CONTROL_BUFSIZE, (botinterface*) this);
-	frame_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_FRAME, UPIS_PORT, USARSIM_IP, frame->data, /*BOT_ARDRONE_FRAME_BUFSIZE*/BOT_ARDRONE_USARSIM_FRAME_BLOCKSIZE, (botinterface*) this);
+	frame_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_FRAME, UPIS_PORT, USARSIM_IP, frame->data, /*BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE*/BOT_ARDRONE_USARSIM_FRAME_BLOCKSIZE, (botinterface*) this);
 }
 
 
@@ -43,7 +43,7 @@ void bot_ardrone_usarsim::init(void)
 
 void bot_ardrone_usarsim::control_update(void *control)
 {
-	bot_ardrone_control *control_struct = (bot_ardrone_control*) control;
+	bot_ardronBOT_EVENT_CONTROL *control_struct = (bot_ardronBOT_EVENT_CONTROL*) control;
 
 	char msg[200];
 
@@ -68,7 +68,7 @@ void bot_ardrone_usarsim::socket_callback(int id, char *message, int bytes)
 	switch (id)
 	{
 		case BOT_ARDRONE_USARSIM_SOCKET_CONTROL:
-			if (bytes >= BOT_ARDRONE_FRAME_BUFSIZE)
+			if (bytes >= BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE)
 				printf("ERROR: USARSIM MEASUREMENT BUFFER FULL!\n");
 			else
 				process_measurement(message, bytes);
@@ -85,7 +85,7 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 {
 	int pos;
 	int lineoffset = 0;
-	bot_ardrone_measurement *m = NULL;
+	bot_ardronBOT_EVENT_MEASUREMENT *m = NULL;
 
 	message[bytes] = '\0';
 	string msg(message);
@@ -104,20 +104,20 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 			return;
 		}
 
-		// BOT_ARDRONE_MEASUREMENT_STA
+		// BOT_ARDRONBOT_EVENT_MEASUREMENT_STA
 		else if (type == "STA")
 		{
 			bot->battery = (int) (((float)usarsim_msgparser_int(&line, "{Battery") / (float)BOT_ARDRONE_BATTERYLIFE)*100.0f);
 		}
 
-		// BOT_ARDRONE_MEASUREMENT_SEN
+		// BOT_ARDRONBOT_EVENT_MEASUREMENT_SEN
 		else if (type == "SEN")
 		{
 			if (m == NULL)
 			{
-				m = new bot_ardrone_measurement;
+				m = new bot_ardronBOT_EVENT_MEASUREMENT;
 				m->usarsim = true;
-				m->type = BOT_ARDRONE_MEASUREMENT_SEN;
+				m->type = BOT_ARDRONBOT_EVENT_MEASUREMENT_SEN;
 			}
 
 			m->sensor = usarsim_msgparser_type(&line);
@@ -202,7 +202,7 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 			bot->frame_received(frame);
 
 			//reset_frame(frame);
-			frame = new bot_ardrone_frame;
+			frame = new bot_ardronBOT_EVENT_FRAME;
 			frame_socket->buffer = frame->data;
 
 			if (bot->slamcontroller->slam_queue.empty())
@@ -217,7 +217,7 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 }
 
 
-void bot_ardrone_usarsim::reset_frame(bot_ardrone_frame *f)
+void bot_ardrone_usarsim::reset_frame(bot_ardronBOT_EVENT_FRAME *f)
 {
 	f->data = f->data_start;
 	f->data_size = f->dest_size = 0;
