@@ -2,6 +2,8 @@
 #include "slam.h"
 #include "bot_ardrone.h"
 
+#include "slam_matlab.h"
+
 #include <cv.hpp>
 #include <cxcore.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -16,6 +18,21 @@ slam::slam()
 	frame = NULL;
 	CV_ready = false;
 	prev_frame_descriptors = NULL;
+
+	last_loc[0] = 300;
+	last_loc[1] = 300;
+
+	matlab = new slam_matlab();
+
+
+    IplImage* img1 = cvLoadImage("puzzel1.jpg");
+    IplImage* img2 = cvLoadImage("puzzel2.jpg");
+
+	process_frame(img1);
+
+	cvReleaseImage(&img1);
+
+	process_frame(img2);
 }
 
 
@@ -42,13 +59,6 @@ static DWORD WINAPI process_thread(void* Param)
 
 	slam_queue_item *item;
 
-    //IplImage* img1 = cvLoadImage("stitch11.jpg");
-    //IplImage* img2 = cvLoadImage("stitch10.jpg");
-	//IplImage* img3 = cvLoadImage("stitch1.jpg");
-
-	//This->process_frame_test(img1);
-	//This->process_frame_test(img2);
-	//This->process_frame_test(img3);
 
 	while (!exit_dataset_collector)
 	{
@@ -60,7 +70,7 @@ static DWORD WINAPI process_thread(void* Param)
 
 		if (q->empty())
 		{
-			printf("queue is empty, while is should not!\n");
+			//printf("queue is empty, while is should not!\n");
 			continue;
 		}
 
@@ -73,13 +83,19 @@ static DWORD WINAPI process_thread(void* Param)
 				break;
 			
 			case MEASUREMENT:
+				This->process_measurement( (bot_ardrone_measurement*) item->object );
 				break;
 			
 			case FRAME:
-				This->process_frame( (bot_ardronBOT_EVENT_FRAME*) item->object );
+				This->process_frame( (bot_ardrone_frame*) item->object );
 				break;
 		}
 	}
+
+	This->matlab->display();
+
+	// keep Matlab window alive
+	Sleep(99999);
 
 	return 1;
 }
@@ -98,11 +114,14 @@ void slam::init_CV()
 	canvas = cvCreateImage( cvSize(800,800), 8, 3 );
 
 	prev_frame_h = Mat::eye(3, 3, CV_64F);
+	double* h_data = (double*) prev_frame_h.data;
+	h_data[2] = 300.0;
+	h_data[5] = 300.0;
 
 	cvNamedWindow("Image:", CV_WINDOW_AUTOSIZE);
 }
 
-void slam::process_frame(bot_ardronBOT_EVENT_FRAME *f)
+void slam::process_frame(bot_ardrone_frame *f)
 {
 	if (!CV_ready)
 		init_CV();
@@ -122,7 +141,6 @@ void slam::process_frame(bot_ardronBOT_EVENT_FRAME *f)
 	}
 
 	double posX, posY;
-	IplImage *dst;
 	posX = posY = 300.0;
 
 
@@ -152,11 +170,12 @@ void slam::process_frame(bot_ardronBOT_EVENT_FRAME *f)
 		vector<DMatch> matches;
 		dm.match(descriptors, prev_frame_descriptors, matches);
 
+		//printf("\n\n");
 		//printf("frame 1 has %i keypoints\n", prev_frame_keypoints.size());
 		//printf("frame 2 has %i keypoints\n", keypoints.size());
 		//printf("found %i matches\n", matches.size());
 
-		if (matches.size() < 4)
+		if (matches.size() < 6)
 			return;
 
 		/* calculate transformation (RANSAC) */
@@ -177,232 +196,130 @@ void slam::process_frame(bot_ardronBOT_EVENT_FRAME *f)
 
 		Mat homography = findHomography( Mat(points1), Mat(points2), CV_RANSAC, ransacReprojThreshold );
 
+
+		/* count number of outliers */
+		/*
+		int outliers = 0;
+
+        Mat points3t; perspectiveTransform(Mat(points1), points3t, homography);
+        for( size_t i1 = 0; i1 < points1.size(); i1++ )
+        {
+            if( norm(points2[i1] - points3t.at<Point2f>((int)i1,0)) > 4 ) // inlier
+               outliers++;
+        }
+
+		double outliers_percentage =  ((double)outliers / (double)points1.size()) * 100.0;
+
+		printf("percentage of outers: %f \n", outliers_percentage);
+
+		if (outliers_percentage > 80.0)
+		{
+			printf("dropped crazy transformation\n");
+			return;
+		}
+		*/
+
 		prev_frame_h *= homography;
-
-		Mat h = prev_frame_h.clone();
-		double *h_data = (double*) h.data;
-
-
-		/* transform current frame */
-		posX += h_data[2];
-		posY += h_data[5];
-		h_data[2] = h_data[5] = 0.0;
-
 
 		/* get transformed corners to calc dest image size and translation */
 		double corners[] = {
-			0.0, 0.0, 0.0,
             frame->width, 0.0, 0.0,
             frame->width, frame->height, 0.0,
 			0.0, frame->height, 0.0,
 		};
 
-		Mat coords = Mat(4, 3, CV_64F, corners);
-		Mat tc = coords * h;
+		Mat coords = Mat(3, 3, CV_64F, corners);
+		Mat tc = coords * homography;
 		double *tc_data = (double*) tc.data;
 
+		/*
 		double minX, maxX, minY, maxY;
-		minX = min(min(min(tc_data[0], tc_data[3]), tc_data[6]), tc_data[9]);
-		maxX = max(max(max(tc_data[0], tc_data[3]), tc_data[6]), tc_data[9]);
-		minY = min(min(min(tc_data[1], tc_data[4]), tc_data[7]), tc_data[10]);
-		maxY = max(max(max(tc_data[1], tc_data[4]), tc_data[7]), tc_data[10]);
+		minX = min(min(tc_data[0], tc_data[3]), tc_data[6]);
+		maxX = max(max(tc_data[0], tc_data[3]), tc_data[6]);
+		minY = min(min(tc_data[1], tc_data[4]), tc_data[7]);
+		maxY = max(max(tc_data[1], tc_data[4]), tc_data[7]);
+		*/
+
+		//printf("minX: %f, minY: %f\n", minX, minY);
+
+		//dumpMatrix(translate);
+
+		//posX += h_data[2];
+		//posY += h_data[5];
+
+		//printf("\n\n");
+
+		//dumpMatrix(h);
+		//printf("\n");
+		//dumpMatrix(h);
+
 
 		/* default height */
-		CvSize dst_size = cvSize(max(frame->width, int(maxX - minX)), max(frame->height, int(maxY - minY)));
 
-		/* translate */
-		h_data[2] -= minX;
-		h_data[5] -= minY;
+		//posX += minX;
+		//posY += minY;
 
-		posX += minX;
-		posY += minY;
+		//if (posX + dst_size.width > 800.0 || posX < 0.0 || posY + dst_size.height > 800.0 || posY < 0.0)
+		//	return;
 
-		if (posX + dst_size.width > 800.0 || posX < 0.0 || posY + dst_size.height > 800.0 || posY < 0.0)
-			return;
+		CvMat CvHomography = homography;
 
-		dst = cvCreateImage(dst_size, IPL_DEPTH_8U, 3);
-	
-		// copy from canvas to dest image
-		cvGetSubRect( (CvMat*)canvas, (CvMat*)dst, cvRect(int(posX), int(posY), dst_size.width, dst_size.height));
+		cvWarpPerspective(frame, canvas, &CvHomography, CV_INTER_LINEAR);
 
-		CvMat CvHomography = h;
-		cvWarpPerspective(frame, dst, &CvHomography, CV_INTER_LINEAR);
+		// tmp
+		last_loc[0] = int(posX);
+		last_loc[1] = int(posY);
 	}
 	else
 	{
-		dst = frame;
+		CvMat CvHomography = prev_frame_h;
+
+		//cvSetImageROI(canvas, cvRect(int(posX), int(posY), frame->width, frame->height));
+		//cvCopy(frame, canvas);
+		cvWarpPerspective(frame, canvas, &CvHomography, CV_INTER_LINEAR);
+		//cvResetImageROI(canvas);
+
+		// tmp
+		last_loc[0] = int(posX);
+		last_loc[1] = int(posY);
 	}
 
 	/* store current frame as previous frame */
 	prev_frame_keypoints = keypoints;
 	prev_frame_descriptors = descriptors;
 	frame_counter++;
-
-
-	/* merge with cancas */
-	int x, y;
-
-	/* SLOW?
-	cvSetImageROI(canvas, cvRect(posX, posY, dst->width, dst->height));
-	cvAddWeighted(canvas, 0.0, dst, 1.0, 0.0, canvas);
-	cvResetImageROI(canvas);
-	*/
-
-	for(x=0; x < dst->width; x++)
-    {
-        for(y=0;y < dst->height; y++)
-        {
-			cvSet2D(canvas, y + int(posY), x + int(posX), cvGet2D(dst, y, x));
-        }
-    }
 
 	imshow("Image:", canvas);
 	cvWaitKey(2);
 }
 
 
-void slam::process_frame_test(IplImage *f)
+void slam::process_frame(IplImage *i)
 {
-	if (!CV_ready)
-		init_CV();
+	bot_ardrone_frame *f1 = new bot_ardrone_frame;
 
-	if (frame == NULL)
-	{
-		unsigned short w, h;
-		w = f->width;
-		h = f->height;
-		gray = cvCreateImage(cvSize(w, h), IPL_DEPTH_8U, 1);
-	}
+	int datasize = i->width * i->height * 3;
+	char data[999999];
 
-	double posX, posY;
-	posX = posY = 300;
+	unsigned short w, h;
+	w = htons(i->width);
+	h = htons(i->height);
 
-	frame = f;
+	memcpy(&data[0], &w, 2);
+	memcpy(&data[2], &h, 2);
+	memcpy(&data[4], i->imageData, datasize);
 
-	vector<cv::KeyPoint> keypoints;
+	f1->data = data;
 
-	find_features(frame, keypoints);
+	process_frame(f1);
+}
 
 
-	/* plot keypoints */
-	// output image
-	//Mat out;
-	// draw grayscale image
-	cvCvtColor(frame, gray, CV_RGB2GRAY);
+void slam::process_measurement(bot_ardrone_measurement *m)
+{
+	int t[3] = {last_loc[0], last_loc[1], m->altitude};
 
-	//drawKeypoints(gray, keypoints, out);
-
-
-	/* match with previous frame */
-	Mat descriptors;
-    de->compute(gray, keypoints, descriptors);
-
-	if (frame_counter > 0)
-	{
-		double ransacReprojThreshold = 3.0;
-
-		//simpleMatching(descriptors, prev_frame_descriptors, matches);
-		vector<DMatch> matches;
-		dm.match(descriptors, prev_frame_descriptors, matches);
-
-		//printf("frame 1 has %i keypoints\n", prev_frame_keypoints.size());
-		//printf("frame 2 has %i keypoints\n", keypoints.size());
-		//printf("found %i matches\n", matches.size());
-
-		if (matches.size() < 4)
-			return;
-
-		/* calculate transformation (RANSAC) */
-		vector<int> queryIdxs( matches.size() ), trainIdxs( matches.size() );
-		for( size_t i = 0; i < matches.size(); i++ )
-		{
-			queryIdxs[i] = matches[i].queryIdx;
-			trainIdxs[i] = matches[i].trainIdx;
-		}
-	
-
-		vector<Point2f> points1;
-		KeyPoint::convert(keypoints, points1, queryIdxs);
-
-		vector<Point2f> points2;
-		KeyPoint::convert(prev_frame_keypoints, points2, trainIdxs);
-
-		Mat homography = findHomography( Mat(points1), Mat(points2), CV_RANSAC, ransacReprojThreshold );
-
-		prev_frame_h *= homography;
-
-		Mat h = prev_frame_h.clone();
-		double *h_data = (double*) h.data;
-
-
-		/* transform current frame */
-		posX += h_data[2];
-		posY += h_data[5];
-		h_data[2] = h_data[5] = 0.0;
-
-
-		/* get transformed corners to calc dest image size and translation */
-		double corners[] = {
-			0.0, 0.0, 0.0,
-            frame->width, 0.0, 0.0,
-            frame->width, frame->height, 0.0,
-			0.0, frame->height, 0.0,
-		};
-
-		Mat coords = Mat(4, 3, CV_64F, corners);
-		Mat tc = coords * h;
-		double *tc_data = (double*) tc.data;
-
-		double minX, maxX, minY, maxY;
-		minX = min(min(min(tc_data[0], tc_data[3]), tc_data[6]), tc_data[9]);
-		maxX = max(max(max(tc_data[0], tc_data[3]), tc_data[6]), tc_data[9]);
-		minY = min(min(min(tc_data[1], tc_data[4]), tc_data[7]), tc_data[10]);
-		maxY = max(max(max(tc_data[1], tc_data[4]), tc_data[7]), tc_data[10]);
-
-		/* default height */
-		CvSize dst_size = cvSize((int) (maxX - minX), (int) (maxY - minY));
-
-		/* translate */
-		h_data[2] -= minX;
-		h_data[5] -= minY;
-
-		posX += minX;
-		posY += minY;
-
-
-		IplImage *dst = cvCreateImage(dst_size, IPL_DEPTH_8U, 3);
-		CvMat CvHomography = h;
-		cvWarpPerspective(frame, dst, &CvHomography, CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS, cvScalarAll(0));
-
-		// OK?
-		frame = dst;
-	}
-
-
-	/* store current frame as previous frame */
-	prev_frame_keypoints = keypoints;
-	prev_frame_descriptors = descriptors;
-	frame_counter++;
-
-
-	/* merge with cancas */
-	int x, y;
-	CvScalar s;
-
-	for(x=0; x < frame->width; x++)
-    {
-        for(y=0;y < frame->height; y++)
-        {
-			s = cvGet2D(frame, y, x);
-			if (s.val[0] != 0.0 || s.val[1] != 0.0 || s.val[2] != 0.0)
-				cvSet2D(canvas, y + (int) posY, x + (int) posX, s);
-        }
-    }
-
-	imshow("Image:", canvas);
-	/**/
-
-	cvWaitKey(2);
+	matlab->add_elevation_map_tuple((int*) t);
 }
 
 
@@ -414,7 +331,7 @@ void slam::find_features(IplImage *img, vector<cv::KeyPoint> &v)
 
 	tt = (double)cvGetTickCount() - tt;
 
-	printf( "Extraction time = %gms\n", tt/(cvGetTickFrequency()*1000.));
+	//printf( "Extraction time = %gms\n", tt/(cvGetTickFrequency()*1000.));
 }
 
 void slam::PrintMat(CvMat *A)

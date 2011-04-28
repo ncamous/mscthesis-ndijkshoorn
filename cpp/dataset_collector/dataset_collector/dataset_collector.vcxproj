@@ -39,10 +39,10 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>../yaml-cpp-0.2.5/include;../ardronewin32;../ardronewin32/Navdata;../ardronewin32/UI;../ardronewin32/Video;C:\Program Files\Microsoft SDKs\Windows\v7.0A\Include;C:\Program Files\Microsoft DirectX SDK %28June 2010%29\Include;C:\Users\Nick\Documents\Thesis\code\SDL-1.2.14\include;$(ARDroneLibDir)\Soft\Common;$(ARDroneLibDir)\VP_SDK;$(ARDroneLibDir)\Soft\Lib;$(ARDroneLibDir)\VP_SDK\VP_Os;$(OpenCVDir)\include;$(OpenCVDir)\include\opencv;$(IncludePath)</IncludePath>
+    <IncludePath>../yaml-cpp-0.2.5/include;../ardronewin32;../ardronewin32/Navdata;../ardronewin32/UI;../ardronewin32/Video;C:\Program Files\Microsoft SDKs\Windows\v7.0A\Include;C:\Program Files\Microsoft DirectX SDK %28June 2010%29\Include;C:\Users\Nick\Documents\Thesis\code\SDL-1.2.14\include;$(ARDroneLibDir)\Soft\Common;$(ARDroneLibDir)\VP_SDK;$(ARDroneLibDir)\Soft\Lib;$(ARDroneLibDir)\VP_SDK\VP_Os;$(OpenCVDir)\include;$(OpenCVDir)\include\opencv;$(MatlabDir)\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LibraryPath>../yaml-cpp-0.2.5/lib;$(OutDir);C:\Program Files\Microsoft SDKs\Windows\v7.1\Lib;C:\Program Files\Microsoft DirectX SDK %28June 2010%29\Lib\x86;C:\Users\Nick\Documents\Thesis\code\SDL-1.2.14\lib;C:\Users\Nick\Documents\Thesis\code\OpenCV\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>../yaml-cpp-0.2.5/lib;$(OutDir);C:\Program Files\Microsoft SDKs\Windows\v7.1\Lib;C:\Program Files\Microsoft DirectX SDK %28June 2010%29\Lib\x86;C:\Users\Nick\Documents\Thesis\code\SDL-1.2.14\lib;C:\Users\Nick\Documents\Thesis\code\OpenCV\lib;$(MatlabDir)\lib\win32\microsoft;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -54,7 +54,8 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ws2_32.lib;..\yaml-cpp-0.2.5\lib\yamlcppd.lib;ardronewin32.lib;ArDroneAPI.lib;dinput8.lib;dxguid.lib;comctl32.lib;dxerr.lib;winmm.lib;d3d9.lib;d3dx9.lib;$(OpenCVDir)\lib\opencv_core220d.lib;$(OpenCVDir)\lib\opencv_highgui220d.lib;$(OpenCVDir)\lib\opencv_legacy220d.lib;$(OpenCVDir)\lib\opencv_features2d220d.lib;$(OpenCVDir)\lib\opencv_imgproc220d.lib;$(OpenCVDir)\lib\opencv_calib3d220d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;..\yaml-cpp-0.2.5\lib\yamlcppd.lib;ardronewin32.lib;ArDroneAPI.lib;dinput8.lib;dxguid.lib;comctl32.lib;dxerr.lib;winmm.lib;d3d9.lib;d3dx9.lib;$(OpenCVDir)\lib\opencv_core220d.lib;$(OpenCVDir)\lib\opencv_highgui220d.lib;$(OpenCVDir)\lib\opencv_legacy220d.lib;$(OpenCVDir)\lib\opencv_features2d220d.lib;$(OpenCVDir)\lib\opencv_imgproc220d.lib;$(OpenCVDir)\lib\opencv_calib3d220d.lib;$(MatlabDir)\lib\win32\microsoft\libeng.lib;$(MatlabDir)\lib\win32\microsoft\libmex.lib;$(MatlabDir)\lib\win32\microsoft\libmx.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <StackReserveSize>10000000</StackReserveSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -79,6 +80,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mysocket.cpp" />
     <ClCompile Include="slam.cpp" />
+    <ClCompile Include="slam_matlab.cpp" />
     <ClCompile Include="usarsim_msgparser.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -92,7 +94,13 @@
     <ClInclude Include="global.h" />
     <ClInclude Include="mysocket.h" />
     <ClInclude Include="slam.h" />
+    <ClInclude Include="slam_matlab.h" />
     <ClInclude Include="usarsim_msgparser.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ArDroneAPI\ArDroneAPI.vcxproj">
+      <Project>{e84e6b0e-6893-4803-bd17-2d7f85a203aa}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

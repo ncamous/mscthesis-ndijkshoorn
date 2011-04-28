@@ -40,6 +40,12 @@
     <Filter Include="Header Files\config">
       <UniqueIdentifier>{7a960c50-fd13-40a0-b9b9-50f0d27fbb1e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\bots\ardrone">
+      <UniqueIdentifier>{c59f775f-781e-4489-b549-df99f55301be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\bots\ardrone">
+      <UniqueIdentifier>{2a5beda0-6e94-4625-a276-40d7622ab580}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -48,25 +54,28 @@
     <ClCompile Include="mysocket.cpp">
       <Filter>Source Files\usarsim\socket</Filter>
     </ClCompile>
-    <ClCompile Include="bot_ardrone.cpp">
-      <Filter>Source Files\bots</Filter>
-    </ClCompile>
-    <ClCompile Include="bot_ardrone_usarsim.cpp">
-      <Filter>Source Files\bots</Filter>
-    </ClCompile>
-    <ClCompile Include="bot_ardrone_recorder.cpp">
-      <Filter>Source Files\bots</Filter>
-    </ClCompile>
-    <ClCompile Include="bot_ardrone_ardronelib.cpp">
-      <Filter>Source Files\bots</Filter>
-    </ClCompile>
-    <ClCompile Include="bot_ardrone_keyboard.cpp">
-      <Filter>Source Files\bots</Filter>
-    </ClCompile>
     <ClCompile Include="usarsim_msgparser.cpp">
       <Filter>Source Files\usarsim</Filter>
     </ClCompile>
     <ClCompile Include="slam.cpp">
+      <Filter>Source Files\slam</Filter>
+    </ClCompile>
+    <ClCompile Include="bot_ardrone.cpp">
+      <Filter>Source Files\bots\ardrone</Filter>
+    </ClCompile>
+    <ClCompile Include="bot_ardrone_usarsim.cpp">
+      <Filter>Source Files\bots\ardrone</Filter>
+    </ClCompile>
+    <ClCompile Include="bot_ardrone_ardronelib.cpp">
+      <Filter>Source Files\bots\ardrone</Filter>
+    </ClCompile>
+    <ClCompile Include="bot_ardrone_keyboard.cpp">
+      <Filter>Source Files\bots\ardrone</Filter>
+    </ClCompile>
+    <ClCompile Include="bot_ardrone_recorder.cpp">
+      <Filter>Source Files\bots\ardrone</Filter>
+    </ClCompile>
+    <ClCompile Include="slam_matlab.cpp">
       <Filter>Source Files\slam</Filter>
     </ClCompile>
   </ItemGroup>
@@ -80,21 +89,6 @@
     <ClInclude Include="usarsim_msgparser.h">
       <Filter>Header Files\usarsim</Filter>
     </ClInclude>
-    <ClInclude Include="bot_ardrone.h">
-      <Filter>Header Files\bots</Filter>
-    </ClInclude>
-    <ClInclude Include="bot_ardrone_ardronelib.h">
-      <Filter>Header Files\bots</Filter>
-    </ClInclude>
-    <ClInclude Include="bot_ardrone_keyboard.h">
-      <Filter>Header Files\bots</Filter>
-    </ClInclude>
-    <ClInclude Include="bot_ardrone_recorder.h">
-      <Filter>Header Files\bots</Filter>
-    </ClInclude>
-    <ClInclude Include="bot_ardrone_usarsim.h">
-      <Filter>Header Files\bots</Filter>
-    </ClInclude>
     <ClInclude Include="botinterface.h">
       <Filter>Header Files\bots</Filter>
     </ClInclude>
@@ -103,6 +97,24 @@
     </ClInclude>
     <ClInclude Include="global.h">
       <Filter>Header Files\config</Filter>
+    </ClInclude>
+    <ClInclude Include="slam_matlab.h">
+      <Filter>Header Files\slam</Filter>
+    </ClInclude>
+    <ClInclude Include="bot_ardrone.h">
+      <Filter>Header Files\bots\ardrone</Filter>
+    </ClInclude>
+    <ClInclude Include="bot_ardrone_ardronelib.h">
+      <Filter>Header Files\bots\ardrone</Filter>
+    </ClInclude>
+    <ClInclude Include="bot_ardrone_keyboard.h">
+      <Filter>Header Files\bots\ardrone</Filter>
+    </ClInclude>
+    <ClInclude Include="bot_ardrone_recorder.h">
+      <Filter>Header Files\bots\ardrone</Filter>
+    </ClInclude>
+    <ClInclude Include="bot_ardrone_usarsim.h">
+      <Filter>Header Files\bots\ardrone</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

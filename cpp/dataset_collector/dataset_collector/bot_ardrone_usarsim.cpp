@@ -10,7 +10,7 @@ bot_ardrone_usarsim::bot_ardrone_usarsim(bot_ardrone *bot)
 {
 	this->bot = bot;
 
-	frame = new bot_ardronBOT_EVENT_FRAME;
+	frame = new bot_ardrone_frame;
 
 	/* sockets */
 	control_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CONTROL, USARSIM_PORT, USARSIM_IP, NULL, BOT_ARDONE_USARSIM_CONTROL_BUFSIZE, (botinterface*) this);
@@ -43,7 +43,7 @@ void bot_ardrone_usarsim::init(void)
 
 void bot_ardrone_usarsim::control_update(void *control)
 {
-	bot_ardronBOT_EVENT_CONTROL *control_struct = (bot_ardronBOT_EVENT_CONTROL*) control;
+	bot_ardrone_control *control_struct = (bot_ardrone_control*) control;
 
 	char msg[200];
 
@@ -85,7 +85,7 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 {
 	int pos;
 	int lineoffset = 0;
-	bot_ardronBOT_EVENT_MEASUREMENT *m = NULL;
+	bot_ardrone_measurement *m = NULL;
 
 	message[bytes] = '\0';
 	string msg(message);
@@ -115,7 +115,7 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 		{
 			if (m == NULL)
 			{
-				m = new bot_ardronBOT_EVENT_MEASUREMENT;
+				m = new bot_ardrone_measurement;
 				m->usarsim = true;
 				m->type = BOT_ARDRONBOT_EVENT_MEASUREMENT_SEN;
 			}
@@ -202,7 +202,7 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 			bot->frame_received(frame);
 
 			//reset_frame(frame);
-			frame = new bot_ardronBOT_EVENT_FRAME;
+			frame = new bot_ardrone_frame;
 			frame_socket->buffer = frame->data;
 
 			if (bot->slamcontroller->slam_queue.empty())
@@ -217,7 +217,7 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 }
 
 
-void bot_ardrone_usarsim::reset_frame(bot_ardronBOT_EVENT_FRAME *f)
+void bot_ardrone_usarsim::reset_frame(bot_ardrone_frame *f)
 {
 	f->data = f->data_start;
 	f->data_size = f->dest_size = 0;

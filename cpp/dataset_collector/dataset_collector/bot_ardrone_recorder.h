@@ -10,9 +10,9 @@
 
 
 class bot_ardrone;
-struct bot_ardronBOT_EVENT_MEASUREMENT;
-struct bot_ardronBOT_EVENT_CONTROL;
-struct bot_ardronBOT_EVENT_FRAME;
+struct bot_ardrone_measurement;
+struct bot_ardrone_control;
+struct bot_ardrone_frame;
 
 using namespace std;
 
@@ -24,9 +24,9 @@ public:
 	~bot_ardrone_recorder(void);
 
 	/* record */
-	void record_measurement(bot_ardronBOT_EVENT_MEASUREMENT *m);
-	void record_control(bot_ardronBOT_EVENT_CONTROL *c);
-	void record_frame(bot_ardronBOT_EVENT_FRAME *f);
+	void record_measurement(bot_ardrone_measurement *m);
+	void record_control(bot_ardrone_control *c);
+	void record_frame(bot_ardrone_frame *f);
 
 	/* playback */
 	void playback(char *dataset);

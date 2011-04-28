@@ -31,7 +31,7 @@ bot_ardrone_recorder::~bot_ardrone_recorder(void)
 }
 
 
-void bot_ardrone_recorder::record_measurement(bot_ardronBOT_EVENT_MEASUREMENT *m)
+void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 {
 	WaitForSingleObject(ghSemaphore, 0L);
 
@@ -56,7 +56,7 @@ void bot_ardrone_recorder::record_measurement(bot_ardronBOT_EVENT_MEASUREMENT *m
 }
 
 
-void bot_ardrone_recorder::record_control(bot_ardronBOT_EVENT_CONTROL *c)
+void bot_ardrone_recorder::record_control(bot_ardrone_control *c)
 {
 	WaitForSingleObject(ghSemaphore, 0L);
 
@@ -69,7 +69,7 @@ void bot_ardrone_recorder::record_control(bot_ardronBOT_EVENT_CONTROL *c)
 }
 
 
-void bot_ardrone_recorder::record_frame(bot_ardronBOT_EVENT_FRAME *f)
+void bot_ardrone_recorder::record_frame(bot_ardrone_frame *f)
 {
 	WaitForSingleObject(ghSemaphore, 0L);
 
@@ -119,7 +119,7 @@ void bot_ardrone_recorder::playback(char *dataset)
 		{
 			case BOT_EVENT_MEASUREMENT:
 			{
-				bot_ardronBOT_EVENT_MEASUREMENT m;
+				bot_ardrone_measurement m;
 				doc["t"] >> m.time;
 				doc["alt"] >> m.altitude;
 				doc["or"] >> m.or;
@@ -136,7 +136,7 @@ void bot_ardrone_recorder::playback(char *dataset)
 		
 			case BOT_EVENT_CONTROL:
 			{
-				bot_ardronBOT_EVENT_CONTROL c;
+				bot_ardrone_control c;
 				doc["t"] >> c.time;
 				doc["vel"] >> c.velocity;
 
@@ -148,7 +148,7 @@ void bot_ardrone_recorder::playback(char *dataset)
 			{
 				char filename[30];
 				string tmpstring;
-				bot_ardronBOT_EVENT_FRAME f;
+				bot_ardrone_frame f;
 				doc["t"] >> f.time;
 				doc["s"] >> f.data_size;
 				doc["f"] >> tmpstring;

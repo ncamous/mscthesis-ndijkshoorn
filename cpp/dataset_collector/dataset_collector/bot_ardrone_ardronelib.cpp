@@ -47,7 +47,7 @@ bot_ardrone_ardronelib::bot_ardrone_ardronelib(bot_ardrone *bot)
 
 	this->bot = bot;
 
-	frame = new bot_ardronBOT_EVENT_FRAME;
+	frame = new bot_ardrone_frame;
 
 	// temp
 	m_counter = 1;
@@ -75,7 +75,7 @@ void bot_ardrone_ardronelib::init(void)
 
 void bot_ardrone_ardronelib::control_update(void *control)
 {
-	bot_ardronBOT_EVENT_CONTROL *c = (bot_ardronBOT_EVENT_CONTROL*) control;
+	bot_ardrone_control *c = (bot_ardrone_control*) control;
 
 	ardronewin32_progress(
 		(c->state == BOT_STATE_FLY)?1:0,
@@ -101,7 +101,7 @@ void bot_ardrone_ardronelib::land()
 
 void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 {
-	bot_ardronBOT_EVENT_MEASUREMENT m;
+	bot_ardrone_measurement *m = new bot_ardrone_measurement;
 
 	// print initial battery state
 	if (bot->battery == NULL)
@@ -112,23 +112,24 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 	if (bot->battery < 10)
 		printf("Low battery: %i\n", bot->battery);
 
-	m.altitude = n->navdata_demo.altitude;
-	m.or[0] = n->navdata_demo.theta;
-	m.or[1] = n->navdata_demo.phi;
-	m.or[2] = n->navdata_demo.psi;
+	m->altitude = n->navdata_demo.altitude;
+
+	m->or[0] = n->navdata_demo.theta;
+	m->or[1] = n->navdata_demo.phi;
+	m->or[2] = n->navdata_demo.psi;
 
 	// Accelerations are received in mg
 	// They are displayed in g: conversion gain is 1/1000
-	m.accel[0] = n->navdata_phys_measures.phys_accs[0]; // x-dir
-	m.accel[1] = n->navdata_phys_measures.phys_accs[1]; // y-dir
-	m.accel[2] = n->navdata_phys_measures.phys_accs[2] + 1000.0f; // z-dir, gravity = 1g */
+	m->accel[0] = n->navdata_phys_measures.phys_accs[0]; // x-dir
+	m->accel[1] = n->navdata_phys_measures.phys_accs[1]; // y-dir
+	m->accel[2] = n->navdata_phys_measures.phys_accs[2] + 1000.0f; // z-dir, gravity = 1g */
 
-	m.vel[0] = n->navdata_demo.vx;
-	m.vel[1] = n->navdata_demo.vy;
+	m->vel[0] = n->navdata_demo.vx;
+	m->vel[1] = n->navdata_demo.vy;
 	//m.ins_vel[2] = n->navdata_demo.vz; // is always zero
-	m.vel[2] = n->navdata_altitude.altitude_vz;
+	m->vel[2] = n->navdata_altitude.altitude_vz;
 
-	bot->measurement_received(&m);
+	bot->measurement_received(m);
 }
 
 
@@ -150,7 +151,7 @@ void bot_ardrone_ardronelib::process_frame(unsigned char* rgbtexture, int w, int
 		return;
 	}
 
-	frame = new bot_ardronBOT_EVENT_FRAME;
+	frame = new bot_ardrone_frame;
 	frame->time = bot->get_clock(); // get clock time now
 
 	// write width and height to first 4 bytes
