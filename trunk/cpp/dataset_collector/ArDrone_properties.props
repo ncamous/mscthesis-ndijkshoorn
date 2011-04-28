@@ -4,6 +4,7 @@
     <ARDroneLibDir>C:\Users\Nick\Documents\Thesis\code\ARDrone_SDK_1_6_20110224\ARDroneLib</ARDroneLibDir>
     <Win32ClientDir>C:\Users\Nick\Documents\Thesis\code\ARDrone_SDK_1_6_20110224\Examples\Win32\sdk_demo\Sources</Win32ClientDir>
     <OpenCVDir>C:\Users\Nick\Documents\Thesis\code\OpenCV</OpenCVDir>
+    <MatlabDir>C:\Program Files\MATLAB\R2010a\extern</MatlabDir>
   </PropertyGroup>
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
@@ -18,6 +19,9 @@
     </BuildMacro>
     <BuildMacro Include="OpenCVDir">
       <Value>$(OpenCVDir)</Value>
+    </BuildMacro>
+    <BuildMacro Include="MatlabDir">
+      <Value>$(MatlabDir)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>

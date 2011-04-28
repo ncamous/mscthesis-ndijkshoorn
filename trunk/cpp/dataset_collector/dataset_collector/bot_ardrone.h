@@ -29,15 +29,15 @@
 #define BOT_ARDRONE_SENSOR_ACCEL 4
 
 
-struct bot_ardronBOT_EVENT_CONTROL {
+struct bot_ardrone_control {
 	double time;
 	float velocity[4];
 	bot_state state;
 
-	bot_ardronBOT_EVENT_CONTROL();
+	bot_ardrone_control();
 };
 
-struct bot_ardronBOT_EVENT_MEASUREMENT {
+struct bot_ardrone_measurement {
 	double time;
 	int altitude;		// mm
 
@@ -64,10 +64,10 @@ struct bot_ardronBOT_EVENT_MEASUREMENT {
 	float gt_loc[3];
 	float gt_or[3];
 
-	bot_ardronBOT_EVENT_MEASUREMENT();
+	bot_ardrone_measurement();
 };
 
-struct bot_ardronBOT_EVENT_FRAME {
+struct bot_ardrone_frame {
 	double time;
 	char *data;
 	char *data_start;
@@ -75,7 +75,7 @@ struct bot_ardronBOT_EVENT_FRAME {
 	int dest_size;
 	char filename[25];
 
-	bot_ardronBOT_EVENT_FRAME();
+	bot_ardrone_frame();
 };
 
 class bot_ardrone
@@ -86,19 +86,19 @@ public:
 	void control_set(int type, int opt, float val);
 	float control_get(int type, int opt);
 	void control_update();
-	void control_update(bot_ardronBOT_EVENT_CONTROL *c);
+	void control_update(bot_ardrone_control *c);
 	void control_reset();
 	void take_off();
 	void land();
-	void measurement_received(bot_ardronBOT_EVENT_MEASUREMENT *m);
-	void frame_received(bot_ardronBOT_EVENT_FRAME *f);
+	void measurement_received(bot_ardrone_measurement *m);
+	void frame_received(bot_ardrone_frame *f);
 	static double get_clock();
 	void set_record();
 	void set_playback(char *dataset);
 
 	static clock_t start_clock;
 	botinterface *i;
-	bot_ardronBOT_EVENT_CONTROL control;
+	bot_ardrone_control control;
 	bot_ardrone_recorder *recorder;
 	bool record, playback;
 	int battery;		// percentage (0-100%)

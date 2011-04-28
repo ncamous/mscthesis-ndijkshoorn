@@ -9,24 +9,24 @@ clock_t bot_ardrone::start_clock = 0;
 
 #undef memset
 
-bot_ardronBOT_EVENT_CONTROL::bot_ardronBOT_EVENT_CONTROL()
+bot_ardrone_control::bot_ardrone_control()
 {
-	memset(this, 0, sizeof(bot_ardronBOT_EVENT_CONTROL));
+	memset(this, 0, sizeof(bot_ardrone_control));
 	state = BOT_STATE_LANDED;
 }
 
 
-bot_ardronBOT_EVENT_MEASUREMENT::bot_ardronBOT_EVENT_MEASUREMENT()
+bot_ardrone_measurement::bot_ardrone_measurement()
 {
-	memset(this, 0, sizeof(bot_ardronBOT_EVENT_MEASUREMENT));
+	memset(this, 0, sizeof(bot_ardrone_measurement));
 	time = bot_ardrone::get_clock();
 	usarsim = false;
 }
 
 
-bot_ardronBOT_EVENT_FRAME::bot_ardronBOT_EVENT_FRAME()
+bot_ardrone_frame::bot_ardrone_frame()
 {
-	memset(this, 0, sizeof(bot_ardronBOT_EVENT_FRAME));
+	memset(this, 0, sizeof(bot_ardrone_frame));
 	this->data = new char[BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE];
 	data_start = this->data;
 }
@@ -109,7 +109,7 @@ void bot_ardrone::control_update()
 }
 
 
-void bot_ardrone::control_update(bot_ardronBOT_EVENT_CONTROL *c)
+void bot_ardrone::control_update(bot_ardrone_control *c)
 {
 	if (PRINT_DEBUG)
 		printf("%f - ARDRONE: control update!\n", c->time);
@@ -150,7 +150,7 @@ void bot_ardrone::land()
 }
 
 
-void bot_ardrone::measurement_received(bot_ardronBOT_EVENT_MEASUREMENT *m)
+void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 {
 	if (exit_dataset_collector)
 		return;
@@ -158,14 +158,33 @@ void bot_ardrone::measurement_received(bot_ardronBOT_EVENT_MEASUREMENT *m)
 	if (PRINT_DEBUG)
 		printf("%f - ARDRONE: measurement received!\n", m->time);
 
+	// time since last frame
+	double diffticks = ((double)clock() - lastframe_time) / CLOCKS_PER_SEC;
+	if (diffticks < BOT_ARDRONE_MIN_FRAME_INTERVAL)
+		return;
+
+	lastframe_time = clock();
+
 	if (record)
 		recorder->record_measurement(m);
 
-	// if(SLAM_USE_QUEUE)
+	if (SLAM_ENABLED && enable_stitching)
+	{
+		if (SLAM_USE_QUEUE)
+		{
+			slam_queue_item queue_item = {MEASUREMENT, m};
+			slamcontroller->slam_queue.push(queue_item);
+			SetEvent(slamcontroller->slam_queue_pushed);
+		}
+		else
+		{
+			//slamcontroller->process_frame(f);
+		}
+	}
 }
 
 
-void bot_ardrone::frame_received(bot_ardronBOT_EVENT_FRAME *f)
+void bot_ardrone::frame_received(bot_ardrone_frame *f)
 {
 	if (exit_dataset_collector)
 		return;

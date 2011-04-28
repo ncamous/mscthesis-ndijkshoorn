@@ -8,9 +8,9 @@
 
 // forward declarations
 class bot_ardrone;
-struct bot_ardronBOT_EVENT_CONTROL;
-struct bot_ardronBOT_EVENT_MEASUREMENT;
-struct bot_ardronBOT_EVENT_FRAME;
+struct bot_ardrone_control;
+struct bot_ardrone_measurement;
+struct bot_ardrone_frame;
 
 
 using namespace std;
@@ -33,9 +33,9 @@ public:
 	void process_measurement(char *message, int bytes);
 	void process_frame(char *message, int bytes);
 
-	void bot_ardrone_usarsim::reset_frame(bot_ardronBOT_EVENT_FRAME *f);
+	void bot_ardrone_usarsim::reset_frame(bot_ardrone_frame *f);
 
-	bot_ardronBOT_EVENT_FRAME *frame;
+	bot_ardrone_frame *frame;
 
 private:
 	bot_ardrone *bot;

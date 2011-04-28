@@ -6,10 +6,12 @@
 #include "opencv2/core/types_c.h"
 #include "opencv2/features2d/features2d.hpp"
 
+class slam_matlab;
 
 enum slam_queue_type { CONTROL, MEASUREMENT, FRAME };
 
-struct bot_ardronBOT_EVENT_FRAME;
+struct bot_ardrone_frame;
+struct bot_ardrone_measurement;
 
 struct slam_queue_item {
 	slam_queue_type type;
@@ -27,8 +29,9 @@ public:
 	~slam(void);
 	void slam::run();
 	void init_CV();
-	void process_frame(bot_ardronBOT_EVENT_FRAME *f);
-	void process_frame_test(IplImage *f);
+	void process_frame(bot_ardrone_frame *f);
+	void process_frame(IplImage *i);
+	void process_measurement(bot_ardrone_measurement *m);
 	void find_features(IplImage *img, vector<cv::KeyPoint> &v);
 
 	void PrintMat(CvMat *A);
@@ -53,5 +56,9 @@ public:
 	int frame_counter;
 
 	cv::Mat prev_frame_h;
+
+	// sonar elevation map
+	int last_loc[2];
+	slam_matlab *matlab;
 };
 

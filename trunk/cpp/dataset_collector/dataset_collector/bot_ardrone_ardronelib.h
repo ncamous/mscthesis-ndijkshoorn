@@ -10,9 +10,9 @@
 #define DRONE_VIDEO_MAX_HEIGHT 480
 
 class bot_ardrone;
-struct bot_ardronBOT_EVENT_CONTROL;
-struct bot_ardronBOT_EVENT_MEASUREMENT;
-struct bot_ardronBOT_EVENT_FRAME;
+struct bot_ardrone_control;
+struct bot_ardrone_measurement;
+struct bot_ardrone_frame;
 
 
 using namespace std;
@@ -48,7 +48,7 @@ public:
 	static bot_ardrone_ardronelib* instance();
 
 	static bot_ardrone_ardronelib* myinstance;
-	bot_ardronBOT_EVENT_FRAME *frame;
+	bot_ardrone_frame *frame;
 
 private:
 	bot_ardrone *bot;
