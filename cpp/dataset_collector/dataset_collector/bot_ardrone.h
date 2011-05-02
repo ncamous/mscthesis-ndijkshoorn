@@ -74,6 +74,7 @@ struct bot_ardrone_frame {
 	int data_size;
 	int dest_size;
 	char filename[25];
+	bool usarsim;
 
 	bot_ardrone_frame();
 };

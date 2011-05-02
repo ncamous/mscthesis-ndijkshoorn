@@ -28,7 +28,7 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 		case VK_OEM_PLUS:
 			if (wParam == WM_KEYDOWN)
 			{
-				keyboard_vel = min(1.0f, keyboard_vel+0.1f);
+				keyboard_vel = min(1.0f, keyboard_vel+0.03f);
 				printf("Keyboard velocity set to: %f\n", keyboard_vel);
 			}
 			break;
@@ -36,7 +36,7 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 		case VK_OEM_MINUS:
 			if (wParam == WM_KEYDOWN)
 			{
-				keyboard_vel = max(0.1f, keyboard_vel-0.1f);
+				keyboard_vel = max(0.03f, keyboard_vel-0.03f);
 				printf("Keyboard velocity set to: %f\n", keyboard_vel);
 			}
 			break;

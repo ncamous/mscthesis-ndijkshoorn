@@ -11,6 +11,7 @@ bot_ardrone_usarsim::bot_ardrone_usarsim(bot_ardrone *bot)
 	this->bot = bot;
 
 	frame = new bot_ardrone_frame;
+	frame->usarsim = true;
 
 	/* sockets */
 	control_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CONTROL, USARSIM_PORT, USARSIM_IP, NULL, BOT_ARDONE_USARSIM_CONTROL_BUFSIZE, (botinterface*) this);
@@ -203,6 +204,7 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 
 			//reset_frame(frame);
 			frame = new bot_ardrone_frame;
+			frame->usarsim = true;
 			frame_socket->buffer = frame->data;
 
 			if (bot->slamcontroller->slam_queue.empty())

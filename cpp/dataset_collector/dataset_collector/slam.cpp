@@ -24,15 +24,21 @@ slam::slam()
 
 	matlab = new slam_matlab();
 
-
+	/*
     IplImage* img1 = cvLoadImage("puzzel1.jpg");
     IplImage* img2 = cvLoadImage("puzzel2.jpg");
+	IplImage* img3 = cvLoadImage("puzzel5.jpg");
 
 	process_frame(img1);
 
 	cvReleaseImage(&img1);
 
 	process_frame(img2);
+
+	cvReleaseImage(&img2);
+
+	process_frame(img3);
+	*/
 }
 
 
@@ -143,8 +149,11 @@ void slam::process_frame(bot_ardrone_frame *f)
 	double posX, posY;
 	posX = posY = 300.0;
 
-
 	frame->imageData = &f->data[4];
+
+	// frames from the real ardrone are received in RGB order instead of BGR
+	if (!f->usarsim)
+		cvCvtColor( frame, frame, CV_RGB2BGR );
 
 	vector<cv::KeyPoint> keypoints;
 
@@ -152,9 +161,6 @@ void slam::process_frame(bot_ardrone_frame *f)
 
 
 	/* plot keypoints */
-	// output image
-	//Mat out;
-	// draw grayscale image
 	cvCvtColor(frame, gray, CV_RGB2GRAY);
 	//drawKeypoints(gray, keypoints, out);
 
@@ -193,12 +199,10 @@ void slam::process_frame(bot_ardrone_frame *f)
 		vector<Point2f> points2;
 		KeyPoint::convert(prev_frame_keypoints, points2, trainIdxs);
 
-
 		Mat homography = findHomography( Mat(points1), Mat(points2), CV_RANSAC, ransacReprojThreshold );
 
 
-		/* count number of outliers */
-		/*
+		/* filter method #1: count number of outliers */
 		int outliers = 0;
 
         Mat points3t; perspectiveTransform(Mat(points1), points3t, homography);
@@ -210,83 +214,70 @@ void slam::process_frame(bot_ardrone_frame *f)
 
 		double outliers_percentage =  ((double)outliers / (double)points1.size()) * 100.0;
 
-		printf("percentage of outers: %f \n", outliers_percentage);
+		//printf("percentage of outers: %f \n", outliers_percentage);
 
-		if (outliers_percentage > 80.0)
+		if (outliers_percentage > 75.0)
 		{
-			printf("dropped crazy transformation\n");
+			printf("dropped frame based on outliers\n");
 			return;
 		}
-		*/
 
-		prev_frame_h *= homography;
+		Mat absolute_homography = prev_frame_h * homography;
 
-		/* get transformed corners to calc dest image size and translation */
-		double corners[] = {
-            frame->width, 0.0, 0.0,
-            frame->width, frame->height, 0.0,
-			0.0, frame->height, 0.0,
-		};
 
-		Mat coords = Mat(3, 3, CV_64F, corners);
-		Mat tc = coords * homography;
+		/* filter method #2: relative change */
+		Mat rel_change = prev_frame_h / absolute_homography;
+		CvScalar rel_change_avg = mean(rel_change);
+
+		printf("rel change: %f\n", rel_change_avg.val[0]);
+
+		if (abs(rel_change_avg.val[0]) > 5.0)
+		{
+			printf("dropped frame based on relative changes\n");
+			return;
+		}
+
+		//prev_frame_h *= homography;
+		prev_frame_h = absolute_homography;
+
+
+
+		/* get center position */
+		double center[] = { (double)frame->width * 0.5, (double)frame->height * 0.5, 1.0 };
+		Mat point_center = Mat(1, 3, CV_64F, center);
+
+		Mat tc = point_center * prev_frame_h;
+
 		double *tc_data = (double*) tc.data;
+		double *h_data = (double*) prev_frame_h.data;
 
-		/*
-		double minX, maxX, minY, maxY;
-		minX = min(min(tc_data[0], tc_data[3]), tc_data[6]);
-		maxX = max(max(tc_data[0], tc_data[3]), tc_data[6]);
-		minY = min(min(tc_data[1], tc_data[4]), tc_data[7]);
-		maxY = max(max(tc_data[1], tc_data[4]), tc_data[7]);
-		*/
+		last_loc[0] = int(tc_data[0] + h_data[2]);
+		last_loc[1] = int(tc_data[1] + h_data[5]);
 
-		//printf("minX: %f, minY: %f\n", minX, minY);
-
-		//dumpMatrix(translate);
-
-		//posX += h_data[2];
-		//posY += h_data[5];
-
-		//printf("\n\n");
-
-		//dumpMatrix(h);
-		//printf("\n");
-		//dumpMatrix(h);
-
-
-		/* default height */
-
-		//posX += minX;
-		//posY += minY;
-
-		//if (posX + dst_size.width > 800.0 || posX < 0.0 || posY + dst_size.height > 800.0 || posY < 0.0)
-		//	return;
-
-		CvMat CvHomography = homography;
-
-		cvWarpPerspective(frame, canvas, &CvHomography, CV_INTER_LINEAR);
-
-		// tmp
-		last_loc[0] = int(posX);
-		last_loc[1] = int(posY);
+		//printf("current pos: %i, %i\n", last_loc[0], last_loc[1]);
 	}
-	else
-	{
-		CvMat CvHomography = prev_frame_h;
 
-		//cvSetImageROI(canvas, cvRect(int(posX), int(posY), frame->width, frame->height));
-		//cvCopy(frame, canvas);
-		cvWarpPerspective(frame, canvas, &CvHomography, CV_INTER_LINEAR);
-		//cvResetImageROI(canvas);
 
-		// tmp
-		last_loc[0] = int(posX);
-		last_loc[1] = int(posY);
-	}
+	/* draw image */
+	CvMat CvHomography = prev_frame_h;
+	cvWarpPerspective(frame, canvas, &CvHomography, CV_INTER_LINEAR);
+
 
 	/* store current frame as previous frame */
+	
+	/*
+	prev_frame_keypoints.clear();
+	prev_frame_descriptors.empty();
+
+	find_features(canvas, prev_frame_keypoints);
+	IplImage *gray2 = cvCreateImage(cvSize(800, 800), IPL_DEPTH_8U, 1);
+	cvCvtColor(canvas, gray2, CV_RGB2GRAY);
+    de->compute(gray2, prev_frame_keypoints, prev_frame_descriptors);
+	*/
+
 	prev_frame_keypoints = keypoints;
 	prev_frame_descriptors = descriptors;
+
 	frame_counter++;
 
 	imshow("Image:", canvas);

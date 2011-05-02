@@ -8,7 +8,7 @@
 /* SLAM */
 #define SLAM_ENABLED true
 #define SLAM_USE_QUEUE true // use a queue to store the controldata and sensor data
-#define SLAM_SURF_HESSIANTHRESHOLD 40.0 // need 2000+ for real ARDRONE
+#define SLAM_SURF_HESSIANTHRESHOLD 200.0 // need 2000+ for real ARDRONE
 
 
 /* USARSIM */
