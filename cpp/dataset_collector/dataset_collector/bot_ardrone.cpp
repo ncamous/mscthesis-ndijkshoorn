@@ -151,6 +151,13 @@ void bot_ardrone::land()
 }
 
 
+void bot_ardrone::recover(bool send)
+{
+	if (control.state == BOT_STATE_LANDED)
+		i->recover(send);
+}
+
+
 void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 {
 	if (exit_dataset_collector)

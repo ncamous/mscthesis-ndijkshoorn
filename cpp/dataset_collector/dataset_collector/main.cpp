@@ -21,9 +21,9 @@ int main(int argc, char *argv[])
 	bot_ardrone *bots[2];
 
 	/* bot 1: REAL ARDRONE */
-	bot_ardrone ardrone(BOT_ARDRONE_INTERFACE_USARSIM);
+	bot_ardrone ardrone(BOT_ARDRONE_INTERFACE_ARDRONELIB);
 	bots[nr_bots++] = &ardrone;
-	//ardrone.set_record();
+	ardrone.set_record();
 
 
 	/* bot 2: USARSim ARDRONE */

@@ -30,7 +30,12 @@ void bot_ardrone_usarsim::init(void)
 
 	// ROBOCUP 2006
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -12600.0,800.0,1000.0}\r\n");
-	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -19.3,57.1,-4.0}\r\n");
+
+	// doolhof
+	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -52.0,5.68,-4.0}\r\n");
+
+	// zebrapad
+	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -19.3,57.1,-4.0}\r\n");
 
 	control_send("SET {Type Viewports} {Config SingleView} {Viewport1 Camera2}\r\n");
 	//control_send("SET {Type Camera} {Robot ARDrone} {Name Camera2} {Client 10.0.0.2}\r\n");

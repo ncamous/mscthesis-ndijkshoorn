@@ -10,6 +10,7 @@ extern "C" {
 	void ardronewin32_take_off();
 	void ardronewin32_land();
 	void ardronewin32_progress(int enable, float roll, float pitch, float gaz, float yaw);
+	void ardronewin32_recover(int send);
 }
 
 #endif
