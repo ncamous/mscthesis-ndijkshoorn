@@ -40,6 +40,7 @@ public:
 	void control_update(void *control);
 	void take_off();
 	void land();
+	void recover(bool send);
 
 	/* handlers */
 	void process_measurement(navdata_unpacked_t *n);

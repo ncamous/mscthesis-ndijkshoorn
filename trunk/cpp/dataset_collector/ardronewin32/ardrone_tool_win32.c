@@ -484,6 +484,15 @@ void ardronewin32_progress(int enable, float roll, float pitch, float gaz, float
 }
 
 
+void ardronewin32_recover(int send)
+{
+	if (send == 1)
+		ardrone_tool_set_ui_pad_select(1);
+	else
+		ardrone_tool_set_ui_pad_select(0);
+}
+
+
 // Default implementation for weak functions
 C_RESULT ardrone_tool_update_custom() { return C_OK; }
 C_RESULT ardrone_tool_display_custom() { return C_OK; }

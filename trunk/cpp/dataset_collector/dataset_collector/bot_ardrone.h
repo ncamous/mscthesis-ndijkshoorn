@@ -91,6 +91,7 @@ public:
 	void control_reset();
 	void take_off();
 	void land();
+	void recover(bool send);
 	void measurement_received(bot_ardrone_measurement *m);
 	void frame_received(bot_ardrone_frame *f);
 	static double get_clock();

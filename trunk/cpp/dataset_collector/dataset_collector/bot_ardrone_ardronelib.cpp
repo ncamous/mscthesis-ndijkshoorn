@@ -99,6 +99,13 @@ void bot_ardrone_ardronelib::land()
 }
 
 
+void bot_ardrone_ardronelib::recover(bool send)
+{
+	printf("Recovering\n");
+	ardronewin32_recover(send ? 1 : 0);
+}
+
+
 void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 {
 	bot_ardrone_measurement *m = new bot_ardrone_measurement;

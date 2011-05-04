@@ -10,4 +10,5 @@ public:
 	/* aereal */
 	virtual void take_off() {} // not required
 	virtual void land() {} // not required
+	virtual void recover(bool send) {} // not required
 };
