@@ -22,7 +22,7 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 			if (wParam == WM_KEYDOWN)
 			{
 				for(i=0; i<keyboard_nr_bots; i++)
-				keyboard_bot[i]->enable_stitching = !keyboard_bot[i]->enable_stitching;
+				keyboard_bot[i]->set_slam(!keyboard_bot[i]->slam_state);
 			}
 			break;
 

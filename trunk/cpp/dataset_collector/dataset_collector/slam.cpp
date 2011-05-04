@@ -24,6 +24,8 @@ slam::slam()
 
 	initial_height = -1;
 
+	dropped_frame_counter = 0;
+
 	matlab = new slam_matlab();
 
 	/*
@@ -157,13 +159,17 @@ void slam::process_frame(bot_ardrone_frame *f)
 		cvCvtColor( frame, frame, CV_RGB2BGR );
 
 	vector<cv::KeyPoint> keypoints;
-
 	find_features(frame, keypoints, false);
 
 
 	/* plot keypoints */
 	cvCvtColor(frame, gray, CV_RGB2GRAY);
-
+	//Mat out;
+	//drawKeypoints(gray, keypoints, out);
+	//imshow("Image:", out);
+	//Sleep(200);
+	//cvWaitKey(4);
+	//return;
 
 	/* match with previous frame */
 	Mat descriptors;
@@ -187,7 +193,7 @@ void slam::process_frame(bot_ardrone_frame *f)
 		/*****/
 
 
-		if (keypoints.size() < 20)
+		if (keypoints.size() < 30)
 		{
 			printf("Not enough features found: dropping frame\n");
 			return;
@@ -196,7 +202,7 @@ void slam::process_frame(bot_ardrone_frame *f)
 		vector<DMatch> matches;
 		dm.match(descriptors, prev_frame_descriptors, matches);
 
-		if (matches.size() < 6)
+		if (matches.size() < 20)
 			return;
 
 		/* calculate transformation (RANSAC) */
@@ -215,9 +221,7 @@ void slam::process_frame(bot_ardrone_frame *f)
 		KeyPoint::convert(prev_frame_keypoints, points2, trainIdxs);
 
 		Mat homography = findHomography( Mat(points1), Mat(points2), CV_RANSAC, ransacReprojThreshold );
-
-
-		dumpMatrix(homography);
+		//dumpMatrix(homography);
 
 
 		/* filter method #1: count number of outliers */
@@ -237,6 +241,7 @@ void slam::process_frame(bot_ardrone_frame *f)
 		if (outliers_percentage > 85.0)
 		{
 			printf("dropped frame based on outliers\n");
+			dropped_frame_counter++;
 			return;
 		}
 
@@ -246,13 +251,18 @@ void slam::process_frame(bot_ardrone_frame *f)
 
 		/* filter method #2: relative change */
 		Mat rel_change = prev_frame_h / absolute_homography;
-		CvScalar rel_change_avg = mean(rel_change);
+		dumpMatrix(rel_change);
+		Mat tmp = abs(rel_change);
+		//double max_change = MatMax(tmp);
 
-		printf("rel change: %f\n", rel_change_avg.val[0]);
+		CvScalar rel_change_avg = mean(tmp);
+		//printf("rel change: %f\n", rel_change_avg.val[0]);
 
-		if (abs(rel_change_avg.val[0]) > 3.0)
+		if (abs(rel_change_avg.val[0]) > 3.5)
+		//if (max_change > 3.5)
 		{
 			printf("dropped frame based on relative changes\n");
+			dropped_frame_counter++;
 			return;
 		}
 
@@ -414,3 +424,18 @@ void slam::dumpMatrix(const Mat &mat) {
         printf("\n"); 
     } 
 } 
+
+double slam::MatMax(const cv::Mat &mat)
+{
+	double max = 0.0;
+	double *vals = (double*) mat.data;
+	int elements = mat.rows * mat.cols;
+
+	for (int i = 0; i < elements; i++)
+	{
+		if (vals[i] > max)
+			max = vals[i];
+	}
+
+	return max;
+}

@@ -97,6 +97,7 @@ public:
 	static double get_clock();
 	void set_record();
 	void set_playback(char *dataset);
+	void set_slam(bool state);
 
 	static clock_t start_clock;
 	botinterface *i;
@@ -107,6 +108,6 @@ public:
 
 	// slam
 	clock_t lastframe_time;
+	bool slam_state;
 	slam *slamcontroller;
-	bool enable_stitching;
 };

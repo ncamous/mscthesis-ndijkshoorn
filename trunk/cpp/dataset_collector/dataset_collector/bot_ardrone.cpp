@@ -40,7 +40,7 @@ bot_ardrone::bot_ardrone(int botinterface)
 	recorder = NULL;
 	record = playback = false;
 	battery = NULL;
-	enable_stitching = false;
+	slam_state = false;
 
 	control_reset();
 
@@ -173,10 +173,10 @@ void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 
 	lastframe_time = clock();
 
-	if (record)
-		recorder->record_measurement(m);
+	//if (record)
+	//	recorder->record_measurement(m);
 
-	if (SLAM_ENABLED && enable_stitching)
+	if (slam_state)
 	{
 		if (SLAM_USE_QUEUE)
 		{
@@ -205,7 +205,7 @@ void bot_ardrone::frame_received(bot_ardrone_frame *f)
 	if (diffticks < BOT_ARDRONE_MIN_FRAME_INTERVAL)
 	{
 		printf("Skipping frame\n");
-		//return;
+		return;
 	}*/
 
 	lastframe_time = clock();
@@ -213,7 +213,8 @@ void bot_ardrone::frame_received(bot_ardrone_frame *f)
 	if (record && BOT_ARDRONE_RECORD_FRAMES)
 		recorder->record_frame(f);
 
-	if (SLAM_ENABLED && enable_stitching)
+
+	if (slam_state && slamcontroller->slam_queue.empty())
 	{
 		if (SLAM_USE_QUEUE)
 		{
@@ -255,4 +256,16 @@ void bot_ardrone::set_playback(char *dataset)
 		recorder->playback(dataset);
 		playback = true;
 	}
+}
+
+
+void bot_ardrone::set_slam(bool state)
+{
+	if (!SLAM_ENABLED)
+	{
+		printf("Unable to set SLAM state, because SLAM_ENABLED is FALSE\n");
+		return;
+	}
+
+	slam_state = state;
 }

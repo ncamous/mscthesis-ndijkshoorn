@@ -97,6 +97,9 @@ void bot_ardrone_recorder::record_frame(bot_ardrone_frame *f)
 void bot_ardrone_recorder::playback(char *dataset)
 {
 	char filename[25];
+	int wait;
+	double last_event_time = 0.0;
+	double event_time;
 
 	sprintf_s(dataset_dir, 25, "dataset/%s", dataset);
 	sprintf_s(filename, 25, "%s/output.yaml", dataset_dir);
@@ -113,6 +116,14 @@ void bot_ardrone_recorder::playback(char *dataset)
 
     while(parser.GetNextDocument(doc))
 	{
+		event_time = doc["t"];
+		wait = int((event_time - last_event_time) * 1000.0);
+		if (wait > 0)
+			Sleep(wait);
+
+		last_event_time = event_time;
+
+
 		doc["e"] >> event_type;
 
 		switch (event_type)

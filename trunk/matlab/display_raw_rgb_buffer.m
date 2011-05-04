@@ -1,13 +1,13 @@
-folder = 'C:/Users/Nick/Documents/Thesis/code/cpp/dataset_collector/dataset_collector/dataset/003';
-nr_images = 645;
-byte_order_rgb = 1;
+folder = 'C:/Users/Nick/Documents/Thesis/code/cpp/dataset_collector/dataset_collector/dataset/006';
+nr_images = 738;
+byte_order_rgb = 0;
 %width=176; % 176
 %height=38; % 144, but i only stored a part of the buffer at the moment (friday)
 %N=width*height;
 %DRONE_VIDEO_MAX_WIDTH=640;
 %DRONE_VIDEO_MAX_HEIGHT=480;
 
-for i = 250:nr_images
+for i = 1:nr_images
 
 %for i = 1:nr_images
     
@@ -46,8 +46,11 @@ for i = 250:nr_images
             end
             index = index + 3;
         end
-	end
+    end
+    
+    i
 
     figure(1);clf;
     imshow(C, []);
+    pause(0.05);
 end
