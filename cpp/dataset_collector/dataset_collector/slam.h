@@ -37,6 +37,7 @@ public:
 
 	void PrintMat(CvMat *A);
 	void dumpMatrix(const cv::Mat &mat);
+	double MatMax(const cv::Mat &mat);
 
 	HANDLE h;
 	HANDLE slam_queue_pushed;
@@ -48,6 +49,7 @@ public:
 	IplImage *gray;
 	vector<cv::KeyPoint> prev_frame_keypoints;
 	cv::Mat prev_frame_descriptors;
+
 	cv::FeatureDetector *fd;
 	cv::DescriptorExtractor *de;
 	cv::BruteForceMatcher<cv::L2<float>> dm;
@@ -63,6 +65,8 @@ public:
 	slam_matlab *matlab;
 	int elevation;
 	int initial_height;
+
+	int dropped_frame_counter;
 
 	cv::Mat canvas_mask;
 };

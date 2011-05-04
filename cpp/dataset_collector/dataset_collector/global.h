@@ -8,7 +8,7 @@
 /* SLAM */
 #define SLAM_ENABLED true
 #define SLAM_USE_QUEUE true // use a queue to store the controldata and sensor data
-#define SLAM_SURF_HESSIANTHRESHOLD 4000.0 // need 2000+ for real ARDRONE
+#define SLAM_SURF_HESSIANTHRESHOLD 50.0
 
 
 /* USARSIM */
@@ -29,6 +29,7 @@
 	#define BOT_ARDRONE_USARSIM_FRAME_BLOCKSIZE 8000
 	#define BOT_ARDONE_USARSIM_CONTROL_BUFSIZE 400
 	#define BOT_ARDRONE_USARSIM_FRAME_REQDELAY 200 // at least 20 ms
+	#define BOT_ARDRONE_USARSIM_FRAME_MODE 2 // 1: request new frame when SLAM queue empty, 2: fixed framerate
 
 	/* keyboard */
 	#define BOT_ARDRONE_KEYBOARD_VEL 0.5f

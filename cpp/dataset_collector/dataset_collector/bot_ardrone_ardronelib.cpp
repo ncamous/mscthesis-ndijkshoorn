@@ -145,12 +145,6 @@ void bot_ardrone_ardronelib::process_frame(unsigned char* rgbtexture, int w, int
 	int bufpos, y;
 	char *rgb_src = (char *)rgbtexture;
 
-	// drop frame
-	if (!bot->slamcontroller->slam_queue.empty())
-	{
-		return;
-	}
-
 	// size check
 	if (w*h*3 + 4 > BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE)
 	{
