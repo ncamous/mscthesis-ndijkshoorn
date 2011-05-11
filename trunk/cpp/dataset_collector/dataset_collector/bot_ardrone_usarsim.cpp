@@ -14,7 +14,9 @@ bot_ardrone_usarsim::bot_ardrone_usarsim(bot_ardrone *bot)
 	frame->usarsim = true;
 
 	/* sockets */
+	printf("Connecting to USARSim\n");
 	control_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CONTROL, USARSIM_PORT, USARSIM_IP, NULL, BOT_ARDONE_USARSIM_CONTROL_BUFSIZE, (botinterface*) this);
+	printf("Connecting to UPIS\n");
 	frame_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_FRAME, UPIS_PORT, USARSIM_IP, frame->data, /*BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE*/BOT_ARDRONE_USARSIM_FRAME_BLOCKSIZE, (botinterface*) this);
 }
 
@@ -32,10 +34,10 @@ void bot_ardrone_usarsim::init(void)
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -12600.0,800.0,1000.0}\r\n");
 
 	// doolhof
-	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -52.0,5.68,-4.0}\r\n");
+	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -52.0,5.68,-4.0}\r\n");
 
 	// zebrapad
-	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -19.3,57.1,-4.0}\r\n");
+	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -19.3,57.1,-4.0}\r\n");
 
 	control_send("SET {Type Viewports} {Config SingleView} {Viewport1 Camera2}\r\n");
 	//control_send("SET {Type Camera} {Robot ARDrone} {Name Camera2} {Client 10.0.0.2}\r\n");

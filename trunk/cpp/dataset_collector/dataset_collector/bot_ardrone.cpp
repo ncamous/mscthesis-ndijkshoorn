@@ -189,6 +189,8 @@ void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 			//slamcontroller->process_frame(f);
 		}
 	}
+
+	//printf("height: %i\n", m->altitude);
 }
 
 
@@ -208,7 +210,7 @@ void bot_ardrone::frame_received(bot_ardrone_frame *f)
 		return;
 	}*/
 
-	lastframe_time = clock();
+	//lastframe_time = clock();
 
 	if (record && BOT_ARDRONE_RECORD_FRAMES)
 		recorder->record_frame(f);
@@ -220,7 +222,6 @@ void bot_ardrone::frame_received(bot_ardrone_frame *f)
 		{
 			slam_queue_item queue_item = {FRAME, f};
 			slamcontroller->slam_queue.push(queue_item);
-			//printf("sending slam_queue_pushed, queue size: %i\n", slamcontroller->slam_queue.size());
 			SetEvent(slamcontroller->slam_queue_pushed);
 		}
 		else

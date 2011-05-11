@@ -10,9 +10,11 @@ bool exit_dataset_collector = false;
 int main(int argc, char *argv[])
 {
 	/**** PLAYBACK ****/
-	//bot_ardrone ardrone(BOT_ARDRONE_INTERFACE_NONE);
-	//ardrone.set_slam(true);
-	//ardrone.set_playback("006");
+	/*
+	bot_ardrone ardrone(BOT_ARDRONE_INTERFACE_NONE);
+	ardrone.set_slam(true);
+	ardrone.set_playback("006");
+	*/
 	//Sleep(10000);
 
 

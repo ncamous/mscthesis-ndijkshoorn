@@ -34,13 +34,9 @@ slam::slam()
 	IplImage* img3 = cvLoadImage("puzzel5.jpg");
 
 	process_frame(img1);
-
 	cvReleaseImage(&img1);
-
 	process_frame(img2);
-
 	cvReleaseImage(&img2);
-
 	process_frame(img3);
 	*/
 }
@@ -69,13 +65,12 @@ static DWORD WINAPI process_thread(void* Param)
 
 	slam_queue_item *item;
 
-
 	while (!exit_dataset_collector)
 	{
 		if (q->empty())
 		{
 			SetEvent(This->slam_queue_empty);
-			WaitForSingleObject(This->slam_queue_pushed, INFINITE);
+			WaitForSingleObject(This->slam_queue_pushed, 2000); // ms
 		}
 
 		if (q->empty())
@@ -83,6 +78,9 @@ static DWORD WINAPI process_thread(void* Param)
 			//printf("queue is empty, while is should not!\n");
 			continue;
 		}
+
+		if (!This->CV_ready)
+			This->init_CV();
 
 		item = &q->front();
 		q->pop();
@@ -93,7 +91,7 @@ static DWORD WINAPI process_thread(void* Param)
 				break;
 			
 			case MEASUREMENT:
-				//This->process_measurement( (bot_ardrone_measurement*) item->object );
+				This->process_measurement( (bot_ardrone_measurement*) item->object );
 				break;
 			
 			case FRAME:
@@ -102,6 +100,18 @@ static DWORD WINAPI process_thread(void* Param)
 		}
 	}
 
+	/* obstacle map */
+	if (SLAM_USE_OBSTACLE_MASK)
+	{
+		cvNamedWindow("Obstacles:", CV_WINDOW_AUTOSIZE);
+		IplImage *obstacle_img = cvCreateImage(cvSize(800, 800), 8, 1);
+		obstacle_img->imageData = (char*)This->obstacle_map.data;
+		imshow("Obstacles:", obstacle_img);
+		cvWaitKey(4);
+	}
+
+	/* matlab plot */
+	//printf("Display Matlab\n");
 	//This->matlab->display();
 
 	// keep Matlab window alive
@@ -128,16 +138,20 @@ void slam::init_CV()
 	h_data[2] = 300.0;
 	h_data[5] = 300.0;
 
-	canvas_mask = Mat::zeros(800, 800, CV_8UC1);
+	if (SLAM_BUILD_OBSTACLE_MAP)
+	{
+		obstacle_map = Mat(800, 800, CV_8UC1);
+		obstacle_map = 255;
+
+		if (SLAM_USE_OBSTACLE_MASK)
+			cvNamedWindow("Mask:", CV_WINDOW_AUTOSIZE);
+	}
 
 	cvNamedWindow("Image:", CV_WINDOW_AUTOSIZE);
 }
 
 void slam::process_frame(bot_ardrone_frame *f)
 {
-	if (!CV_ready)
-		init_CV();
-
 	if (frame == NULL)
 	{
 		unsigned short w, h;
@@ -154,27 +168,33 @@ void slam::process_frame(bot_ardrone_frame *f)
 
 	frame->imageData = &f->data[4];
 
+
+	/* display image */
+	/*
+	imshow("Image:", frame);
+	cvWaitKey(4);
+	return;
+	*/
+	/**/
+
+
 	// frames from the real ardrone are received in RGB order instead of BGR
 	if (!f->usarsim)
 		cvCvtColor( frame, frame, CV_RGB2BGR );
 
+
+	/* find features */
 	vector<cv::KeyPoint> keypoints;
-	find_features(frame, keypoints, false);
+	find_features(frame, keypoints);
 
 
-	/* plot keypoints */
-	cvCvtColor(frame, gray, CV_RGB2GRAY);
-	//Mat out;
-	//drawKeypoints(gray, keypoints, out);
-	//imshow("Image:", out);
-	//Sleep(200);
-	//cvWaitKey(4);
-	//return;
-
-	/* match with previous frame */
+	/* calculate descriptors (on greyscale image) */
 	Mat descriptors;
+	cvCvtColor(frame, gray, CV_RGB2GRAY);
     de->compute(gray, keypoints, descriptors);
 
+
+	/* match with previous frame */
 	if (frame_counter > 0)
 	{
 		double ransacReprojThreshold = 3.0;
@@ -205,6 +225,7 @@ void slam::process_frame(bot_ardrone_frame *f)
 		if (matches.size() < 20)
 			return;
 
+
 		/* calculate transformation (RANSAC) */
 		vector<int> queryIdxs( matches.size() ), trainIdxs( matches.size() );
 		for( size_t i = 0; i < matches.size(); i++ )
@@ -221,7 +242,6 @@ void slam::process_frame(bot_ardrone_frame *f)
 		KeyPoint::convert(prev_frame_keypoints, points2, trainIdxs);
 
 		Mat homography = findHomography( Mat(points1), Mat(points2), CV_RANSAC, ransacReprojThreshold );
-		//dumpMatrix(homography);
 
 
 		/* filter method #1: count number of outliers */
@@ -251,7 +271,7 @@ void slam::process_frame(bot_ardrone_frame *f)
 
 		/* filter method #2: relative change */
 		Mat rel_change = prev_frame_h / absolute_homography;
-		dumpMatrix(rel_change);
+		//dumpMatrix(rel_change);
 		Mat tmp = abs(rel_change);
 		//double max_change = MatMax(tmp);
 
@@ -325,63 +345,73 @@ void slam::process_frame(IplImage *i)
 
 void slam::process_measurement(bot_ardrone_measurement *m)
 {
+	if (frame == NULL) // we need the frame size in order to calculate the canvas scale
+		return;
+
 	// initial height
 	if (initial_height == -1)
+	{
 		initial_height = m->altitude;
+		canvas_scale = 2.0f * tan(((BOT_ARDRONE_CAM_FOV)/180.0f)*PI) * (float)initial_height;
+		canvas_scale /= (float)frame->width;
+		printf("MAP SCALE: 1px is %f mm\n", canvas_scale);
+		printf("MAP SIZE: %f x %f m\n", canvas_scale * 0.8f, canvas_scale * 0.8f);
+	}
 
 	elevation = initial_height - m->altitude;
 	double rel_elevation = (double)elevation / (double)initial_height;
 
-	//printf("elevation: %i, rel_elevation: %f\n", elevation, rel_elevation);
-
-	if (abs(rel_elevation) > 0.2)
+	if (abs(rel_elevation) > 0.1)
 	{
-		printf("obstacle found: apply mask\n");
-	}
+		float a = (2.0f * tan(((BOT_ARDRONE_SONAR_FOV)/180.0f)*PI) * (float) m->altitude);
+		// size (mm) to pixels
+		a *= 1.0f / canvas_scale;
 
-	int t[3] = {last_loc[0], last_loc[1], elevation};
-
-	matlab->add_elevation_map_tuple((int*) t);
-}
-
-
-void slam::find_features(IplImage *img, vector<cv::KeyPoint> &v, bool use_mask)
-{
-	//double tt = (double)cvGetTickCount();
-
-	if (use_mask)
-		fd->detect(img, v, canvas_mask);
-	else
-		fd->detect(img, v);
-
-	printf("found %i features\n", v.size());
-
-	//tt = (double)cvGetTickCount() - tt;
-	//printf( "Extraction time = %gms\n", tt/(cvGetTickFrequency()*1000.));
-}
-
-
-void slam::set_canvas_mask()
-{
-	int minX, maxX, minY, maxY;
-
-	minX = max(0, last_loc[0] - 100);
-	minY = max(0, last_loc[1] - 100);
-
-	maxX = min(800, minX + 200);
-	maxY = min(800, minY + 200);
-
-	//cvmSetZero(&canvas_mask);
-	canvas_mask = Scalar(0);
-
-	for(int x=minX; x<maxX; x++)
-	{
-		for(int y=minY; y<maxY; y++)
+		if (SLAM_BUILD_OBSTACLE_MAP)
 		{
-			canvas_mask.at<uint8_t>(y,x) = 1;
+			printf("obstacle found: apply mask. sonar field size: %f\n", a);
+
+			int d = max(1, int(a * 0.5));
+			Rect r(last_loc[0] - d, last_loc[1] - d, 2*d, 2*d);
+			Mat roi(obstacle_map, r);
+			roi = 0;
 		}
 	}
+
+	//int t[3] = {last_loc[0], last_loc[1], elevation};
+	//matlab->add_elevation_map_tuple((int*) t);
 }
+
+
+void slam::find_features(IplImage *img, vector<cv::KeyPoint> &v)
+{
+	if (SLAM_USE_OBSTACLE_MASK)
+		calculate_frame_mask(img->width, img->height);
+
+	// frame_mask is ignored when empty
+	fd->detect(img, v, frame_mask);
+
+	printf("found %i features\n", v.size());
+}
+
+
+void slam::calculate_frame_mask(int width, int height)
+{
+	IplImage *mask_img = cvCreateImage(cvSize(width, height), 8, 1);
+	Mat h_inverse = prev_frame_h.inv();
+	CvMat invHomography = h_inverse;
+
+	IplImage *obstacle_map_img = cvCreateImageHeader(cvSize(800, 800), 8, 1);
+	obstacle_map_img->imageData = (char*)obstacle_map.data;
+
+	cvWarpPerspective(obstacle_map_img, mask_img, &invHomography, CV_INTER_LINEAR);
+
+	frame_mask = Mat(mask_img, true); // copy
+
+	imshow("Mask:", mask_img);
+	cvWaitKey(4);
+}
+
 
 void slam::PrintMat(CvMat *A)
 {
@@ -435,6 +465,32 @@ double slam::MatMax(const cv::Mat &mat)
 	{
 		if (vals[i] > max)
 			max = vals[i];
+	}
+
+	return max;
+}
+
+double slam::ColMin(const cv::Mat &mat, int col)
+{
+	double min = FLT_MAX;
+
+	for (int i = 0; i < mat.rows; i++)
+	{
+		if (mat.at<double> (i, col) < min)
+			min = mat.at<double> (i, col);
+	}
+
+	return min;
+}
+
+double slam::ColMax(const cv::Mat &mat, int col)
+{
+	double max = FLT_MIN;
+
+	for (int i = 0; i < mat.rows; i++)
+	{
+		if (mat.at<double> (i, col) > max)
+			max = mat.at<double> (i, col);
 	}
 
 	return max;
