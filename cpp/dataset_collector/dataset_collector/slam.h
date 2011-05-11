@@ -32,12 +32,15 @@ public:
 	void process_frame(bot_ardrone_frame *f);
 	void process_frame(IplImage *i);
 	void process_measurement(bot_ardrone_measurement *m);
-	void find_features(IplImage *img, vector<cv::KeyPoint> &v, bool use_mask);
-	void set_canvas_mask();
+	void find_features(IplImage *img, vector<cv::KeyPoint> &v);
+	void calculate_frame_mask(int width, int height);
 
+	// openCV helpers
 	void PrintMat(CvMat *A);
 	void dumpMatrix(const cv::Mat &mat);
 	double MatMax(const cv::Mat &mat);
+	double ColMin(const cv::Mat &mat, int col);
+	double ColMax(const cv::Mat &mat, int col);
 
 	HANDLE h;
 	HANDLE slam_queue_pushed;
@@ -65,9 +68,11 @@ public:
 	slam_matlab *matlab;
 	int elevation;
 	int initial_height;
+	float canvas_scale; // px -> mm
 
 	int dropped_frame_counter;
 
-	cv::Mat canvas_mask;
+	cv::Mat obstacle_map;
+	cv::Mat frame_mask;
 };
 
