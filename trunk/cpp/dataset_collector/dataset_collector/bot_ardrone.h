@@ -32,6 +32,7 @@
 struct bot_ardrone_control {
 	double time;
 	float velocity[4];
+	float velocity_compensate[4];
 	bot_state state;
 
 	bot_ardrone_control();
@@ -89,6 +90,7 @@ public:
 	void control_update();
 	void control_update(bot_ardrone_control *c);
 	void control_reset();
+	void control_compensate(bot_ardrone_measurement *m);
 	void take_off();
 	void land();
 	void recover(bool send);
@@ -100,6 +102,7 @@ public:
 	void set_slam(bool state);
 
 	static clock_t start_clock;
+	int i_id;
 	botinterface *i;
 	bot_ardrone_control control;
 	bot_ardrone_recorder *recorder;

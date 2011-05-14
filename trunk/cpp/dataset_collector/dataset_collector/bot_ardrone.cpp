@@ -37,6 +37,7 @@ bot_ardrone::bot_ardrone(int botinterface)
 {
 	start_clock = clock();
 	i = NULL;
+	i_id = botinterface;
 	recorder = NULL;
 	record = playback = false;
 	battery = NULL;
@@ -120,8 +121,6 @@ void bot_ardrone::control_update(bot_ardrone_control *c)
 
 	if (i != NULL)
 		i->control_update((void*) &control);
-
-	// if (SLAM_USE_QUEUE)
 }
 
 
@@ -134,6 +133,22 @@ void bot_ardrone::control_reset()
 
 	if (control.state == BOT_STATE_FLY)
 		control.state = BOT_STATE_HOVER;
+}
+
+
+void bot_ardrone::control_compensate(bot_ardrone_measurement *m)
+{
+	// only when BOT_STATE_FLY and no vertical speed set by the user
+	if (m->vel[2] >= 50.0f && control.state == BOT_STATE_FLY && control.velocity[BOT_ARDRONE_AltitudeVelocity] == 0.0f)
+	{
+		control.velocity_compensate[BOT_ARDRONE_AltitudeVelocity] = m->vel[2] / BOT_ARDRONE_CONTROL_VZ_MAX;
+		control_update();
+	}
+	else if (control.velocity_compensate[BOT_ARDRONE_AltitudeVelocity] != 0.0f)
+	{
+		control.velocity_compensate[BOT_ARDRONE_AltitudeVelocity] = 0.0f;
+		control_update();
+	}
 }
 
 
@@ -173,8 +188,13 @@ void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 
 	lastframe_time = clock();
 
-	//if (record)
-	//	recorder->record_measurement(m);
+
+	/* compensate the ARDrone's fixed altitude */
+	if (i_id == BOT_ARDRONE_INTERFACE_ARDRONELIB)
+		control_compensate(m);
+
+	if (record)
+		recorder->record_measurement(m);
 
 	if (slam_state)
 	{
@@ -189,8 +209,6 @@ void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 			//slamcontroller->process_frame(f);
 		}
 	}
-
-	//printf("height: %i\n", m->altitude);
 }
 
 
@@ -216,12 +234,13 @@ void bot_ardrone::frame_received(bot_ardrone_frame *f)
 		recorder->record_frame(f);
 
 
-	if (slam_state && slamcontroller->slam_queue.empty())
+	if (slam_state && /*slamcontroller->slam_queue.empty()*/ slamcontroller->slam_queue_frames == 0)
 	{
 		if (SLAM_USE_QUEUE)
 		{
 			slam_queue_item queue_item = {FRAME, f};
 			slamcontroller->slam_queue.push(queue_item);
+			slamcontroller->slam_queue_frames++;
 			SetEvent(slamcontroller->slam_queue_pushed);
 		}
 		else

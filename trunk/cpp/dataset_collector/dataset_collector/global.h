@@ -9,8 +9,8 @@
 #define SLAM_ENABLED true
 #define SLAM_USE_QUEUE true // use a queue to store the controldata and sensor data
 #define SLAM_SURF_HESSIANTHRESHOLD 200.0
-#define SLAM_BUILD_OBSTACLE_MAP true
-#define SLAM_USE_OBSTACLE_MASK true
+#define SLAM_BUILD_OBSTACLE_MAP false
+#define SLAM_USE_OBSTACLE_MASK false
 
 
 /* USARSIM */
@@ -27,13 +27,14 @@
 #define BOT_ARDRONE_RECORD_FRAMES true
 #define BOT_ARDRONE_MIN_FRAME_INTERVAL 0.1
 #define BOT_ARDRONE_CAM_FOV 32.5f // camera FOV / 2
-#define BOT_ARDRONE_SONAR_FOV 10.0f // sonar angle FOV
+#define BOT_ARDRONE_SONAR_FOV 20.0f // sonar angle FOV
+#define BOT_ARDRONE_CONTROL_VZ_MAX 1000.0f // mm/s
 
 	/* USARSim */
 	#define BOT_ARDRONE_USARSIM_FRAME_BLOCKSIZE 8000
 	#define BOT_ARDONE_USARSIM_CONTROL_BUFSIZE 400
 	#define BOT_ARDRONE_USARSIM_FRAME_REQDELAY 200 // at least 20 ms
-	#define BOT_ARDRONE_USARSIM_FRAME_MODE 2 // 1: request new frame when SLAM queue empty, 2: fixed framerate
+	#define BOT_ARDRONE_USARSIM_FRAME_MODE 1 // 1: request new frame when SLAM queue empty, 2: fixed framerate
 
 	/* keyboard */
 	#define BOT_ARDRONE_KEYBOARD_VEL 0.5f

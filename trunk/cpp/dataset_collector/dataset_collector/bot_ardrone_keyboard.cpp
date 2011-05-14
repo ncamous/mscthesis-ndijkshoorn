@@ -18,11 +18,20 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 	// http://delphi.about.com/od/objectpascalide/l/blvkc.htm
 	switch (kd->vkCode)
 	{
+		case 84: // T
+			if (wParam == WM_KEYDOWN)
+			{
+				printf("Start recording\n");
+				for(i=0; i<keyboard_nr_bots; i++)
+					keyboard_bot[i]->set_record();
+			}
+			break;
+
 		case 83: // S
 			if (wParam == WM_KEYDOWN)
 			{
 				for(i=0; i<keyboard_nr_bots; i++)
-				keyboard_bot[i]->set_slam(!keyboard_bot[i]->slam_state);
+					keyboard_bot[i]->set_slam(!keyboard_bot[i]->slam_state);
 			}
 			break;
 

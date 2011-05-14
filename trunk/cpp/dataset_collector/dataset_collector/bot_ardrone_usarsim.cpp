@@ -51,15 +51,15 @@ void bot_ardrone_usarsim::init(void)
 
 void bot_ardrone_usarsim::control_update(void *control)
 {
-	bot_ardrone_control *control_struct = (bot_ardrone_control*) control;
+	bot_ardrone_control *c = (bot_ardrone_control*) control;
 
 	char msg[200];
 
 	sprintf_s(msg, 200, "DRIVE {AltitudeVelocity %f} {LinearVelocity %f} {LateralVelocity %f} {RotationalVelocity %f} {Normalized false}\r\n",
-		control_struct->velocity[BOT_ARDRONE_AltitudeVelocity],
-		control_struct->velocity[BOT_ARDRONE_LinearVelocity],
-		control_struct->velocity[BOT_ARDRONE_LateralVelocity],
-		control_struct->velocity[BOT_ARDRONE_RotationalVelocity]);
+		c->velocity[BOT_ARDRONE_AltitudeVelocity],
+		c->velocity[BOT_ARDRONE_LinearVelocity],
+		c->velocity[BOT_ARDRONE_LateralVelocity],
+		c->velocity[BOT_ARDRONE_RotationalVelocity]);
 
 	control_send(msg);
 }
@@ -126,6 +126,7 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 				m = new bot_ardrone_measurement;
 				m->usarsim = true;
 				m->type = BOT_ARDRONBOT_EVENT_MEASUREMENT_SEN;
+				m->vel[2] = 100.0f;
 			}
 
 			m->sensor = usarsim_msgparser_type(&line);
@@ -215,12 +216,17 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 			frame_socket->buffer = frame->data;
 
 			// slam enabled and queue not empty -> wait
-			if (BOT_ARDRONE_USARSIM_FRAME_MODE == 1 && bot->slam_state && !bot->slamcontroller->slam_queue.empty())
+			if (BOT_ARDRONE_USARSIM_FRAME_MODE == 1 && bot->slam_state && bot->slamcontroller->slam_queue_frames != 0 /*!bot->slamcontroller->slam_queue.empty()*/)
+			{
+				//printf("waiting for event\n");
 				WaitForSingleObject(bot->slamcontroller->slam_queue_empty, INFINITE);
+				//printf("done waiting\n");
+			}
 			// slam not (yet) enabled, or fixed fps mode
 			else if ((BOT_ARDRONE_USARSIM_FRAME_MODE == 1 && !bot->slam_state) || BOT_ARDRONE_USARSIM_FRAME_MODE == 2)
 				Sleep(BOT_ARDRONE_USARSIM_FRAME_REQDELAY - 20);
 
+			//printf("reqeusting frame\n");
 			frame_socket->send("OK");
 			Sleep(20); // wait a bit before receiving new frame data
 		}
