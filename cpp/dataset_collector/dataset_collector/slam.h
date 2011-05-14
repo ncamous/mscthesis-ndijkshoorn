@@ -58,6 +58,7 @@ public:
 	cv::BruteForceMatcher<cv::L2<float>> dm;
 
 	SLAMQUEUE slam_queue;
+	int slam_queue_frames;
 
 	int frame_counter;
 

@@ -24,6 +24,7 @@ slam::slam()
 
 	initial_height = -1;
 
+	slam_queue_frames = 0;
 	dropped_frame_counter = 0;
 
 	matlab = new slam_matlab();
@@ -69,16 +70,19 @@ static DWORD WINAPI process_thread(void* Param)
 	{
 		if (q->empty())
 		{
+			ResetEvent(This->slam_queue_pushed);
 			SetEvent(This->slam_queue_empty);
 			WaitForSingleObject(This->slam_queue_pushed, 2000); // ms
 		}
 
+		// just in case
 		if (q->empty())
-		{
-			//printf("queue is empty, while is should not!\n");
 			continue;
-		}
 
+		// queue is not empty anymore
+		ResetEvent(This->slam_queue_empty);
+
+		// init opencv in this thread
 		if (!This->CV_ready)
 			This->init_CV();
 
@@ -95,13 +99,14 @@ static DWORD WINAPI process_thread(void* Param)
 				break;
 			
 			case FRAME:
+				This->slam_queue_frames--;
 				This->process_frame( (bot_ardrone_frame*) item->object );
 				break;
 		}
 	}
 
 	/* obstacle map */
-	if (SLAM_USE_OBSTACLE_MASK)
+	if (This->CV_ready && SLAM_USE_OBSTACLE_MASK)
 	{
 		cvNamedWindow("Obstacles:", CV_WINDOW_AUTOSIZE);
 		IplImage *obstacle_img = cvCreateImage(cvSize(800, 800), 8, 1);
@@ -213,7 +218,7 @@ void slam::process_frame(bot_ardrone_frame *f)
 		/*****/
 
 
-		if (keypoints.size() < 30)
+		if (keypoints.size() < 20)
 		{
 			printf("Not enough features found: dropping frame\n");
 			return;
@@ -369,10 +374,22 @@ void slam::process_measurement(bot_ardrone_measurement *m)
 
 		if (SLAM_BUILD_OBSTACLE_MAP)
 		{
-			printf("obstacle found: apply mask. sonar field size: %f\n", a);
+			printf("obstacle found. Distance: %i\n", m->altitude);
 
 			int d = max(1, int(a * 0.5));
-			Rect r(last_loc[0] - d, last_loc[1] - d, 2*d, 2*d);
+			int x, y, w, h;
+			x = max(0, last_loc[0] - d);
+			y = max(0, last_loc[1] - d);
+			w = min(2*d, obstacle_map.rows - x);
+			h = min(2*d, obstacle_map.cols - y);
+
+			y = max(0, y - 40); // tmp
+			x = max(0, x - 20);
+			//y -= 90;
+
+			printf("ROI: %i, %i, %i, %i\n", x, y, w, h);
+
+			Rect r(x, y, w, h);
 			Mat roi(obstacle_map, r);
 			roi = 0;
 		}

@@ -81,7 +81,7 @@ void bot_ardrone_ardronelib::control_update(void *control)
 		(c->state == BOT_STATE_FLY)?1:0,
 		c->velocity[BOT_ARDRONE_LateralVelocity],
 		-c->velocity[BOT_ARDRONE_LinearVelocity],
-		c->velocity[BOT_ARDRONE_AltitudeVelocity],
+		c->velocity[BOT_ARDRONE_AltitudeVelocity] + c->velocity_compensate[BOT_ARDRONE_AltitudeVelocity],
 		c->velocity[BOT_ARDRONE_RotationalVelocity]
 	);
 }
