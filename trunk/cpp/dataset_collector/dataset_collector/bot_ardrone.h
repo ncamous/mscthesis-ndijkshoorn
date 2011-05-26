@@ -113,4 +113,10 @@ public:
 	clock_t lastframe_time;
 	bool slam_state;
 	slam *slamcontroller;
+
+	float estimated_compensation;
+	float max_vel;
+	clock_t compensation_timeout;
+	int compensation_dir;
+	float altitude;
 };

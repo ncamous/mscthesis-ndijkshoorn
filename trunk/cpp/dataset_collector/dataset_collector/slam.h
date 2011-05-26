@@ -39,6 +39,8 @@ public:
 	void PrintMat(CvMat *A);
 	void dumpMatrix(const cv::Mat &mat);
 	double MatMax(const cv::Mat &mat);
+	double MatMin(const cv::Mat &mat);
+	int MatNegCount(const cv::Mat &mat);
 	double ColMin(const cv::Mat &mat, int col);
 	double ColMax(const cv::Mat &mat, int col);
 

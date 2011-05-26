@@ -34,10 +34,10 @@ void bot_ardrone_usarsim::init(void)
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -12600.0,800.0,1000.0}\r\n");
 
 	// doolhof
-	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -52.0,5.68,-4.0}\r\n");
+	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -52.0,5.68,-4.0}\r\n");
 
 	// zebrapad
-	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -19.3,57.1,-4.0}\r\n");
+	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -19.3,57.1,-7.0}\r\n");
 
 	control_send("SET {Type Viewports} {Config SingleView} {Viewport1 Camera2}\r\n");
 	//control_send("SET {Type Camera} {Robot ARDrone} {Name Camera2} {Client 10.0.0.2}\r\n");
@@ -226,9 +226,8 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 			else if ((BOT_ARDRONE_USARSIM_FRAME_MODE == 1 && !bot->slam_state) || BOT_ARDRONE_USARSIM_FRAME_MODE == 2)
 				Sleep(BOT_ARDRONE_USARSIM_FRAME_REQDELAY - 20);
 
-			//printf("reqeusting frame\n");
 			frame_socket->send("OK");
-			Sleep(20); // wait a bit before receiving new frame data
+			Sleep(30); // wait a bit before receiving new frame data
 		}
 	}
 }

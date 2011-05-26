@@ -124,6 +124,8 @@ void bot_ardrone_recorder::playback(char *dataset)
 			Sleep(wait);
 		//
 
+		//printf("%f\n", event_time);
+
 
 		doc["e"] >> event_type;
 
