@@ -78,7 +78,8 @@ ardrone_tool_configure_data_t configure_data[] = {
   { "control:altitude_max", "10000" },
   { "control:control_vz_max", "1000" },
   { "control:outdoor", "FALSE" },
-  { "video:camif_fps", "5" },
+  //{ "video:camif_fps", "5" },
+  //{ "control:altitude_min", "5000" },
   //{ "control:flight_without_shell", "FALSE" },
   { NULL, NULL }
 };

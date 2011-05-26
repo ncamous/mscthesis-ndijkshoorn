@@ -19,8 +19,8 @@ slam::slam()
 	CV_ready = false;
 	prev_frame_descriptors = NULL;
 
-	last_loc[0] = 300;
-	last_loc[1] = 300;
+	last_loc[0] = 1300;
+	last_loc[1] = 800;
 
 	initial_height = -1;
 
@@ -109,7 +109,7 @@ static DWORD WINAPI process_thread(void* Param)
 	if (This->CV_ready && SLAM_USE_OBSTACLE_MASK)
 	{
 		cvNamedWindow("Obstacles:", CV_WINDOW_AUTOSIZE);
-		IplImage *obstacle_img = cvCreateImage(cvSize(800, 800), 8, 1);
+		IplImage *obstacle_img = cvCreateImage(cvSize(1600, 1600), 8, 1);
 		obstacle_img->imageData = (char*)This->obstacle_map.data;
 		imshow("Obstacles:", obstacle_img);
 		cvWaitKey(4);
@@ -136,16 +136,16 @@ void slam::init_CV()
 
 	de = new SurfDescriptorExtractor();
 
-	canvas = cvCreateImage( cvSize(800,800), 8, 3 );
+	canvas = cvCreateImage( cvSize(1600,1600), 8, 3 );
 
 	prev_frame_h = Mat::eye(3, 3, CV_64F);
 	double* h_data = (double*) prev_frame_h.data;
-	h_data[2] = 300.0;
-	h_data[5] = 300.0;
+	h_data[2] = 1300.0;
+	h_data[5] = 800.0;
 
 	if (SLAM_BUILD_OBSTACLE_MAP)
 	{
-		obstacle_map = Mat(800, 800, CV_8UC1);
+		obstacle_map = Mat(2000, 2000, CV_8UC1);
 		obstacle_map = 255;
 
 		if (SLAM_USE_OBSTACLE_MASK)
@@ -157,6 +157,9 @@ void slam::init_CV()
 
 void slam::process_frame(bot_ardrone_frame *f)
 {
+	if (!CV_ready)
+		init_CV();
+
 	if (frame == NULL)
 	{
 		unsigned short w, h;
@@ -211,7 +214,7 @@ void slam::process_frame(bot_ardrone_frame *f)
 
 		set_canvas_mask();
 		find_features(canvas, prev_frame_keypoints, true);
-		IplImage *gray2 = cvCreateImage(cvSize(800, 800), IPL_DEPTH_8U, 1);
+		IplImage *gray2 = cvCreateImage(cvSize(600, 600), IPL_DEPTH_8U, 1);
 		cvCvtColor(canvas, gray2, CV_RGB2GRAY);
 		de->compute(gray2, prev_frame_keypoints, prev_frame_descriptors);
 		*/
@@ -276,20 +279,39 @@ void slam::process_frame(bot_ardrone_frame *f)
 
 		/* filter method #2: relative change */
 		Mat rel_change = prev_frame_h / absolute_homography;
-		//dumpMatrix(rel_change);
+		dumpMatrix(absolute_homography);
 		Mat tmp = abs(rel_change);
-		//double max_change = MatMax(tmp);
+		double min_change = MatMin(tmp);
+		double max_change = MatMax(tmp);
+
+		//printf("max_change: %f\n", max_change);
 
 		CvScalar rel_change_avg = mean(tmp);
 		//printf("rel change: %f\n", rel_change_avg.val[0]);
 
-		if (abs(rel_change_avg.val[0]) > 3.5)
-		//if (max_change > 3.5)
+
+		if (abs(absolute_homography.at<double> (0, 0)) > 4.0 || absolute_homography.at<double> (0, 0) < -3.0
+			||
+			abs(absolute_homography.at<double> (0, 1)) > 4.0 || absolute_homography.at<double> (0, 1) < -3.0
+			||
+			abs(absolute_homography.at<double> (1, 0)) > 4.0 || absolute_homography.at<double> (1, 0) < -3.0
+			||
+			abs(absolute_homography.at<double> (1, 1)) > 4.0 || absolute_homography.at<double> (1, 1) < -3.0
+			)
 		{
 			printf("dropped frame based on relative changes\n");
 			dropped_frame_counter++;
 			return;
 		}
+
+		/*
+		if (max_change > 2.0 || MatNegCount(rel_change) >= 3)
+		{
+			printf("dropped frame based on relative changes\n");
+			dropped_frame_counter++;
+			return;
+		}
+		*/
 
 		//prev_frame_h *= homography;
 		prev_frame_h = absolute_homography;
@@ -320,10 +342,16 @@ void slam::process_frame(bot_ardrone_frame *f)
 	prev_frame_keypoints = keypoints;
 	prev_frame_descriptors = descriptors;
 
-	frame_counter++;
-
-	imshow("Image:", canvas);
+	//imshow("Image:", canvas);
+	if (frame_counter > 0 && frame_counter % 4 == 0)
+	{
+	IplImage *canvas_resized = cvCreateImage( cvSize(800,800), 8, 3 );
+	cvResize(canvas, canvas_resized);
+	imshow("Image:", canvas_resized);
 	cvWaitKey(4);
+	}
+
+	frame_counter++;
 }
 
 
@@ -406,7 +434,10 @@ void slam::find_features(IplImage *img, vector<cv::KeyPoint> &v)
 		calculate_frame_mask(img->width, img->height);
 
 	// frame_mask is ignored when empty
-	fd->detect(img, v, frame_mask);
+	if (SLAM_USE_OBSTACLE_MASK)
+		fd->detect(img, v, frame_mask);
+	else
+		fd->detect(img, v);
 
 	printf("found %i features\n", v.size());
 }
@@ -418,7 +449,7 @@ void slam::calculate_frame_mask(int width, int height)
 	Mat h_inverse = prev_frame_h.inv();
 	CvMat invHomography = h_inverse;
 
-	IplImage *obstacle_map_img = cvCreateImageHeader(cvSize(800, 800), 8, 1);
+	IplImage *obstacle_map_img = cvCreateImageHeader(cvSize(1600, 1600), 8, 1);
 	obstacle_map_img->imageData = (char*)obstacle_map.data;
 
 	cvWarpPerspective(obstacle_map_img, mask_img, &invHomography, CV_INTER_LINEAR);
@@ -485,6 +516,36 @@ double slam::MatMax(const cv::Mat &mat)
 	}
 
 	return max;
+}
+
+double slam::MatMin(const cv::Mat &mat)
+{
+	double min = 0.0;
+	double *vals = (double*) mat.data;
+	int elements = mat.rows * mat.cols;
+
+	for (int i = 0; i < elements; i++)
+	{
+		if (vals[i] < min)
+			min = vals[i];
+	}
+
+	return min;
+}
+
+int slam::MatNegCount(const cv::Mat &mat)
+{
+	int neg_count = 0;
+	double *vals = (double*) mat.data;
+	int elements = mat.rows * mat.cols;
+
+	for (int i = 0; i < elements; i++)
+	{
+		if (vals[i] < 0.0)
+			neg_count++;
+	}
+
+	return neg_count;
 }
 
 double slam::ColMin(const cv::Mat &mat, int col)
