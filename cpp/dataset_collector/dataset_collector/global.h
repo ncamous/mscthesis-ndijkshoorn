@@ -8,7 +8,7 @@
 /* SLAM */
 #define SLAM_ENABLED true
 #define SLAM_USE_QUEUE true // use a queue to store the controldata and sensor data
-#define SLAM_SURF_HESSIANTHRESHOLD 500.0
+#define SLAM_SURF_HESSIANTHRESHOLD 100.0
 #define SLAM_BUILD_OBSTACLE_MAP false
 #define SLAM_USE_OBSTACLE_MASK false
 
