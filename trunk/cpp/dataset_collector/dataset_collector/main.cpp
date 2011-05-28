@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 	/**** PLAYBACK ****/
 	bot_ardrone ardrone(BOT_ARDRONE_INTERFACE_NONE);
 	ardrone.set_slam(true);
-	ardrone.set_playback("003");
+	ardrone.set_playback("010");
 	Sleep(10000);
 
 
@@ -36,6 +36,6 @@ int main(int argc, char *argv[])
 
 
 
-	Sleep(1000000);
+	Sleep(60000);
 	return 0;
 }

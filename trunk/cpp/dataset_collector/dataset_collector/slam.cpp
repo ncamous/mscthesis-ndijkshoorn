@@ -19,8 +19,8 @@ slam::slam()
 	CV_ready = false;
 	prev_frame_descriptors = NULL;
 
-	last_loc[0] = 1300;
-	last_loc[1] = 800;
+	last_loc[0] = 300;
+	last_loc[1] = 300;
 
 	initial_height = -1;
 
@@ -131,21 +131,22 @@ void slam::init_CV()
 	CV_ready = true;
 
 	frame_counter = 0;
+	feature_distance = 0.0;
 
 	fd = new SurfFeatureDetector(SLAM_SURF_HESSIANTHRESHOLD, 3, 4);
 
 	de = new SurfDescriptorExtractor();
 
-	canvas = cvCreateImage( cvSize(1600,1600), 8, 3 );
+	canvas = cvCreateImage( cvSize(800,800), 8, 3 );
 
 	prev_frame_h = Mat::eye(3, 3, CV_64F);
 	double* h_data = (double*) prev_frame_h.data;
-	h_data[2] = 1300.0;
-	h_data[5] = 800.0;
+	h_data[2] = 300.0;
+	h_data[5] = 300.0;
 
 	if (SLAM_BUILD_OBSTACLE_MAP)
 	{
-		obstacle_map = Mat(2000, 2000, CV_8UC1);
+		obstacle_map = Mat(800, 800, CV_8UC1);
 		obstacle_map = 255;
 
 		if (SLAM_USE_OBSTACLE_MASK)
@@ -178,7 +179,9 @@ void slam::process_frame(bot_ardrone_frame *f)
 
 
 	/* display image */
+	frame_add_noise(frame);
 	/*
+	frame_add_noise(frame);
 	imshow("Image:", frame);
 	cvWaitKey(4);
 	return;
@@ -193,13 +196,33 @@ void slam::process_frame(bot_ardrone_frame *f)
 
 	/* find features */
 	vector<cv::KeyPoint> keypoints;
-	find_features(frame, keypoints);
+	int features_found = find_features(frame, keypoints);
 
 
 	/* calculate descriptors (on greyscale image) */
 	Mat descriptors;
 	cvCvtColor(frame, gray, CV_RGB2GRAY);
     de->compute(gray, keypoints, descriptors);
+
+
+
+	/* plot keypoints */
+	for (int i = 0; i < (int)keypoints.size(); i++)
+	{
+		int x = (int)keypoints.at(i).pt.x - 2;
+		int y = (int)keypoints.at(i).pt.y - 2;
+
+		for (int x2 = 0; x2 < 5; x2++)
+		{
+			for (int y2 = 0; y2 < 5; y2++)
+			{
+				frame->imageData[((y + y2) * frame->width * 3) + (x + x2) * 3] = (unsigned char) 0;
+				frame->imageData[((y + y2) * frame->width * 3) + (x + x2) * 3 + 1] = (unsigned char) 0;
+				frame->imageData[((y + y2) * frame->width * 3) + (x + x2) * 3 + 2] = (unsigned char) 255;
+			}
+		}
+	}
+	/**/
 
 
 	/* match with previous frame */
@@ -254,13 +277,20 @@ void slam::process_frame(bot_ardrone_frame *f)
 
 		/* filter method #1: count number of outliers */
 		int outliers = 0;
+		double d;
+		double d_sum = 0.0;
 
         Mat points3t; perspectiveTransform(Mat(points1), points3t, homography);
         for( size_t i1 = 0; i1 < points1.size(); i1++ )
         {
-            if( norm(points2[i1] - points3t.at<Point2f>((int)i1,0)) > 4 ) // inlier
+			d = norm(points2[i1] - points3t.at<Point2f>((int)i1,0));
+			d_sum += d;
+
+            if(d > 4 ) // inlier
                outliers++;
         }
+
+		printf("Average feature distance: %f\n", feature_distance / frame_counter);
 
 		double outliers_percentage =  ((double)outliers / (double)points1.size()) * 100.0;
 
@@ -279,7 +309,7 @@ void slam::process_frame(bot_ardrone_frame *f)
 
 		/* filter method #2: relative change */
 		Mat rel_change = prev_frame_h / absolute_homography;
-		dumpMatrix(absolute_homography);
+		//dumpMatrix(absolute_homography);
 		Mat tmp = abs(rel_change);
 		double min_change = MatMin(tmp);
 		double max_change = MatMax(tmp);
@@ -317,6 +347,8 @@ void slam::process_frame(bot_ardrone_frame *f)
 		prev_frame_h = absolute_homography;
 
 		//printf("current pos: %i, %i\n", last_loc[0], last_loc[1]);
+
+		feature_distance += (d_sum) / (double)points1.size();
 	}
 
 
@@ -342,7 +374,9 @@ void slam::process_frame(bot_ardrone_frame *f)
 	prev_frame_keypoints = keypoints;
 	prev_frame_descriptors = descriptors;
 
-	//imshow("Image:", canvas);
+	imshow("Image:", canvas);
+	cvWaitKey(4);
+	/*
 	if (frame_counter > 0 && frame_counter % 4 == 0)
 	{
 	IplImage *canvas_resized = cvCreateImage( cvSize(800,800), 8, 3 );
@@ -350,8 +384,12 @@ void slam::process_frame(bot_ardrone_frame *f)
 	imshow("Image:", canvas_resized);
 	cvWaitKey(4);
 	}
+	*/
 
 	frame_counter++;
+
+	//printf("Average number features/frame: %f\n", (double)feature_counter / (double)frame_counter);
+	printf("Average features distance: %f\n", feature_distance / (double)frame_counter);
 }
 
 
@@ -428,7 +466,7 @@ void slam::process_measurement(bot_ardrone_measurement *m)
 }
 
 
-void slam::find_features(IplImage *img, vector<cv::KeyPoint> &v)
+int slam::find_features(IplImage *img, vector<cv::KeyPoint> &v)
 {
 	if (SLAM_USE_OBSTACLE_MASK)
 		calculate_frame_mask(img->width, img->height);
@@ -439,7 +477,9 @@ void slam::find_features(IplImage *img, vector<cv::KeyPoint> &v)
 	else
 		fd->detect(img, v);
 
-	printf("found %i features\n", v.size());
+	//printf("found %i features\n", v.size());
+
+	return v.size();
 }
 
 
@@ -572,4 +612,60 @@ double slam::ColMax(const cv::Mat &mat, int col)
 	}
 
 	return max;
+}
+
+void slam::frame_add_noise(IplImage *img)
+{
+
+	unsigned char* imagedata = (unsigned char*) img->imageData;
+	unsigned char tmp;
+	double value;
+	unsigned int sum;
+
+	double brightness = 0.0;
+	double contrast = 0.0;
+
+	double contrast_random;
+
+	contrast_random = 0.4 + (0.5 * rand() / RAND_MAX);
+
+	if (((double)rand() / (double)RAND_MAX) > 0.5)
+		brightness = 0.12 * ((double)rand() / (double)RAND_MAX);
+	else
+		brightness = -0.12 * ((double)rand() / (double)RAND_MAX);
+
+
+	for (int i = 0; i < img->width * img->height; i++)
+	{
+		sum = 0;
+
+		for (int j = 0; j < 3; j++)
+		{
+			sum += imagedata[i * 3 + j];
+		}
+
+
+		for (int j = 0; j < 3; j++)
+		{
+			tmp = (unsigned char)imagedata[i * 3 + j];
+			value = (double)tmp / 255.0;
+
+			if (brightness < 0.0)
+				value = value * ( 1.0 + brightness);
+            else
+				value = value + ((1 - value) * brightness);
+
+			value = (value - 0.5) * (tan ((contrast + 1) * PI/4) ) + 0.5;
+
+			if (sum > 250)
+				value = value + (1.0 - value) * contrast_random;
+
+			imagedata[i * 3 + j] = unsigned char(value * 255.0);
+		}
+	}
+
+
+
+	return;
+
 }

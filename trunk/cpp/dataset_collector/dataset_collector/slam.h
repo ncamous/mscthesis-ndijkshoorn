@@ -32,10 +32,11 @@ public:
 	void process_frame(bot_ardrone_frame *f);
 	void process_frame(IplImage *i);
 	void process_measurement(bot_ardrone_measurement *m);
-	void find_features(IplImage *img, vector<cv::KeyPoint> &v);
+	int find_features(IplImage *img, vector<cv::KeyPoint> &v);
 	void calculate_frame_mask(int width, int height);
 
 	// openCV helpers
+	void frame_add_noise(IplImage *img);
 	void PrintMat(CvMat *A);
 	void dumpMatrix(const cv::Mat &mat);
 	double MatMax(const cv::Mat &mat);
@@ -63,6 +64,8 @@ public:
 	int slam_queue_frames;
 
 	int frame_counter;
+	int feature_counter;
+	double feature_distance;
 
 	cv::Mat prev_frame_h;
 
