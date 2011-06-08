@@ -2,11 +2,11 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="UserMacros">
     <ARDroneLibDir>C:\Users\Nick\Documents\Thesis\code\ARDrone_SDK_1_6_20110224\ARDroneLib</ARDroneLibDir>
-	<ARDroneWin32Dir>C:\Users\Nick\Documents\Thesis\code\cpp\dataset_collector\ardronewin32</ARDroneWin32Dir>
+	<ARDroneWin32Dir>C:\Users\Nick\Documents\Thesis\code\cpp\ardrone_slam\ardronewin32</ARDroneWin32Dir>
     <OpenCVDir>C:\Users\Nick\Documents\Thesis\code\OpenCV</OpenCVDir>
     <MatlabDir>C:\Program Files\MATLAB\R2010a\extern</MatlabDir>
     <SDLDir>C:\Users\Nick\Documents\Thesis\code\SDL-1.2.14</SDLDir>
-	<YAMLDir>C:\Users\Nick\Documents\Thesis\code\cpp\dataset_collector\yaml-cpp-0.2.5</YAMLDir>
+	<YAMLDir>C:\Users\Nick\Documents\Thesis\code\cpp\ardrone_slam\yaml-cpp-0.2.5</YAMLDir>
   </PropertyGroup>
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
