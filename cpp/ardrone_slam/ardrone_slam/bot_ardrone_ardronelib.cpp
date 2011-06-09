@@ -54,9 +54,8 @@ bot_ardrone_ardronelib::bot_ardrone_ardronelib(bot_ardrone *bot)
 
 	// start thread
 	printf("Connecting to ARDrone\n");
-	DWORD ThreadID;
 	ardrone_ready = CreateEvent(NULL, false, false, NULL);
-	ardrone_thread = CreateThread(NULL, 0, start_ardrone_api_thread, (void*) this, 0, &ThreadID);
+	ardrone_thread = CreateThread(NULL, 0, start_ardrone_api_thread, (void*) this, 0, NULL);
 
 	// wait untill the Drone is completely ready (communication started)
 	WaitForSingleObject(ardrone_ready, INFINITE);

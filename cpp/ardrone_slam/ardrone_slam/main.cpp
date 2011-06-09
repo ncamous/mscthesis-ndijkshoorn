@@ -4,7 +4,7 @@
 
 
 /* global variables */
-bool exit_dataset_collector = false;
+bool exit_application = false;
 
 
 int main(int argc, char *argv[])
@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
 	/*
 	bot_ardrone ardrone(BOT_ARDRONE_INTERFACE_NONE);
 	ardrone.set_slam(true);
-	ardrone.set_playback("004");
+	ardrone.set_playback("001");
 	Sleep(10000);
 	*/
 

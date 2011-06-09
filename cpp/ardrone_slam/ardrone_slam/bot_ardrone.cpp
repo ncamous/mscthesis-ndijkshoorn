@@ -43,12 +43,6 @@ bot_ardrone::bot_ardrone(int botinterface)
 	battery = NULL;
 	slam_state = false;
 
-	estimated_compensation = 0.0f;
-	max_vel = 0.0f;
-	compensation_dir = -1;
-
-	altitude = 0.0f;
-
 	control_reset();
 
 	/* INTERFACE */
@@ -71,8 +65,8 @@ bot_ardrone::bot_ardrone(int botinterface)
 
 	/* SLAM */
 	slamcontroller = new slam();
-	if (SLAM_ENABLED)
-		slamcontroller->run();
+	//if (SLAM_ENABLED)
+	//	slamcontroller->run();
 }
 
 
@@ -142,86 +136,6 @@ void bot_ardrone::control_reset()
 }
 
 
-void bot_ardrone::control_compensate(bot_ardrone_measurement *m)
-{
-	altitude -= m->vel[2] * 0.05f;
-
-	printf("Altitude: %f\n", altitude);
-
-	return;
-
-	double diffticks = ((double)clock() - compensation_timeout) / CLOCKS_PER_SEC;
-
-	//if ((compensation_dir == 1 && m->vel[2] > 0.0f) || (compensation_dir == 2 && m->vel[2] < 0.0f))
-		//max_vel += abs(m->vel[2]) * 0.05f;
-
-
-	if (abs(m->vel[2]) > 40.0f)
-	{
-		if (m->vel[2] < 0.0f)
-			control.velocity_compensate[BOT_ARDRONE_AltitudeVelocity] = (m->vel[2] / BOT_ARDRONE_CONTROL_VZ_MAX) * 1.5f;
-		else
-			control.velocity_compensate[BOT_ARDRONE_AltitudeVelocity] = (m->vel[2] / BOT_ARDRONE_CONTROL_VZ_MAX) * 4.0f;
-		control_update();
-	}
-	else if (control.velocity_compensate[BOT_ARDRONE_AltitudeVelocity] != 0.0f)
-	{
-		control.velocity_compensate[BOT_ARDRONE_AltitudeVelocity] = 0.0f;
-		control_update();
-	}
-
-	return;
-
-
-	// only when BOT_STATE_FLY and no vertical speed set by the user
-	if ((compensation_dir > -1 || (compensation_dir == -1 && abs(m->vel[2]) > 120.0f))
-		&& control.state == BOT_STATE_FLY && control.velocity[BOT_ARDRONE_AltitudeVelocity] == 0.0f
-		&& (estimated_compensation == 0.0f || estimated_compensation < max_vel)
-		&& diffticks > 1.5)
-	{
-
-		printf("%f/%f\n", estimated_compensation, max_vel);
-
-		if (compensation_dir == -1)
-		{
-			compensation_dir = m->vel[2] > 0.0f ? 1 : 2;
-			max_vel += abs(m->vel[2]) * 0.05f;
-		}
-
-		float to_compensate = max_vel - estimated_compensation;
-
-		if (compensation_dir == 1)
-		{
-			//control.velocity_compensate[BOT_ARDRONE_AltitudeVelocity] = min(1.0f, to_compensate / (BOT_ARDRONE_CONTROL_VZ_MAX * 0.05f));
-			control.velocity_compensate[BOT_ARDRONE_AltitudeVelocity] = 0.5f;
-			estimated_compensation += BOT_ARDRONE_CONTROL_VZ_MAX * control.velocity_compensate[BOT_ARDRONE_AltitudeVelocity] * 0.05f * 4.0f;
-			printf("compensating down\n");
-		}
-		else
-		{
-			//control.velocity_compensate[BOT_ARDRONE_AltitudeVelocity] = min(-1.0f, -to_compensate / (BOT_ARDRONE_CONTROL_VZ_MAX * 0.05f));
-			control.velocity_compensate[BOT_ARDRONE_AltitudeVelocity] = -1.0f;
-			estimated_compensation += BOT_ARDRONE_CONTROL_VZ_MAX * abs(control.velocity_compensate[BOT_ARDRONE_AltitudeVelocity]) * 0.05f;
-			printf("compensating up\n");
-		}
-
-		control_update();
-	}
-
-	// compensated
-	else if (estimated_compensation >= max_vel && ((compensation_dir == 1 && m->vel[2] <= 0.0f) || (compensation_dir == 2 &&  m->vel[2] >= 0.0f)))
-	{
-		printf("compensation done\n");
-		control.velocity_compensate[BOT_ARDRONE_AltitudeVelocity] = 0.0f;
-		control_update();
-		estimated_compensation = 0.0f;
-		max_vel = 0.0f;
-		compensation_timeout = clock();
-		compensation_dir = -1;
-	}
-}
-
-
 void bot_ardrone::take_off()
 {
 	i->take_off();
@@ -245,83 +159,41 @@ void bot_ardrone::recover(bool send)
 
 void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 {
-	if (exit_dataset_collector)
+	if (exit_application)
 		return;
 
 	if (PRINT_DEBUG)
 		printf("%f - ARDRONE: measurement received!\n", m->time);
 
 	// time since last frame
-	double diffticks = ((double)clock() - lastframe_time) / CLOCKS_PER_SEC;
+	double diffticks = ((double)clock() - last_measurement_time) / CLOCKS_PER_SEC;
 	if (diffticks < BOT_ARDRONE_MIN_FRAME_INTERVAL)
 		return;
 
-	lastframe_time = clock();
+	last_measurement_time = clock();
 
-
-	/* compensate the ARDrone's fixed altitude */
-	//if (i_id == BOT_ARDRONE_INTERFACE_ARDRONELIB)
-	//	control_compensate(m);
 
 	if (record)
 		recorder->record_measurement(m);
 
 	if (slam_state)
-	{
-		if (SLAM_USE_QUEUE)
-		{
-			slam_queue_item queue_item = {MEASUREMENT, m};
-			slamcontroller->slam_queue.push(queue_item);
-			SetEvent(slamcontroller->slam_queue_pushed);
-		}
-		else
-		{
-			slamcontroller->process_measurement(m);
-		}
-	}
-	else
-	{
-		printf("alt: %i\n", m->altitude);
-	}
+		slamcontroller->add_input_sensor(m);
 }
 
 
 void bot_ardrone::frame_received(bot_ardrone_frame *f)
 {
-	if (exit_dataset_collector)
+	if (exit_application)
 		return;
 
 	if (PRINT_DEBUG)
 		printf("%f - ARDRONE: frame received: %s!\n", f->time, f->filename);
 
-	// time since last frame
-	/*double diffticks = ((double)clock() - lastframe_time) / CLOCKS_PER_SEC;
-	if (diffticks < BOT_ARDRONE_MIN_FRAME_INTERVAL)
-	{
-		printf("Skipping frame\n");
-		return;
-	}*/
-
-	//lastframe_time = clock();
-
 	if (record && BOT_ARDRONE_RECORD_FRAMES)
 		recorder->record_frame(f);
 
-
-	if (slam_state && /*slamcontroller->slam_queue.empty()*/ slamcontroller->slam_queue_frames == 0)
-	{
-		if (SLAM_USE_QUEUE)
-		{
-			slam_queue_item queue_item = {FRAME, f};
-			slamcontroller->slam_queue.push(queue_item);
-			slamcontroller->slam_queue_frames++;
-			SetEvent(slamcontroller->slam_queue_pushed);
-		}
-		else
-		{
-			slamcontroller->process_frame(f);
-		}
-	}
+	if (slam_state)
+		slamcontroller->add_input_frame(f);
 }
 
 

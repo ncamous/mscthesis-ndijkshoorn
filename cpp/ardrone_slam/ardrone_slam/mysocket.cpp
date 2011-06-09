@@ -98,8 +98,7 @@ bool mysocket::bytes_waiting()
 
 int mysocket::start_listener(void)
 {
-	DWORD ThreadID;
-	h = CreateThread( NULL, 0, receive_thread, (void*) this, 0, &ThreadID);
+	h = CreateThread( NULL, 0, receive_thread, (void*) this, 0, NULL);
 
 	return 1;
 }
