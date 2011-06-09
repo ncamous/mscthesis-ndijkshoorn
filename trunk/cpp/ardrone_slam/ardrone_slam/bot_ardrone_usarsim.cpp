@@ -216,10 +216,10 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 			frame_socket->buffer = frame->data;
 
 			// slam enabled and queue not empty -> wait
-			if (BOT_ARDRONE_USARSIM_FRAME_MODE == 1 && bot->slam_state && bot->slamcontroller->slam_queue_frames != 0 /*!bot->slamcontroller->slam_queue.empty()*/)
+			if (BOT_ARDRONE_USARSIM_FRAME_MODE == 1 && bot->slam_state)
 			{
 				//printf("waiting for event\n");
-				WaitForSingleObject(bot->slamcontroller->slam_queue_empty, INFINITE);
+				bot->slamcontroller->queue_frame.wait_until_empty(INFINITE); // move this function to bot_ardrone?
 				//printf("done waiting\n");
 			}
 			// slam not (yet) enabled, or fixed fps mode

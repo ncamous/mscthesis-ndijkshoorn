@@ -2,8 +2,8 @@
 #include "botinterface.h"
 #include <windows.h>
 #include <string>
-#include "navdata_common.h"
-#include "ardrone_api.h"
+
+#include <ardrone_tool/Navdata/ardrone_navdata_client.h>
 
 
 #define DRONE_VIDEO_MAX_WIDTH 640

@@ -90,7 +90,6 @@ public:
 	void control_update();
 	void control_update(bot_ardrone_control *c);
 	void control_reset();
-	void control_compensate(bot_ardrone_measurement *m);
 	void take_off();
 	void land();
 	void recover(bool send);
@@ -110,13 +109,7 @@ public:
 	int battery;		// percentage (0-100%)
 
 	// slam
-	clock_t lastframe_time;
+	clock_t last_measurement_time;
 	bool slam_state;
 	slam *slamcontroller;
-
-	float estimated_compensation;
-	float max_vel;
-	clock_t compensation_timeout;
-	int compensation_dir;
-	float altitude;
 };
