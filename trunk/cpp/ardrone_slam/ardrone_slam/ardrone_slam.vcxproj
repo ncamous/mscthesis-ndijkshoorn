@@ -49,7 +49,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(YAMLDir)/include;$(ARDroneWin32Dir);$(ARDroneLibDir)\Soft\Common;$(ARDroneLibDir)\VP_SDK;$(ARDroneLibDir)\Soft\Lib;$(ARDroneLibDir)\VP_SDK\VP_Os;$(ARDroneLibDir);$(OpenCVDir)\include\opencv;$(OpenCVDir)\include;$(MatlabDir)\include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(YAMLDir)/include;$(ARDroneWin32Dir);$(ARDroneLibDir)\Soft\Common;$(ARDroneLibDir)\Soft\Lib;$(ARDroneLibDir)\VP_SDK;$(OpenCVDir)\include\opencv;$(OpenCVDir)\include;$(MatlabDir)\include;</AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
@@ -80,8 +80,12 @@
     <ClCompile Include="bot_ardrone.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mysocket.cpp" />
+    <ClCompile Include="opencv_helpers.cpp" />
     <ClCompile Include="slam.cpp" />
     <ClCompile Include="slam_matlab.cpp" />
+    <ClCompile Include="slam_module_frame.cpp" />
+    <ClCompile Include="slam_module_sensor.cpp" />
+    <ClCompile Include="slam_module_ui.cpp" />
     <ClCompile Include="usarsim_msgparser.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -94,8 +98,13 @@
     <ClInclude Include="bot_ardrone.h" />
     <ClInclude Include="global.h" />
     <ClInclude Include="mysocket.h" />
+    <ClInclude Include="opencv_helpers.h" />
     <ClInclude Include="slam.h" />
     <ClInclude Include="slam_matlab.h" />
+    <ClInclude Include="slam_module_frame.h" />
+    <ClInclude Include="slam_module_sensor.h" />
+    <ClInclude Include="slam_module_ui.h" />
+    <ClInclude Include="slam_queue.h" />
     <ClInclude Include="usarsim_msgparser.h" />
   </ItemGroup>
   <ItemGroup>
