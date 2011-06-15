@@ -40,6 +40,7 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 				keyboard_bot[i]->recover(wParam == WM_KEYDOWN);
 			break;
 
+		case 191: // NL keyboard
 		case VK_OEM_PLUS:
 			if (wParam == WM_KEYDOWN)
 			{
@@ -48,6 +49,7 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 			}
 			break;
 
+		case 219: // NL keyboard
 		case VK_OEM_MINUS:
 			if (wParam == WM_KEYDOWN)
 			{
