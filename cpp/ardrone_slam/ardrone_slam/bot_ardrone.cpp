@@ -166,11 +166,13 @@ void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 		printf("%f - ARDRONE: measurement received!\n", m->time);
 
 	// time since last frame
+	/*
 	double diffticks = ((double)clock() - last_measurement_time) / CLOCKS_PER_SEC;
 	if (diffticks < BOT_ARDRONE_MIN_FRAME_INTERVAL)
 		return;
 
 	last_measurement_time = clock();
+	*/
 
 
 	if (record)

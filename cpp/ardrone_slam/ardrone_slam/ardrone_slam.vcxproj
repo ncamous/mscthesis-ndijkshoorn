@@ -54,7 +54,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ws2_32.lib;yamlcpp.lib;ardronewin32.lib;ArDroneAPI.lib;opencv_core220d.lib;opencv_highgui220d.lib;opencv_legacy220d.lib;opencv_features2d220d.lib;opencv_imgproc220d.lib;opencv_calib3d220d.lib;libeng.lib;libmex.lib;libmx.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;yamlcpp.lib;ardronewin32.lib;ArDroneAPI.lib;opencv_core220d.lib;opencv_highgui220d.lib;opencv_legacy220d.lib;opencv_features2d220d.lib;opencv_imgproc220d.lib;opencv_calib3d220d.lib;opencv_video220d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StackReserveSize>10000000</StackReserveSize>
       <AdditionalLibraryDirectories>$(OutDir);$(SDLDir)\lib;$(OpenCVDir)\lib;$(MatlabDir)\lib\win32\microsoft;</AdditionalLibraryDirectories>
     </Link>
@@ -82,7 +82,9 @@
     <ClCompile Include="mysocket.cpp" />
     <ClCompile Include="opencv_helpers.cpp" />
     <ClCompile Include="slam.cpp" />
-    <ClCompile Include="slam_matlab.cpp" />
+    <ClCompile Include="slam_matlab.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="slam_module_frame.cpp" />
     <ClCompile Include="slam_module_sensor.cpp" />
     <ClCompile Include="slam_module_ui.cpp" />
@@ -100,17 +102,14 @@
     <ClInclude Include="mysocket.h" />
     <ClInclude Include="opencv_helpers.h" />
     <ClInclude Include="slam.h" />
-    <ClInclude Include="slam_matlab.h" />
+    <ClInclude Include="slam_matlab.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="slam_module_frame.h" />
     <ClInclude Include="slam_module_sensor.h" />
     <ClInclude Include="slam_module_ui.h" />
     <ClInclude Include="slam_queue.h" />
     <ClInclude Include="usarsim_msgparser.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ArDroneAPI\ArDroneAPI.vcxproj">
-      <Project>{e84e6b0e-6893-4803-bd17-2d7f85a203aa}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
