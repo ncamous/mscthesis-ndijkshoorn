@@ -7,32 +7,31 @@ using namespace cv;
 
 
 slam_module_sensor::slam_module_sensor(slam *controller):
-	KF(3, 1, 0),
-	//KF(3, 3, 0),
-	state(3, 1, CV_32F),
-	processNoise(3, 1, CV_32F)
+	KF(9, 3, 0),
+	state(9, 1, CV_32F),
+	processNoise(9, 1, CV_32F)
 {
 	this->controller = controller;
 
 	prev_update = clock();
 
 	// measure accel
-	measurement = Mat::zeros(1, 1, CV_32F);
-	//measurement = Mat::zeros(3, 1, CV_32F);
+	measurement = Mat::zeros(3, 1, CV_32F);
 
 	// F vector
-	KF.transitionMatrix = *(Mat_<float>(3, 3) << 1, 1, 0, 0, 1, 1, 0, 0, 1);
+	setIdentity(KF.transitionMatrix); // completed (T added) when measurement received and T is known
 
 	// H vector
-	KF.measurementMatrix =  *(Mat_<float>(1, 3) << 0, 0, 1);
-	//setIdentity(KF.measurementMatrix);
+	for(int i = 0; i < 3; i++)
+		KF.measurementMatrix.at<float>(i, i*3 + 2) = 1.0f;
+
 
 	setIdentity(KF.processNoiseCov, Scalar::all(1e-5));
 	setIdentity(KF.measurementNoiseCov, Scalar::all(1e-5));
 	setIdentity(KF.errorCovPost, Scalar::all(1));
 
 	// random initial state
-	randn(KF.statePost, Scalar::all(0), Scalar::all(0.01));
+	randn(KF.statePost, Scalar::all(0), Scalar::all(0.001));
 }
 
 
@@ -47,11 +46,14 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	prev_update = clock();
 
 	/* update transition matrix */
-	// position
-	KF.transitionMatrix.at<float>(0, 1) = float(difftime);
-	KF.transitionMatrix.at<float>(0, 2) = float(0.5 * difftime*difftime);
-	// velocity
-	KF.transitionMatrix.at<float>(1, 2) = float(difftime);
+	for (int i = 0; i < 9; i+=3)
+	{
+		// position
+		KF.transitionMatrix.at<float>(i, i+1) = float(difftime);
+		KF.transitionMatrix.at<float>(i, i+2) = float(0.5 * difftime*difftime);
+		// velocity
+		KF.transitionMatrix.at<float>(i+1, i+2) = float(difftime);
+	}
 
 
 	/* predict */
@@ -60,6 +62,8 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 	/* correct */
 	measurement.at<float>(0) = m->accel[0] * MG_TO_MS2;
+	measurement.at<float>(1) = m->accel[1] * MG_TO_MS2;
+	measurement.at<float>(2) = m->accel[2] * MG_TO_MS2;
 	//measurement = KF.statePost.clone();
 	//measurement.at<float>(2) = m->accel[0] * MG_TO_MS2;
 	//measurement = KF.transitionMatrix*measurement;
@@ -69,14 +73,11 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 	/* state */
 	//randn( processNoise, Scalar(0), Scalar::all(sqrt(KF.processNoiseCov.at<float>(0, 0))));
-	//state = KF.transitionMatrix*state + processNoise;
-
-	//randn( processNoise, Scalar(0), Scalar::all(sqrt(KF.processNoiseCov.at<float>(0, 0))));
 	state = KF.statePost /* + processNoise*/;
 
 
-	printf("state: [%f, %f, %f]\n", state.at<float>(0), state.at<float>(1), state.at<float>(2));
-	printf("gt:    [%f]\n", m->gt_loc[0]);
+	printf("state: [%f, %f, %f]\n", state.at<float>(0), state.at<float>(3), state.at<float>(6));
+	printf("gt:    [%f, %f, %f]\n", m->gt_loc[0], m->gt_loc[1] - 10.0f, m->gt_loc[2] + 10.0f);
 }
 
 
