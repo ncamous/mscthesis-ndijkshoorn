@@ -1,37 +1,21 @@
 #include "global.h"
 #include "slam_module_sensor.h"
 #include "bot_ardrone.h"
-#include "opencv_helpers.h"
 
 using namespace cv;
 
 
-slam_module_sensor::slam_module_sensor(slam *controller):
-	KF(9, 3, 0),
-	state(9, 1, CV_32F),
-	processNoise(9, 1, CV_32F)
+slam_module_sensor::slam_module_sensor(slam *controller)
 {
 	this->controller = controller;
+	KF = &controller->KF;
+	state = &KF->statePost;
+
+	//processNoise(9, 1, CV_32F)
 
 	prev_update = clock();
 
-	// measure accel
 	measurement = Mat::zeros(3, 1, CV_32F);
-
-	// F vector
-	setIdentity(KF.transitionMatrix); // completed (T added) when measurement received and T is known
-
-	// H vector
-	for(int i = 0; i < 3; i++)
-		KF.measurementMatrix.at<float>(i, i*3 + 2) = 1.0f;
-
-
-	setIdentity(KF.processNoiseCov, Scalar::all(1e-5));
-	setIdentity(KF.measurementNoiseCov, Scalar::all(1e-5));
-	setIdentity(KF.errorCovPost, Scalar::all(1));
-
-	// random initial state
-	randn(KF.statePost, Scalar::all(0), Scalar::all(0.001));
 }
 
 
@@ -49,15 +33,15 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	for (int i = 0; i < 9; i+=3)
 	{
 		// position
-		KF.transitionMatrix.at<float>(i, i+1) = float(difftime);
-		KF.transitionMatrix.at<float>(i, i+2) = float(0.5 * difftime*difftime);
+		KF->transitionMatrix.at<float>(i, i+1) = float(difftime);
+		KF->transitionMatrix.at<float>(i, i+2) = float(0.5 * difftime*difftime);
 		// velocity
-		KF.transitionMatrix.at<float>(i+1, i+2) = float(difftime);
+		KF->transitionMatrix.at<float>(i+1, i+2) = float(difftime);
 	}
 
 
 	/* predict */
-	Mat prediction = KF.predict();
+	Mat prediction = KF->predict();
 
 
 	/* correct */
@@ -68,15 +52,15 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	//measurement.at<float>(2) = m->accel[0] * MG_TO_MS2;
 	//measurement = KF.transitionMatrix*measurement;
 
-	KF.correct(measurement);
+	KF->correct(measurement);
 
 
 	/* state */
 	//randn( processNoise, Scalar(0), Scalar::all(sqrt(KF.processNoiseCov.at<float>(0, 0))));
-	state = KF.statePost /* + processNoise*/;
+	//state = KF.statePost /* + processNoise*/;
 
 
-	printf("state: [%f, %f, %f]\n", state.at<float>(0), state.at<float>(3), state.at<float>(6));
+	printf("state: [%f, %f, %f]\n", state->at<float>(0), state->at<float>(3), state->at<float>(6));
 	printf("gt:    [%f, %f, %f]\n", m->gt_loc[0], m->gt_loc[1] - 10.0f, m->gt_loc[2] + 10.0f);
 }
 

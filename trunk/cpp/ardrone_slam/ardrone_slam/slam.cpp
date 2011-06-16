@@ -4,9 +4,11 @@
 
 #include <cv.hpp>
 
+using namespace cv;
 
 
-slam::slam()
+slam::slam():
+	KF(9, 3, 0)
 {
 	running = false;
 
@@ -36,6 +38,8 @@ void slam::run()
 {
 	running = true;
 
+	init_kf();
+
 	canvas = cvCreateImage(cvSize(800,800), 8, 3);
 
 	/* modules */
@@ -50,6 +54,24 @@ void slam::run()
 	//thread_process_frame = CreateThread(NULL, 0, start_process_frame, (void*) this, 0, NULL);
 	thread_process_sensor = CreateThread(NULL, 0, start_process_sensor, (void*) this, 0, NULL);
 	//thread_ui = CreateThread(NULL, 0, start_ui, (void*) this, 0, NULL);
+}
+
+
+void slam:: init_kf()
+{
+	// F vector
+	setIdentity(KF.transitionMatrix); // completed (T added) when measurement received and T is known
+
+	// H vector
+	for(int i = 0; i < 3; i++)
+		KF.measurementMatrix.at<float>(i, i*3 + 2) = 1.0f;
+
+	setIdentity(KF.processNoiseCov, Scalar::all(1e-5));
+	setIdentity(KF.measurementNoiseCov, Scalar::all(1e-5));
+	setIdentity(KF.errorCovPost, Scalar::all(1));
+
+	// random initial state
+	randn(KF.statePost, Scalar::all(0), Scalar::all(0.001));
 }
 
 
