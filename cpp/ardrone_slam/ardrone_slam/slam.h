@@ -43,6 +43,9 @@ public:
 	slam_module_sensor *m_sensor;
 	slam_module_ui *m_ui;
 
+	/* Kalman filter */
+	cv::KalmanFilter KF;
+
 
 	IplImage *canvas;
 	float canvas_scale; // px -> mm
@@ -52,6 +55,8 @@ public:
 	int initial_height;
 
 private:
+	void init_kf();
+
 	bool running;
 };
 

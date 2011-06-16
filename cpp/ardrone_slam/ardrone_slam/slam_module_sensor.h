@@ -1,8 +1,8 @@
 #pragma once
 
 #include "opencv2/core/types_c.h"
-#include "opencv2/features2d/features2d.hpp"
 #include "opencv2/video/tracking.hpp"
+#include "opencv2/features2d/features2d.hpp"
 
 #define MG_TO_MS2 0.00980665003f
 
@@ -23,10 +23,9 @@ private:
 
 	clock_t prev_update;
 
-	cv::KalmanFilter KF;
-	cv::Mat state;
+	cv::KalmanFilter *KF;
 	cv::Mat processNoise;
 	cv::Mat measurement;
-
+	cv::Mat *state;
 };
 
