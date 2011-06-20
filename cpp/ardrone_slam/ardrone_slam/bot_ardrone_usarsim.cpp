@@ -16,8 +16,8 @@ bot_ardrone_usarsim::bot_ardrone_usarsim(bot_ardrone *bot)
 	/* sockets */
 	printf("Connecting to USARSim\n");
 	control_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CONTROL, USARSIM_PORT, USARSIM_IP, NULL, BOT_ARDONE_USARSIM_CONTROL_BUFSIZE, (botinterface*) this);
-	//printf("Connecting to UPIS\n");
-	//frame_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_FRAME, UPIS_PORT, USARSIM_IP, frame->data, /*BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE*/BOT_ARDRONE_USARSIM_FRAME_BLOCKSIZE, (botinterface*) this);
+	printf("Connecting to UPIS\n");
+	frame_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_FRAME, UPIS_PORT, USARSIM_IP, frame->data, /*BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE*/BOT_ARDRONE_USARSIM_FRAME_BLOCKSIZE, (botinterface*) this);
 }
 
 
@@ -148,10 +148,9 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 					usarsim_msgparser_float3(&line, "{Orientation", m->or);
 					
 					// rad to mili-degrees
-					float y_bak = m->or[0];
-					m->or[0] = usarsim_msgparser_rad_to_mildeg(m->or[1]);
-					m->or[1] = usarsim_msgparser_rad_to_mildeg(y_bak);
-					m->or[2] = usarsim_msgparser_rad_to_mildeg(m->or[2]);
+					m->or[0] = usarsim_msgparser_rad_to_mildeg(m->or[0]); // x
+					m->or[1] = usarsim_msgparser_rad_to_mildeg(m->or[1]); // y
+					m->or[2] = usarsim_msgparser_rad_to_mildeg(m->or[2]); // z
 					break;
 				}
 

@@ -45,7 +45,9 @@ public:
 
 	/* Kalman filter */
 	cv::KalmanFilter KF;
-
+	/* state vector:
+     * p(3), v(3), a(3), q(3)
+	 */
 
 	IplImage *canvas;
 	float canvas_scale; // px -> mm

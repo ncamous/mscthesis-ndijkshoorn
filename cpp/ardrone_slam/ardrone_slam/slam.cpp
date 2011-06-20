@@ -8,7 +8,7 @@ using namespace cv;
 
 
 slam::slam():
-	KF(9, 3, 0)
+	KF(12, 3, 0)
 {
 	running = false;
 
@@ -64,14 +64,17 @@ void slam:: init_kf()
 
 	// H vector
 	for(int i = 0; i < 3; i++)
-		KF.measurementMatrix.at<float>(i, i*3 + 2) = 1.0f;
+	{
+		KF.measurementMatrix.at<float>(i, 6+i) = 1.0f; // measured a
+		//KF.measurementMatrix.at<float>(3+i, 9+i) = 1.0f; // measured q (attitude/orientation)
+	}
 
-	setIdentity(KF.processNoiseCov, Scalar::all(1e-5));
-	setIdentity(KF.measurementNoiseCov, Scalar::all(1e-5));
+	setIdentity(KF.processNoiseCov, Scalar::all(1e-7));
+	setIdentity(KF.measurementNoiseCov, Scalar::all(1e-7));
 	setIdentity(KF.errorCovPost, Scalar::all(1));
 
 	// random initial state
-	randn(KF.statePost, Scalar::all(0), Scalar::all(0.001));
+	randn(KF.statePost, Scalar::all(0), Scalar::all(0.0001));
 }
 
 
