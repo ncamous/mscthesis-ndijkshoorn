@@ -120,8 +120,13 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 
 	m->altitude = n->navdata_demo.altitude;
 
+	/*
 	m->or[0] = n->navdata_demo.theta;
 	m->or[1] = n->navdata_demo.phi;
+	m->or[2] = n->navdata_demo.psi;
+	*/
+	m->or[0] = n->navdata_demo.phi;
+	m->or[1] = n->navdata_demo.theta;
 	m->or[2] = n->navdata_demo.psi;
 
 	// Accelerations are received in mg

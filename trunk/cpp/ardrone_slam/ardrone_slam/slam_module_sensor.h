@@ -5,6 +5,7 @@
 #include "opencv2/features2d/features2d.hpp"
 
 #define MG_TO_MS2 0.00980665003f
+#define MD_TO_RAD 1.745329252e-05f
 
 struct bot_ardrone_measurement;
 
