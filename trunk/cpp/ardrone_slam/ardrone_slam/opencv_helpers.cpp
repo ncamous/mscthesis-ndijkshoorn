@@ -117,4 +117,48 @@ double ColMax(const Mat &mat, int col)
 	return max;
 }
 
+void RotationMatrix3D(const Mat& src_m, Mat& dst_m)
+{
+	float* dst = (float*) dst_m.data;
+	float* src = (float*) src_m.data; // angles in rad
+
+	float CosRx = cos(src[0]);
+	float CosRy = cos(src[1]);
+	float CosRz = cos(src[2]);
+	float SinRx = sin(src[0]);
+	float SinRy = sin(src[1]);
+	float SinRz = sin(src[2]);
+
+	// http://www.codecogs.com/pages/forums/pagegen.php?id=455
+	// http://www.intechopen.com/source/pdfs/11307/InTech-Visual_slam_and_moving_object_detection_for_a_small_size_humanoid_robot.pdf
+	// http://46dogs.blogspot.com/2011/04/right-handed-rotation-matrix-for.html
+
+	/* Note: this matrix effectively yaws first, then pitches, then rolls.  For the opposite order (and the one I ended up using), look below.*/
+	dst[0] = CosRy * CosRz;
+	dst[1] = -SinRz * CosRy;
+	dst[2] = SinRy;
+
+	dst[3] = CosRz * SinRy * SinRx + SinRz * CosRx;
+	dst[4] = -SinRz * SinRy * SinRx + CosRz * CosRx;
+	dst[5] = -CosRy * SinRx;
+
+	dst[6] = -CosRz * SinRy * CosRx + SinRz * SinRx;
+	dst[7] = SinRz * SinRy * CosRx + CosRz * SinRx;
+	dst[8] = CosRy * CosRx;
+
+
+	/* Note: this matrix effectively rolls first, then pitches, then yaws.  This turned out to be the one I used for my system.*/
+	dst[0] = CosRy * CosRz;
+	dst[1] = -SinRz * CosRx + CosRz * SinRy * SinRx;
+	dst[2] = SinRx * SinRz + CosRz * SinRy * CosRx;
+
+	dst[3] = CosRy * SinRz;
+	dst[4] = CosRz * CosRx + SinRy * SinRz * SinRx;
+	dst[5] = -SinRx * CosRz + SinRy * SinRz * SinRx;
+
+	dst[6] = -SinRy;
+	dst[7] = CosRy * SinRx;
+	dst[8] = CosRy * CosRx;
+}
+
 }

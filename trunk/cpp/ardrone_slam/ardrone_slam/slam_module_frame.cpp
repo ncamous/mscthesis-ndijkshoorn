@@ -38,6 +38,13 @@ slam_module_frame::slam_module_frame(slam *controller)
 		obstacle_map = Mat(800, 800, CV_8UC1);
 		obstacle_map = 255;
 	}
+
+	/* KF */
+	KF = &controller->KF;
+	state = &KF->statePost;
+	estimated_pos[0] = 0.0f;
+	estimated_pos[1] = 0.0f;
+	estimated_pos[2] = 0.0f;
 }
 
 
@@ -85,6 +92,15 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 	int features_found = find_features(frame, keypoints);
 
 
+
+	/* transform to 'captured from a perfect downlooking camera' */
+	/* based on IMU data */
+	//Mat m_or = (Mat_<float>(3,1) << state[9], state[10], state[11]);
+	//Mat Rw(3, 3, CV_32F);
+	//cv::RotationMatrix3D(m_or, Rw);
+
+
+
 	/* calculate descriptors (on greyscale image) */
 	Mat descriptors;
 	cvCvtColor(frame, gray, CV_RGB2GRAY);
@@ -117,23 +133,9 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 	{
 		double ransacReprojThreshold = 3.0;
 
-		/* new method */
-		/*
-		prev_frame_keypoints.clear();
-		prev_frame_descriptors.empty();
-
-		set_canvas_mask();
-		find_features(canvas, prev_frame_keypoints, true);
-		IplImage *gray2 = cvCreateImage(cvSize(600, 600), IPL_DEPTH_8U, 1);
-		cvCvtColor(canvas, gray2, CV_RGB2GRAY);
-		de->compute(gray2, prev_frame_keypoints, prev_frame_descriptors);
-		*/
-		/*****/
-
-
 		if (keypoints.size() < 20)
 		{
-			printf("Not enough features found: dropping frame\n");
+			//printf("Not enough features found: dropping frame\n");
 			return;
 		}
 
@@ -142,6 +144,7 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 		if (matches.size() < 20)
 			return;
+
 
 
 		/* calculate transformation (RANSAC) */
@@ -161,12 +164,39 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 		Mat homography = findHomography( Mat(points1), Mat(points2), CV_RANSAC, ransacReprojThreshold );
 
+		//cvCalcImageHomography(
+
+
+		//dumpMatrix(homography);
+		//printf("\n\n");
+
+		//double canvas_pos[3];
+		//canvas_pos[0] = homography.at<double>(0,2);
+		//canvas_pos[1] = homography.at<double>(1,2);
+		//canvas_pos[2] = 0.0;
+
+		//dumpMatrix(homography);
+
+		//double pos[2];
+		//if (!controller->get_world_position(canvas_pos, pos))
+		//	return;
+
+		//estimated_pos[0] -= (float) pos[1];
+		//estimated_pos[1] += (float) pos[0];
+
+		//printf("state: [%f, %f, %f]\n", estimated_pos[0], estimated_pos[1], estimated_pos[2]);
+		//if (frame_counter % 5 == 0)
+		//	printf("state: [%f, %f, %f]\n", estimated_pos[0], estimated_pos[1], 5000.0);
+
 
 		/* filter method #1: count number of outliers */
+		/*
 		int outliers = 0;
 		double d;
 		double d_sum = 0.0;
+		*/
 
+		/*
         Mat points3t; perspectiveTransform(Mat(points1), points3t, homography);
         for( size_t i1 = 0; i1 < points1.size(); i1++ )
         {
@@ -176,37 +206,42 @@ void slam_module_frame::process(bot_ardrone_frame *f)
             if(d > 4 ) // inlier
                outliers++;
         }
+		*/
 
 		//printf("Average feature distance: %f\n", feature_distance / frame_counter);
 
-		double outliers_percentage =  ((double)outliers / (double)points1.size()) * 100.0;
+		//double outliers_percentage =  ((double)outliers / (double)points1.size()) * 100.0;
 
 		//printf("percentage of outers: %f \n", outliers_percentage);
 
+		/*
 		if (outliers_percentage > 85.0)
 		{
 			printf("dropped frame based on outliers\n");
 			dropped_frame_counter++;
 			return;
 		}
+		*/
 
-		Mat absolute_homography = prev_frame_h * homography;
+		//Mat absolute_homography = prev_frame_h * homography;
 		//Mat absolute_homography = homography;
 
 
 		/* filter method #2: relative change */
+		/*
 		Mat rel_change = prev_frame_h / absolute_homography;
 		//dumpMatrix(absolute_homography);
 		Mat tmp = abs(rel_change);
 		double min_change = MatMin(tmp);
 		double max_change = MatMax(tmp);
+		*/
 
 		//printf("max_change: %f\n", max_change);
 
-		CvScalar rel_change_avg = mean(tmp);
+		//CvScalar rel_change_avg = mean(tmp);
 		//printf("rel change: %f\n", rel_change_avg.val[0]);
 
-
+		/*
 		if (abs(absolute_homography.at<double> (0, 0)) > 4.0 || absolute_homography.at<double> (0, 0) < -3.0
 			||
 			abs(absolute_homography.at<double> (0, 1)) > 4.0 || absolute_homography.at<double> (0, 1) < -3.0
@@ -220,6 +255,7 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 			dropped_frame_counter++;
 			return;
 		}
+		*/
 
 		/*
 		if (max_change > 2.0 || MatNegCount(rel_change) >= 3)
@@ -231,15 +267,16 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		*/
 
 		//prev_frame_h *= homography;
-		prev_frame_h = absolute_homography;
+		//prev_frame_h = absolute_homography;
 
 		//printf("current pos: %i, %i\n", last_loc[0], last_loc[1]);
 
-		feature_distance += (d_sum) / (double)points1.size();
+		//feature_distance += (d_sum) / (double)points1.size();
 	}
 
 
 	/* get center position */
+	/*
 	double center[] = { (double)frame->width * 0.5, (double)frame->height * 0.5, 0.0 };
 	Mat point_center = Mat(1, 3, CV_64F, center);
 
@@ -250,11 +287,25 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 	last_loc[0] = int(tc_data[0] + h_data[2]);
 	last_loc[1] = int(tc_data[1] + h_data[5]);
+	*/
+
+	/* get position from KF */
+	//double pos[2];
+	//if (!controller->get_canvas_position(pos))
+	//	return; // OK?
+
+	/*
+	double* h_data = (double*) prev_frame_h.data;
+	h_data[2] = 300.0 + pos[1];
+	h_data[5] = 300.0 - pos[0];
+
+	*/
+	//printf("%f, %f\n", h_data[2], h_data[5]);
 
 
 	/* draw image */
-	CvMat CvHomography = prev_frame_h;
-	cvWarpPerspective(frame, controller->canvas, &CvHomography, CV_INTER_LINEAR);
+	//CvMat CvHomography = prev_frame_h;
+	//cvWarpPerspective(frame, controller->canvas, &CvHomography, CV_INTER_LINEAR);
 
 
 	/* store current frame as previous frame */

@@ -10,4 +10,5 @@ namespace cv {
 	int MatNegCount(const Mat &mat);
 	double ColMin(const Mat &mat, int col);
 	double ColMax(const Mat &mat, int col);
+	void RotationMatrix3D(const Mat& src, Mat& dst);
 }
