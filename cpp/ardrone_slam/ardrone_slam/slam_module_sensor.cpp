@@ -17,7 +17,11 @@ slam_module_sensor::slam_module_sensor(slam *controller)
 
 	prev_update = clock();
 
-	measurement = Mat::zeros(3, 1, CV_32F);
+	//measurement = Mat::zeros(3, 1, CV_32F);
+
+	counter = 0;
+
+	scale_set = false;
 }
 
 
@@ -31,7 +35,37 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	double difftime = ((double)clock() - prev_update) / CLOCKS_PER_SEC;
 	prev_update = clock();
 
-	//printf("%f %f %f\n", m->or[0], m->or[1], m->or[2]);
+
+	/* set scale */
+	if (!scale_set)
+		calculate_scale(m);
+
+
+/*
+	m->or[0] = 0.0f;
+	m->or[1] = -45000.0f;
+	m->or[2] = 0.0f;
+
+	m->accel[0] = 1000.0f;
+	m->accel[1] = 0.0f;
+	m->accel[2] = 1000.0f;
+*/
+
+	//return;
+
+
+	Mat m_or = (Mat_<float>(3,1) << m->or[0] * MD_TO_RAD, m->or[1] * MD_TO_RAD, m->or[2] * MD_TO_RAD);
+	Mat m_accel = (Mat_<float>(3,1) << m->accel[0], m->accel[1], m->accel[2]);
+
+	/*
+	if (counter++ % 25 == 0)
+	{
+		dumpMatrix(m_or);
+		printf("\n");
+	}
+	return;
+	*/
+
 
 	/* update transition matrix */
 	for (int i = 0; i < 3; i++)
@@ -49,34 +83,38 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 
 	/* correct */
-	// a
-	measurement.at<float>(0) = m->accel[0] * MG_TO_MS2;
-	measurement.at<float>(1) = m->accel[1] * MG_TO_MS2;
-	measurement.at<float>(2) = m->accel[2] * MG_TO_MS2;
+	measurement = m_accel;
 
-	// w (attitude)
-	//measurement.at<float>(3) = m->or[0];
-	//measurement.at<float>(4) = m->or[1];
-	//measurement.at<float>(5) = m->or[2];
 
-	//measurement.at<float>(0) = 1.0f;
-	//measurement.at<float>(1) = 0.0f;
-	//measurement.at<float>(2) = 0.0f;
+	// transform angular acceleration to world accelerations
+	Mat Rw(3, 3, CV_32F);
+	cv::RotationMatrix3D(m_or, Rw);
+	measurement = Rw * measurement;
 
-	//Mat angles(3, 1, CV_32F);
-	Mat angles = (Mat_<float>(3,1) << m->or[0] * MD_TO_RAD, m->or[1] * MD_TO_RAD, m->or[2] * MD_TO_RAD);
-	//Mat angles = (Mat_<float>(3,1) << 0.0f, 0.0174532925f, 0.0f); // 1 deg
-	Mat R(3, 3, CV_32F);
-	cv::Rodrigues(angles, R);
 
-	measurement = R * measurement;
+	/* compensate for gravity */
+	if (!m->usarsim)
+		measurement.at<float>(2) += 1000.0f;
 
-	//dumpMatrix(R);
-	//printf("\n");
-	//dumpMatrix(measurement);
-	//printf("\n\n");
+
+	/* convert MG to MS2 */
+	measurement = measurement * MG_TO_MM2;
+
+	/*
+	dumpMatrix(measurement);
+	printf("(%f)\n", m->accel[2]);
+	printf("\n\n");
+	return;
+	*/
 
 	KF->correct(measurement);
+
+
+	/* directly inject attitude into state vector */
+	KF->statePost.at<float>(9) = m_or.at<float>(0);
+	KF->statePost.at<float>(10) = m_or.at<float>(0);
+	KF->statePost.at<float>(11) = m_or.at<float>(0);
+	/**/
 
 
 	/* state */
@@ -85,10 +123,42 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 	//dumpMatrix(KF->statePost);
 
-	printf("state: [%f, %f, %f]\n", state->at<float>(0), state->at<float>(1), state->at<float>(2));
-	printf("gt:    [%f, %f, %f]\n", m->gt_loc[0], m->gt_loc[1] - 10.0f, m->gt_loc[2] + 10.0f);
+	if (counter++ % 25 == 0)
+	{
+		m->gt_loc[1] -= 10.0f;
+		m->gt_loc[2] += 10.0f;
+
+		//printf("state: [%f, %f, %f]\n", state->at<float>(0), state->at<float>(1), state->at<float>(2));
+		printf("gt:    [%f, %f, %f]\n", m->gt_loc[0] * 1000.f, m->gt_loc[1] * 1000.f, m->gt_loc[2] * 1000.f);
+	}
 }
 
+
+void slam_module_sensor::accel_compensate_gravity(Mat& accel, cv::Mat& m_or)
+{
+	Mat Rg(3, 3, CV_32F);
+	cv::RotationMatrix3D(m_or, Rg);
+	Mat gravity = (Mat_<float>(3,1) << 0.0f, 0.0f, 1000.0f); // 1000mg in z-direction
+	gravity = Rg * gravity;
+
+	//dumpMatrix(gravity);
+	//printf("\n");
+
+	accel -= gravity;
+}
+
+
+void slam_module_sensor::calculate_scale(bot_ardrone_measurement *m)
+{
+	scale_set = true;
+
+	double altitude = (double) m->altitude;
+	double scale = 2.0f * tan(((BOT_ARDRONE_CAM_FOV)/180.0f)*PI) * altitude;
+	scale /= (double) BOT_ARDRONE_CAM_RESOLUTION_W;
+	//scale = 1.0 / scale; // mm -> px
+
+	controller->set_scale(scale);
+}
 
 
 

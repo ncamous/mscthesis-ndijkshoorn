@@ -27,6 +27,10 @@ public:
 	void add_input_frame(bot_ardrone_frame *f);
 	void add_input_sensor(bot_ardrone_measurement *m);
 
+	void set_scale(double s);
+	bool get_canvas_position(double *out);
+	bool get_world_position(double *in, double *out);
+
 
 	/* threads */
 	HANDLE thread_process_frame;
@@ -50,11 +54,9 @@ public:
 	 */
 
 	IplImage *canvas;
-	float canvas_scale; // px -> mm
-
-	// sonar elevation map
-	int elevation;
-	int initial_height;
+	bool scale_known;
+	double canvas_scale; // px -> mm
+	int initial_height; // used to determine the 
 
 private:
 	void init_kf();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "opencv2/core/types_c.h"
+#include "opencv2/video/tracking.hpp"
 #include "opencv2/features2d/features2d.hpp"
 
 struct bot_ardrone_frame;
@@ -42,5 +43,9 @@ private:
 	cv::Mat frame_mask;
 
 	int last_loc[2];
+
+	cv::KalmanFilter *KF;
+	cv::Mat *state;
+	float estimated_pos[3];
 };
 

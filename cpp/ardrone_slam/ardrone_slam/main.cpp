@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 
 
 	/* bot 2: USARSim ARDRONE */
-	//bot_ardrone ardrone2(BOT_ARDRONE_INTERFACE_USARSIM);
+	//bot_ardrone ardrone2(BOT_ARDRONE_INTERFACE_ARDRONELIB);
 	//bots[nr_bots++] = &ardrone2;
 	//ardrone2.set_record();
 
@@ -38,6 +38,6 @@ int main(int argc, char *argv[])
 
 
 
-	Sleep(60000);
+	Sleep(1000);
 	return 0;
 }
