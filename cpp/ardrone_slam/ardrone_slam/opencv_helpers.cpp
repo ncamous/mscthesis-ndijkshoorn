@@ -161,4 +161,13 @@ void RotationMatrix3D(const Mat& src_m, Mat& dst_m)
 	dst[8] = CosRy * CosRx;
 }
 
+
+void CalcLinePlaneIntersection(const Mat& Plane, const Mat& PlaneNormal, const Mat& Line, const Mat& LineNormal, Mat& intersection)
+{
+
+	double d = 0; //-cvDotProduct(plane_normal, plane_point);
+	double t = (d - PlaneNormal.dot(Line)) / PlaneNormal.dot(LineNormal);
+	addWeighted(Line, 1.0, LineNormal, t, 0.0, intersection);
+}
+
 }

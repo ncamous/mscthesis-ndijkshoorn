@@ -11,4 +11,5 @@ namespace cv {
 	double ColMin(const Mat &mat, int col);
 	double ColMax(const Mat &mat, int col);
 	void RotationMatrix3D(const Mat& src, Mat& dst);
+	void CalcLinePlaneIntersection(const Mat& Plane, const Mat& PlaneNormal, const Mat& Line, const Mat& LineNormal, Mat& intersection);
 }

@@ -11,12 +11,34 @@
 using namespace cv;
 
 
-slam_module_frame::slam_module_frame(slam *controller)
+slam_module_frame::slam_module_frame(slam *controller):
+	camera_matrix(3, 3, CV_32F),
+	world_plane(3, 1, CV_32F),
+	world_plane_normal(3, 1, CV_32F)
 {
 	this->controller = controller;
 
 	fd = new SurfFeatureDetector(SLAM_SURF_HESSIANTHRESHOLD, 3, 4);
 	de = new SurfDescriptorExtractor();
+
+
+	/* camera matrix */
+	camera_matrix = 0.0f;
+	camera_matrix.at<float>(0, 0) = 300.0f; //1.60035f;
+	camera_matrix.at<float>(1, 1) = 300.0f; //1.60035f;
+	camera_matrix.at<float>(2, 2) = 1.f;
+	camera_matrix.at<float>(0, 2) = 88.0f;
+	camera_matrix.at<float>(1, 2) = 72.0f;
+
+	camera_matrix_inv = camera_matrix.inv();
+	/**/
+
+
+	/* world plane */
+	world_plane = 0.0f;
+	world_plane_normal = 0.0f;
+	world_plane_normal.at<float>(2) = 1.0f;
+
 
 	frame = NULL;
 	prev_frame_descriptors = NULL;
@@ -54,6 +76,12 @@ slam_module_frame::~slam_module_frame(void)
 
 void slam_module_frame::process(bot_ardrone_frame *f)
 {
+	// scale not kwown: no use of processing the frame
+	if (!controller->scale_known)
+		return;
+
+
+	// initialize frame
 	if (frame == NULL)
 	{
 		unsigned short w, h;
@@ -71,25 +99,19 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 	frame->imageData = &f->data[4];
 
 
-	/* display image */
-	//add_noise(frame);
-	/*
-	add_noise(frame);
-	imshow("Image:", frame);
-	cvWaitKey(4);
-	return;
-	*/
-	/**/
-
 
 	// frames from the real ardrone are received in RGB order instead of BGR
 	if (!f->usarsim)
 		cvCvtColor( frame, frame, CV_RGB2BGR );
 
 
+
 	/* find features */
 	vector<cv::KeyPoint> keypoints;
 	int features_found = find_features(frame, keypoints);
+
+	vector<Point2f> current_frame_ip; // current frame image points
+	KeyPoint::convert(keypoints, current_frame_ip);
 
 
 
@@ -116,11 +138,15 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		dm.match(descriptors, prev_frame_descriptors, matches);
 
 		if (matches.size() < 20)
+		{
+			printf("Not enough features matched: dropping frame\n");
 			return;
+		}
 
 
 
 		/* calculate transformation (RANSAC) */
+		/* NOT NEEDED ATM
 		vector<int> queryIdxs( matches.size() ), trainIdxs( matches.size() );
 		for( size_t i = 0; i < matches.size(); i++ )
 		{
@@ -134,7 +160,7 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 		vector<Point2f> points2;
 		KeyPoint::convert(prev_frame_keypoints, points2, trainIdxs);
-
+		*/
 
 
 
@@ -182,13 +208,6 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 		Mat rotation_vector_calc(3, 1, CV_64F);
 		Mat translation_vector_calc(3, 1, CV_64F);
-
-		camera_matrix = 0.0f;
-		camera_matrix.at<float>(0, 0) = 31.9850946f; //1.60035f;
-		camera_matrix.at<float>(1, 1) = 32.5596395f; //1.60035f;
-		camera_matrix.at<float>(2, 2) = 1.f;
-		camera_matrix.at<float>(0, 2) = 223.61462402f;
-		camera_matrix.at<float>(1, 2) = -39.23768616f;
 
 		dist_coef = 0.0f;
 		translation_vector = 0.0f;
@@ -244,56 +263,94 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 	}
 
 
-	/* get center position */
-	/*
-	double center[] = { (double)frame->width * 0.5, (double)frame->height * 0.5, 0.0 };
-	Mat point_center = Mat(1, 3, CV_64F, center);
-
-	Mat tc = point_center * prev_frame_h;
-
-	double *tc_data = (double*) tc.data;
-	double *h_data = (double*) prev_frame_h.data;
-
-	last_loc[0] = int(tc_data[0] + h_data[2]);
-	last_loc[1] = int(tc_data[1] + h_data[5]);
-	*/
-
-	/* get position from KF */
-	//double pos[2];
-	//if (!controller->get_canvas_position(pos))
-	//	return; // OK?
-
-	/*
-	double* h_data = (double*) prev_frame_h.data;
-	h_data[2] = 300.0 + pos[1];
-	h_data[5] = 300.0 - pos[0];
-
-	*/
-	//printf("%f, %f\n", h_data[2], h_data[5]);
-
-
-	/* draw image */
-	//CvMat CvHomography = prev_frame_h;
-	//cvWarpPerspective(frame, controller->canvas, &CvHomography, CV_INTER_LINEAR);
-
 
 	/* store current frame as previous frame */
 	prev_frame_keypoints = keypoints;
 	prev_frame_descriptors = descriptors;
+	// prev_frame_wc is set below
 
-	//imshow("Image:", controller->canvas);
-	//cvWaitKey(4);
-	/*
-	if (frame_counter > 0 && frame_counter % 4 == 0)
+	//Point2f tmp(88.0f, 72.0f);
+	//src.push_back(tmp);
+
+	printf("===== INPUT =====\n");
+	for( size_t i = 0; i < current_frame_ip.size(); i++ )
 	{
-	IplImage *canvas_resized = cvCreateImage( cvSize(800,800), 8, 3 );
-	cvResize(canvas, canvas_resized);
-	imshow("Image:", canvas_resized);
-	cvWaitKey(4);
+		printf("%f, %f\n", current_frame_ip[i].x, current_frame_ip[i].y);
 	}
-	*/
 
-	frame_counter++;
+	imagepoints_to_world3d(current_frame_ip, prev_frame_wc);
+
+	printf("\n");
+	printf("===== OUTPUT (%i) =====\n", prev_frame_wc.size());
+	for( size_t i = 0; i < prev_frame_wc.size(); i++ )
+	{
+		printf("%f, %f, %f\n", prev_frame_wc[i].x, prev_frame_wc[i].y, prev_frame_wc[i].z);
+	}
+
+	printf("\n\n");
+
+
+
+
+	//frame_counter++;
+}
+
+
+void slam_module_frame::imagepoints_to_world3d(vector<Point2f>& src, vector<Point3f>& dst)
+{
+	// get camera (vectors)
+	Mat cam_pos(3, 1, CV_32F);
+	Mat cam_rotation(3, 1, CV_32F);
+	get_current_camera(cam_pos, cam_rotation);
+
+	// 3D rotation matrix
+	Mat rotation_matrix(3, 3, CV_32F);
+	cv::RotationMatrix3D(cam_rotation, rotation_matrix);
+
+	Mat point(3, 1, CV_32F);
+	Mat intersection(3, 1, CV_32F);
+	Point3f point3d;
+
+	dst.clear();
+	//dst.resize(src.size());
+
+	for( size_t i = 0; i < src.size(); i++ )
+	{
+		point.at<float>(0) = src[i].x;
+		point.at<float>(1) = src[i].y;
+		point.at<float>(2) = 1.0f;
+
+		point = camera_matrix_inv * point;
+		point = rotation_matrix * point;
+
+		cv::normalize(point, point);
+
+		CalcLinePlaneIntersection(world_plane, world_plane_normal, cam_pos, point, intersection);
+
+		point3d.x = intersection.at<float>(0);
+		point3d.y = intersection.at<float>(1);
+		point3d.z = intersection.at<float>(2);
+
+		dst.push_back(point3d);
+	}
+}
+
+
+void slam_module_frame::get_current_camera(Mat& pos, Mat& orientation)
+{
+	// TODO: get from KF!
+
+	// test data
+	float test_cam_p[3] = {0.0f, 0.0f, -1000.0f};
+	float test_cam_o[3] = {0.0f-PI, 0.0f-PI, -0.5f * PI};
+	
+	pos.at<float>(0) = test_cam_p[0];
+	pos.at<float>(1) = test_cam_p[1];
+	pos.at<float>(2) = test_cam_p[2];
+
+	orientation.at<float>(0) = test_cam_o[0];
+	orientation.at<float>(1) = test_cam_o[1];
+	orientation.at<float>(2) = test_cam_o[2];
 }
 
 
