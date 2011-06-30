@@ -93,39 +93,12 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 
 
-	/* transform to 'captured from a perfect downlooking camera' */
-	/* based on IMU data */
-	//Mat m_or = (Mat_<float>(3,1) << state[9], state[10], state[11]);
-	//Mat Rw(3, 3, CV_32F);
-	//cv::RotationMatrix3D(m_or, Rw);
-
-
-
 	/* calculate descriptors (on greyscale image) */
 	Mat descriptors;
 	cvCvtColor(frame, gray, CV_RGB2GRAY);
     de->compute(gray, keypoints, descriptors);
 
 
-	/* plot keypoints */
-	/*
-	for (int i = 0; i < (int)keypoints.size(); i++)
-	{
-		int x = (int)keypoints.at(i).pt.x - 2;
-		int y = (int)keypoints.at(i).pt.y - 2;
-
-		for (int x2 = 0; x2 < 5; x2++)
-		{
-			for (int y2 = 0; y2 < 5; y2++)
-			{
-				frame->imageData[((y + y2) * frame->width * 3) + (x + x2) * 3] = (unsigned char) 0;
-				frame->imageData[((y + y2) * frame->width * 3) + (x + x2) * 3 + 1] = (unsigned char) 0;
-				frame->imageData[((y + y2) * frame->width * 3) + (x + x2) * 3 + 2] = (unsigned char) 255;
-			}
-		}
-	}
-	*/
-	/**/
 
 
 	/* match with previous frame */
@@ -135,7 +108,7 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 		if (keypoints.size() < 20)
 		{
-			//printf("Not enough features found: dropping frame\n");
+			printf("Not enough features found: dropping frame\n");
 			return;
 		}
 
@@ -162,7 +135,100 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		vector<Point2f> points2;
 		KeyPoint::convert(prev_frame_keypoints, points2, trainIdxs);
 
-		Mat homography = findHomography( Mat(points1), Mat(points2), CV_RANSAC, ransacReprojThreshold );
+
+
+
+		/* retrieve camera motion from two frames */
+		Mat points3d(9, 1, CV_32FC3);
+		Mat imagePoints(9, 1, CV_32FC2);
+		vector <Point2f> imagePoints2;
+
+		for (int i = 0; i < 3; i++)
+		{
+			for (int j = 0; j < 3; j++)
+			{
+
+				points3d.at<Vec3f>(i*3 + j, 0)[0] = 40.0f * i;
+				points3d.at<Vec3f>(i*3 + j, 0)[1] = 40.0f * j;
+				points3d.at<Vec3f>(i*3 + j, 0)[2] = (40.0f * i) - (40.0f * i);
+
+			}
+		}
+
+		/*
+		for( size_t i = 0; i < matches.size(); i++ )
+		{
+			points3d.at<Vec3f>(0, i)[0] = points2[i].x * 50.0f;
+			points3d.at<Vec3f>(0, i)[1] = points2[i].y * 50.0f;
+			points3d.at<Vec3f>(0, i)[2] = 0.0f;
+			//points3d.at<Vec3f>(0, i)[2] = 0.0 + rand() * (10.0 - 0.0) / RAND_MAX;
+
+			//printf("%f, %f, %f\n", points3d.at<Vec3f>(0, i)[0], points3d.at<Vec3f>(0, i)[1], points3d.at<Vec3f>(0, i)[2]);
+
+			//elem2f[0] = points1[i].x;
+			//elem2f[1] = points1[i].y;
+		}
+		*/
+
+
+		//elem3f = points3d.at<Vec3f>(0, 0);
+
+		//printf("%f, %f, %f\n", points3d.at<Vec3f>(0, 0)[0], points3d.at<Vec3f>(0, 0)[1], points3d.at<Vec3f>(0, 0)[2]);
+
+		Mat camera_matrix(3, 3, CV_32F);
+		Mat dist_coef(5, 1, CV_32F);
+		Mat rotation_vector(3, 1, CV_32F);
+		Mat translation_vector(3, 1, CV_32F);
+
+		Mat rotation_vector_calc(3, 1, CV_64F);
+		Mat translation_vector_calc(3, 1, CV_64F);
+
+		camera_matrix = 0.0f;
+		camera_matrix.at<float>(0, 0) = 31.9850946f; //1.60035f;
+		camera_matrix.at<float>(1, 1) = 32.5596395f; //1.60035f;
+		camera_matrix.at<float>(2, 2) = 1.f;
+		camera_matrix.at<float>(0, 2) = 223.61462402f;
+		camera_matrix.at<float>(1, 2) = -39.23768616f;
+
+		dist_coef = 0.0f;
+		translation_vector = 0.0f;
+		rotation_vector = 0.0f;
+
+		translation_vector.at<float>(2, 0) = -20.0f;
+		translation_vector.at<float>(0, 0) = 30.0f;
+		rotation_vector.at<float>(2, 0) = 1.57079633f;
+
+		projectPoints( points3d, rotation_vector, translation_vector, camera_matrix, dist_coef, imagePoints2 );
+
+		for( size_t i = 0; i < imagePoints2.size(); i++ )
+		{
+			imagePoints.at<Vec2f>(i, 0)[0] = imagePoints2[i].x;
+			imagePoints.at<Vec2f>(i, 0)[1] = imagePoints2[i].y;
+
+			//printf("%f, %f\n", imagePoints2[i].x, imagePoints2[i].y);
+		}
+
+		//printf("\n\n\n");
+
+		solvePnP( points3d, imagePoints, camera_matrix, dist_coef, rotation_vector_calc, translation_vector_calc );
+
+		dumpMatrix(translation_vector_calc);
+		printf("\n");
+		dumpMatrix(rotation_vector_calc);
+		printf("\n\n\n");
+
+		/*
+		double world_translation[2];
+
+		controller->get_world_position((double*) translation_vector_calc.data, world_translation);
+
+		estimated_pos[0] += (float) world_translation[1];
+		estimated_pos[1] -= (float) world_translation[0];
+
+		printf("%f, %f\n", estimated_pos[0], estimated_pos[1]);
+		*/
+
+		//Mat homography = findHomography( Mat(points1), Mat(points2), CV_RANSAC, ransacReprojThreshold );
 
 		//cvCalcImageHomography(
 
@@ -175,103 +241,6 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		//canvas_pos[1] = homography.at<double>(1,2);
 		//canvas_pos[2] = 0.0;
 
-		//dumpMatrix(homography);
-
-		//double pos[2];
-		//if (!controller->get_world_position(canvas_pos, pos))
-		//	return;
-
-		//estimated_pos[0] -= (float) pos[1];
-		//estimated_pos[1] += (float) pos[0];
-
-		//printf("state: [%f, %f, %f]\n", estimated_pos[0], estimated_pos[1], estimated_pos[2]);
-		//if (frame_counter % 5 == 0)
-		//	printf("state: [%f, %f, %f]\n", estimated_pos[0], estimated_pos[1], 5000.0);
-
-
-		/* filter method #1: count number of outliers */
-		/*
-		int outliers = 0;
-		double d;
-		double d_sum = 0.0;
-		*/
-
-		/*
-        Mat points3t; perspectiveTransform(Mat(points1), points3t, homography);
-        for( size_t i1 = 0; i1 < points1.size(); i1++ )
-        {
-			d = norm(points2[i1] - points3t.at<Point2f>((int)i1,0));
-			d_sum += d;
-
-            if(d > 4 ) // inlier
-               outliers++;
-        }
-		*/
-
-		//printf("Average feature distance: %f\n", feature_distance / frame_counter);
-
-		//double outliers_percentage =  ((double)outliers / (double)points1.size()) * 100.0;
-
-		//printf("percentage of outers: %f \n", outliers_percentage);
-
-		/*
-		if (outliers_percentage > 85.0)
-		{
-			printf("dropped frame based on outliers\n");
-			dropped_frame_counter++;
-			return;
-		}
-		*/
-
-		//Mat absolute_homography = prev_frame_h * homography;
-		//Mat absolute_homography = homography;
-
-
-		/* filter method #2: relative change */
-		/*
-		Mat rel_change = prev_frame_h / absolute_homography;
-		//dumpMatrix(absolute_homography);
-		Mat tmp = abs(rel_change);
-		double min_change = MatMin(tmp);
-		double max_change = MatMax(tmp);
-		*/
-
-		//printf("max_change: %f\n", max_change);
-
-		//CvScalar rel_change_avg = mean(tmp);
-		//printf("rel change: %f\n", rel_change_avg.val[0]);
-
-		/*
-		if (abs(absolute_homography.at<double> (0, 0)) > 4.0 || absolute_homography.at<double> (0, 0) < -3.0
-			||
-			abs(absolute_homography.at<double> (0, 1)) > 4.0 || absolute_homography.at<double> (0, 1) < -3.0
-			||
-			abs(absolute_homography.at<double> (1, 0)) > 4.0 || absolute_homography.at<double> (1, 0) < -3.0
-			||
-			abs(absolute_homography.at<double> (1, 1)) > 4.0 || absolute_homography.at<double> (1, 1) < -3.0
-			)
-		{
-			printf("dropped frame based on relative changes\n");
-			dropped_frame_counter++;
-			return;
-		}
-		*/
-
-		/*
-		if (max_change > 2.0 || MatNegCount(rel_change) >= 3)
-		{
-			printf("dropped frame based on relative changes\n");
-			dropped_frame_counter++;
-			return;
-		}
-		*/
-
-		//prev_frame_h *= homography;
-		//prev_frame_h = absolute_homography;
-
-		//printf("current pos: %i, %i\n", last_loc[0], last_loc[1]);
-
-		//feature_distance += (d_sum) / (double)points1.size();
 	}
 
 
@@ -325,10 +294,6 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 	*/
 
 	frame_counter++;
-
-	//printf("Average number features/frame: %f\n", (double)feature_counter / (double)frame_counter);
-	//printf("Average features distance: %f\n", feature_distance / (double)frame_counter);
-	//Sleep(250);
 }
 
 
