@@ -53,12 +53,12 @@ void slam::run()
 
 	/* start threads */
 	thread_process_frame = CreateThread(NULL, 0, start_process_frame, (void*) this, 0, NULL);
-	thread_process_sensor = CreateThread(NULL, 0, start_process_sensor, (void*) this, 0, NULL);
-	thread_ui = CreateThread(NULL, 0, start_ui, (void*) this, 0, NULL);
+	//thread_process_sensor = CreateThread(NULL, 0, start_process_sensor, (void*) this, 0, NULL);
+	//thread_ui = CreateThread(NULL, 0, start_ui, (void*) this, 0, NULL);
 }
 
 
-void slam:: init_kf()
+void slam::init_kf()
 {
 	// F vector
 	setIdentity(KF.transitionMatrix); // completed (T added) when measurement received and T is known
