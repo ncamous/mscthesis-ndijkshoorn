@@ -18,6 +18,8 @@ public:
 	int find_features(IplImage *img, vector<cv::KeyPoint> &v);
 	void calculate_frame_mask(int width, int height);
 	void add_noise(IplImage *img);
+	void imagepoints_to_world3d(vector<cv::Point2f>& src, vector<cv::Point3f>& dst);
+	void get_current_camera(cv::Mat& pos, cv::Mat& orientation);
 
 
 private:
@@ -25,8 +27,10 @@ private:
 
 	IplImage *frame;
 	IplImage *gray;
+
 	vector<cv::KeyPoint> prev_frame_keypoints;
 	cv::Mat prev_frame_descriptors;
+	vector<cv::Point3f> prev_frame_wc;
 
 	cv::FeatureDetector *fd;
 	cv::DescriptorExtractor *de;
@@ -36,6 +40,12 @@ private:
 	int feature_counter;
 	int dropped_frame_counter;
 	double feature_distance;
+
+	cv::Mat camera_matrix;
+	cv::Mat camera_matrix_inv;
+
+	cv::Mat world_plane;
+	cv::Mat world_plane_normal;
 
 	cv::Mat prev_frame_h;
 

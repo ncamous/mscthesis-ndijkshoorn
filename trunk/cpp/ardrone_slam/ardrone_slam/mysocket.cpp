@@ -59,21 +59,8 @@ static DWORD WINAPI receive_thread(void* Param)
 
 	while(bytes = recv(This->s, This->buffer, This->buffersize, 0))
 	{
-		if(bytes == SOCKET_ERROR)
-		{
+		if(bytes == -1)
 			return 0;
-		}
-    
-		if (bytes == 0 || bytes == WSAECONNRESET)
-		{
-			return 0;
-		}
-
-		if(bytes < 1)
-		{
-			Sleep(300);
-			continue;
-		}
 
 		This->i->socket_callback(This->id, This->buffer, bytes);
 	}

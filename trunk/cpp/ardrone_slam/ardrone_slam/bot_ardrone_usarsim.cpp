@@ -214,6 +214,9 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 		frame->dest_size = (frame->dest_size << 8) + frame->data[2];
 		frame->dest_size = (frame->dest_size << 8) + frame->data[3];
 		frame->dest_size = (frame->dest_size << 8) + frame->data[4];
+		//frame->dest_size = ntohl((long) frame->dest_size);
+
+		// fix by Sander
 		frame->time = bot->get_clock(); // get clock time now
 	}
 
@@ -245,10 +248,10 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 			}
 			// slam not (yet) enabled, or fixed fps mode
 			else if ((BOT_ARDRONE_USARSIM_FRAME_MODE == 1 && !bot->slam_state) || BOT_ARDRONE_USARSIM_FRAME_MODE == 2)
-				Sleep(BOT_ARDRONE_USARSIM_FRAME_REQDELAY - 50);
+				Sleep(BOT_ARDRONE_USARSIM_FRAME_REQDELAY - 30);
 
 			frame_socket->send("OK");
-			Sleep(150); // wait a bit before receiving new frame data
+			Sleep(30); // wait a bit before receiving new frame data
 		}
 	}
 }
