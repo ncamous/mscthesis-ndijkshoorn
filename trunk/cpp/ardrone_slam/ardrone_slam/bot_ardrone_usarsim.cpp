@@ -40,7 +40,7 @@ void bot_ardrone_usarsim::init(void)
 	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -19.3,57.1,-1.1}\r\n");
 
 	// 0,0,0
-	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,10.0,-5.0}\r\n");
+	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,10.0,-3.0}\r\n");
 
 	control_send("SET {Type Viewports} {Config SingleView} {Viewport1 Camera2}\r\n");
 	//control_send("SET {Type Camera} {Robot ARDrone} {Name Camera2} {Client 10.0.0.2}\r\n");
@@ -207,16 +207,15 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 	frame->data_size += bytes;
 	frame_socket->buffer += bytes;
 
+
 	// we dont know image size (bytes) yet
 	if (frame->dest_size == 0 && frame->data_size >= 5)
 	{
-		frame->dest_size = (frame->dest_size << 8) + frame->data[1];
-		frame->dest_size = (frame->dest_size << 8) + frame->data[2];
-		frame->dest_size = (frame->dest_size << 8) + frame->data[3];
-		frame->dest_size = (frame->dest_size << 8) + frame->data[4];
-		//frame->dest_size = ntohl((long) frame->dest_size);
+		unsigned long sizebytes;
+		memcpy_s(&sizebytes, 4, &frame->data[1], 4);
+		frame->dest_size = ntohl(sizebytes);
+		//printf("dest size: %i\n", frame->dest_size);
 
-		// fix by Sander
 		frame->time = bot->get_clock(); // get clock time now
 	}
 
@@ -251,7 +250,6 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 				Sleep(BOT_ARDRONE_USARSIM_FRAME_REQDELAY - 30);
 
 			frame_socket->send("OK");
-			Sleep(30); // wait a bit before receiving new frame data
 		}
 	}
 }

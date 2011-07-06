@@ -11,7 +11,8 @@ slam::slam():
 	KF(12, 3, 0)
 {
 	running = false;
-	scale_known = false;
+	KF_running = false;
+	//scale_known = false;
 
 	/*
 	if (!running)
@@ -106,16 +107,19 @@ void slam::add_input_sensor(bot_ardrone_measurement *m)
 
 void slam::set_scale(double s)
 {
+	/*
 	if (scale_known)
 		return;
 
 	canvas_scale = s;
 	scale_known = true;
+	*/
 }
 
 
 bool slam::get_canvas_position(double *out) // pos in mm
 {
+	/*
 	if (!scale_known)
 		return false;
 
@@ -123,6 +127,7 @@ bool slam::get_canvas_position(double *out) // pos in mm
 
 	out[0] = (double) KF.statePost.at<float>(0) * scale;
 	out[1] = (double) KF.statePost.at<float>(1) * scale;
+	*/
 
 	return true;
 }
@@ -130,11 +135,13 @@ bool slam::get_canvas_position(double *out) // pos in mm
 
 bool slam::get_world_position(double *in, double *out)
 {
+	/*
 	if (!scale_known)
 		return false;
 
 	out[0] = in[0] * canvas_scale;
 	out[1] = in[1] * canvas_scale;
+	*/
 
 	return true;
 }

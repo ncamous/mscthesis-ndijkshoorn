@@ -15,10 +15,10 @@ public:
 	~slam_module_frame(void);
 	void process(bot_ardrone_frame *f);
 	void process(IplImage *i);
-	int find_features(IplImage *img, vector<cv::KeyPoint> &v);
+	int find_features(IplImage *img, std::vector<cv::KeyPoint> &v);
 	void calculate_frame_mask(int width, int height);
 	void add_noise(IplImage *img);
-	void imagepoints_to_world3d(vector<cv::Point2f>& src, vector<cv::Point3f>& dst);
+	void imagepoints_to_world3d(std::vector<cv::Point2f>& src, std::vector<cv::Point3f>& dst);
 	void get_current_camera(cv::Mat& pos, cv::Mat& orientation);
 
 
@@ -28,9 +28,9 @@ private:
 	IplImage *frame;
 	IplImage *gray;
 
-	vector<cv::KeyPoint> prev_frame_keypoints;
+	std::vector<cv::KeyPoint> prev_frame_keypoints;
 	cv::Mat prev_frame_descriptors;
-	vector<cv::Point3f> prev_frame_wc;
+	std::vector<cv::Point3f> prev_frame_wc;
 
 	cv::FeatureDetector *fd;
 	cv::DescriptorExtractor *de;
@@ -52,10 +52,7 @@ private:
 	cv::Mat obstacle_map;
 	cv::Mat frame_mask;
 
-	int last_loc[2];
-
 	cv::KalmanFilter *KF;
 	cv::Mat *state;
-	float estimated_pos[3];
 };
 

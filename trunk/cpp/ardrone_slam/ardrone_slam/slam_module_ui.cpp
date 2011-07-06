@@ -26,7 +26,8 @@ void slam_module_ui::update()
 	if (!CV_ready)
 		init_CV();
 
-	imshow("Image:", controller->canvas);
+	Mat img(controller->canvas);
+	//imshow("Image:", controller->canvas);
 	cvWaitKey(4);
 }
 

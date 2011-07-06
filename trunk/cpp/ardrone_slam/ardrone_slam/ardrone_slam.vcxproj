@@ -54,7 +54,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ws2_32.lib;yamlcpp.lib;ardronewin32.lib;ArDroneAPI.lib;opencv_core220d.lib;opencv_highgui220d.lib;opencv_legacy220d.lib;opencv_features2d220d.lib;opencv_imgproc220d.lib;opencv_calib3d220d.lib;opencv_video220d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;yamlcpp.lib;ardronewin32.lib;ArDroneAPI.lib;opencv_core230d.lib;opencv_highgui230d.lib;opencv_legacy230d.lib;opencv_features2d230d.lib;opencv_imgproc230d.lib;opencv_calib3d230d.lib;opencv_video230d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StackReserveSize>10000000</StackReserveSize>
       <AdditionalLibraryDirectories>$(OutDir);$(SDLDir)\lib;$(OpenCVDir)\lib;$(MatlabDir)\lib\win32\microsoft;</AdditionalLibraryDirectories>
     </Link>
