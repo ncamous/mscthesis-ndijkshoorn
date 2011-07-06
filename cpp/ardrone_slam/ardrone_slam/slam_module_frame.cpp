@@ -22,10 +22,10 @@ slam_module_frame::slam_module_frame(slam *controller):
 	de = new SurfDescriptorExtractor();
 
 
-	/* camera matrix */
+	/* camera matrix (USARSim) */
 	camera_matrix = 0.0f;
-	camera_matrix.at<float>(0, 0) = 300.0f; //1.60035f;
-	camera_matrix.at<float>(1, 1) = 300.0f; //1.60035f;
+	camera_matrix.at<float>(0, 0) = 141.76401f; //1.60035f;
+	camera_matrix.at<float>(1, 1) = 141.689265f; //1.60035f;
 	camera_matrix.at<float>(2, 2) = 1.f;
 	camera_matrix.at<float>(0, 2) = 88.0f;
 	camera_matrix.at<float>(1, 2) = 72.0f;
@@ -42,9 +42,6 @@ slam_module_frame::slam_module_frame(slam *controller):
 
 	frame = NULL;
 	prev_frame_descriptors = NULL;
-
-	last_loc[0] = 300;
-	last_loc[1] = 300;
 
 	dropped_frame_counter = 0;
 	frame_counter = 0;
@@ -64,9 +61,6 @@ slam_module_frame::slam_module_frame(slam *controller):
 	/* KF */
 	KF = &controller->KF;
 	state = &KF->statePost;
-	estimated_pos[0] = 0.0f;
-	estimated_pos[1] = 0.0f;
-	estimated_pos[2] = 0.0f;
 }
 
 
@@ -77,7 +71,7 @@ slam_module_frame::~slam_module_frame(void)
 void slam_module_frame::process(bot_ardrone_frame *f)
 {
 	// scale not kwown: no use of processing the frame
-	if (!controller->scale_known)
+	if (!controller->KF_running)
 		return;
 
 
@@ -89,8 +83,8 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		memcpy_s(&w, 2, &f->data[0], 2);
 		memcpy_s(&h, 2, &f->data[2], 2);
 
-		w = htons(w);
-		h = htons(h);
+		w = ntohs(w);
+		h = ntohs(h);
 
 		frame = cvCreateImageHeader(cvSize(w, h), IPL_DEPTH_8U, 3);
 		gray = cvCreateImage(cvSize(w, h), IPL_DEPTH_8U, 1);
@@ -98,6 +92,16 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 	frame->imageData = &f->data[4];
 
+
+	/*
+	char s[100];
+	sprintf(s, "blup_%i.png\0", frame_counter++); 
+
+	Mat img(frame);
+	imwrite(string(s), img);
+	//imwrite(s, frame);
+	return;
+	*/
 
 
 	// frames from the real ardrone are received in RGB order instead of BGR
@@ -126,7 +130,6 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 	/* match with previous frame */
 	if (frame_counter > 0)
 	{
-		double ransacReprojThreshold = 3.0;
 
 		if (keypoints.size() < 20)
 		{
@@ -139,147 +142,69 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 		if (matches.size() < 20)
 		{
-			printf("Not enough features matched: dropping frame\n");
+			printf("Not enough features matched (%i): dropping frame\n", matches.size());
 			return;
 		}
 
 
-
-		/* calculate transformation (RANSAC) */
-		/* NOT NEEDED ATM
-		vector<int> queryIdxs( matches.size() ), trainIdxs( matches.size() );
-		for( size_t i = 0; i < matches.size(); i++ )
-		{
-			queryIdxs[i] = matches[i].queryIdx;
-			trainIdxs[i] = matches[i].trainIdx;
-		}
-	
-
-		vector<Point2f> points1;
-		KeyPoint::convert(keypoints, points1, queryIdxs);
-
-		vector<Point2f> points2;
-		KeyPoint::convert(prev_frame_keypoints, points2, trainIdxs);
-		*/
-
-
-
 		/* retrieve camera motion from two frames */
-		Mat points3d(9, 1, CV_32FC3);
-		Mat imagePoints(9, 1, CV_32FC2);
-		vector <Point2f> imagePoints2;
+		size_t nr_matches = matches.size();
 
-		for (int i = 0; i < 3; i++)
+		Mat points3d(nr_matches, 1, CV_32FC3);
+		Mat imagePoints(nr_matches, 1, CV_32FC2);
+
+		int src_i;
+		for (size_t i = 0; i < nr_matches; i++)
 		{
-			for (int j = 0; j < 3; j++)
-			{
+			src_i = matches[i].queryIdx;
 
-				points3d.at<Vec3f>(i*3 + j, 0)[0] = 40.0f * i;
-				points3d.at<Vec3f>(i*3 + j, 0)[1] = 40.0f * j;
-				points3d.at<Vec3f>(i*3 + j, 0)[2] = (40.0f * i) - (40.0f * i);
+			imagePoints.at<Vec2f>(i)[0] = current_frame_ip[src_i].x;
+			imagePoints.at<Vec2f>(i)[1] = current_frame_ip[src_i].y;
 
-			}
+			src_i = matches[i].trainIdx;
+
+			points3d.at<Vec3f>(i)[0] = prev_frame_wc[src_i].x;
+			points3d.at<Vec3f>(i)[1] = prev_frame_wc[src_i].y;
+			points3d.at<Vec3f>(i)[2] = prev_frame_wc[src_i].z;
 		}
 
-		/*
-		for( size_t i = 0; i < matches.size(); i++ )
-		{
-			points3d.at<Vec3f>(0, i)[0] = points2[i].x * 50.0f;
-			points3d.at<Vec3f>(0, i)[1] = points2[i].y * 50.0f;
-			points3d.at<Vec3f>(0, i)[2] = 0.0f;
-			//points3d.at<Vec3f>(0, i)[2] = 0.0 + rand() * (10.0 - 0.0) / RAND_MAX;
-
-			//printf("%f, %f, %f\n", points3d.at<Vec3f>(0, i)[0], points3d.at<Vec3f>(0, i)[1], points3d.at<Vec3f>(0, i)[2]);
-
-			//elem2f[0] = points1[i].x;
-			//elem2f[1] = points1[i].y;
-		}
-		*/
-
-
-		//elem3f = points3d.at<Vec3f>(0, 0);
-
-		//printf("%f, %f, %f\n", points3d.at<Vec3f>(0, 0)[0], points3d.at<Vec3f>(0, 0)[1], points3d.at<Vec3f>(0, 0)[2]);
-
-		Mat camera_matrix(3, 3, CV_32F);
 		Mat dist_coef(5, 1, CV_32F);
-		Mat rotation_vector(3, 1, CV_32F);
-		Mat translation_vector(3, 1, CV_32F);
-
 		Mat rotation_vector_calc(3, 1, CV_64F);
 		Mat translation_vector_calc(3, 1, CV_64F);
-
 		dist_coef = 0.0f;
-		translation_vector = 0.0f;
-		rotation_vector = 0.0f;
 
-		translation_vector.at<float>(2, 0) = -20.0f;
-		translation_vector.at<float>(0, 0) = 30.0f;
-		rotation_vector.at<float>(2, 0) = 1.57079633f;
 
-		projectPoints( points3d, rotation_vector, translation_vector, camera_matrix, dist_coef, imagePoints2 );
-
-		for( size_t i = 0; i < imagePoints2.size(); i++ )
-		{
-			imagePoints.at<Vec2f>(i, 0)[0] = imagePoints2[i].x;
-			imagePoints.at<Vec2f>(i, 0)[1] = imagePoints2[i].y;
-
-			//printf("%f, %f\n", imagePoints2[i].x, imagePoints2[i].y);
-		}
-
-		//printf("\n\n\n");
-
-		solvePnP( points3d, imagePoints, camera_matrix, dist_coef, rotation_vector_calc, translation_vector_calc );
+		solvePnP(points3d, imagePoints, camera_matrix, dist_coef, rotation_vector_calc, translation_vector_calc);
 
 		dumpMatrix(translation_vector_calc);
 		printf("\n");
-		dumpMatrix(rotation_vector_calc);
-		printf("\n\n\n");
+		//dumpMatrix(rotation_vector_calc);
+		//printf("\n\n\n");
 
-		/*
-		double world_translation[2];
-
-		controller->get_world_position((double*) translation_vector_calc.data, world_translation);
-
-		estimated_pos[0] += (float) world_translation[1];
-		estimated_pos[1] -= (float) world_translation[0];
-
-		printf("%f, %f\n", estimated_pos[0], estimated_pos[1]);
-		*/
-
-		//Mat homography = findHomography( Mat(points1), Mat(points2), CV_RANSAC, ransacReprojThreshold );
-
-		//cvCalcImageHomography(
-
-
-		//dumpMatrix(homography);
-		//printf("\n\n");
-
-		//double canvas_pos[3];
-		//canvas_pos[0] = homography.at<double>(0,2);
-		//canvas_pos[1] = homography.at<double>(1,2);
-		//canvas_pos[2] = 0.0;
-
+		Sleep(500);
 	}
 
 
 
 	/* store current frame as previous frame */
-	prev_frame_keypoints = keypoints;
+	//prev_frame_keypoints = keypoints;
 	prev_frame_descriptors = descriptors;
 	// prev_frame_wc is set below
 
 	//Point2f tmp(88.0f, 72.0f);
 	//src.push_back(tmp);
 
+	/*
 	printf("===== INPUT =====\n");
 	for( size_t i = 0; i < current_frame_ip.size(); i++ )
 	{
 		printf("%f, %f\n", current_frame_ip[i].x, current_frame_ip[i].y);
 	}
+	*/
 
 	imagepoints_to_world3d(current_frame_ip, prev_frame_wc);
 
+	/*
 	printf("\n");
 	printf("===== OUTPUT (%i) =====\n", prev_frame_wc.size());
 	for( size_t i = 0; i < prev_frame_wc.size(); i++ )
@@ -288,11 +213,9 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 	}
 
 	printf("\n\n");
+	*/
 
-
-
-
-	//frame_counter++;
+	frame_counter++;
 }
 
 
@@ -338,19 +261,19 @@ void slam_module_frame::imagepoints_to_world3d(vector<Point2f>& src, vector<Poin
 
 void slam_module_frame::get_current_camera(Mat& pos, Mat& orientation)
 {
-	// TODO: get from KF!
-
 	// test data
+	/*
 	float test_cam_p[3] = {0.0f, 0.0f, -1000.0f};
 	float test_cam_o[3] = {0.0f-PI, 0.0f-PI, -0.5f * PI};
-	
-	pos.at<float>(0) = test_cam_p[0];
-	pos.at<float>(1) = test_cam_p[1];
-	pos.at<float>(2) = test_cam_p[2];
+	*/
 
-	orientation.at<float>(0) = test_cam_o[0];
-	orientation.at<float>(1) = test_cam_o[1];
-	orientation.at<float>(2) = test_cam_o[2];
+	pos.at<float>(0) = state->at<float>(0);
+	pos.at<float>(1) = state->at<float>(1);
+	pos.at<float>(2) = state->at<float>(2);
+
+	orientation.at<float>(0) = state->at<float>(9);
+	orientation.at<float>(1) = state->at<float>(10);
+	orientation.at<float>(2) = state->at<float>(11);
 }
 
 
@@ -405,7 +328,7 @@ void slam_module_frame::calculate_frame_mask(int width, int height)
 
 	frame_mask = Mat(mask_img, true); // copy
 
-	imshow("Mask:", mask_img);
+	//imshow("Mask:", mask_img);
 	cvWaitKey(4);
 }
 

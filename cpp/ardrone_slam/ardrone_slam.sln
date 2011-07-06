@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "yamlcpp", "yaml-cpp-0.2.5\y
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ARDroneAPI-1.7", "ARDroneAPI-1.7\ArDroneAPI-1.7.vcxproj", "{3217131C-F675-490C-B9CB-66FD85C2E1B8}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "calibration", "calibration\calibration.vcxproj", "{1CAB159F-5694-4860-9CFA-66C3A4557188}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -37,6 +39,10 @@ Global
 		{3217131C-F675-490C-B9CB-66FD85C2E1B8}.Debug|Win32.Build.0 = Debug|Win32
 		{3217131C-F675-490C-B9CB-66FD85C2E1B8}.Release|Win32.ActiveCfg = Release|Win32
 		{3217131C-F675-490C-B9CB-66FD85C2E1B8}.Release|Win32.Build.0 = Release|Win32
+		{1CAB159F-5694-4860-9CFA-66C3A4557188}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1CAB159F-5694-4860-9CFA-66C3A4557188}.Debug|Win32.Build.0 = Debug|Win32
+		{1CAB159F-5694-4860-9CFA-66C3A4557188}.Release|Win32.ActiveCfg = Release|Win32
+		{1CAB159F-5694-4860-9CFA-66C3A4557188}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -21,7 +21,7 @@ slam_module_sensor::slam_module_sensor(slam *controller)
 
 	counter = 0;
 
-	scale_set = false;
+	//scale_set = false;
 }
 
 
@@ -37,8 +37,19 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 
 	/* set scale */
+	/*
 	if (!scale_set)
 		calculate_scale(m);
+	*/
+
+
+	/* set initial position: module_frame is not used before position is known */
+	if (!controller->KF_running)
+	{
+		KF->statePost.at<float>(2) = (float) -m->altitude; // write initial height directly into state vector
+		controller->KF_running = true;
+	}
+
 
 
 /*
@@ -112,9 +123,10 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 	/* directly inject attitude into state vector */
 	KF->statePost.at<float>(9) = m_or.at<float>(0);
-	KF->statePost.at<float>(10) = m_or.at<float>(0);
-	KF->statePost.at<float>(11) = m_or.at<float>(0);
+	KF->statePost.at<float>(10) = m_or.at<float>(1);
+	KF->statePost.at<float>(11) = m_or.at<float>(2);
 	/**/
+
 
 
 	/* state */
@@ -123,12 +135,14 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 	//dumpMatrix(KF->statePost);
 
-	if (counter++ % 25 == 0)
+	if (counter++ % 30 == 0)
 	{
-		m->gt_loc[1] -= 10.0f;
-		m->gt_loc[2] += 10.0f;
+		// -19.3,57.1
 
-		//printf("state: [%f, %f, %f]\n", state->at<float>(0), state->at<float>(1), state->at<float>(2));
+		m->gt_loc[0] += 19.3f;
+		m->gt_loc[1] -= 57.1f;
+
+		printf("state: [%f, %f, %f]\n", state->at<float>(0), state->at<float>(1), state->at<float>(2));
 		printf("gt:    [%f, %f, %f]\n", m->gt_loc[0] * 1000.f, m->gt_loc[1] * 1000.f, m->gt_loc[2] * 1000.f);
 	}
 }
@@ -150,7 +164,7 @@ void slam_module_sensor::accel_compensate_gravity(Mat& accel, cv::Mat& m_or)
 
 void slam_module_sensor::calculate_scale(bot_ardrone_measurement *m)
 {
-	scale_set = true;
+	//scale_set = true;
 
 	double altitude = (double) m->altitude;
 	double scale = 2.0f * tan(((BOT_ARDRONE_CAM_FOV)/180.0f)*PI) * altitude;

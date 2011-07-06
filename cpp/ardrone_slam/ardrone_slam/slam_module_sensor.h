@@ -32,7 +32,6 @@ private:
 	cv::Mat measurement;
 	cv::Mat *state;
 
-	bool scale_set;
 	int counter;
 };
 

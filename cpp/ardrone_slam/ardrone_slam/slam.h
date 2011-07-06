@@ -49,13 +49,14 @@ public:
 
 	/* Kalman filter */
 	cv::KalmanFilter KF;
+	bool KF_running;
 	/* state vector:
      * p(3), v(3), a(3), q(3)
 	 */
 
 	IplImage *canvas;
-	bool scale_known;
-	double canvas_scale; // px -> mm
+	//bool scale_known;
+	//double canvas_scale; // px -> mm
 	int initial_height; // used to determine the 
 
 private:

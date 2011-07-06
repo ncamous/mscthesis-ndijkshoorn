@@ -43,6 +43,7 @@ mysocket::~mysocket(void)
 
 int mysocket::send(char *message)
 {
+	//printf("send: %s\n", message);
 	return ::send(s, message, strlen(message), 0);
 }
 
