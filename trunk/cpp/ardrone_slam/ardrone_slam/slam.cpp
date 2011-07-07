@@ -64,15 +64,7 @@ void slam::init_kf()
 	// F vector
 	setIdentity(KF.transitionMatrix); // completed (T added) when measurement received and T is known
 
-	// H vector
-	for(int i = 0; i < 3; i++)
-	{
-		KF.measurementMatrix.at<float>(i, 6+i) = 1.0f; // measured a
-		//KF.measurementMatrix.at<float>(3+i, 9+i) = 1.0f; // measured q (attitude/orientation)
-	}
-
 	setIdentity(KF.processNoiseCov, Scalar::all(1e-5));
-	setIdentity(KF.measurementNoiseCov, Scalar::all(1e-5));
 	setIdentity(KF.errorCovPost, Scalar::all(1));
 
 	// random initial state
@@ -166,9 +158,10 @@ static DWORD WINAPI start_process_frame(void* Param)
 			continue;
 
 		item = q->front();
-		q->pop();
 
 		processor->process(item);
+
+		q->pop();
 	}
 
 	return 1;
@@ -192,9 +185,10 @@ static DWORD WINAPI start_process_sensor(void* Param)
 			continue;
 
 		item = q->front();
-		q->pop();
 
 		processor->process(item);
+
+		q->pop();
 	}
 
 	return 1;

@@ -14,7 +14,10 @@ using namespace cv;
 slam_module_frame::slam_module_frame(slam *controller):
 	camera_matrix(3, 3, CV_32F),
 	world_plane(3, 1, CV_32F),
-	world_plane_normal(3, 1, CV_32F)
+	world_plane_normal(3, 1, CV_32F),
+
+	measurementMatrix(3, 12, CV_32F),
+	measurementNoiseCov(3, 3, CV_32F)
 {
 	this->controller = controller;
 
@@ -37,7 +40,7 @@ slam_module_frame::slam_module_frame(slam *controller):
 	/* world plane */
 	world_plane = 0.0f;
 	world_plane_normal = 0.0f;
-	world_plane_normal.at<float>(2) = 1.0f;
+	world_plane_normal.at<float>(2) = -1.0f;
 
 
 	frame = NULL;
@@ -47,20 +50,28 @@ slam_module_frame::slam_module_frame(slam *controller):
 	frame_counter = 0;
 	feature_distance = 0.0;
 
-	prev_frame_h = Mat::eye(3, 3, CV_64F);
-	double* h_data = (double*) prev_frame_h.data;
-	h_data[2] = 300.0;
-	h_data[5] = 300.0;
-
 	if (SLAM_BUILD_OBSTACLE_MAP)
 	{
 		obstacle_map = Mat(800, 800, CV_8UC1);
 		obstacle_map = 255;
 	}
 
+
+
+
 	/* KF */
 	KF = &controller->KF;
 	state = &KF->statePost;
+
+	// H vector
+	measurementMatrix = 0.0f;
+	for(int i = 0; i < 3; i++)
+	{
+		measurementMatrix.at<float>(i, i) = 1.0f; // measured a
+	}
+
+	measurementNoiseCov = 0.0f;
+	setIdentity(measurementNoiseCov, Scalar::all(1e-2));
 }
 
 
@@ -140,32 +151,48 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		vector<DMatch> matches;
 		dm.match(descriptors, prev_frame_descriptors, matches);
 
-		if (matches.size() < 20)
+		if (matches.size() < 10)
 		{
 			printf("Not enough features matched (%i): dropping frame\n", matches.size());
 			return;
 		}
 
 
-		/* retrieve camera motion from two frames */
-		size_t nr_matches = matches.size();
+		/* find robust matched descriptors (RANSAC) */
+		vector<char> matchesMask(matches.size(), 0);
+		int nr_inliers = find_robust_matches(current_frame_ip, prev_frame_ip, matches, matchesMask);
+		int nr_matches_used = min(10, nr_inliers);
 
-		Mat points3d(nr_matches, 1, CV_32FC3);
-		Mat imagePoints(nr_matches, 1, CV_32FC2);
+
+		if (nr_inliers < 4)
+		{
+			printf("Not enough inliers found (%i): dropping frame\n", nr_inliers);
+			return;
+		}
+
+
+		/* retrieve camera motion from two frames */
+		Mat points3d(nr_matches_used, 1, CV_32FC3);
+		Mat imagePoints(nr_matches_used, 1, CV_32FC2);
 
 		int src_i;
-		for (size_t i = 0; i < nr_matches; i++)
+		int j = 0;
+		for (size_t i = 0; i < matches.size(); i++)
 		{
-			src_i = matches[i].queryIdx;
+			if (matchesMask[i] == 0)
+				continue;
 
-			imagePoints.at<Vec2f>(i)[0] = current_frame_ip[src_i].x;
-			imagePoints.at<Vec2f>(i)[1] = current_frame_ip[src_i].y;
+			src_i = matches[i].queryIdx;
+			imagePoints.at<Vec2f>(j)[0] = current_frame_ip[src_i].x;
+			imagePoints.at<Vec2f>(j)[1] = current_frame_ip[src_i].y;
 
 			src_i = matches[i].trainIdx;
+			points3d.at<Vec3f>(j)[0] = prev_frame_wc[src_i].x;
+			points3d.at<Vec3f>(j)[1] = prev_frame_wc[src_i].y;
+			points3d.at<Vec3f>(j)[2] = prev_frame_wc[src_i].z;
 
-			points3d.at<Vec3f>(i)[0] = prev_frame_wc[src_i].x;
-			points3d.at<Vec3f>(i)[1] = prev_frame_wc[src_i].y;
-			points3d.at<Vec3f>(i)[2] = prev_frame_wc[src_i].z;
+			if (++j >= nr_matches_used)
+				break;
 		}
 
 		Mat dist_coef(5, 1, CV_32F);
@@ -173,49 +200,51 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		Mat translation_vector_calc(3, 1, CV_64F);
 		dist_coef = 0.0f;
 
-
 		solvePnP(points3d, imagePoints, camera_matrix, dist_coef, rotation_vector_calc, translation_vector_calc);
 
-		dumpMatrix(translation_vector_calc);
-		printf("\n");
+		printf("Vstate:[%f, %f, %f]\n", translation_vector_calc.at<double>(1), -translation_vector_calc.at<double>(0), -translation_vector_calc.at<double>(2));
+
+		//float alt_diff = (float) abs(state->at<float>(2) - (float)-translation_vector_calc.at<double>(2));
+
+		//printf("alt diff: %f\n", alt_diff);
+
+		/*
+		state->at<float>(0) = (float) -translation_vector_calc.at<double>(1);
+		state->at<float>(1) = (float) translation_vector_calc.at<double>(0);
+		state->at<float>(2) = (float) -translation_vector_calc.at<double>(2);
+		*/
+
+		
+		//dumpMatrix(translation_vector_calc);
+		//printf("\n");
 		//dumpMatrix(rotation_vector_calc);
 		//printf("\n\n\n");
 
-		Sleep(500);
+		//Sleep(20000);
+
+
+		/*
+		Mat measurement = (Mat_<float>(3,1) <<
+			(float) translation_vector_calc.at<double>(1),
+			(float) -translation_vector_calc.at<double>(0),
+			(float) -translation_vector_calc.at<double>(2)
+		);
+		*/
+
+		//KF->correct(measurement);
 	}
 
 
 
 	/* store current frame as previous frame */
-	//prev_frame_keypoints = keypoints;
 	prev_frame_descriptors = descriptors;
-	// prev_frame_wc is set below
-
-	//Point2f tmp(88.0f, 72.0f);
-	//src.push_back(tmp);
-
-	/*
-	printf("===== INPUT =====\n");
-	for( size_t i = 0; i < current_frame_ip.size(); i++ )
-	{
-		printf("%f, %f\n", current_frame_ip[i].x, current_frame_ip[i].y);
-	}
-	*/
-
+	prev_frame_ip = current_frame_ip;
 	imagepoints_to_world3d(current_frame_ip, prev_frame_wc);
 
-	/*
-	printf("\n");
-	printf("===== OUTPUT (%i) =====\n", prev_frame_wc.size());
-	for( size_t i = 0; i < prev_frame_wc.size(); i++ )
-	{
-		printf("%f, %f, %f\n", prev_frame_wc[i].x, prev_frame_wc[i].y, prev_frame_wc[i].z);
-	}
-
-	printf("\n\n");
-	*/
-
 	frame_counter++;
+
+	//printf("please move drone NOW!\n");
+	Sleep(500);
 }
 
 
@@ -237,6 +266,7 @@ void slam_module_frame::imagepoints_to_world3d(vector<Point2f>& src, vector<Poin
 	dst.clear();
 	//dst.resize(src.size());
 
+	//for( size_t i = 0; i < 1; i++ )
 	for( size_t i = 0; i < src.size(); i++ )
 	{
 		point.at<float>(0) = src[i].x;
@@ -254,6 +284,8 @@ void slam_module_frame::imagepoints_to_world3d(vector<Point2f>& src, vector<Poin
 		point3d.y = intersection.at<float>(1);
 		point3d.z = intersection.at<float>(2);
 
+		//printf("IP (%f, %f) = (%f, %f, %d)\n", src[i].x, src[i].y, point3d.x, point3d.y, point3d.z);
+
 		dst.push_back(point3d);
 	}
 }
@@ -261,19 +293,14 @@ void slam_module_frame::imagepoints_to_world3d(vector<Point2f>& src, vector<Poin
 
 void slam_module_frame::get_current_camera(Mat& pos, Mat& orientation)
 {
-	// test data
-	/*
-	float test_cam_p[3] = {0.0f, 0.0f, -1000.0f};
-	float test_cam_o[3] = {0.0f-PI, 0.0f-PI, -0.5f * PI};
-	*/
+	pos.at<float>(0) = 0.0f; //-state->at<float>(1); // x(cam) = y
+	pos.at<float>(1) = 0.0f; //state->at<float>(0); // y(cam) = -x
+	pos.at<float>(2) = state->at<float>(2); // z(cam) = z
+	//printf("alt: %f\n", pos.at<float>(2));
 
-	pos.at<float>(0) = state->at<float>(0);
-	pos.at<float>(1) = state->at<float>(1);
-	pos.at<float>(2) = state->at<float>(2);
-
-	orientation.at<float>(0) = state->at<float>(9);
-	orientation.at<float>(1) = state->at<float>(10);
-	orientation.at<float>(2) = state->at<float>(11);
+	orientation.at<float>(0) = 0.0f; //state->at<float>(9);
+	orientation.at<float>(1) = 0.0f; //state->at<float>(10);
+	orientation.at<float>(2) = 0.0f; //state->at<float>(11); // camera orientation is downwards
 }
 
 
@@ -315,8 +342,47 @@ int slam_module_frame::find_features(IplImage *img, vector<cv::KeyPoint> &v)
 }
 
 
+int slam_module_frame::find_robust_matches(vector<Point2f>& p1, vector<Point2f>& p2, vector<DMatch>& matches, vector<char>& matchesMask)
+{
+	size_t nr_matches = matches.size();
+
+	Mat p1m(nr_matches, 1, CV_32FC2);
+	Mat p2m(nr_matches, 1, CV_32FC2);
+
+    for (size_t i = 0; i < matches.size(); i++)
+    {
+		p1m.at<Vec2f>(i)[0] = p1[matches[i].queryIdx].x;
+		p1m.at<Vec2f>(i)[1] = p1[matches[i].queryIdx].y;
+
+		p2m.at<Vec2f>(i)[0] = p2[matches[i].trainIdx].x;
+		p2m.at<Vec2f>(i)[1] = p2[matches[i].trainIdx].y;
+    }
+
+	Mat homography = findHomography(p1m, p2m, CV_RANSAC);
+
+
+	//vector<char> matchesMask(matches.size(), 0);
+	Mat p1mt;
+	perspectiveTransform(p1m, p1mt, homography);
+	
+	double maxInlierDist = 3;
+	int nr_inliers = 0;
+	for (size_t i1 = 0; i1 < nr_matches; i1++)
+	{
+		if (norm(p2m.at<Point2f>(i1) - p1mt.at<Point2f>(i1)) <= maxInlierDist)
+		{
+			matchesMask[i1] = 1;
+			nr_inliers++;
+		}
+	}
+
+	return nr_inliers;
+}
+
+
 void slam_module_frame::calculate_frame_mask(int width, int height)
 {
+	/*
 	IplImage *mask_img = cvCreateImage(cvSize(width, height), 8, 1);
 	Mat h_inverse = prev_frame_h.inv();
 	CvMat invHomography = h_inverse;
@@ -330,6 +396,7 @@ void slam_module_frame::calculate_frame_mask(int width, int height)
 
 	//imshow("Mask:", mask_img);
 	cvWaitKey(4);
+	*/
 }
 
 void slam_module_frame::add_noise(IplImage *img)
@@ -387,3 +454,21 @@ void slam_module_frame::add_noise(IplImage *img)
 	return;
 
 }
+
+
+
+		/* determine distance threshold */
+		/*
+		vector<float> distances;
+		float distance_threshold;
+		size_t nr_matches = 10;
+
+		for (size_t i = 0; i < matches.size(); i++)
+			distances.push_back(matches[i].distance);
+
+		sort(distances.begin(), distances.end(), greater<float>()); // desc
+
+		distance_threshold = distances[ nr_matches-1 ];
+		*/
+
+		//printf("distance threshold: %f\n", distance_threshold);

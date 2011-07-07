@@ -16,6 +16,7 @@ public:
 	void process(bot_ardrone_frame *f);
 	void process(IplImage *i);
 	int find_features(IplImage *img, std::vector<cv::KeyPoint> &v);
+	int find_robust_matches(std::vector<cv::Point2f>& p1, std::vector<cv::Point2f>& p2, std::vector<cv::DMatch>& matches, cv::vector<char>& matchesMask);
 	void calculate_frame_mask(int width, int height);
 	void add_noise(IplImage *img);
 	void imagepoints_to_world3d(std::vector<cv::Point2f>& src, std::vector<cv::Point3f>& dst);
@@ -28,8 +29,8 @@ private:
 	IplImage *frame;
 	IplImage *gray;
 
-	std::vector<cv::KeyPoint> prev_frame_keypoints;
 	cv::Mat prev_frame_descriptors;
+	std::vector<cv::Point2f> prev_frame_ip;
 	std::vector<cv::Point3f> prev_frame_wc;
 
 	cv::FeatureDetector *fd;
@@ -47,12 +48,15 @@ private:
 	cv::Mat world_plane;
 	cv::Mat world_plane_normal;
 
-	cv::Mat prev_frame_h;
-
 	cv::Mat obstacle_map;
 	cv::Mat frame_mask;
 
+	/* KF */
 	cv::KalmanFilter *KF;
 	cv::Mat *state;
+
+	cv::Mat measurement;
+	cv::Mat measurementMatrix;
+	cv::Mat measurementNoiseCov;
 };
 
