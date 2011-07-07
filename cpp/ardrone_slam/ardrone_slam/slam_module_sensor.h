@@ -27,11 +27,15 @@ private:
 
 	clock_t prev_update;
 
+	int counter;
+
+
+	/* KF */
 	cv::KalmanFilter *KF;
-	cv::Mat processNoise;
-	cv::Mat measurement;
 	cv::Mat *state;
 
-	int counter;
+	cv::Mat measurement;
+	cv::Mat measurementMatrix;
+	cv::Mat measurementNoiseCov;
 };
 

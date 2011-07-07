@@ -7,21 +7,34 @@
 using namespace cv;
 
 
-slam_module_sensor::slam_module_sensor(slam *controller)
+slam_module_sensor::slam_module_sensor(slam *controller):
+	measurementMatrix(3, 12, CV_32F),
+	measurementNoiseCov(3, 3, CV_32F)
 {
 	this->controller = controller;
+
+
+	prev_update = clock();
+	counter = 0;
+	//scale_set = false;
+
+
+
+	/* KF */
 	KF = &controller->KF;
 	state = &KF->statePost;
 
-	//processNoise(9, 1, CV_32F)
 
-	prev_update = clock();
+	// H vector
+	measurementMatrix = 0.0f;
+	for(int i = 0; i < 3; i++)
+	{
+		measurementMatrix.at<float>(i, 6+i) = 1.0f; // measured a
+		//KF.measurementMatrix.at<float>(3+i, 9+i) = 1.0f; // measured q (attitude/orientation)
+	}
 
-	//measurement = Mat::zeros(3, 1, CV_32F);
-
-	counter = 0;
-
-	//scale_set = false;
+	measurementNoiseCov = 0.0f;
+	setIdentity(measurementNoiseCov, Scalar::all(1e-5));
 }
 
 
@@ -50,32 +63,18 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 		controller->KF_running = true;
 	}
 
+	return;
 
 
-/*
-	m->or[0] = 0.0f;
-	m->or[1] = -45000.0f;
-	m->or[2] = 0.0f;
-
-	m->accel[0] = 1000.0f;
-	m->accel[1] = 0.0f;
-	m->accel[2] = 1000.0f;
-*/
-
-	//return;
+	/* switch KF matrices */
+	KF->measurementMatrix = measurementMatrix;
+	KF->measurementNoiseCov = measurementNoiseCov;
 
 
+	/* measurement */
 	Mat m_or = (Mat_<float>(3,1) << m->or[0] * MD_TO_RAD, m->or[1] * MD_TO_RAD, m->or[2] * MD_TO_RAD);
 	Mat m_accel = (Mat_<float>(3,1) << m->accel[0], m->accel[1], m->accel[2]);
 
-	/*
-	if (counter++ % 25 == 0)
-	{
-		dumpMatrix(m_or);
-		printf("\n");
-	}
-	return;
-	*/
 
 
 	/* update transition matrix */
@@ -135,15 +134,16 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 	//dumpMatrix(KF->statePost);
 
-	if (counter++ % 30 == 0)
+	if (counter++ % 20 == 0)
 	{
-		// -19.3,57.1
+		//-52.0,5.68,-4.0
 
-		m->gt_loc[0] += 19.3f;
-		m->gt_loc[1] -= 57.1f;
+		m->gt_loc[0] += 52.0f;
+		m->gt_loc[1] -= 5.68f;
+		m->gt_loc[2] += 3.63f;
 
-		printf("state: [%f, %f, %f]\n", state->at<float>(0), state->at<float>(1), state->at<float>(2));
-		printf("gt:    [%f, %f, %f]\n", m->gt_loc[0] * 1000.f, m->gt_loc[1] * 1000.f, m->gt_loc[2] * 1000.f);
+		//printf("state: [%f, %f, %f]\n", state->at<float>(0), state->at<float>(1), state->at<float>(2));
+		//printf("gt:    [%f, %f, %f]\n", m->gt_loc[0] * 1000.f, m->gt_loc[1] * 1000.f, m->gt_loc[2] * 1000.f);
 	}
 }
 
