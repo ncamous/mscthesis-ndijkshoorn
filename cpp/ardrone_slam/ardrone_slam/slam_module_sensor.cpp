@@ -63,7 +63,6 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 		controller->KF_running = true;
 	}
 
-	return;
 
 
 	/* switch KF matrices */
@@ -89,7 +88,7 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 
 	/* predict */
-	Mat prediction = KF->predict();
+	//Mat prediction = KF->predict();
 
 
 	/* correct */
@@ -117,13 +116,15 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	return;
 	*/
 
-	KF->correct(measurement);
+	//KF->correct(measurement);
 
 
 	/* directly inject attitude into state vector */
+	/*
 	KF->statePost.at<float>(9) = m_or.at<float>(0);
 	KF->statePost.at<float>(10) = m_or.at<float>(1);
 	KF->statePost.at<float>(11) = m_or.at<float>(2);
+	*/
 	/**/
 
 
@@ -134,7 +135,7 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 	//dumpMatrix(KF->statePost);
 
-	if (counter++ % 20 == 0)
+	if (counter++ % 10 == 0)
 	{
 		//-52.0,5.68,-4.0
 
@@ -144,6 +145,7 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 		//printf("state: [%f, %f, %f]\n", state->at<float>(0), state->at<float>(1), state->at<float>(2));
 		//printf("gt:    [%f, %f, %f]\n", m->gt_loc[0] * 1000.f, m->gt_loc[1] * 1000.f, m->gt_loc[2] * 1000.f);
+		printf("gt:    [%f, %f, %f]\n", m_or.at<float>(0), m_or.at<float>(1), m_or.at<float>(2));
 	}
 }
 

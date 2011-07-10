@@ -8,6 +8,8 @@ struct bot_ardrone_frame;
 
 class slam;
 
+using namespace cv;
+
 class slam_module_frame
 {
 public:
@@ -15,12 +17,16 @@ public:
 	~slam_module_frame(void);
 	void process(bot_ardrone_frame *f);
 	void process(IplImage *i);
-	int find_features(IplImage *img, std::vector<cv::KeyPoint> &v);
-	int find_robust_matches(std::vector<cv::Point2f>& p1, std::vector<cv::Point2f>& p2, std::vector<cv::DMatch>& matches, cv::vector<char>& matchesMask);
+	void compute_motion(Mat& cam_or, Mat& cam_pos, vector<DMatch>& matches, vector<char>& mask);
+	int find_features(IplImage *img, vector<KeyPoint> &v);
+	int find_robust_matches(vector<Point2f>& p1, vector<Point2f>& p2, vector<DMatch>& matches, vector<char>& mask, int max);
+
 	void calculate_frame_mask(int width, int height);
 	void add_noise(IplImage *img);
-	void imagepoints_to_world3d(std::vector<cv::Point2f>& src, std::vector<cv::Point3f>& dst);
-	void get_current_camera(cv::Mat& pos, cv::Mat& orientation);
+	void imagepoints_to_world3d(vector<Point2f>& src, vector<Point3f>& dst);
+	void get_state(Mat& pos, Mat& or);
+	void objectpos_to_localcam(Mat& pos, Mat& or, Mat& rot, bool state_provided=false);
+	void objectpos_to_worldpos(Mat& pos, Mat& or);
 
 
 private:
@@ -29,34 +35,35 @@ private:
 	IplImage *frame;
 	IplImage *gray;
 
-	cv::Mat prev_frame_descriptors;
-	std::vector<cv::Point2f> prev_frame_ip;
-	std::vector<cv::Point3f> prev_frame_wc;
+	// current frame data
+	vector<Point2f> current_frame_ip;
 
-	cv::FeatureDetector *fd;
-	cv::DescriptorExtractor *de;
-	cv::BruteForceMatcher<cv::L2<float>> dm;
+	// previous frame data
+	Mat prev_frame_descriptors;
+	vector<Point2f> prev_frame_ip;
+	vector<Point3f> prev_frame_wc;
+
+	FeatureDetector *fd;
+	DescriptorExtractor *de;
+	BruteForceMatcher<L2<float>> dm;
 
 	int frame_counter;
-	int feature_counter;
-	int dropped_frame_counter;
-	double feature_distance;
 
-	cv::Mat camera_matrix;
-	cv::Mat camera_matrix_inv;
+	Mat camera_matrix;
+	Mat camera_matrix_inv;
 
-	cv::Mat world_plane;
-	cv::Mat world_plane_normal;
+	Mat world_plane;
+	Mat world_plane_normal;
 
-	cv::Mat obstacle_map;
-	cv::Mat frame_mask;
+	Mat obstacle_map;
+	Mat frame_mask;
 
 	/* KF */
-	cv::KalmanFilter *KF;
-	cv::Mat *state;
+	KalmanFilter *KF;
+	Mat *state;
 
-	cv::Mat measurement;
-	cv::Mat measurementMatrix;
-	cv::Mat measurementNoiseCov;
+	Mat measurement;
+	Mat measurementMatrix;
+	Mat measurementNoiseCov;
 };
 

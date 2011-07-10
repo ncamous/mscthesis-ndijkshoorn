@@ -4,9 +4,6 @@
 #include "opencv2/video/tracking.hpp"
 #include "opencv2/features2d/features2d.hpp"
 
-#define MG_TO_MM2 9.80665003f
-#define MD_TO_RAD 1.745329252e-05f
-
 struct bot_ardrone_measurement;
 
 class slam;

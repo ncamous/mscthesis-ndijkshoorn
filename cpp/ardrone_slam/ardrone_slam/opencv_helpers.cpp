@@ -44,6 +44,7 @@ void dumpMatrix(const Mat &mat) {
         } 
         printf("\n"); 
     } 
+	printf("\n");
 } 
 
 double MatMax(const Mat &mat)
@@ -117,7 +118,7 @@ double ColMax(const Mat &mat, int col)
 	return max;
 }
 
-void RotationMatrix3D(const Mat& src_m, Mat& dst_m)
+void RotationMatrix3D(const Mat& src_m, Mat& dst_m, bool yawlast)
 {
 	float* dst = (float*) dst_m.data;
 	float* src = (float*) src_m.data; // angles in rad
@@ -134,31 +135,36 @@ void RotationMatrix3D(const Mat& src_m, Mat& dst_m)
 	// http://46dogs.blogspot.com/2011/04/right-handed-rotation-matrix-for.html
 
 	/* Note: this matrix effectively yaws first, then pitches, then rolls.  For the opposite order (and the one I ended up using), look below.*/
-	dst[0] = CosRy * CosRz;
-	dst[1] = -SinRz * CosRy;
-	dst[2] = SinRy;
+	if (!yawlast)
+	{
+		dst[0] = CosRy * CosRz;
+		dst[1] = -SinRz * CosRy;
+		dst[2] = SinRy;
 
-	dst[3] = CosRz * SinRy * SinRx + SinRz * CosRx;
-	dst[4] = -SinRz * SinRy * SinRx + CosRz * CosRx;
-	dst[5] = -CosRy * SinRx;
+		dst[3] = CosRz * SinRy * SinRx + SinRz * CosRx;
+		dst[4] = -SinRz * SinRy * SinRx + CosRz * CosRx;
+		dst[5] = -CosRy * SinRx;
 
-	dst[6] = -CosRz * SinRy * CosRx + SinRz * SinRx;
-	dst[7] = SinRz * SinRy * CosRx + CosRz * SinRx;
-	dst[8] = CosRy * CosRx;
-
+		dst[6] = -CosRz * SinRy * CosRx + SinRz * SinRx;
+		dst[7] = SinRz * SinRy * CosRx + CosRz * SinRx;
+		dst[8] = CosRy * CosRx;
+	}
 
 	/* Note: this matrix effectively rolls first, then pitches, then yaws.  This turned out to be the one I used for my system.*/
-	dst[0] = CosRy * CosRz;
-	dst[1] = -SinRz * CosRx + CosRz * SinRy * SinRx;
-	dst[2] = SinRx * SinRz + CosRz * SinRy * CosRx;
+	else
+	{
+		dst[0] = CosRy * CosRz;
+		dst[1] = -SinRz * CosRx + CosRz * SinRy * SinRx;
+		dst[2] = SinRx * SinRz + CosRz * SinRy * CosRx;
 
-	dst[3] = CosRy * SinRz;
-	dst[4] = CosRz * CosRx + SinRy * SinRz * SinRx;
-	dst[5] = -SinRx * CosRz + SinRy * SinRz * SinRx;
+		dst[3] = CosRy * SinRz;
+		dst[4] = CosRz * CosRx + SinRy * SinRz * SinRx;
+		dst[5] = -SinRx * CosRz + SinRy * SinRz * SinRx;
 
-	dst[6] = -SinRy;
-	dst[7] = CosRy * SinRx;
-	dst[8] = CosRy * CosRx;
+		dst[6] = -SinRy;
+		dst[7] = CosRy * SinRx;
+		dst[8] = CosRy * CosRx;
+	}
 }
 
 
@@ -168,6 +174,30 @@ void CalcLinePlaneIntersection(const Mat& Plane, const Mat& PlaneNormal, const M
 	double d = 0; //-cvDotProduct(plane_normal, plane_point);
 	double t = (d - PlaneNormal.dot(Line)) / PlaneNormal.dot(LineNormal);
 	addWeighted(Line, 1.0, LineNormal, t, 0.0, intersection);
+}
+
+
+void MatFloatToDouble(const Mat &in, Mat &out)
+{
+	for (int i = 0; i < in.rows; i++)
+	{
+		for (int j = 0; j < in.cols; j++)
+		{
+			out.at<double>(i, j) = (double) in.at<float>(i, j);
+		}
+	}
+}
+
+
+void MatDoubleToFloat(const Mat &in, Mat &out)
+{
+	for (int i = 0; i < in.rows; i++)
+	{
+		for (int j = 0; j < in.cols; j++)
+		{
+			out.at<float>(i, j) = (float) in.at<double>(i, j);
+		}
+	}
 }
 
 }
