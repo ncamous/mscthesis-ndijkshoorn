@@ -8,7 +8,7 @@
 /* SLAM */
 #define SLAM_ENABLED true
 #define SLAM_USE_QUEUE true // use a queue to store the controldata and sensor data
-#define SLAM_SURF_HESSIANTHRESHOLD 500.0
+#define SLAM_SURF_HESSIANTHRESHOLD 50.0
 #define SLAM_BUILD_OBSTACLE_MAP false
 #define SLAM_USE_OBSTACLE_MASK false
 
@@ -25,7 +25,7 @@
 #define USARSIM_FRAME_EXT "raw"
 #define BOT_ARDRONE_BATTERYLIFE 720 // 720s, 12 minutes
 #define BOT_ARDRONE_RECORD_FRAMES true
-#define BOT_ARDRONE_MIN_MEASUREMENT_INTERVAL 0.02 // max 50 measurement/s
+#define BOT_ARDRONE_MIN_MEASUREMENT_INTERVAL 0.01 // max 100 measurement/s
 #define BOT_ARDRONE_CAM_RESOLUTION_W 176
 #define BOT_ARDRONE_CAM_RESOLUTION_H 144
 #define BOT_ARDRONE_CAM_FOV 32.0f // camera FOV / 2
@@ -33,7 +33,7 @@
 #define BOT_ARDRONE_CONTROL_VZ_MAX 1000.0f // mm/s
 
 	/* USARSim */
-	#define BOT_ARDRONE_USARSIM_FRAME_BLOCKSIZE 2048
+	#define BOT_ARDRONE_USARSIM_FRAME_BLOCKSIZE 4096
 	#define BOT_ARDONE_USARSIM_CONTROL_BUFSIZE 400
 	#define BOT_ARDRONE_USARSIM_FRAME_REQDELAY 250 // at least 20 ms
 	#define BOT_ARDRONE_USARSIM_FRAME_MODE 1 // 1: request new frame when SLAM queue empty, 2: fixed framerate
@@ -43,3 +43,8 @@
 
 
 extern bool exit_application;
+
+
+/* conversion */
+#define MG_TO_MM2 9.80665003f
+#define MD_TO_RAD 1.745329252e-05f

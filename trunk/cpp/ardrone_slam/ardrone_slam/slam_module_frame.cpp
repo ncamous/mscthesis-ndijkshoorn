@@ -41,14 +41,13 @@ slam_module_frame::slam_module_frame(slam *controller):
 	world_plane = 0.0f;
 	world_plane_normal = 0.0f;
 	world_plane_normal.at<float>(2) = -1.0f;
+	/**/
 
 
 	frame = NULL;
 	prev_frame_descriptors = NULL;
 
-	dropped_frame_counter = 0;
 	frame_counter = 0;
-	feature_distance = 0.0;
 
 	if (SLAM_BUILD_OBSTACLE_MAP)
 	{
@@ -104,16 +103,6 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 	frame->imageData = &f->data[4];
 
 
-	/*
-	char s[100];
-	sprintf(s, "blup_%i.png\0", frame_counter++); 
-
-	Mat img(frame);
-	imwrite(string(s), img);
-	//imwrite(s, frame);
-	return;
-	*/
-
 
 	// frames from the real ardrone are received in RGB order instead of BGR
 	if (!f->usarsim)
@@ -121,11 +110,25 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 
 
+	/* store current estimated position before computing: otherwise timestamp of frame and position do not match! */
+	//printf("READ STATE pos: %f, %f, %f\n", state->at<float>(0), state->at<float>(1), state->at<float>(2));
+	Mat cam_pos(3, 1, CV_64F);
+	Mat cam_or(3, 1, CV_64F);
+	Mat tmp_cam_pos(3, 1, CV_32F);
+	Mat tmp_cam_or(3, 1, CV_32F);
+	get_state(tmp_cam_pos, tmp_cam_or);
+	MatFloatToDouble(tmp_cam_pos, cam_pos);
+	MatFloatToDouble(tmp_cam_or, cam_or);
+
+	cam_pos.at<double>(2) = abs(cam_pos.at<double>(2));
+
+
+
 	/* find features */
 	vector<cv::KeyPoint> keypoints;
 	int features_found = find_features(frame, keypoints);
 
-	vector<Point2f> current_frame_ip; // current frame image points
+	current_frame_ip.clear();
 	KeyPoint::convert(keypoints, current_frame_ip);
 
 
@@ -159,10 +162,8 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 
 		/* find robust matched descriptors (RANSAC) */
-		vector<char> matchesMask(matches.size(), 0);
-		int nr_inliers = find_robust_matches(current_frame_ip, prev_frame_ip, matches, matchesMask);
-		int nr_matches_used = min(10, nr_inliers);
-
+		vector<char> mask;
+		int nr_inliers = find_robust_matches(current_frame_ip, prev_frame_ip, matches, mask, 10);
 
 		if (nr_inliers < 4)
 		{
@@ -172,66 +173,29 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 
 		/* retrieve camera motion from two frames */
-		Mat points3d(nr_matches_used, 1, CV_32FC3);
-		Mat imagePoints(nr_matches_used, 1, CV_32FC2);
-
-		int src_i;
-		int j = 0;
-		for (size_t i = 0; i < matches.size(); i++)
-		{
-			if (matchesMask[i] == 0)
-				continue;
-
-			src_i = matches[i].queryIdx;
-			imagePoints.at<Vec2f>(j)[0] = current_frame_ip[src_i].x;
-			imagePoints.at<Vec2f>(j)[1] = current_frame_ip[src_i].y;
-
-			src_i = matches[i].trainIdx;
-			points3d.at<Vec3f>(j)[0] = prev_frame_wc[src_i].x;
-			points3d.at<Vec3f>(j)[1] = prev_frame_wc[src_i].y;
-			points3d.at<Vec3f>(j)[2] = prev_frame_wc[src_i].z;
-
-			if (++j >= nr_matches_used)
-				break;
-		}
-
-		Mat dist_coef(5, 1, CV_32F);
-		Mat rotation_vector_calc(3, 1, CV_64F);
-		Mat translation_vector_calc(3, 1, CV_64F);
-		dist_coef = 0.0f;
-
-		solvePnP(points3d, imagePoints, camera_matrix, dist_coef, rotation_vector_calc, translation_vector_calc);
-
-		printf("Vstate:[%f, %f, %f]\n", translation_vector_calc.at<double>(1), -translation_vector_calc.at<double>(0), -translation_vector_calc.at<double>(2));
-
-		//float alt_diff = (float) abs(state->at<float>(2) - (float)-translation_vector_calc.at<double>(2));
-
-		//printf("alt diff: %f\n", alt_diff);
-
-		/*
-		state->at<float>(0) = (float) -translation_vector_calc.at<double>(1);
-		state->at<float>(1) = (float) translation_vector_calc.at<double>(0);
-		state->at<float>(2) = (float) -translation_vector_calc.at<double>(2);
-		*/
-
-		
-		//dumpMatrix(translation_vector_calc);
-		//printf("\n");
-		//dumpMatrix(rotation_vector_calc);
-		//printf("\n\n\n");
-
-		//Sleep(20000);
+		compute_motion(cam_or, cam_pos, matches, mask);
 
 
-		/*
-		Mat measurement = (Mat_<float>(3,1) <<
-			(float) translation_vector_calc.at<double>(1),
-			(float) -translation_vector_calc.at<double>(0),
-			(float) -translation_vector_calc.at<double>(2)
-		);
-		*/
+		/* convert CV_64F to CV_32F */
+		Mat new_or(3, 1, CV_32F);
+		MatDoubleToFloat(cam_or, new_or);
 
-		//KF->correct(measurement);
+		Mat new_pos(3, 1, CV_32F);
+		MatDoubleToFloat(cam_pos, new_pos);
+
+
+		//state->at<float>(9) = new_or.at<float>(0);
+		//state->at<float>(10) = new_or.at<float>(1);
+		//state->at<float>(11) = new_or.at<float>(2);
+
+
+		objectpos_to_worldpos(new_pos, new_or);
+
+		state->at<float>(0) = new_pos.at<float>(0);
+		state->at<float>(1) = new_pos.at<float>(1);
+		state->at<float>(2) = -new_pos.at<float>(2);
+
+		printf("Vstate:[%f, %f, %f]\n", state->at<float>(0), state->at<float>(1), state->at<float>(2));
 	}
 
 
@@ -243,8 +207,32 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 	frame_counter++;
 
-	//printf("please move drone NOW!\n");
-	Sleep(500);
+	Sleep(400);
+}
+
+
+void slam_module_frame::compute_motion(Mat& cam_or, Mat& cam_pos, vector<DMatch>& matches, vector<char>& mask)
+{
+	Mat points3d(mask.size(), 1, CV_32FC3);
+	Mat imagePoints(mask.size(), 1, CV_32FC2);
+
+	int src_i;
+	for (size_t i = 0; i < mask.size(); i++)
+	{
+		src_i = matches[mask[i]].queryIdx;
+		imagePoints.at<Vec2f>(i)[0] = current_frame_ip[src_i].x;
+		imagePoints.at<Vec2f>(i)[1] = current_frame_ip[src_i].y;
+
+		src_i = matches[mask[i]].trainIdx;
+		points3d.at<Vec3f>(i)[0] = prev_frame_wc[src_i].x;
+		points3d.at<Vec3f>(i)[1] = prev_frame_wc[src_i].y;
+		points3d.at<Vec3f>(i)[2] = prev_frame_wc[src_i].z;
+	}
+
+	Mat dist_coef(5, 1, CV_32F);
+	dist_coef = 0.0f;
+
+	solvePnP(points3d, imagePoints, camera_matrix, dist_coef, cam_or, cam_pos, true);
 }
 
 
@@ -252,21 +240,16 @@ void slam_module_frame::imagepoints_to_world3d(vector<Point2f>& src, vector<Poin
 {
 	// get camera (vectors)
 	Mat cam_pos(3, 1, CV_32F);
-	Mat cam_rotation(3, 1, CV_32F);
-	get_current_camera(cam_pos, cam_rotation);
-
-	// 3D rotation matrix
-	Mat rotation_matrix(3, 3, CV_32F);
-	cv::RotationMatrix3D(cam_rotation, rotation_matrix);
+	Mat cam_or(3, 1, CV_32F);
+	Mat cam_rot(3, 3, CV_32F);
+	objectpos_to_localcam(cam_pos, cam_or, cam_rot);
 
 	Mat point(3, 1, CV_32F);
 	Mat intersection(3, 1, CV_32F);
 	Point3f point3d;
 
 	dst.clear();
-	//dst.resize(src.size());
 
-	//for( size_t i = 0; i < 1; i++ )
 	for( size_t i = 0; i < src.size(); i++ )
 	{
 		point.at<float>(0) = src[i].x;
@@ -274,7 +257,7 @@ void slam_module_frame::imagepoints_to_world3d(vector<Point2f>& src, vector<Poin
 		point.at<float>(2) = 1.0f;
 
 		point = camera_matrix_inv * point;
-		point = rotation_matrix * point;
+		point = cam_rot * point;
 
 		cv::normalize(point, point);
 
@@ -291,16 +274,49 @@ void slam_module_frame::imagepoints_to_world3d(vector<Point2f>& src, vector<Poin
 }
 
 
-void slam_module_frame::get_current_camera(Mat& pos, Mat& orientation)
+void slam_module_frame::objectpos_to_worldpos(Mat& pos, Mat& or)
 {
-	pos.at<float>(0) = 0.0f; //-state->at<float>(1); // x(cam) = y
-	pos.at<float>(1) = 0.0f; //state->at<float>(0); // y(cam) = -x
-	pos.at<float>(2) = state->at<float>(2); // z(cam) = z
-	//printf("alt: %f\n", pos.at<float>(2));
+	Mat rot(3, 3, CV_32F);
+	objectpos_to_localcam(pos, or, rot, true); // state is provided by arguments
 
-	orientation.at<float>(0) = 0.0f; //state->at<float>(9);
-	orientation.at<float>(1) = 0.0f; //state->at<float>(10);
-	orientation.at<float>(2) = 0.0f; //state->at<float>(11); // camera orientation is downwards
+	Mat tmp = (Mat_<float>(3,1) << PI, PI, -0.5f * PI);
+	Mat Yaw90degL(3, 3, CV_32F);
+	cv::RotationMatrix3D(tmp, Yaw90degL);
+
+	// position
+	pos = Yaw90degL * pos;
+	pos.at<float>(2) *= -1.0f;
+
+	// orientation
+	//or = Yaw90degL * or;
+}
+
+
+void slam_module_frame::get_state(Mat& pos, Mat& or)
+{
+	pos.at<float>(0) = state->at<float>(0);
+	pos.at<float>(1) = state->at<float>(1);
+	pos.at<float>(2) = state->at<float>(2);
+
+	or.at<float>(0) = state->at<float>(9);
+	or.at<float>(1) = state->at<float>(10);
+	or.at<float>(2) = state->at<float>(11);
+}
+
+
+void slam_module_frame::objectpos_to_localcam(Mat& pos, Mat& or, Mat& rot, bool state_provided)
+{
+	if (!state_provided)
+		get_state(pos, or);
+
+	cv::RotationMatrix3D(or, rot);
+	rot = rot.t();
+
+	pos.at<float>(0) *= -1.0f;
+	pos.at<float>(1) *= -1.0f;
+	pos = rot * pos;
+
+	Rodrigues(rot, or); // rotation matrix to rotation vector
 }
 
 
@@ -336,13 +352,11 @@ int slam_module_frame::find_features(IplImage *img, vector<cv::KeyPoint> &v)
 	else
 		fd->detect(img, v);
 
-	//printf("found %i features\n", v.size());
-
 	return v.size();
 }
 
 
-int slam_module_frame::find_robust_matches(vector<Point2f>& p1, vector<Point2f>& p2, vector<DMatch>& matches, vector<char>& matchesMask)
+int slam_module_frame::find_robust_matches(vector<Point2f>& p1, vector<Point2f>& p2, vector<DMatch>& matches, vector<char>& mask, int max)
 {
 	size_t nr_matches = matches.size();
 
@@ -361,23 +375,31 @@ int slam_module_frame::find_robust_matches(vector<Point2f>& p1, vector<Point2f>&
 	Mat homography = findHomography(p1m, p2m, CV_RANSAC);
 
 
-	//vector<char> matchesMask(matches.size(), 0);
 	Mat p1mt;
 	perspectiveTransform(p1m, p1mt, homography);
 	
 	double maxInlierDist = 3;
 	int nr_inliers = 0;
-	for (size_t i1 = 0; i1 < nr_matches; i1++)
+	for (size_t i = 0; i < nr_matches; i++)
 	{
-		if (norm(p2m.at<Point2f>(i1) - p1mt.at<Point2f>(i1)) <= maxInlierDist)
+		if (norm(p2m.at<Point2f>(i) - p1mt.at<Point2f>(i)) <= maxInlierDist)
 		{
-			matchesMask[i1] = 1;
-			nr_inliers++;
+			mask.push_back((char) i);
+			if (++nr_inliers >= max)
+				break;
 		}
 	}
 
 	return nr_inliers;
 }
+
+
+
+
+
+
+
+
 
 
 void slam_module_frame::calculate_frame_mask(int width, int height)

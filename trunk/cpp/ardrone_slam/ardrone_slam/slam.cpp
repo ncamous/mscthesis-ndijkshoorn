@@ -68,7 +68,8 @@ void slam::init_kf()
 	setIdentity(KF.errorCovPost, Scalar::all(1));
 
 	// random initial state
-	randn(KF.statePost, Scalar::all(0), Scalar::all(0.1));
+	//randn(KF.statePost, Scalar::all(0), Scalar::all(0.1));
+	KF.statePost = 0.0f;
 }
 
 
