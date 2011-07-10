@@ -17,16 +17,26 @@ public:
 	~slam_module_frame(void);
 	void process(bot_ardrone_frame *f);
 	void process(IplImage *i);
-	void compute_motion(Mat& cam_or, Mat& cam_pos, vector<DMatch>& matches, vector<char>& mask);
+	void compute_motion(Mat& cam_pos, Mat& cam_or, vector<DMatch>& matches, vector<char>& mask);
 	int find_features(IplImage *img, vector<KeyPoint> &v);
 	int find_robust_matches(vector<Point2f>& p1, vector<Point2f>& p2, vector<DMatch>& matches, vector<char>& mask, int max);
 
+	void imagepoints_to_world3d(vector<Point2f>& src, vector<Point3f>& dst);
+	
+	void get_state(Mat& pos, Mat& or);
+	void get_localcam(Mat& pos, Mat& or);
+	void object_to_worldpos(Mat& obj_pos, Mat& obj_or, Mat& pos, Mat& or); // in: double!
+	void get_objectpos(Mat& pos, Mat& or); // out: double!
+
+	// coordinate system helpers
+	void object_to_localcam(Mat& pos, Mat& or);
+	void localcam_to_object(Mat& pos, Mat& or);
+	void localcam_to_world(Mat& pos, Mat& or);
+	void world_to_localcam(Mat& pos, Mat& or);
+
+
 	void calculate_frame_mask(int width, int height);
 	void add_noise(IplImage *img);
-	void imagepoints_to_world3d(vector<Point2f>& src, vector<Point3f>& dst);
-	void get_state(Mat& pos, Mat& or);
-	void objectpos_to_localcam(Mat& pos, Mat& or, Mat& rot, bool state_provided=false);
-	void objectpos_to_worldpos(Mat& pos, Mat& or);
 
 
 private:

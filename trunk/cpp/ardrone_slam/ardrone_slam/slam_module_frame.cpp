@@ -71,6 +71,28 @@ slam_module_frame::slam_module_frame(slam *controller):
 
 	measurementNoiseCov = 0.0f;
 	setIdentity(measurementNoiseCov, Scalar::all(1e-2));
+
+
+
+
+
+	/** test **/
+	/*
+	Mat rot(3, 3, CV_32F);
+	Mat pos(3, 1, CV_32F);
+	pos.at<float>(0) = 130.0f;
+	pos.at<float>(1) = -100.0f;
+	pos.at<float>(2) = 700.0f;
+
+	Mat or(3, 1, CV_32F);
+	or = 0.0f;
+
+	dumpMatrix(pos);
+	localcam_to_world(pos, or);
+	dumpMatrix(pos);
+	world_to_localcam(pos, or, rot);
+	dumpMatrix(pos);
+	*/
 }
 
 
@@ -111,16 +133,9 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 
 	/* store current estimated position before computing: otherwise timestamp of frame and position do not match! */
-	//printf("READ STATE pos: %f, %f, %f\n", state->at<float>(0), state->at<float>(1), state->at<float>(2));
-	Mat cam_pos(3, 1, CV_64F);
-	Mat cam_or(3, 1, CV_64F);
-	Mat tmp_cam_pos(3, 1, CV_32F);
-	Mat tmp_cam_or(3, 1, CV_32F);
-	get_state(tmp_cam_pos, tmp_cam_or);
-	MatFloatToDouble(tmp_cam_pos, cam_pos);
-	MatFloatToDouble(tmp_cam_or, cam_or);
-
-	cam_pos.at<double>(2) = abs(cam_pos.at<double>(2));
+	Mat obj_pos(3, 1, CV_64F);
+	Mat obj_or(3, 1, CV_64F);
+	get_objectpos(obj_pos, obj_or);
 
 
 
@@ -173,27 +188,27 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 
 		/* retrieve camera motion from two frames */
-		compute_motion(cam_or, cam_pos, matches, mask);
+		compute_motion(obj_pos, obj_or, matches, mask);
 
-
-		/* convert CV_64F to CV_32F */
-		Mat new_or(3, 1, CV_32F);
-		MatDoubleToFloat(cam_or, new_or);
+		//dumpMatrix(obj_pos);
+		//dumpMatrix(new_pos);
+		//printf("\n\n\n");
 
 		Mat new_pos(3, 1, CV_32F);
-		MatDoubleToFloat(cam_pos, new_pos);
+		Mat new_or(3, 1, CV_32F);
+		object_to_worldpos(obj_pos, obj_or, new_pos, new_or);
 
-
-		//state->at<float>(9) = new_or.at<float>(0);
-		//state->at<float>(10) = new_or.at<float>(1);
-		//state->at<float>(11) = new_or.at<float>(2);
-
-
-		objectpos_to_worldpos(new_pos, new_or);
+		dumpMatrix(obj_or);
+		dumpMatrix(new_or);
+		//printf("\n\n");
 
 		state->at<float>(0) = new_pos.at<float>(0);
 		state->at<float>(1) = new_pos.at<float>(1);
-		state->at<float>(2) = -new_pos.at<float>(2);
+		//state->at<float>(2) = new_pos.at<float>(2);
+
+		//state->at<float>(9) = new_or.at<float>(0);
+		//state->at<float>(10) = new_or.at<float>(1);
+		state->at<float>(11) = new_or.at<float>(2);
 
 		printf("Vstate:[%f, %f, %f]\n", state->at<float>(0), state->at<float>(1), state->at<float>(2));
 	}
@@ -211,7 +226,7 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 }
 
 
-void slam_module_frame::compute_motion(Mat& cam_or, Mat& cam_pos, vector<DMatch>& matches, vector<char>& mask)
+void slam_module_frame::compute_motion(Mat& cam_pos, Mat& cam_or, vector<DMatch>& matches, vector<char>& mask)
 {
 	Mat points3d(mask.size(), 1, CV_32FC3);
 	Mat imagePoints(mask.size(), 1, CV_32FC2);
@@ -238,11 +253,14 @@ void slam_module_frame::compute_motion(Mat& cam_or, Mat& cam_pos, vector<DMatch>
 
 void slam_module_frame::imagepoints_to_world3d(vector<Point2f>& src, vector<Point3f>& dst)
 {
-	// get camera (vectors)
 	Mat cam_pos(3, 1, CV_32F);
 	Mat cam_or(3, 1, CV_32F);
 	Mat cam_rot(3, 3, CV_32F);
-	objectpos_to_localcam(cam_pos, cam_or, cam_rot);
+
+	get_localcam(cam_pos, cam_or);
+	//if (cam_pos.at<float>(2) > 0.0f)
+	cam_pos.at<float>(2) *= -1.0f;
+	cv::RotationMatrix3D(cam_or, cam_rot);
 
 	Mat point(3, 1, CV_32F);
 	Mat intersection(3, 1, CV_32F);
@@ -274,23 +292,6 @@ void slam_module_frame::imagepoints_to_world3d(vector<Point2f>& src, vector<Poin
 }
 
 
-void slam_module_frame::objectpos_to_worldpos(Mat& pos, Mat& or)
-{
-	Mat rot(3, 3, CV_32F);
-	objectpos_to_localcam(pos, or, rot, true); // state is provided by arguments
-
-	Mat tmp = (Mat_<float>(3,1) << PI, PI, -0.5f * PI);
-	Mat Yaw90degL(3, 3, CV_32F);
-	cv::RotationMatrix3D(tmp, Yaw90degL);
-
-	// position
-	pos = Yaw90degL * pos;
-	pos.at<float>(2) *= -1.0f;
-
-	// orientation
-	//or = Yaw90degL * or;
-}
-
 
 void slam_module_frame::get_state(Mat& pos, Mat& or)
 {
@@ -304,11 +305,46 @@ void slam_module_frame::get_state(Mat& pos, Mat& or)
 }
 
 
-void slam_module_frame::objectpos_to_localcam(Mat& pos, Mat& or, Mat& rot, bool state_provided)
+void slam_module_frame::get_localcam(Mat& pos, Mat& or)
 {
-	if (!state_provided)
-		get_state(pos, or);
+	get_state(pos, or);
 
+	world_to_localcam(pos, or);
+}
+
+
+void slam_module_frame::object_to_worldpos(Mat& obj_pos, Mat& obj_or, Mat& pos, Mat& or)
+{
+	Mat rot(3, 3, CV_32F);
+
+	MatDoubleToFloat(obj_pos, pos);
+	MatDoubleToFloat(obj_or, or);
+
+	object_to_localcam(pos, or);
+	localcam_to_world(pos, or);
+}
+
+
+void slam_module_frame::get_objectpos(Mat& pos, Mat& or)
+{
+	Mat tmp_pos(3, 1, CV_32F);
+	Mat tmp_or(3, 1, CV_32F);
+
+	get_state(tmp_pos, tmp_or);
+
+	world_to_localcam(tmp_pos, tmp_or);
+	localcam_to_object(tmp_pos, tmp_or);
+
+	MatFloatToDouble(tmp_pos, pos);
+	MatFloatToDouble(tmp_or, or);
+}
+
+
+
+/** HELPERS **/
+void slam_module_frame::object_to_localcam(Mat& pos, Mat& or)
+{
+	Mat rot(3, 3, CV_32F);
 	cv::RotationMatrix3D(or, rot);
 	rot = rot.t();
 
@@ -318,6 +354,52 @@ void slam_module_frame::objectpos_to_localcam(Mat& pos, Mat& or, Mat& rot, bool 
 
 	Rodrigues(rot, or); // rotation matrix to rotation vector
 }
+
+
+void slam_module_frame::localcam_to_object(Mat& pos, Mat& or)
+{
+	Mat rot(3, 3, CV_32F);
+	cv::RotationMatrix3D(or, rot);
+	rot = rot.t();
+
+	pos = rot * pos;
+	pos.at<float>(0) *= -1.0f;
+	pos.at<float>(1) *= -1.0f;
+
+	Rodrigues(rot, or); // rotation matrix to rotation vector
+}
+
+
+void slam_module_frame::localcam_to_world(Mat& pos, Mat& or)
+{
+	Mat tmp = (Mat_<float>(3,1) << PI, PI, -0.5f * PI);
+	Mat rot(3, 3, CV_32F);
+	cv::RotationMatrix3D(tmp, rot, false);
+
+	// position
+	pos = rot * pos;
+	pos.at<float>(2) *= -1.0f;
+
+	// orientation
+	//or = rot * or;
+}
+
+
+void slam_module_frame::world_to_localcam(Mat& pos, Mat& or)
+{
+	Mat tmp = (Mat_<float>(3,1) << PI, PI, 0.5f * PI);
+	Mat rot(3, 3, CV_32F);
+	cv::RotationMatrix3D(tmp, rot);
+
+	// position
+	pos = rot * pos;
+	pos.at<float>(2) *= -1.0f;
+
+	// orientation
+	//or = rot * or;
+}
+/***/
+
 
 
 void slam_module_frame::process(IplImage *i)
@@ -476,21 +558,3 @@ void slam_module_frame::add_noise(IplImage *img)
 	return;
 
 }
-
-
-
-		/* determine distance threshold */
-		/*
-		vector<float> distances;
-		float distance_threshold;
-		size_t nr_matches = 10;
-
-		for (size_t i = 0; i < matches.size(); i++)
-			distances.push_back(matches[i].distance);
-
-		sort(distances.begin(), distances.end(), greater<float>()); // desc
-
-		distance_threshold = distances[ nr_matches-1 ];
-		*/
-
-		//printf("distance threshold: %f\n", distance_threshold);

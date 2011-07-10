@@ -135,7 +135,7 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 	//dumpMatrix(KF->statePost);
 
-	if (counter++ % 10 == 0)
+	if (counter++ % 1000 == 0)
 	{
 		//-52.0,5.68,-4.0
 
