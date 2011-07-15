@@ -54,6 +54,9 @@ public:
      * p(3), v(3), a(3), q(3)
 	 */
 
+	/* Elevation map */
+	Mat elevation_map;
+
 	IplImage *canvas;
 	//bool scale_known;
 	//double canvas_scale; // px -> mm

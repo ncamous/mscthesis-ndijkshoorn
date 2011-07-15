@@ -33,6 +33,12 @@ bot_ardrone_frame::bot_ardrone_frame()
 }
 
 
+bot_ardrone_frame::~bot_ardrone_frame()
+{
+	delete[] this->data_start;
+}
+
+
 bot_ardrone::bot_ardrone(int botinterface)
 {
 	start_clock = clock();
@@ -178,6 +184,8 @@ void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 
 	if (slam_state)
 		slamcontroller->add_input_sensor(m);
+	else
+		delete m;
 }
 
 
@@ -194,6 +202,8 @@ void bot_ardrone::frame_received(bot_ardrone_frame *f)
 
 	if (slam_state)
 		slamcontroller->add_input_frame(f);
+	else
+		delete f;
 }
 
 

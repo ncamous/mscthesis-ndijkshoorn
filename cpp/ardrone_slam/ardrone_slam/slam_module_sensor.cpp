@@ -88,7 +88,7 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 
 	/* predict */
-	//Mat prediction = KF->predict();
+	Mat prediction = KF->predict();
 
 
 	/* correct */
@@ -116,16 +116,19 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	return;
 	*/
 
-	//KF->correct(measurement);
+	KF->correct(measurement);
 
 
 	/* directly inject attitude into state vector */
-	/*
 	KF->statePost.at<float>(9) = m_or.at<float>(0);
 	KF->statePost.at<float>(10) = m_or.at<float>(1);
 	KF->statePost.at<float>(11) = m_or.at<float>(2);
-	*/
 	/**/
+
+
+
+	/* elevation map */
+	update_elevation_map((int) -state->at<float>(2) - m->altitude);
 
 
 
@@ -174,6 +177,18 @@ void slam_module_sensor::calculate_scale(bot_ardrone_measurement *m)
 	//scale = 1.0 / scale; // mm -> px
 
 	controller->set_scale(scale);
+}
+
+
+void slam_module_sensor::update_elevation_map(int sonar_height)
+{
+	// calculate map index
+	int x, y;
+	// no round -> + 0.5 and floor
+	x = (int) floor((state->at<float>(0) / 100.0f) + 0.5f) + SLAM_ELEVATION_MAP_DEFAULT_SIZE;
+	y = (int) floor((state->at<float>(1) / 100.0f) + 0.5f) + SLAM_ELEVATION_MAP_DEFAULT_SIZE;
+
+	controller->elevation_map.at<short>(x, y) = (short) sonar_height;
 }
 
 

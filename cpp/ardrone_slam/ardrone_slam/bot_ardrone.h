@@ -78,6 +78,7 @@ struct bot_ardrone_frame {
 	bool usarsim;
 
 	bot_ardrone_frame();
+	~bot_ardrone_frame();
 };
 
 class bot_ardrone
