@@ -21,7 +21,7 @@ slam_module_frame::slam_module_frame(slam *controller):
 {
 	this->controller = controller;
 
-	fd = new SurfFeatureDetector(SLAM_SURF_HESSIANTHRESHOLD, 3, 4);
+	//fd = new SurfFeatureDetector(SLAM_SURF_HESSIANTHRESHOLD, 3, 4);
 	de = new SurfDescriptorExtractor();
 
 
@@ -49,14 +49,6 @@ slam_module_frame::slam_module_frame(slam *controller):
 
 	frame_counter = 0;
 
-	if (SLAM_BUILD_OBSTACLE_MAP)
-	{
-		obstacle_map = Mat(800, 800, CV_8UC1);
-		obstacle_map = 255;
-	}
-
-
-
 
 	/* KF */
 	KF = &controller->KF;
@@ -71,28 +63,6 @@ slam_module_frame::slam_module_frame(slam *controller):
 
 	measurementNoiseCov = 0.0f;
 	setIdentity(measurementNoiseCov, Scalar::all(1e-2));
-
-
-
-
-
-	/** test **/
-	/*
-	Mat rot(3, 3, CV_32F);
-	Mat pos(3, 1, CV_32F);
-	pos.at<float>(0) = 130.0f;
-	pos.at<float>(1) = -100.0f;
-	pos.at<float>(2) = 700.0f;
-
-	Mat or(3, 1, CV_32F);
-	or = 0.0f;
-
-	dumpMatrix(pos);
-	localcam_to_world(pos, or);
-	dumpMatrix(pos);
-	world_to_localcam(pos, or, rot);
-	dumpMatrix(pos);
-	*/
 }
 
 
@@ -126,9 +96,14 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 
 
+
 	// frames from the real ardrone are received in RGB order instead of BGR
 	if (!f->usarsim)
 		cvCvtColor( frame, frame, CV_RGB2BGR );
+
+
+	// convert to gray
+	cvCvtColor(frame, gray, CV_BGR2GRAY);
 
 
 
@@ -138,23 +113,19 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 	get_objectpos(obj_pos, obj_or);
 
 
-
 	/* find features */
 	vector<cv::KeyPoint> keypoints;
-	int features_found = find_features(frame, keypoints);
+	int features_found = find_features(gray, keypoints);
 
 	current_frame_ip.clear();
 	KeyPoint::convert(keypoints, current_frame_ip);
 
 
-
 	/* calculate descriptors (on greyscale image) */
 	Mat descriptors;
-	cvCvtColor(frame, gray, CV_RGB2GRAY);
     de->compute(gray, keypoints, descriptors);
 
-
-
+	//return;
 
 	/* match with previous frame */
 	if (frame_counter > 0)
@@ -176,8 +147,9 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		}
 
 
+
 		/* find robust matched descriptors (RANSAC) */
-		vector<char> mask;
+		vector<short> mask;
 		int nr_inliers = find_robust_matches(current_frame_ip, prev_frame_ip, matches, mask, 10);
 
 		if (nr_inliers < 4)
@@ -187,20 +159,25 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		}
 
 
-		/* retrieve camera motion from two frames */
-		compute_motion(obj_pos, obj_or, matches, mask);
+		//return;
 
-		//dumpMatrix(obj_pos);
-		//dumpMatrix(new_pos);
-		//printf("\n\n\n");
+
+		/* retrieve camera motion from two frames */
+		find_object_position(obj_pos, obj_or, matches, mask);
+
+		/*
+		int nr_inliers = find_object_position(obj_pos, obj_or, matches, mask);
+		if (nr_inliers < 4)
+		{
+			printf("Not enough inliers found (%i): dropping frame\n", nr_inliers);
+			return;
+		}
+		*/
+
 
 		Mat new_pos(3, 1, CV_32F);
 		Mat new_or(3, 1, CV_32F);
 		object_to_worldpos(obj_pos, obj_or, new_pos, new_or);
-
-		dumpMatrix(obj_or);
-		dumpMatrix(new_or);
-		//printf("\n\n");
 
 		state->at<float>(0) = new_pos.at<float>(0);
 		state->at<float>(1) = new_pos.at<float>(1);
@@ -216,29 +193,72 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 
 	/* store current frame as previous frame */
-	prev_frame_descriptors = descriptors;
-	prev_frame_ip = current_frame_ip;
+	prev_frame_descriptors = descriptors; // copy -> switch to pointer?
+	prev_frame_ip = current_frame_ip; // copy -> switch to pointer?
 	imagepoints_to_world3d(current_frame_ip, prev_frame_wc);
+
 
 	frame_counter++;
 
-	Sleep(400);
+	//Sleep(400);
 }
 
 
-void slam_module_frame::compute_motion(Mat& cam_pos, Mat& cam_or, vector<DMatch>& matches, vector<char>& mask)
+int slam_module_frame::find_robust_matches(vector<Point2f>& p1, vector<Point2f>& p2, vector<DMatch>& matches, vector<short>& mask, int max)
+{
+	size_t nr_matches = matches.size();
+
+	Mat p1m(nr_matches, 1, CV_32FC2);
+	Mat p2m(nr_matches, 1, CV_32FC2);
+
+    for (size_t i = 0; i < matches.size(); i++)
+    {
+		p1m.at<Vec2f>(i)[0] = p1[matches[i].queryIdx].x;
+		p1m.at<Vec2f>(i)[1] = p1[matches[i].queryIdx].y;
+
+		p2m.at<Vec2f>(i)[0] = p2[matches[i].trainIdx].x;
+		p2m.at<Vec2f>(i)[1] = p2[matches[i].trainIdx].y;
+    }
+
+	Mat homography = findHomography(p1m, p2m, CV_RANSAC);
+
+
+	Mat p1mt;
+	perspectiveTransform(p1m, p1mt, homography);
+	
+	double maxInlierDist = 3;
+	int nr_inliers = 0;
+	for (size_t i = 0; i < nr_matches; i++)
+	{
+		if (norm(p2m.at<Point2f>(i) - p1mt.at<Point2f>(i)) <= maxInlierDist)
+		{
+			mask.push_back((short) i);
+			if (++nr_inliers >= max)
+				break;
+		}
+	}
+
+	return nr_inliers;
+}
+
+
+
+int slam_module_frame::find_object_position(Mat& cam_pos, Mat& cam_or, vector<DMatch>& matches, vector<short>& mask)
 {
 	Mat points3d(mask.size(), 1, CV_32FC3);
 	Mat imagePoints(mask.size(), 1, CV_32FC2);
 
 	int src_i;
 	for (size_t i = 0; i < mask.size(); i++)
+	//for (size_t i = 0; i < matches.size(); i++)
 	{
 		src_i = matches[mask[i]].queryIdx;
+		//src_i = matches[i].queryIdx;
 		imagePoints.at<Vec2f>(i)[0] = current_frame_ip[src_i].x;
 		imagePoints.at<Vec2f>(i)[1] = current_frame_ip[src_i].y;
 
 		src_i = matches[mask[i]].trainIdx;
+		//src_i = matches[i].trainIdx;
 		points3d.at<Vec3f>(i)[0] = prev_frame_wc[src_i].x;
 		points3d.at<Vec3f>(i)[1] = prev_frame_wc[src_i].y;
 		points3d.at<Vec3f>(i)[2] = prev_frame_wc[src_i].z;
@@ -246,8 +266,13 @@ void slam_module_frame::compute_motion(Mat& cam_pos, Mat& cam_or, vector<DMatch>
 
 	Mat dist_coef(5, 1, CV_32F);
 	dist_coef = 0.0f;
+	vector<int> inliers;
 
 	solvePnP(points3d, imagePoints, camera_matrix, dist_coef, cam_or, cam_pos, true);
+
+	//solvePnPRansac(points3d, imagePoints, camera_matrix, dist_coef, cam_or, cam_pos, true, 100, 3.0, 10 /* TODO */, inliers);
+
+	return inliers.size();
 }
 
 
@@ -425,63 +450,22 @@ void slam_module_frame::process(IplImage *i)
 
 int slam_module_frame::find_features(IplImage *img, vector<cv::KeyPoint> &v)
 {
-	if (SLAM_USE_OBSTACLE_MASK)
-		calculate_frame_mask(img->width, img->height);
+	//if (SLAM_USE_OBSTACLE_MASK)
+	//	calculate_frame_mask(img->width, img->height);
 
 	// frame_mask is ignored when empty
-	if (SLAM_USE_OBSTACLE_MASK)
-		fd->detect(img, v, frame_mask);
-	else
-		fd->detect(img, v);
+	//if (SLAM_USE_OBSTACLE_MASK)
+	//	fd->detect(img, v, frame_mask);
+	//else
+
+	//SurfFeatureDetector blup = new SurfFeatureDetector(SLAM_SURF_HESSIANTHRESHOLD, 3, 4);
+	//fd->detect(img, v);
+
+	SURF surf_extractor(SLAM_SURF_HESSIANTHRESHOLD);
+	surf_extractor(img, Mat(), v);
 
 	return v.size();
 }
-
-
-int slam_module_frame::find_robust_matches(vector<Point2f>& p1, vector<Point2f>& p2, vector<DMatch>& matches, vector<char>& mask, int max)
-{
-	size_t nr_matches = matches.size();
-
-	Mat p1m(nr_matches, 1, CV_32FC2);
-	Mat p2m(nr_matches, 1, CV_32FC2);
-
-    for (size_t i = 0; i < matches.size(); i++)
-    {
-		p1m.at<Vec2f>(i)[0] = p1[matches[i].queryIdx].x;
-		p1m.at<Vec2f>(i)[1] = p1[matches[i].queryIdx].y;
-
-		p2m.at<Vec2f>(i)[0] = p2[matches[i].trainIdx].x;
-		p2m.at<Vec2f>(i)[1] = p2[matches[i].trainIdx].y;
-    }
-
-	Mat homography = findHomography(p1m, p2m, CV_RANSAC);
-
-
-	Mat p1mt;
-	perspectiveTransform(p1m, p1mt, homography);
-	
-	double maxInlierDist = 3;
-	int nr_inliers = 0;
-	for (size_t i = 0; i < nr_matches; i++)
-	{
-		if (norm(p2m.at<Point2f>(i) - p1mt.at<Point2f>(i)) <= maxInlierDist)
-		{
-			mask.push_back((char) i);
-			if (++nr_inliers >= max)
-				break;
-		}
-	}
-
-	return nr_inliers;
-}
-
-
-
-
-
-
-
-
 
 
 void slam_module_frame::calculate_frame_mask(int width, int height)
@@ -502,6 +486,7 @@ void slam_module_frame::calculate_frame_mask(int width, int height)
 	cvWaitKey(4);
 	*/
 }
+
 
 void slam_module_frame::add_noise(IplImage *img)
 {

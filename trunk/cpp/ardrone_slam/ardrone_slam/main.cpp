@@ -38,6 +38,6 @@ int main(int argc, char *argv[])
 
 
 
-	Sleep(1000);
+	Sleep(99999);
 	return 0;
 }

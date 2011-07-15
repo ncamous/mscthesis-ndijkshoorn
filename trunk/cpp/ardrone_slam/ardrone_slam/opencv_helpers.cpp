@@ -40,6 +40,9 @@ void dumpMatrix(const Mat &mat) {
             case CV_64F: 
                 printf("%6.4f, ", mat.at<double> (i, j)); 
                 break; 
+			case CV_8UC1:
+				printf("%i, ", (int) mat.at<char> (i, j)); 
+                break; 
             } 
         } 
         printf("\n"); 

@@ -1,5 +1,9 @@
 #pragma once
 
+
+
+#include "engine.h"
+
 class slam;
 
 
@@ -9,6 +13,7 @@ public:
 	slam_module_ui(slam *controller);
 	~slam_module_ui(void);
 	void update();
+	void display_elevation_map();
 
 private:
 	void init_CV();
@@ -16,5 +21,7 @@ private:
 	slam *controller;
 
 	bool CV_ready;
+
+	Engine *matlab;
 };
 

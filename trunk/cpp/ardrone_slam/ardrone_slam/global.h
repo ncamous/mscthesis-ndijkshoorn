@@ -8,9 +8,8 @@
 /* SLAM */
 #define SLAM_ENABLED true
 #define SLAM_USE_QUEUE true // use a queue to store the controldata and sensor data
-#define SLAM_SURF_HESSIANTHRESHOLD 50.0
-#define SLAM_BUILD_OBSTACLE_MAP false
-#define SLAM_USE_OBSTACLE_MASK false
+#define SLAM_SURF_HESSIANTHRESHOLD 100.0
+#define SLAM_ELEVATION_MAP_DEFAULT_SIZE 100 // 100 * 10cm in each direction + 1 for center
 
 
 /* USARSIM */

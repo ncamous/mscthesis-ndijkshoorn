@@ -8,7 +8,8 @@ using namespace cv;
 
 
 slam::slam():
-	KF(12, 3, 0)
+	KF(12, 3, 0),
+	elevation_map(2 * SLAM_ELEVATION_MAP_DEFAULT_SIZE, 2 * SLAM_ELEVATION_MAP_DEFAULT_SIZE, CV_16S)
 {
 	running = false;
 	KF_running = false;
@@ -43,6 +44,8 @@ void slam::run()
 	init_kf();
 
 	canvas = cvCreateImage(cvSize(800,800), 8, 3);
+	elevation_map = Scalar(0);
+
 
 	/* modules */
 	m_frame = new slam_module_frame((slam*) this);
@@ -53,9 +56,9 @@ void slam::run()
 	initial_height = -1;
 
 	/* start threads */
-	thread_process_frame = CreateThread(NULL, 0, start_process_frame, (void*) this, 0, NULL);
+	//thread_process_frame = CreateThread(NULL, 0, start_process_frame, (void*) this, 0, NULL);
 	thread_process_sensor = CreateThread(NULL, 0, start_process_sensor, (void*) this, 0, NULL);
-	//thread_ui = CreateThread(NULL, 0, start_ui, (void*) this, 0, NULL);
+	thread_ui = CreateThread(NULL, 0, start_ui, (void*) this, 0, NULL);
 }
 
 
@@ -163,6 +166,9 @@ static DWORD WINAPI start_process_frame(void* Param)
 		processor->process(item);
 
 		q->pop();
+
+		/* free memory */
+		delete item;
 	}
 
 	return 1;
@@ -190,6 +196,9 @@ static DWORD WINAPI start_process_sensor(void* Param)
 		processor->process(item);
 
 		q->pop();
+
+		/* free memory */
+		delete item;
 	}
 
 	return 1;
@@ -204,8 +213,10 @@ static DWORD WINAPI start_ui(void* Param)
 	while (!exit_application)
 	{
 		processor->update();
-		Sleep(2000); // update every 2 seconds
+		Sleep(5000); // update every 2 seconds
 	}
+
+	//processor->display_elevation_map();
 
 	return 1;
 }

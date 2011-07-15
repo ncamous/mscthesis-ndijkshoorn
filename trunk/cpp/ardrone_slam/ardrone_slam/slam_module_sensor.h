@@ -19,6 +19,7 @@ public:
 private:
 	void accel_compensate_gravity(cv::Mat& accel, cv::Mat& m_or);
 	void calculate_scale(bot_ardrone_measurement *m);
+	void update_elevation_map(int sonar_height);
 
 	slam *controller;
 

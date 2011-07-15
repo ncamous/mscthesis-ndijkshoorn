@@ -17,9 +17,9 @@ public:
 	~slam_module_frame(void);
 	void process(bot_ardrone_frame *f);
 	void process(IplImage *i);
-	void compute_motion(Mat& cam_pos, Mat& cam_or, vector<DMatch>& matches, vector<char>& mask);
+	int find_robust_matches(vector<Point2f>& p1, vector<Point2f>& p2, vector<DMatch>& matches, vector<short>& mask, int max);
+	int find_object_position(Mat& cam_pos, Mat& cam_or, vector<DMatch>& matches, vector<short>& mask);
 	int find_features(IplImage *img, vector<KeyPoint> &v);
-	int find_robust_matches(vector<Point2f>& p1, vector<Point2f>& p2, vector<DMatch>& matches, vector<char>& mask, int max);
 
 	void imagepoints_to_world3d(vector<Point2f>& src, vector<Point3f>& dst);
 	
@@ -53,7 +53,7 @@ private:
 	vector<Point2f> prev_frame_ip;
 	vector<Point3f> prev_frame_wc;
 
-	FeatureDetector *fd;
+	//SurfFeatureDetector *fd;
 	DescriptorExtractor *de;
 	BruteForceMatcher<L2<float>> dm;
 
@@ -65,8 +65,7 @@ private:
 	Mat world_plane;
 	Mat world_plane_normal;
 
-	Mat obstacle_map;
-	Mat frame_mask;
+	//Mat frame_mask;
 
 	/* KF */
 	KalmanFilter *KF;

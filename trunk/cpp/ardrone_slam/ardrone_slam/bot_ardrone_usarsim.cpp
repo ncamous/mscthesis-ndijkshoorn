@@ -34,7 +34,7 @@ void bot_ardrone_usarsim::init(void)
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -12600.0,800.0,1000.0}\r\n");
 
 	// doolhof
-	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -52.0,5.68,-4.0}\r\n");
+	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -51.7,5.8,-4.0}\r\n");
 
 	// zebrapad
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -19.3,57.1,-1.1}\r\n");
