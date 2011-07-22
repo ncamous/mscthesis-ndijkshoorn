@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ARDroneAPI-1.7", "ARDroneAP
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "calibration", "calibration\calibration.vcxproj", "{1CAB159F-5694-4860-9CFA-66C3A4557188}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "terrain3d", "terrain3d\terrain3d.vcxproj", "{BBFC9206-8A23-4940-8A27-6A2E26623C37}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -43,6 +45,10 @@ Global
 		{1CAB159F-5694-4860-9CFA-66C3A4557188}.Debug|Win32.Build.0 = Debug|Win32
 		{1CAB159F-5694-4860-9CFA-66C3A4557188}.Release|Win32.ActiveCfg = Release|Win32
 		{1CAB159F-5694-4860-9CFA-66C3A4557188}.Release|Win32.Build.0 = Release|Win32
+		{BBFC9206-8A23-4940-8A27-6A2E26623C37}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BBFC9206-8A23-4940-8A27-6A2E26623C37}.Debug|Win32.Build.0 = Debug|Win32
+		{BBFC9206-8A23-4940-8A27-6A2E26623C37}.Release|Win32.ActiveCfg = Release|Win32
+		{BBFC9206-8A23-4940-8A27-6A2E26623C37}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

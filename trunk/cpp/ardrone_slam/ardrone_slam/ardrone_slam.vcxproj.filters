@@ -87,9 +87,6 @@
     <ClCompile Include="bot_ardrone_recorder.cpp">
       <Filter>Source Files\bots\ardrone</Filter>
     </ClCompile>
-    <ClCompile Include="slam_matlab.cpp">
-      <Filter>Source Files\slam</Filter>
-    </ClCompile>
     <ClCompile Include="slam_module_frame.cpp">
       <Filter>Source Files\slam</Filter>
     </ClCompile>
@@ -101,6 +98,9 @@
     </ClCompile>
     <ClCompile Include="opencv_helpers.cpp">
       <Filter>Source Files\helpers\opencv</Filter>
+    </ClCompile>
+    <ClCompile Include="slam_elevation_map.cpp">
+      <Filter>Source Files\slam</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -121,9 +121,6 @@
     </ClInclude>
     <ClInclude Include="global.h">
       <Filter>Header Files\config</Filter>
-    </ClInclude>
-    <ClInclude Include="slam_matlab.h">
-      <Filter>Header Files\slam</Filter>
     </ClInclude>
     <ClInclude Include="bot_ardrone.h">
       <Filter>Header Files\bots\ardrone</Filter>
@@ -153,6 +150,9 @@
       <Filter>Header Files\slam</Filter>
     </ClInclude>
     <ClInclude Include="slam_module_sensor.h">
+      <Filter>Header Files\slam</Filter>
+    </ClInclude>
+    <ClInclude Include="slam_elevation_map.h">
       <Filter>Header Files\slam</Filter>
     </ClInclude>
   </ItemGroup>

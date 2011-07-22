@@ -39,7 +39,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files\Microsoft DirectX SDK %28June 2010%29\Include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LibraryPath>$(LibraryPath)</LibraryPath>
@@ -49,12 +49,12 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(YAMLDir)/include;$(ARDroneWin32Dir);$(ARDroneLibDir)\Soft\Common;$(ARDroneLibDir)\Soft\Lib;$(ARDroneLibDir)\VP_SDK;$(OpenCVDir)\include\opencv;$(OpenCVDir)\include;$(MatlabDir)\include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(YAMLDir)/include;$(ARDroneWin32Dir);$(ARDroneLibDir)\Soft\Common;$(ARDroneLibDir)\Soft\Lib;$(ARDroneLibDir)\VP_SDK;$(OpenCVDir)\include\opencv;$(OpenCVDir)\include;$(MatlabDir)\include;$(SolutionDir)\terrain3d\include</AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ws2_32.lib;yamlcpp.lib;ardronewin32.lib;ArDroneAPI.lib;opencv_core230d.lib;opencv_highgui230d.lib;opencv_legacy230d.lib;opencv_features2d230d.lib;opencv_imgproc230d.lib;opencv_calib3d230d.lib;opencv_video230d.lib;libeng.lib;libmex.lib;libmx.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;yamlcpp.lib;ardronewin32.lib;ArDroneAPI.lib;terrain3d.lib;opencv_core230d.lib;opencv_highgui230d.lib;opencv_legacy230d.lib;opencv_features2d230d.lib;opencv_imgproc230d.lib;opencv_calib3d230d.lib;opencv_video230d.lib;libeng.lib;libmex.lib;libmx.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StackReserveSize>10000000</StackReserveSize>
       <AdditionalLibraryDirectories>$(OutDir);$(SDLDir)\lib;$(OpenCVDir)\lib;$(MatlabDir)\lib\win32\microsoft;</AdditionalLibraryDirectories>
     </Link>
@@ -82,9 +82,7 @@
     <ClCompile Include="mysocket.cpp" />
     <ClCompile Include="opencv_helpers.cpp" />
     <ClCompile Include="slam.cpp" />
-    <ClCompile Include="slam_matlab.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="slam_elevation_map.cpp" />
     <ClCompile Include="slam_module_frame.cpp" />
     <ClCompile Include="slam_module_sensor.cpp" />
     <ClCompile Include="slam_module_ui.cpp" />
@@ -102,9 +100,7 @@
     <ClInclude Include="mysocket.h" />
     <ClInclude Include="opencv_helpers.h" />
     <ClInclude Include="slam.h" />
-    <ClInclude Include="slam_matlab.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
+    <ClInclude Include="slam_elevation_map.h" />
     <ClInclude Include="slam_module_frame.h" />
     <ClInclude Include="slam_module_sensor.h" />
     <ClInclude Include="slam_module_ui.h" />

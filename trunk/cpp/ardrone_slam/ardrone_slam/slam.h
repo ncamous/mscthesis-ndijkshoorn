@@ -1,6 +1,7 @@
 #pragma once
 
 #include "slam_queue.h"
+#include "slam_elevation_map.h"
 #include "slam_module_frame.h"
 #include "slam_module_sensor.h"
 #include "slam_module_ui.h"
@@ -54,8 +55,10 @@ public:
      * p(3), v(3), a(3), q(3)
 	 */
 
+
 	/* Elevation map */
-	Mat elevation_map;
+	slam_elevation_map elevation_map;
+
 
 	IplImage *canvas;
 	//bool scale_known;
