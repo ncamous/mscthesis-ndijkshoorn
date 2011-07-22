@@ -1,10 +1,10 @@
 #pragma once
 
-
-
 #include "engine.h"
 
 class slam;
+
+class terrain3d;
 
 
 class slam_module_ui
@@ -13,15 +13,16 @@ public:
 	slam_module_ui(slam *controller);
 	~slam_module_ui(void);
 	void update();
-	void display_elevation_map();
 
 private:
-	void init_CV();
+	void init();
 
 	slam *controller;
 
-	bool CV_ready;
+	bool initialized;
 
 	Engine *matlab;
+
+	terrain3d *terrain;
 };
 

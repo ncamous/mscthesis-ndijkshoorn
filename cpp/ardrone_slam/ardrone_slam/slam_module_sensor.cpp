@@ -188,7 +188,7 @@ void slam_module_sensor::update_elevation_map(int sonar_height)
 	x = (int) floor((state->at<float>(0) / 100.0f) + 0.5f) + SLAM_ELEVATION_MAP_DEFAULT_SIZE;
 	y = (int) floor((state->at<float>(1) / 100.0f) + 0.5f) + SLAM_ELEVATION_MAP_DEFAULT_SIZE;
 
-	controller->elevation_map.at<short>(x, y) = (short) sonar_height;
+	controller->elevation_map.update(x, y, (short) sonar_height);
 }
 
 

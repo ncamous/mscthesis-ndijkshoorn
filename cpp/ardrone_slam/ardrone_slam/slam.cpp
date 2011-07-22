@@ -8,8 +8,7 @@ using namespace cv;
 
 
 slam::slam():
-	KF(12, 3, 0),
-	elevation_map(2 * SLAM_ELEVATION_MAP_DEFAULT_SIZE, 2 * SLAM_ELEVATION_MAP_DEFAULT_SIZE, CV_16S)
+	KF(12, 3, 0)
 {
 	running = false;
 	KF_running = false;
@@ -29,6 +28,8 @@ slam::slam():
 	cvReleaseImage(&img2);
 	process_frame(img3);
 	*/
+
+	//run();
 }
 
 
@@ -44,11 +45,10 @@ void slam::run()
 	init_kf();
 
 	canvas = cvCreateImage(cvSize(800,800), 8, 3);
-	elevation_map = Scalar(0);
 
 
 	/* modules */
-	m_frame = new slam_module_frame((slam*) this);
+	//m_frame = new slam_module_frame((slam*) this);
 	m_sensor = new slam_module_sensor((slam*) this);
 	m_ui = new slam_module_ui((slam*) this);
 
@@ -213,10 +213,8 @@ static DWORD WINAPI start_ui(void* Param)
 	while (!exit_application)
 	{
 		processor->update();
-		Sleep(5000); // update every 2 seconds
+		Sleep(20); // update every 2 seconds
 	}
-
-	//processor->display_elevation_map();
 
 	return 1;
 }
