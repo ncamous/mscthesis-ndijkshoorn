@@ -29,10 +29,11 @@ public:
     CTerrain();
     ~CTerrain() { Release(); }
 
-    BOOL Initialize( LPDIRECT3DDEVICE9 pDevice, short* map, UINT w, UINT h, char* terrainTexture );
+    BOOL Initialize( LPDIRECT3DDEVICE9 pDevice, short* map, UINT w, UINT h, byte* texture );
     void Render( LPDIRECT3DDEVICE9 pDevice);
     void Release();
-	void update( LPDIRECT3DDEVICE9 pDevice, short* map, UINT w, UINT h, int* roi);
+	void update_elevation_map( LPDIRECT3DDEVICE9 pDevice, short* map, UINT w, UINT h, int* roi);
+	void update_texture(byte* texture, int* roi);
 
 private:
     CVertexBuffer m_vb;

@@ -19,7 +19,7 @@ slam_module_ui::slam_module_ui(slam *controller)
 
 slam_module_ui::~slam_module_ui(void)
 {
-	cvDestroyWindow("Image:");
+	//cvDestroyWindow("Image:");
 }
 
 
@@ -28,19 +28,29 @@ void slam_module_ui::update()
 	if (!initialized)
 		init();
 
-	int roi[4];
+	terrain->handle_input(); // mouse and keyboard
 
-	if (controller->elevation_map.is_updated(roi, true))
+	if (clock() - prev_update > 2 * CLOCKS_PER_SEC)
 	{
-		printf("ROI: %i, %i, %i, %i\n", roi[0], roi[1], roi[2], roi[3]);
-		terrain->update_elevation_map(roi);
+		int roi[4];
+
+		if (controller->elevation_map.is_updated(roi, true))
+			terrain->update_elevation_map(roi);
+
+		if (controller->visual_map.is_updated(roi, true))
+			terrain->update_texture(roi);
+
+		prev_update = clock();
 	}
 
-	terrain->render();
+	if (terrain->requires_render())
+		terrain->render();
 
-	//Mat img(controller->canvas);
-	//imshow("Image:", controller->canvas);
-	//cvWaitKey(4);
+	/*
+	Mat blup(controller->visual_map.canvas, Rect(1800, 1800, 600, 600));
+	imshow("Image:", blup);
+	cvWaitKey(4);
+	*/
 }
 
 
@@ -48,26 +58,18 @@ void slam_module_ui::init()
 {
 	initialized = true;
 
+	prev_update = clock();
+
 
 	/* 3D Terrain */
 	terrain = new terrain3d(
 		controller->elevation_map.get_array(),
 		controller->elevation_map.w,
-		controller->elevation_map.h
+		controller->elevation_map.h,
+		controller->visual_map.get_array()
 	);
+
 
 	/* OpenCV window */
 	//cvNamedWindow("Image:", CV_WINDOW_AUTOSIZE);
-
-
-	/* Matlab */
-	/*
-	if (!(matlab = engOpen("\0"))) {
-		printf("\nCan't start MATLAB engine\n");
-		return;
-	}
-
-	//engEvalString(matlab, "[X,Y] = meshgrid(-100:99,-100:99);");
-	engEvalString(matlab, "[X,Y] = meshgrid(-10:9,-10:9);");
-	*/
 }

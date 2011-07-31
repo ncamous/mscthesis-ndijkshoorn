@@ -25,6 +25,9 @@ Parameters:
 void CTriangleStripPlane::GeneratePositionNormalTextured( cuCustomVertex::PositionNormalTextured** ppVertices, int verticesAlongWidth, int verticesAlongLength )
 {
     SAFE_DELETE_ARRAY( *ppVertices );
+
+	int verticesAlongLengthIndex = verticesAlongLength - 1;
+
     *ppVertices = new cuCustomVertex::PositionNormalTextured[verticesAlongLength * verticesAlongWidth];
     for ( int z = 0; z < verticesAlongLength; z++ )
     {
@@ -35,7 +38,9 @@ void CTriangleStripPlane::GeneratePositionNormalTextured( cuCustomVertex::Positi
             (*ppVertices)[z * verticesAlongLength + x] = cuCustomVertex::PositionNormalTextured(
                 (float)x - halfWidth, 0.0f, (float)z - halfLength,
                 0.0f, 1.0f, 0.0f,
-                (float)x / (verticesAlongWidth - 1), (float)z / (verticesAlongLength - 1)
+				(float)x / (verticesAlongWidth - 1),
+				(float)(verticesAlongLengthIndex - z) / verticesAlongLengthIndex
+                //(float)x / (verticesAlongWidth - 1), (float)z / (verticesAlongLength - 1)
             );
         }
     }
@@ -52,6 +57,9 @@ Parameters:
 void CTriangleStripPlane::GeneratePositionTexturedWithHeight( cuCustomVertex::PositionTextured** ppVertices, int verticesAlongWidth, int verticesAlongLength, short* pHeight )
 {
     SAFE_DELETE_ARRAY( *ppVertices );
+
+	int verticesAlongLengthIndex = verticesAlongLength - 1;
+
     *ppVertices = new cuCustomVertex::PositionTextured[verticesAlongLength * verticesAlongWidth];
     for ( int z = 0; z < verticesAlongLength; z++ )
     {
@@ -63,7 +71,9 @@ void CTriangleStripPlane::GeneratePositionTexturedWithHeight( cuCustomVertex::Po
                 (float)x - halfWidth, 
                 (float)pHeight[z * verticesAlongLength + x], 
                 (float)z - halfLength,
-                (float)x / (verticesAlongWidth - 1), (float)z / (verticesAlongLength - 1)
+				(float)x / (verticesAlongWidth - 1),
+				(float)(verticesAlongLengthIndex - z) / verticesAlongLengthIndex
+                //(float)x / (verticesAlongWidth - 1), (float)z / (verticesAlongLength - 1)
             );
         }
     }
@@ -72,6 +82,8 @@ void CTriangleStripPlane::GeneratePositionTexturedWithHeight( cuCustomVertex::Po
 void CTriangleStripPlane::UpdatePositionTexturedWithHeight( cuCustomVertex::PositionTextured** ppVertices, int verticesAlongWidth, int verticesAlongLength, short* pHeight, int* roi )
 {
 	int i;
+
+	int verticesAlongLengthIndex = verticesAlongLength - 1;
 
     for ( int z = roi[0]; z <= roi[1]; z++ )
     {
@@ -85,7 +97,8 @@ void CTriangleStripPlane::UpdatePositionTexturedWithHeight( cuCustomVertex::Posi
 			(*ppVertices)[i].Y = (float)pHeight[z * verticesAlongLength + x];
 			(*ppVertices)[i].Z = (float)z - halfLength;
 			(*ppVertices)[i].Tu = (float)x / (verticesAlongWidth - 1);
-			(*ppVertices)[i].Tv = (float)z / (verticesAlongLength - 1);
+			(*ppVertices)[i].Tv = (float)(verticesAlongLengthIndex - z) / verticesAlongLengthIndex;
+			//(*ppVertices)[i].Tv = (float)z / (verticesAlongLength - 1);
         }
     }
 }

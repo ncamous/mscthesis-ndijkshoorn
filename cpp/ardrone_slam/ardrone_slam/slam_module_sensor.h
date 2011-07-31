@@ -20,10 +20,12 @@ private:
 	void accel_compensate_gravity(cv::Mat& accel, cv::Mat& m_or);
 	void calculate_scale(bot_ardrone_measurement *m);
 	void update_elevation_map(int sonar_height);
+	void get_sonar_state(cv::Mat& pos, cv::Mat& or);
 
 	slam *controller;
 
-	clock_t prev_update;
+	//clock_t prev_update;
+	double prev_update;
 
 	int counter;
 

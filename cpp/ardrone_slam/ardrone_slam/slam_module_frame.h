@@ -45,6 +45,9 @@ private:
 	IplImage *frame;
 	IplImage *gray;
 
+	// image corners
+	vector<Point2f> image_corners;
+
 	// current frame data
 	vector<Point2f> current_frame_ip;
 

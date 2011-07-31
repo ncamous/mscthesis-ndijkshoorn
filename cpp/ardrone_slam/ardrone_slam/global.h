@@ -9,7 +9,7 @@
 #define SLAM_ENABLED true
 #define SLAM_USE_QUEUE true // use a queue to store the controldata and sensor data
 #define SLAM_SURF_HESSIANTHRESHOLD 100.0
-#define SLAM_ELEVATION_MAP_DEFAULT_SIZE 100 // 100 * 10cm in each direction + 1 for center
+#define SLAM_ELEVATION_MAP_DEFAULT_SIZE 200 // 10m * 10m in each direction + 1 for center
 
 
 /* USARSIM */
@@ -28,7 +28,7 @@
 #define BOT_ARDRONE_CAM_RESOLUTION_W 176
 #define BOT_ARDRONE_CAM_RESOLUTION_H 144
 #define BOT_ARDRONE_CAM_FOV 32.0f // camera FOV / 2
-#define BOT_ARDRONE_SONAR_FOV 20.0f // sonar angle FOV
+#define BOT_ARDRONE_SONAR_FOV 10.0f // sonar angle FOV
 #define BOT_ARDRONE_CONTROL_VZ_MAX 1000.0f // mm/s
 
 	/* USARSim */
@@ -47,3 +47,7 @@ extern bool exit_application;
 /* conversion */
 #define MG_TO_MM2 9.80665003f
 #define MD_TO_RAD 1.745329252e-05f
+
+#ifndef M_PI
+	#define M_PI 3.14159265358979323846
+#endif

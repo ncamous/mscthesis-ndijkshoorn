@@ -89,7 +89,14 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		h = ntohs(h);
 
 		frame = cvCreateImageHeader(cvSize(w, h), IPL_DEPTH_8U, 3);
-		gray = cvCreateImage(cvSize(w, h), IPL_DEPTH_8U, 1);
+		//gray = cvCreateImage(cvSize(w, h), IPL_DEPTH_8U, 1);
+		gray = cvCreateImage(cvSize(w, h), IPL_DEPTH_8U, 4);
+
+		/* image corners */
+		image_corners.push_back(Point2f(0.0f, 0.0f));
+		image_corners.push_back(Point2f(0.0f, (float) (w - 1)));
+		image_corners.push_back(Point2f((float) (h - 1), (float) (w - 1)));
+		image_corners.push_back(Point2f((float) (h - 1), 0.0f));
 	}
 
 	frame->imageData = &f->data[4];
@@ -98,39 +105,46 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 
 	// frames from the real ardrone are received in RGB order instead of BGR
+	/*
 	if (!f->usarsim)
 		cvCvtColor( frame, frame, CV_RGB2BGR );
+	*/
 
 
 	// convert to gray
-	cvCvtColor(frame, gray, CV_BGR2GRAY);
+	//cvCvtColor(frame, gray, CV_BGR2GRAY);
+	cvCvtColor(frame, gray, CV_BGR2BGRA);
 
 
 
 	/* store current estimated position before computing: otherwise timestamp of frame and position do not match! */
+	/*
 	Mat obj_pos(3, 1, CV_64F);
 	Mat obj_or(3, 1, CV_64F);
 	get_objectpos(obj_pos, obj_or);
+	*/
 
 
 	/* find features */
+	/*
 	vector<cv::KeyPoint> keypoints;
 	int features_found = find_features(gray, keypoints);
 
 	current_frame_ip.clear();
 	KeyPoint::convert(keypoints, current_frame_ip);
-
+	*/
 
 	/* calculate descriptors (on greyscale image) */
+	/*
 	Mat descriptors;
     de->compute(gray, keypoints, descriptors);
+	*/
 
-	//return;
 
 	/* match with previous frame */
 	if (frame_counter > 0)
 	{
-
+		/*
 		if (keypoints.size() < 20)
 		{
 			printf("Not enough features found: dropping frame\n");
@@ -145,10 +159,11 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 			printf("Not enough features matched (%i): dropping frame\n", matches.size());
 			return;
 		}
-
+		*/
 
 
 		/* find robust matched descriptors (RANSAC) */
+		/*
 		vector<short> mask;
 		int nr_inliers = find_robust_matches(current_frame_ip, prev_frame_ip, matches, mask, 10);
 
@@ -157,13 +172,13 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 			printf("Not enough inliers found (%i): dropping frame\n", nr_inliers);
 			return;
 		}
-
-
-		//return;
+		*/
 
 
 		/* retrieve camera motion from two frames */
+		/*
 		find_object_position(obj_pos, obj_or, matches, mask);
+		*/
 
 		/*
 		int nr_inliers = find_object_position(obj_pos, obj_or, matches, mask);
@@ -175,6 +190,7 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		*/
 
 
+		/*
 		Mat new_pos(3, 1, CV_32F);
 		Mat new_or(3, 1, CV_32F);
 		object_to_worldpos(obj_pos, obj_or, new_pos, new_or);
@@ -188,19 +204,30 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		state->at<float>(11) = new_or.at<float>(2);
 
 		printf("Vstate:[%f, %f, %f]\n", state->at<float>(0), state->at<float>(1), state->at<float>(2));
+		*/
 	}
 
 
 
 	/* store current frame as previous frame */
+	/*
 	prev_frame_descriptors = descriptors; // copy -> switch to pointer?
 	prev_frame_ip = current_frame_ip; // copy -> switch to pointer?
 	imagepoints_to_world3d(current_frame_ip, prev_frame_wc);
+	*/
 
+	/* add frame to canvas */
+	Mat frameMat(gray);
+	vector<Point3f> image_corners_wc;
+	imagepoints_to_world3d(image_corners, image_corners_wc);
+	controller->visual_map.update(frameMat, image_corners, image_corners_wc);
+	/*
+	for (size_t i = 0; i < image_corners_wc.size(); i++)
+		printf("%f, %f, %f\n", image_corners_wc[i].x, image_corners_wc[i].y, image_corners_wc[i].z);
+	printf("\n\n");
+	*/
 
 	frame_counter++;
-
-	//Sleep(400);
 }
 
 
@@ -282,6 +309,8 @@ void slam_module_frame::imagepoints_to_world3d(vector<Point2f>& src, vector<Poin
 	Mat cam_or(3, 1, CV_32F);
 	Mat cam_rot(3, 3, CV_32F);
 
+	Mat rot(3, 3, CV_32F); // tmp
+
 	get_localcam(cam_pos, cam_or);
 	//if (cam_pos.at<float>(2) > 0.0f)
 	cam_pos.at<float>(2) *= -1.0f;
@@ -309,8 +338,6 @@ void slam_module_frame::imagepoints_to_world3d(vector<Point2f>& src, vector<Poin
 		point3d.x = intersection.at<float>(0);
 		point3d.y = intersection.at<float>(1);
 		point3d.z = intersection.at<float>(2);
-
-		//printf("IP (%f, %f) = (%f, %f, %d)\n", src[i].x, src[i].y, point3d.x, point3d.y, point3d.z);
 
 		dst.push_back(point3d);
 	}

@@ -13,10 +13,11 @@
 #include "CTerrain.h"
 #include "CCamera.h"
 
+
 class terrain3d : public CBaseApp
 {
 public:
-	terrain3d(short* map, UINT w, UINT h);
+	terrain3d(short* map, UINT w, UINT h, byte* texture);
 	~terrain3d();
 	void SetFramework( CFramework* pFramework );
 	BOOL Initialize();
@@ -31,6 +32,11 @@ public:
 
 	void render();
 	void update_elevation_map(int* roi);
+	void update_texture(int* roi);
+	bool requires_render();
+	void handle_input();
+
+	bool				updated;
 
 private:
     CFramework*         m_pFramework;
@@ -44,4 +50,5 @@ private:
 	short*				elevation_map;
 	UINT				elevation_map_w;
 	UINT				elevation_map_h;
+	byte*				texture;
 };

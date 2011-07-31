@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine.h"
+#include <time.h>
 
 class slam;
 
@@ -21,7 +21,8 @@ private:
 
 	bool initialized;
 
-	Engine *matlab;
+	clock_t prev_update;
+	clock_t prev_render;
 
 	terrain3d *terrain;
 };

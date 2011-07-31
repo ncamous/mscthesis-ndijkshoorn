@@ -12,7 +12,10 @@ slam::slam():
 {
 	running = false;
 	KF_running = false;
-	//scale_known = false;
+
+	m_frame = NULL;
+	m_sensor = NULL;
+	m_ui = NULL;
 
 	/*
 	if (!running)
@@ -44,19 +47,15 @@ void slam::run()
 
 	init_kf();
 
-	canvas = cvCreateImage(cvSize(800,800), 8, 3);
-
 
 	/* modules */
-	//m_frame = new slam_module_frame((slam*) this);
+	m_frame = new slam_module_frame((slam*) this);
 	m_sensor = new slam_module_sensor((slam*) this);
 	m_ui = new slam_module_ui((slam*) this);
 
 
-	initial_height = -1;
-
 	/* start threads */
-	//thread_process_frame = CreateThread(NULL, 0, start_process_frame, (void*) this, 0, NULL);
+	thread_process_frame = CreateThread(NULL, 0, start_process_frame, (void*) this, 0, NULL);
 	thread_process_sensor = CreateThread(NULL, 0, start_process_sensor, (void*) this, 0, NULL);
 	thread_ui = CreateThread(NULL, 0, start_ui, (void*) this, 0, NULL);
 }
@@ -81,6 +80,10 @@ void slam::add_input_frame(bot_ardrone_frame *f)
 	if (!running)
 		run();
 
+	// frame module not enable: drop frame
+	if (m_frame == NULL)
+		delete f;
+
 	// drop frame is queue enabled but not empty
 	if (SLAM_USE_QUEUE && queue_frame.empty())
 		queue_frame.push(f);
@@ -98,34 +101,6 @@ void slam::add_input_sensor(bot_ardrone_measurement *m)
 		queue_sensor.push(m);
 	else if(!SLAM_USE_QUEUE)
 		m_sensor->process(m);
-}
-
-
-void slam::set_scale(double s)
-{
-	/*
-	if (scale_known)
-		return;
-
-	canvas_scale = s;
-	scale_known = true;
-	*/
-}
-
-
-bool slam::get_canvas_position(double *out) // pos in mm
-{
-	/*
-	if (!scale_known)
-		return false;
-
-	double scale = 1.0 / canvas_scale;
-
-	out[0] = (double) KF.statePost.at<float>(0) * scale;
-	out[1] = (double) KF.statePost.at<float>(1) * scale;
-	*/
-
-	return true;
 }
 
 
@@ -213,7 +188,7 @@ static DWORD WINAPI start_ui(void* Param)
 	while (!exit_application)
 	{
 		processor->update();
-		Sleep(20); // update every 2 seconds
+		Sleep(35);
 	}
 
 	return 1;

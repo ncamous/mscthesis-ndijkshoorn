@@ -14,9 +14,8 @@ slam_module_sensor::slam_module_sensor(slam *controller):
 	this->controller = controller;
 
 
-	prev_update = clock();
+	//prev_update = clock();
 	counter = 0;
-	//scale_set = false;
 
 
 
@@ -45,8 +44,18 @@ slam_module_sensor::~slam_module_sensor(void)
 
 void slam_module_sensor::process(bot_ardrone_measurement *m)
 {
-	double difftime = ((double)clock() - prev_update) / CLOCKS_PER_SEC;
-	prev_update = clock();
+	/* Time different between current measurement and previous measurement.
+	 * Used to calculate the transition matrix.
+	 * I assume the vehicle is hovering when starting SLAM. So the first couple measurements have a small impact.
+	 */
+	double difftime;
+
+	if (counter == 0)
+		difftime = 0.0001; // it may take some time between class initialization and processing the first measurement.
+	else
+		difftime = m->time - prev_update;
+
+	prev_update = m->time;
 
 
 	/* set scale */
@@ -60,7 +69,7 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	if (!controller->KF_running)
 	{
 		KF->statePost.at<float>(2) = (float) -m->altitude; // write initial height directly into state vector
-		controller->KF_running = true;
+		controller->KF_running = true; // KF is initialized. Now that the initial height of the vehicle is known, the frame module can start working
 	}
 
 
@@ -128,7 +137,7 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 
 	/* elevation map */
-	update_elevation_map((int) -state->at<float>(2) - m->altitude);
+	update_elevation_map(m->altitude);
 
 
 
@@ -176,19 +185,63 @@ void slam_module_sensor::calculate_scale(bot_ardrone_measurement *m)
 	scale /= (double) BOT_ARDRONE_CAM_RESOLUTION_W;
 	//scale = 1.0 / scale; // mm -> px
 
-	controller->set_scale(scale);
+	//controller->set_scale(scale);
 }
 
 
 void slam_module_sensor::update_elevation_map(int sonar_height)
 {
-	// calculate map index
-	int x, y;
-	// no round -> + 0.5 and floor
-	x = (int) floor((state->at<float>(0) / 100.0f) + 0.5f) + SLAM_ELEVATION_MAP_DEFAULT_SIZE;
-	y = (int) floor((state->at<float>(1) / 100.0f) + 0.5f) + SLAM_ELEVATION_MAP_DEFAULT_SIZE;
+	/* cast sonar beam on the 'world/object' based on the current position & attitude */
+	float h;
 
-	controller->elevation_map.update(x, y, (short) sonar_height);
+	Mat sonar_pos(3, 1, CV_32F);
+	Mat sonar_or(3, 1, CV_32F);
+
+	sonar_or.at<float>(0) = 0.0f;
+	sonar_or.at<float>(1) = 0.0f;
+	sonar_or.at<float>(2) = 0.0f;
+
+	Mat sonar_normal(3, 1, CV_32F);
+	Mat sonar_rot(3, 3, CV_32F);
+	Mat hit(3, 1, CV_32F);
+
+	get_sonar_state(sonar_pos, sonar_or);
+
+	sonar_normal.at<float>(0) = 0.0f;
+	sonar_normal.at<float>(1) = 0.0f;
+	sonar_normal.at<float>(2) = 1.0f; // pointing down
+
+	/* more efficient method to extract line normal from vehicle attitide? */
+	cv::RotationMatrix3D(sonar_or, sonar_rot);
+	sonar_normal = sonar_rot * sonar_normal;
+	cv::normalize(sonar_normal, sonar_normal); // to normal vector
+
+	CalcLinePositionAtDistance(sonar_pos, sonar_normal, (double) sonar_height, hit);
+
+	h = hit.at<float>(2);
+
+	if (abs(h) >= 70.0f)
+	{
+		controller->elevation_map.update(hit.at<float>(0), hit.at<float>(1), hit.at<float>(2), 10);
+	}
+	else
+	{
+		float r_mm = (float) (tan((BOT_ARDRONE_SONAR_FOV / 180.0f) * M_PI) * sonar_height);
+
+		controller->elevation_map.update(hit.at<float>(0), hit.at<float>(1), hit.at<float>(2), 20, r_mm);
+	}
+}
+
+
+void slam_module_sensor::get_sonar_state(Mat& pos, Mat& or)
+{
+	pos.at<float>(0) = state->at<float>(0);
+	pos.at<float>(1) = state->at<float>(1);
+	pos.at<float>(2) = state->at<float>(2);
+
+	or.at<float>(0) = state->at<float>(9);
+	or.at<float>(1) = state->at<float>(10);
+	or.at<float>(2) = state->at<float>(11);
 }
 
 
@@ -211,6 +264,7 @@ void slam_module_sensor::update_elevation_map(int sonar_height)
 
 	elevation = initial_height - m->altitude;
 	double rel_elevation = (double)elevation / (double)initial_height;
+
 
 	if (abs(rel_elevation) > 0.1)
 	{

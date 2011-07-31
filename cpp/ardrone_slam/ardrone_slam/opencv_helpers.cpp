@@ -162,7 +162,7 @@ void RotationMatrix3D(const Mat& src_m, Mat& dst_m, bool yawlast)
 
 		dst[3] = CosRy * SinRz;
 		dst[4] = CosRz * CosRx + SinRy * SinRz * SinRx;
-		dst[5] = -SinRx * CosRz + SinRy * SinRz * SinRx;
+		dst[5] = -SinRx * CosRz + SinRy * SinRz * CosRx;
 
 		dst[6] = -SinRy;
 		dst[7] = CosRy * SinRx;
@@ -173,10 +173,15 @@ void RotationMatrix3D(const Mat& src_m, Mat& dst_m, bool yawlast)
 
 void CalcLinePlaneIntersection(const Mat& Plane, const Mat& PlaneNormal, const Mat& Line, const Mat& LineNormal, Mat& intersection)
 {
-
-	double d = 0; //-cvDotProduct(plane_normal, plane_point);
+	double d = 0;
 	double t = (d - PlaneNormal.dot(Line)) / PlaneNormal.dot(LineNormal);
 	addWeighted(Line, 1.0, LineNormal, t, 0.0, intersection);
+}
+
+
+void CalcLinePositionAtDistance(const Mat& Line, const Mat& LineNormal, double d, Mat& intersection)
+{
+	addWeighted(Line, 1.0, LineNormal, d, 0.0, intersection);
 }
 
 
