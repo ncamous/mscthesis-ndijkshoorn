@@ -128,36 +128,6 @@ BOOL CFramework::Initialize( char* title, HINSTANCE hInstance, int width, int he
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-Summary: Runs the application
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-void CFramework::Run()
-{
-    MSG msg;
-    while ( 1 ) 
-    {
-        // Did we recieve a message, or are we idling ?
-        if ( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE ) ) 
-        {
-            if ( msg.message == WM_QUIT)
-            {
-                break;
-            }
-            TranslateMessage( &msg );
-            DispatchMessage ( &msg );
-        } 
-        else 
-        {
-            // Advance Game Frame.
-            if ( m_pGraphics->GetDevice() != NULL && m_active )
-            {
-                OnUpdateFrame();
-                OnRenderFrame();
-            }
-        } 
-    }
-}
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 Summary: Called after the device is created. Create D3DPOOL_MANAGED resources here.
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 void CFramework::OnCreateDevice()
@@ -217,10 +187,8 @@ Summary: Updates the current frame.
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 void CFramework::OnUpdateFrame()
 {
-    if ( m_pTimer != NULL )
-    {
-        m_pTimer->Update();
-    }
+	// update timer moved to OnRenderFrame
+
     if ( m_pGameApp != NULL && m_pGraphics != NULL && m_pTimer != NULL )
     {
         float elapsedTime = m_pTimer->GetElapsedTime();
@@ -244,6 +212,11 @@ Summary: Renders the current frame.
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 void CFramework::OnRenderFrame()
 {
+    if ( m_pTimer != NULL )
+    {
+        m_pTimer->Update();
+    }
+
     if ( !m_active || (m_pGraphics->GetDevice() == NULL) )
     {
         return;

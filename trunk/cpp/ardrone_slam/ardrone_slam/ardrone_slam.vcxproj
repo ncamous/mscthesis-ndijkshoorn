@@ -49,12 +49,12 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(YAMLDir)/include;$(ARDroneWin32Dir);$(ARDroneLibDir)\Soft\Common;$(ARDroneLibDir)\Soft\Lib;$(ARDroneLibDir)\VP_SDK;$(OpenCVDir)\include\opencv;$(OpenCVDir)\include;$(MatlabDir)\include;$(SolutionDir)\terrain3d\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(YAMLDir)/include;$(ARDroneWin32Dir);$(ARDroneLibDir)\Soft\Common;$(ARDroneLibDir)\Soft\Lib;$(ARDroneLibDir)\VP_SDK;$(OpenCVDir)\include\opencv;$(OpenCVDir)\include;$(SolutionDir)\terrain3d\include</AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ws2_32.lib;yamlcpp.lib;ardronewin32.lib;ArDroneAPI.lib;terrain3d.lib;opencv_core230d.lib;opencv_highgui230d.lib;opencv_legacy230d.lib;opencv_features2d230d.lib;opencv_imgproc230d.lib;opencv_calib3d230d.lib;opencv_video230d.lib;libeng.lib;libmex.lib;libmx.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;yamlcpp.lib;ardronewin32.lib;ArDroneAPI.lib;terrain3d.lib;opencv_core230d.lib;opencv_highgui230d.lib;opencv_legacy230d.lib;opencv_features2d230d.lib;opencv_imgproc230d.lib;opencv_calib3d230d.lib;opencv_video230d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StackReserveSize>10000000</StackReserveSize>
       <AdditionalLibraryDirectories>$(OutDir);$(SDLDir)\lib;$(OpenCVDir)\lib;$(MatlabDir)\lib\win32\microsoft;</AdditionalLibraryDirectories>
     </Link>
@@ -86,6 +86,7 @@
     <ClCompile Include="slam_module_frame.cpp" />
     <ClCompile Include="slam_module_sensor.cpp" />
     <ClCompile Include="slam_module_ui.cpp" />
+    <ClCompile Include="slam_visual_map.cpp" />
     <ClCompile Include="usarsim_msgparser.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -105,6 +106,7 @@
     <ClInclude Include="slam_module_sensor.h" />
     <ClInclude Include="slam_module_ui.h" />
     <ClInclude Include="slam_queue.h" />
+    <ClInclude Include="slam_visual_map.h" />
     <ClInclude Include="usarsim_msgparser.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

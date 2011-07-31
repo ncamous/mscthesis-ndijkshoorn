@@ -32,7 +32,7 @@ Parameters:
 [in] rawFile - Name of the height map file
 [in] terrainTexture - Texture file name
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-BOOL CTerrain::Initialize( LPDIRECT3DDEVICE9 pDevice, short* map, UINT w, UINT h, char *terrainTexture )
+BOOL CTerrain::Initialize( LPDIRECT3DDEVICE9 pDevice, short* map, UINT w, UINT h, byte* texture )
 {
     Release();
   
@@ -53,17 +53,23 @@ BOOL CTerrain::Initialize( LPDIRECT3DDEVICE9 pDevice, short* map, UINT w, UINT h
     m_ib.SetData( m_numIndices, pIndices, 0 );
     m_vb.SetIndexBuffer( &m_ib );
 
-    CUtility::GetMediaFile( terrainTexture, path ); 
-    if ( FAILED( D3DXCreateTextureFromFile( pDevice, path, &m_pTexture ) ) )
+	if ( FAILED( D3DXCreateTexture( pDevice, 4096, 4096, 0, D3DUSAGE_DYNAMIC, D3DFMT_R8G8B8, D3DPOOL_DEFAULT, &m_pTexture ) ) )
     {
-        SHOWERROR( "Unable to load terrain textures.", __FILE__, __LINE__ );
+        SHOWERROR( "Unable to create terrain texture.", __FILE__, __LINE__ );
         return FALSE;
-
     }
+
+	// init texture
+	D3DLOCKED_RECT m_rectLocked;
+	m_pTexture->LockRect(0,&m_rectLocked,NULL,0);
+	byte* pByte = (byte*) m_rectLocked.pBits;
+	memcpy_s(pByte, 4096 * 4096 * 4, texture, 4096 * 4096 * 4);
+	m_pTexture->UnlockRect(0);
+
     return TRUE;
 }
 
-void CTerrain::update( LPDIRECT3DDEVICE9 pDevice, short* map, UINT w, UINT h, int* roi)
+void CTerrain::update_elevation_map( LPDIRECT3DDEVICE9 pDevice, short* map, UINT w, UINT h, int* roi)
 {
     // Generate vertices
 	m_numVertices = w * h;
@@ -72,6 +78,25 @@ void CTerrain::update( LPDIRECT3DDEVICE9 pDevice, short* map, UINT w, UINT h, in
     m_vb.SetData( m_numVertices, pVertices, 0, h, roi );
 
 	// no need to update indices
+}
+
+void CTerrain::update_texture(byte* texture, int* roi)
+{
+	D3DLOCKED_RECT m_rectLocked;
+
+	int w = roi[3] - roi[2];
+	int h = roi[1] - roi[0];
+
+	RECT r = {roi[0], roi[2], roi[1], roi[3]};
+
+	m_pTexture->LockRect(0,&m_rectLocked,&r,0);
+
+	byte* pByte = (byte*) m_rectLocked.pBits;
+
+	for (int line = 0; line < h; line++)
+		memcpy((char*) &pByte[(line * 4096 * 4)], (char*) &texture[((r.top + line) * 4096 * 4) + (r.left * 4)], w * 4);
+
+	m_pTexture->UnlockRect(0);
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 

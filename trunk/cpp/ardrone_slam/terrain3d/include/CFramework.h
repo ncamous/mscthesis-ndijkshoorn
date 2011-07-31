@@ -44,7 +44,6 @@ public:
     CFramework( CBaseApp* pGameApp );
     ~CFramework() { Release(); }
     BOOL Initialize( char* title, HINSTANCE hInstance, int width, int height, BOOL windowed = TRUE );
-    void Run();
     void Release();
     void ToggleFullscreen();
     void ToggleWireframe();

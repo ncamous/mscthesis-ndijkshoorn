@@ -2,6 +2,7 @@
 
 #include "slam_queue.h"
 #include "slam_elevation_map.h"
+#include "slam_visual_map.h"
 #include "slam_module_frame.h"
 #include "slam_module_sensor.h"
 #include "slam_module_ui.h"
@@ -28,8 +29,6 @@ public:
 	void add_input_frame(bot_ardrone_frame *f);
 	void add_input_sensor(bot_ardrone_measurement *m);
 
-	void set_scale(double s);
-	bool get_canvas_position(double *out);
 	bool get_world_position(double *in, double *out);
 
 
@@ -59,11 +58,8 @@ public:
 	/* Elevation map */
 	slam_elevation_map elevation_map;
 
-
-	IplImage *canvas;
-	//bool scale_known;
-	//double canvas_scale; // px -> mm
-	int initial_height; // used to determine the 
+	/* Visual map */
+	slam_visual_map visual_map;
 
 private:
 	void init_kf();

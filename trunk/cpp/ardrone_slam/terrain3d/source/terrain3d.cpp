@@ -14,20 +14,21 @@ Modified : 12/06/2005
 #include "..\include\stdafx.h"
 #include "..\include\terrain3d.h"
 
-//char* g_instructions = "WASD: Move\r\nQE: Scale the mountains\r\nClick and drag the mouse to look around\r\nEsc: Quit\r\nF5: Toggle fullscreen\r\nF6: Toggle wireframe";
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 Summary: Default constructor
 Parameters:
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-terrain3d::terrain3d(short* map, UINT w, UINT h)
+terrain3d::terrain3d(short* map, UINT w, UINT h, byte* texture)
 {
     m_pFramework = NULL;
 
 	/**/
-	elevation_map = map;
-	elevation_map_w = w;
-	elevation_map_h = h;
+	updated				= true;
+	elevation_map		= map;
+	elevation_map_w		= w;
+	elevation_map_h		= h;
+	this->texture		= texture;
 	/**/
 
 	HINSTANCE hInstance = GetModuleHandle(NULL);
@@ -64,15 +65,31 @@ terrain3d::~terrain3d()
 
 void terrain3d::render()
 {
-	m_pFramework->OnUpdateFrame();
+	updated = false;
+	//m_pFramework->OnUpdateFrame();
 	m_pFramework->OnRenderFrame();
 }
 
 void terrain3d::update_elevation_map(int* roi)
 {
-	//int roi[4] = {80, 120, 80, 120}; // x, y
+	m_terrain.update_elevation_map(m_pFramework->m_pGraphics->GetDevice(), elevation_map, elevation_map_w, elevation_map_h, roi);
+	updated = true;
+}
 
-	m_terrain.update(m_pFramework->m_pGraphics->GetDevice(), elevation_map, elevation_map_w, elevation_map_h, roi);
+void terrain3d::update_texture(int *roi)
+{
+	m_terrain.update_texture(texture, roi);
+	updated = true;
+}
+
+bool terrain3d::requires_render()
+{
+	return updated;
+}
+
+void terrain3d::handle_input()
+{
+	m_pFramework->OnUpdateFrame();
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -92,8 +109,8 @@ Returns: TRUE on success, FALSE on failure
 BOOL terrain3d::Initialize()
 {
     m_camera.SetMaxVelocity( 100.0f );
-    m_camera.SetPosition( new D3DXVECTOR3( 0.0f, 5.0f, 20.0f ) );
-    m_camera.SetLookAt( new D3DXVECTOR3( 0.0f, 0.0f, 0.0f ) );
+    m_camera.SetPosition( new D3DXVECTOR3( -5.0f, 3.0f, -12.0f ) );
+    m_camera.SetLookAt( new D3DXVECTOR3( 0.0f, 0.0f, -3.0f ) );
     m_camera.Update();
     return TRUE;
 }
@@ -111,9 +128,8 @@ void terrain3d::OnCreateDevice( LPDIRECT3DDEVICE9 pDevice )
     D3DXCreateSprite( pDevice, &m_pTextSprite );
     m_font.Initialize( pDevice, "Arial", 12 );
 
-	m_terrain.Initialize( pDevice, elevation_map, elevation_map_w, elevation_map_h, "terrain.jpg" );
-	//m_terrain.ScaleAbs( 0.5f, 0.01f, 0.5f );
-	m_terrain.ScaleAbs( 0.5f, 0.05f, 0.5f );
+	m_terrain.Initialize( pDevice, elevation_map, elevation_map_w, elevation_map_h, texture );
+	m_terrain.ScaleAbs( 0.5f, 0.015f, 0.5f ); // 50mm x 1mm x 50mm
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -185,7 +201,7 @@ void terrain3d::OnRenderFrame( LPDIRECT3DDEVICE9 pDevice, float elapsedTime )
     pDevice->SetTransform( D3DTS_VIEW, m_camera.GetViewMatrix() );
     sprintf( m_fps, "%.2f fps", m_pFramework->GetFPS() );
 
-    pDevice->Clear( 0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB( 255, 255, 255 ), 1.0f, 0 ); 
+    pDevice->Clear( 0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB( 135, 206, 250 ), 1.0f, 0 ); 
     pDevice->BeginScene();
 
     m_terrain.Render( pDevice );
@@ -211,40 +227,42 @@ Parameters:
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 void terrain3d::ProcessInput( long xDelta, long yDelta, long zDelta, BOOL* pMouseButtons, BOOL* pPressedKeys, float elapsedTime )
 {
-    float cameraSpeed = 20.0f;
+    float cameraSpeed = 50.0f;
     if ( pMouseButtons[0] )
     {
-        m_camera.Yaw( xDelta * elapsedTime * 1.8f);
-        m_camera.Pitch( yDelta * elapsedTime * 1.8f );
+        m_camera.Yaw( xDelta * elapsedTime * 0.1f);
+        m_camera.Pitch( yDelta * elapsedTime * 0.1f );
+		updated = true;
     }
     if ( pPressedKeys[DIK_W] )
     {
         m_camera.MoveForward( cameraSpeed * elapsedTime );
+		updated = true;
     }
     if ( pPressedKeys[DIK_A] )
     {
         m_camera.Strafe( -cameraSpeed * elapsedTime );
+		updated = true;
     }
     if ( pPressedKeys[DIK_S] )
     {
         m_camera.MoveForward( -cameraSpeed * elapsedTime );
+		updated = true;
     }
     if ( pPressedKeys[DIK_D] )
     {
         m_camera.Strafe( cameraSpeed * elapsedTime );
+		updated = true;
     }
     if ( pPressedKeys[DIK_Q] )
     {
         m_terrain.ScaleRel( 0.0f, -0.5f * elapsedTime, 0.0f );
+		updated = true;
     }
     if ( pPressedKeys[DIK_E] )
     {
         m_terrain.ScaleRel( 0.0f , 0.5f * elapsedTime, 0.0f  );
-    }
-    if ( pPressedKeys[DIK_ESCAPE] )
-    {
-        m_pFramework->LockKey( DIK_ESCAPE );
-        PostQuitMessage( 0 );
+		updated = true;
     }
     if ( pPressedKeys[DIK_F5] )
     {
@@ -260,6 +278,7 @@ void terrain3d::ProcessInput( long xDelta, long yDelta, long zDelta, BOOL* pMous
         if ( m_pFramework != NULL )
         {
             m_pFramework->ToggleWireframe();
+			updated = true;
         }
     }
 }
