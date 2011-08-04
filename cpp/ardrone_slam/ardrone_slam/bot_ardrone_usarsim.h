@@ -32,6 +32,7 @@ public:
 	void socket_callback(int id, char *message, int bytes);
 	void process_measurement(char *message, int bytes);
 	void process_frame(char *message, int bytes);
+	bool check_frame();
 
 	void bot_ardrone_usarsim::reset_frame(bot_ardrone_frame *f);
 

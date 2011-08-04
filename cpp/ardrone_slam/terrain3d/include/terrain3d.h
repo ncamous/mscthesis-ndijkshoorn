@@ -7,17 +7,17 @@
 #include "CWorldTransform.h"
 #include "CUtility.h"
 #include "CTriangleStripPlane.h"
-#include "CFont.h"
 #include "CustomVertex.h"
 #include "CMesh.h"
 #include "CTerrain.h"
 #include "CCamera.h"
+#include "CArrow.h"
 
 
 class terrain3d : public CBaseApp
 {
 public:
-	terrain3d(short* map, UINT w, UINT h, byte* texture);
+	terrain3d(short* map, UINT w, UINT h, byte* texture, float* arrow);
 	~terrain3d();
 	void SetFramework( CFramework* pFramework );
 	BOOL Initialize();
@@ -40,15 +40,13 @@ public:
 
 private:
     CFramework*         m_pFramework;
-    CFont               m_font;
     CTerrain            m_terrain;
+	CArrow				m_arrow;
     CCamera             m_camera;
-    LPD3DXSPRITE        m_pTextSprite;
-
-    char				m_fps[10];
 
 	short*				elevation_map;
 	UINT				elevation_map_w;
 	UINT				elevation_map_h;
 	byte*				texture;
+	float*				arrow;
 };

@@ -19,7 +19,7 @@ Modified : 12/06/2005
 Summary: Default constructor
 Parameters:
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-terrain3d::terrain3d(short* map, UINT w, UINT h, byte* texture)
+terrain3d::terrain3d(short* map, UINT w, UINT h, byte* texture, float* arrow)
 {
     m_pFramework = NULL;
 
@@ -29,6 +29,7 @@ terrain3d::terrain3d(short* map, UINT w, UINT h, byte* texture)
 	elevation_map_w		= w;
 	elevation_map_h		= h;
 	this->texture		= texture;
+	this->arrow			= arrow;
 	/**/
 
 	HINSTANCE hInstance = GetModuleHandle(NULL);
@@ -109,8 +110,8 @@ Returns: TRUE on success, FALSE on failure
 BOOL terrain3d::Initialize()
 {
     m_camera.SetMaxVelocity( 100.0f );
-    m_camera.SetPosition( new D3DXVECTOR3( -5.0f, 3.0f, -12.0f ) );
-    m_camera.SetLookAt( new D3DXVECTOR3( 0.0f, 0.0f, -3.0f ) );
+    m_camera.SetPosition( new D3DXVECTOR3( 0.0f, 10.0f, -20.0f ) );
+    m_camera.SetLookAt( new D3DXVECTOR3( 0.0f, 0.0f, 0.0f ) );
     m_camera.Update();
     return TRUE;
 }
@@ -125,11 +126,11 @@ Parameters:
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 void terrain3d::OnCreateDevice( LPDIRECT3DDEVICE9 pDevice )
 {
-    D3DXCreateSprite( pDevice, &m_pTextSprite );
-    m_font.Initialize( pDevice, "Arial", 12 );
-
 	m_terrain.Initialize( pDevice, elevation_map, elevation_map_w, elevation_map_h, texture );
-	m_terrain.ScaleAbs( 0.5f, 0.015f, 0.5f ); // 50mm x 1mm x 50mm
+	m_terrain.ScaleAbs( 0.5f, 0.02f, 0.5f ); // 50mm x 1mm x 50mm
+
+	// NICK
+	m_arrow.Initialize( pDevice, arrow );
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -142,9 +143,6 @@ Parameters:
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 void terrain3d::OnResetDevice( LPDIRECT3DDEVICE9 pDevice )
 {
-    m_pTextSprite->OnResetDevice();
-    m_font.OnResetDevice();
-
     // Set projection
     m_camera.SetAspectRatio( (float)m_pFramework->GetWidth() / (float)m_pFramework->GetHeight() );
     pDevice->SetTransform( D3DTS_PROJECTION, m_camera.GetProjectionMatrix() );
@@ -163,8 +161,6 @@ be released here, which generally includes all D3DPOOL_DEFAULT resources.
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 void terrain3d::OnLostDevice()
 {
-    m_pTextSprite->OnLostDevice();
-    m_font.OnLostDevice();
 }
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 Summary: 
@@ -174,9 +170,8 @@ all D3DPOOL_MANAGED resources.
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 void terrain3d::OnDestroyDevice()
 {
-    SAFE_RELEASE( m_pTextSprite );
-    m_font.Release();
     m_terrain.Release();
+	m_arrow.Release();
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -199,17 +194,12 @@ Parameters:
 void terrain3d::OnRenderFrame( LPDIRECT3DDEVICE9 pDevice, float elapsedTime )
 {
     pDevice->SetTransform( D3DTS_VIEW, m_camera.GetViewMatrix() );
-    sprintf( m_fps, "%.2f fps", m_pFramework->GetFPS() );
 
     pDevice->Clear( 0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB( 135, 206, 250 ), 1.0f, 0 ); 
     pDevice->BeginScene();
 
-    m_terrain.Render( pDevice );
-
-    // Display framerate
-    m_pTextSprite->Begin( D3DXSPRITE_ALPHABLEND | D3DXSPRITE_SORT_TEXTURE );
-    m_font.Print( m_fps, 5, 5, D3DCOLOR_XRGB( 255, 0, 0 ), m_pTextSprite );
-    m_pTextSprite->End();
+	m_terrain.Render( pDevice );
+	m_arrow.Render( pDevice );
 
     pDevice->EndScene();
     pDevice->Present( 0, 0, 0, 0 );
@@ -227,7 +217,8 @@ Parameters:
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 void terrain3d::ProcessInput( long xDelta, long yDelta, long zDelta, BOOL* pMouseButtons, BOOL* pPressedKeys, float elapsedTime )
 {
-    float cameraSpeed = 50.0f;
+    float cameraSpeed = 30.0f;
+
     if ( pMouseButtons[0] )
     {
         m_camera.Yaw( xDelta * elapsedTime * 0.1f);

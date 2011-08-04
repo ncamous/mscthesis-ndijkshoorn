@@ -29,7 +29,7 @@ public:
 	void add_input_frame(bot_ardrone_frame *f);
 	void add_input_sensor(bot_ardrone_measurement *m);
 
-	bool get_world_position(double *in, double *out);
+	void get_world_position(float *pos);
 
 
 	/* threads */

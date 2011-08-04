@@ -36,9 +36,6 @@ BOOL CTerrain::Initialize( LPDIRECT3DDEVICE9 pDevice, short* map, UINT w, UINT h
 {
     Release();
   
-    // Load height map
-    char path[MAX_PATH] = {0};
-
     // Generate vertices
 	m_numVertices = w * h;
 
@@ -84,8 +81,8 @@ void CTerrain::update_texture(byte* texture, int* roi)
 {
 	D3DLOCKED_RECT m_rectLocked;
 
-	int w = roi[3] - roi[2];
-	int h = roi[1] - roi[0];
+	int w = roi[1] - roi[0];
+	int h = roi[3] - roi[2];
 
 	RECT r = {roi[0], roi[2], roi[1], roi[3]};
 

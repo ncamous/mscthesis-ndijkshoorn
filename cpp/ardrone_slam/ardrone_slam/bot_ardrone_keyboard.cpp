@@ -16,14 +16,18 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 	KBDLLHOOKSTRUCT	*kd = (KBDLLHOOKSTRUCT *)lParam;
 
 	// http://delphi.about.com/od/objectpascalide/l/blvkc.htm
+
 	switch (kd->vkCode)
 	{
 		case 84: // T
 			if (wParam == WM_KEYDOWN)
 			{
+				/*
 				printf("Start recording\n");
 				for(i=0; i<keyboard_nr_bots; i++)
 					keyboard_bot[i]->set_record();
+				*/
+				printf("Recording button disabled!\n");
 			}
 			break;
 
@@ -75,19 +79,23 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 			keyboard_set(wParam, BOT_ARDRONE_LateralVelocity, true);
 			break;
 
-		case VK_Q:
+		case 73:
+		//case VK_Q:
 			keyboard_set(wParam, BOT_ARDRONE_AltitudeVelocity, true);
 			break;
 
-		case VK_A:
+		case 75:
+		//case VK_A:
 			keyboard_set(wParam, BOT_ARDRONE_AltitudeVelocity, false);
 			break;
 
-		case VK_LSHIFT:
+		case 74:
+		//case VK_LSHIFT:
 			keyboard_set(wParam, BOT_ARDRONE_RotationalVelocity, false);
 			break;
 
-		case VK_RSHIFT:
+		case 76:
+		//case VK_RSHIFT:
 			keyboard_set(wParam, BOT_ARDRONE_RotationalVelocity, true);
 			break;
 

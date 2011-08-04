@@ -16,6 +16,10 @@ slam_module_frame::slam_module_frame(slam *controller):
 	world_plane(3, 1, CV_32F),
 	world_plane_normal(3, 1, CV_32F),
 
+	frame(BOT_ARDRONE_CAM_RESOLUTION_H, BOT_ARDRONE_CAM_RESOLUTION_W, CV_8UC3, NULL, 0), // do not want to allocate data here. HOW?
+	frame_rgba(BOT_ARDRONE_CAM_RESOLUTION_H, BOT_ARDRONE_CAM_RESOLUTION_W, CV_8UC4),
+	frame_gray(BOT_ARDRONE_CAM_RESOLUTION_H, BOT_ARDRONE_CAM_RESOLUTION_W, CV_8U),
+
 	measurementMatrix(3, 12, CV_32F),
 	measurementNoiseCov(3, 3, CV_32F)
 {
@@ -78,42 +82,28 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 
 	// initialize frame
-	if (frame == NULL)
+	if (frame_counter == 0)
 	{
-		unsigned short w, h;
-
-		memcpy_s(&w, 2, &f->data[0], 2);
-		memcpy_s(&h, 2, &f->data[2], 2);
-
-		w = ntohs(w);
-		h = ntohs(h);
-
-		frame = cvCreateImageHeader(cvSize(w, h), IPL_DEPTH_8U, 3);
-		//gray = cvCreateImage(cvSize(w, h), IPL_DEPTH_8U, 1);
-		gray = cvCreateImage(cvSize(w, h), IPL_DEPTH_8U, 4);
-
 		/* image corners */
 		image_corners.push_back(Point2f(0.0f, 0.0f));
-		image_corners.push_back(Point2f(0.0f, (float) (w - 1)));
-		image_corners.push_back(Point2f((float) (h - 1), (float) (w - 1)));
-		image_corners.push_back(Point2f((float) (h - 1), 0.0f));
+		image_corners.push_back(Point2f(0.0f, (float) (BOT_ARDRONE_CAM_RESOLUTION_H - 1)));
+		image_corners.push_back(Point2f((float) (BOT_ARDRONE_CAM_RESOLUTION_W - 1), (float) (BOT_ARDRONE_CAM_RESOLUTION_H - 1)));
+		image_corners.push_back(Point2f((float) (BOT_ARDRONE_CAM_RESOLUTION_W - 1), 0.0f));
 	}
 
-	frame->imageData = &f->data[4];
-
+	frame.data = (uchar*) &f->data[4];
 
 
 
 	// frames from the real ardrone are received in RGB order instead of BGR
 	/*
 	if (!f->usarsim)
-		cvCvtColor( frame, frame, CV_RGB2BGR );
+		cvtColor( frame, frame, CV_RGB2BGR );
 	*/
 
 
 	// convert to gray
-	//cvCvtColor(frame, gray, CV_BGR2GRAY);
-	cvCvtColor(frame, gray, CV_BGR2BGRA);
+	//cvtColor(frame, gray, CV_BGR2GRAY);
 
 
 
@@ -217,15 +207,10 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 	*/
 
 	/* add frame to canvas */
-	Mat frameMat(gray);
+	cvtColor(frame, frame_rgba, CV_BGR2BGRA); // convert to RGBA because Direct3D wants a 4 channel array
 	vector<Point3f> image_corners_wc;
-	imagepoints_to_world3d(image_corners, image_corners_wc);
-	controller->visual_map.update(frameMat, image_corners, image_corners_wc);
-	/*
-	for (size_t i = 0; i < image_corners_wc.size(); i++)
-		printf("%f, %f, %f\n", image_corners_wc[i].x, image_corners_wc[i].y, image_corners_wc[i].z);
-	printf("\n\n");
-	*/
+	imagepoints_to_world3d(image_corners, image_corners_wc, true); // swap x and y
+	controller->visual_map.update(frame_rgba, image_corners, image_corners_wc);
 
 	frame_counter++;
 }
@@ -303,7 +288,7 @@ int slam_module_frame::find_object_position(Mat& cam_pos, Mat& cam_or, vector<DM
 }
 
 
-void slam_module_frame::imagepoints_to_world3d(vector<Point2f>& src, vector<Point3f>& dst)
+void slam_module_frame::imagepoints_to_world3d(vector<Point2f>& src, vector<Point3f>& dst, bool swap_xy)
 {
 	Mat cam_pos(3, 1, CV_32F);
 	Mat cam_or(3, 1, CV_32F);
@@ -312,8 +297,15 @@ void slam_module_frame::imagepoints_to_world3d(vector<Point2f>& src, vector<Poin
 	Mat rot(3, 3, CV_32F); // tmp
 
 	get_localcam(cam_pos, cam_or);
-	//if (cam_pos.at<float>(2) > 0.0f)
 	cam_pos.at<float>(2) *= -1.0f;
+
+	if (swap_xy)
+	{
+		float tmp = cam_or.at<float>(0);
+		cam_or.at<float>(0) = cam_or.at<float>(1);
+		cam_or.at<float>(1) = tmp;
+	}
+
 	cv::RotationMatrix3D(cam_or, cam_rot);
 
 	Mat point(3, 1, CV_32F);

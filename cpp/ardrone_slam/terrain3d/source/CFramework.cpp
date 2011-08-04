@@ -187,7 +187,10 @@ Summary: Updates the current frame.
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 void CFramework::OnUpdateFrame()
 {
-	// update timer moved to OnRenderFrame
+    if ( m_pTimer != NULL )
+    {
+        m_pTimer->Update();
+    }
 
     if ( m_pGameApp != NULL && m_pGraphics != NULL && m_pTimer != NULL )
     {
@@ -212,11 +215,6 @@ Summary: Renders the current frame.
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 void CFramework::OnRenderFrame()
 {
-    if ( m_pTimer != NULL )
-    {
-        m_pTimer->Update();
-    }
-
     if ( !m_active || (m_pGraphics->GetDevice() == NULL) )
     {
         return;
@@ -465,16 +463,4 @@ int CFramework::GetHeight()
     }
 
     return m_fullscreenHeight;
-}
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-Summary: Gets the framerate
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-float CFramework::GetFPS()
-{
-    if ( m_pTimer != NULL )
-    {
-        return m_pTimer->GetFPS();
-    }
-    return 0.0f;
 }

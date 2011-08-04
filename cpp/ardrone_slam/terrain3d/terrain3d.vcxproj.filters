@@ -18,9 +18,6 @@
     <ClInclude Include="include\CCamera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\CFont.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\CFramework.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -66,12 +63,12 @@
     <ClInclude Include="include\terrain3d.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\CArrow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\CCamera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\CFont.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\CFramework.cpp">
@@ -111,6 +108,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\terrain3d.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\CArrow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

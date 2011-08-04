@@ -9,7 +9,7 @@ public:
 	slam_visual_map();
 	~slam_visual_map();
 	byte* get_array();
-	void update(cv::Mat frame, std::vector<cv::Point2f>& lc, std::vector<cv::Point3f>& wc);
+	void update(cv::Mat& frame, std::vector<cv::Point2f>& lc, std::vector<cv::Point3f>& wc);
 	bool is_updated(int* dst, bool reset_roi = false);
 
 	cv::Mat canvas;
@@ -28,6 +28,7 @@ public:
 
 private:
 	cv::Size canvasSize;
+	cv::Mat undoTranslate;
 
 	void worldpos_to_cell(cv::Point3f& src, cv::Point2f& dst);
 	void update_roi(cv::Point2f& p, int *roi);
