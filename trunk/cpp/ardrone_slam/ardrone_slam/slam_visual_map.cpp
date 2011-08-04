@@ -7,10 +7,13 @@ using namespace cv;
 
 
 slam_visual_map::slam_visual_map(void):
-	canvas(4096, 4096, CV_8UC4) // image, last channel not used
+	canvas(4096, 4096, CV_8UC4), // image, last channel not used
+	undoTranslate(3, 3, CV_64F) // do not forget to set identity matrix
 {
 	canvas = Scalar(140, 140, 140, 0);
 	map_updated = false;
+
+	setIdentity(undoTranslate);
 
 	memset(sync_roi, -1, 4 * sizeof(int));
 
@@ -33,7 +36,7 @@ slam_visual_map::~slam_visual_map(void)
 }
 
 
-void slam_visual_map::update(Mat frame, vector<Point2f>& lc, vector<Point3f>& wc)
+void slam_visual_map::update(Mat& frame, vector<Point2f>& lc, vector<Point3f>& wc)
 {
 	Point2f src[4];
 	Point2f dst[4];
@@ -42,19 +45,21 @@ void slam_visual_map::update(Mat frame, vector<Point2f>& lc, vector<Point3f>& wc
 	for (int i = 0; i < 4; i++)
 	{
 		src[i] = Point2f(lc[i].x, lc[i].y);
-		dst[i] = Point2f();
 		worldpos_to_cell(wc[i], dst[i]);
 		update_roi(dst[i], frame_roi);
 	}
 
 	Mat T = getPerspectiveTransform (src, dst);
 
-	int w = frame_roi[3] - frame_roi[2];
-	int h = frame_roi[1] - frame_roi[0];
+	int w = frame_roi[1] - frame_roi[0];
+	int h = frame_roi[3] - frame_roi[2];
 	Mat subCanvas(canvas, Rect(frame_roi[0], frame_roi[2], w, h));
 
-	T.at<double>(0, 2) -= (double) frame_roi[0];
-	T.at<double>(1, 2) -= (double) frame_roi[2];
+	undoTranslate.at<double>(0, 2) = (double) -frame_roi[0];
+	undoTranslate.at<double>(1, 2) = (double) -frame_roi[2];
+
+	T = undoTranslate * T;
+
 	canvasSize.width = w;
 	canvasSize.height = h;
 

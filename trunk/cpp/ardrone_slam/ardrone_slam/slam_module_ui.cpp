@@ -40,6 +40,9 @@ void slam_module_ui::update()
 		if (controller->visual_map.is_updated(roi, true))
 			terrain->update_texture(roi);
 
+		controller->get_world_position(pos);
+		controller->elevation_map.worldpos_to_cell(pos);
+
 		prev_update = clock();
 	}
 
@@ -66,7 +69,8 @@ void slam_module_ui::init()
 		controller->elevation_map.get_array(),
 		controller->elevation_map.w,
 		controller->elevation_map.h,
-		controller->visual_map.get_array()
+		controller->visual_map.get_array(),
+		pos
 	);
 
 

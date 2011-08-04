@@ -21,7 +21,7 @@ public:
 	int find_object_position(Mat& cam_pos, Mat& cam_or, vector<DMatch>& matches, vector<short>& mask);
 	int find_features(IplImage *img, vector<KeyPoint> &v);
 
-	void imagepoints_to_world3d(vector<Point2f>& src, vector<Point3f>& dst);
+	void imagepoints_to_world3d(vector<Point2f>& src, vector<Point3f>& dst, bool swap_xy = false);
 	
 	void get_state(Mat& pos, Mat& or);
 	void get_localcam(Mat& pos, Mat& or);
@@ -42,8 +42,9 @@ public:
 private:
 	slam *controller;
 
-	IplImage *frame;
-	IplImage *gray;
+	Mat frame;
+	Mat frame_gray;
+	Mat frame_rgba;
 
 	// image corners
 	vector<Point2f> image_corners;

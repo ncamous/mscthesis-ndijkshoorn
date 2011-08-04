@@ -15,7 +15,7 @@ bot_ardrone_usarsim::bot_ardrone_usarsim(bot_ardrone *bot)
 
 	/* sockets */
 	printf("Connecting to USARSim\n");
-	control_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CONTROL, USARSIM_PORT, USARSIM_IP, NULL, BOT_ARDONE_USARSIM_CONTROL_BUFSIZE, (botinterface*) this);
+	control_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CONTROL, USARSIM_PORT, USARSIM_IP, NULL, BOT_ARDRONE_USARSIM_CONTROL_BUFSIZE, (botinterface*) this);
 	printf("Connecting to UPIS\n");
 	frame_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_FRAME, UPIS_PORT, USARSIM_IP, frame->data, BOT_ARDRONE_USARSIM_FRAME_BLOCKSIZE, (botinterface*) this);
 }
@@ -231,7 +231,8 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 			frame->data += 5;
 			frame->data_size -= 5;
 
-			bot->frame_received(frame);
+			if (check_frame())
+				bot->frame_received(frame);
 
 			//reset_frame(frame);
 			frame = new bot_ardrone_frame;
@@ -241,9 +242,7 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 			// slam enabled and queue not empty -> wait
 			if (BOT_ARDRONE_USARSIM_FRAME_MODE == 1 && bot->slam_state)
 			{
-				//printf("waiting for event\n");
 				bot->slamcontroller->queue_frame.wait_until_empty(INFINITE); // move this function to bot_ardrone?
-				//printf("done waiting\n");
 			}
 			// slam not (yet) enabled, or fixed fps mode
 			else if ((BOT_ARDRONE_USARSIM_FRAME_MODE == 1 && !bot->slam_state) || BOT_ARDRONE_USARSIM_FRAME_MODE == 2)
@@ -252,6 +251,30 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 			frame_socket->send("OK");
 		}
 	}
+}
+
+
+bool bot_ardrone_usarsim::check_frame()
+{
+	unsigned short w, h;
+
+	memcpy_s(&w, 2, &frame->data[0], 2);
+	memcpy_s(&h, 2, &frame->data[2], 2);
+
+	w = ntohs(w);
+	h = ntohs(h);
+
+	if (w != BOT_ARDRONE_CAM_RESOLUTION_W || h != BOT_ARDRONE_CAM_RESOLUTION_H)
+	{
+		printf("ERROR: received frame size does not match frame width defined in global (%i, %i)\n",
+			BOT_ARDRONE_CAM_RESOLUTION_W,
+			BOT_ARDRONE_CAM_RESOLUTION_H
+		);
+
+		return false;
+	}
+
+	return true;
 }
 
 

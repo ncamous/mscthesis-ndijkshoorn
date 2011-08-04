@@ -33,12 +33,12 @@
 
 	/* USARSim */
 	#define BOT_ARDRONE_USARSIM_FRAME_BLOCKSIZE 4096
-	#define BOT_ARDONE_USARSIM_CONTROL_BUFSIZE 400
+	#define BOT_ARDRONE_USARSIM_CONTROL_BUFSIZE 400
 	#define BOT_ARDRONE_USARSIM_FRAME_REQDELAY 250 // at least 20 ms
 	#define BOT_ARDRONE_USARSIM_FRAME_MODE 1 // 1: request new frame when SLAM queue empty, 2: fixed framerate
 
 	/* keyboard */
-	#define BOT_ARDRONE_KEYBOARD_VEL 0.5f
+	#define BOT_ARDRONE_KEYBOARD_VEL 0.06f
 
 
 extern bool exit_application;

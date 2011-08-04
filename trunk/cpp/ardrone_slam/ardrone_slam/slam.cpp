@@ -104,17 +104,14 @@ void slam::add_input_sensor(bot_ardrone_measurement *m)
 }
 
 
-bool slam::get_world_position(double *in, double *out)
+void slam::get_world_position(float *pos)
 {
-	/*
-	if (!scale_known)
-		return false;
-
-	out[0] = in[0] * canvas_scale;
-	out[1] = in[1] * canvas_scale;
-	*/
-
-	return true;
+	pos[0] = KF.statePost.at<float>(0);
+	pos[1] = KF.statePost.at<float>(1);
+	pos[2] = KF.statePost.at<float>(2);
+	pos[3] = KF.statePost.at<float>(9);
+	pos[4] = KF.statePost.at<float>(10);
+	pos[5] = KF.statePost.at<float>(11);
 }
 
 

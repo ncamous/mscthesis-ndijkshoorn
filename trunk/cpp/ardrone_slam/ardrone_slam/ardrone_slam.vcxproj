@@ -54,9 +54,10 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ws2_32.lib;yamlcpp.lib;ardronewin32.lib;ArDroneAPI.lib;terrain3d.lib;opencv_core230d.lib;opencv_highgui230d.lib;opencv_legacy230d.lib;opencv_features2d230d.lib;opencv_imgproc230d.lib;opencv_calib3d230d.lib;opencv_video230d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;yamlcpp.lib;ardronewin32.lib;ARDroneAPI.lib;terrain3d.lib;opencv_core230d.lib;opencv_highgui230d.lib;opencv_legacy230d.lib;opencv_features2d230d.lib;opencv_imgproc230d.lib;opencv_calib3d230d.lib;opencv_video230d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StackReserveSize>10000000</StackReserveSize>
       <AdditionalLibraryDirectories>$(OutDir);$(SDLDir)\lib;$(OpenCVDir)\lib;$(MatlabDir)\lib\win32\microsoft;</AdditionalLibraryDirectories>
+      <TargetMachine>MachineX86</TargetMachine>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

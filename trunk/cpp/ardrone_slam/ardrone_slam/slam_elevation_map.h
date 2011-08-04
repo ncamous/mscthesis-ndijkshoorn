@@ -12,6 +12,7 @@ public:
 	void update(float w_x, float w_y, float w_h, unsigned char conf, float r_mm);
 	short* get_array();
 	bool is_updated(int* dst, bool reset_roi = false);
+	void worldpos_to_cell(float *pos);
 
 	float resolution;
 

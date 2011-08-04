@@ -31,7 +31,7 @@ BOOL CUtility::GetMediaFile( char* file, char path[] )
     if ( pCutPoint )
     {
         // Copy over the exe file name
-        strcpy( exeName, pCutPoint );
+        strcpy_s( exeName, MAX_PATH, pCutPoint );
 
         // Chop off the exe file name from the path so we
         // just have the exe directory
@@ -53,7 +53,7 @@ BOOL CUtility::GetMediaFile( char* file, char path[] )
         }
 
         // Add a slash
-        strcat( exeName, "\\" );
+        strcat_s( exeName, MAX_PATH, "\\" );
     }
 
     // Search all the folders in searchFolders
@@ -64,7 +64,7 @@ BOOL CUtility::GetMediaFile( char* file, char path[] )
 
     // Search all the folders in searchFolders with media\ appended to the end
     char mediaFile[MAX_PATH] = "media\\";
-    strcat( mediaFile, file );
+    strcat_s( mediaFile, MAX_PATH, file );
     if ( SearchFolders( mediaFile, exeFolder, exeName, path ) )
     {
         return TRUE;
@@ -93,11 +93,11 @@ BOOL CUtility::SearchFolders( char* filename, char* exeFolder, char* exeName, ch
     char currentPath[MAX_PATH] = {0};
     for ( int i = 0; i < 8; i++ )
     {
-        sprintf( currentPath, searchFolders[i], exeFolder, exeName );
-        strcat( currentPath, filename );
+        sprintf_s( currentPath, MAX_PATH, searchFolders[i], exeFolder, exeName );
+        strcat_s( currentPath, MAX_PATH, filename );
         if ( GetFileAttributes( currentPath ) != INVALID_FILE_ATTRIBUTES )
         {
-            strcpy( fullPath, currentPath );
+            strcpy_s( fullPath, MAX_PATH, currentPath );
             return TRUE;
         }
     }

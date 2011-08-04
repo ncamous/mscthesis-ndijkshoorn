@@ -54,7 +54,6 @@ public:
     DWORD GetFillMode();
     int GetWidth();
     int GetHeight();
-    float GetFPS();
 
     void OnUpdateFrame();
     void OnRenderFrame();

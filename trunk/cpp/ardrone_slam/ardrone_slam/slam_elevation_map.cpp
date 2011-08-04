@@ -104,6 +104,13 @@ void slam_elevation_map::worldpos_to_cell(float x, float y, int *cellxy)
 	cellxy[1] = (int) floor(y * resolution + 0.5f) + origin_y;
 }
 
+void slam_elevation_map::worldpos_to_cell(float *pos)
+{
+	pos[0] *= resolution;
+	pos[1] *= resolution;
+	pos[2] = -pos[2];
+}
+
 void slam_elevation_map::update_roi(int x, int y)
 {
 	if (roi[0] == -1 || x < roi[0])

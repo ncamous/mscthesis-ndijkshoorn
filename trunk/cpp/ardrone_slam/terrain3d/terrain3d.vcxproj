@@ -56,7 +56,7 @@
       </PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -97,8 +97,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\CArrow.h" />
     <ClInclude Include="include\CCamera.h" />
-    <ClInclude Include="include\CFont.h" />
     <ClInclude Include="include\CFramework.h" />
     <ClInclude Include="include\terrain3d.h" />
     <ClInclude Include="include\CGraphics.h" />
@@ -116,8 +116,8 @@
     <ClInclude Include="include\stdafx.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\CArrow.cpp" />
     <ClCompile Include="source\CCamera.cpp" />
-    <ClCompile Include="source\CFont.cpp" />
     <ClCompile Include="source\CFramework.cpp" />
     <ClCompile Include="source\terrain3d.cpp" />
     <ClCompile Include="source\CGraphics.cpp" />
@@ -131,6 +131,13 @@
     <ClCompile Include="source\CVertexBuffer.cpp" />
     <ClCompile Include="source\CWorldTransform.cpp" />
     <ClCompile Include="source\stdafx.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

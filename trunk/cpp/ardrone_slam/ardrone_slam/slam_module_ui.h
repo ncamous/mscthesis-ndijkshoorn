@@ -25,5 +25,7 @@ private:
 	clock_t prev_render;
 
 	terrain3d *terrain;
+
+	float pos[6];
 };
 
