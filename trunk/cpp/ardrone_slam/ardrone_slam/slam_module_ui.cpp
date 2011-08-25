@@ -19,7 +19,6 @@ slam_module_ui::slam_module_ui(slam *controller)
 
 slam_module_ui::~slam_module_ui(void)
 {
-	//cvDestroyWindow("Image:");
 }
 
 
@@ -30,7 +29,7 @@ void slam_module_ui::update()
 
 	terrain->handle_input(); // mouse and keyboard
 
-	if (clock() - prev_update > 2 * CLOCKS_PER_SEC)
+	if (clock() - prev_update > /*2 **/ CLOCKS_PER_SEC)
 	{
 		int roi[4];
 
@@ -48,12 +47,20 @@ void slam_module_ui::update()
 
 	if (terrain->requires_render())
 		terrain->render();
+}
 
-	/*
-	Mat blup(controller->visual_map.canvas, Rect(1800, 1800, 600, 600));
-	imshow("Image:", blup);
+
+void slam_module_ui::display_canvas()
+{
+	Mat subCanvas(controller->visual_map.canvas, Rect(700, 1200, 2300, 2800));
+	Mat resized(800, 800, CV_8UC4);
+	resize(subCanvas, resized, Size(800, 800));
+
+	cvNamedWindow("Image:", CV_WINDOW_AUTOSIZE);
+	imshow("Image:", resized);
 	cvWaitKey(4);
-	*/
+
+	Sleep(99999);
 }
 
 

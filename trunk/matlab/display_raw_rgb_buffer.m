@@ -1,5 +1,5 @@
-folder = 'C:/Users/Nick/Documents/Thesis/code/cpp/dataset_collector/dataset_collector/dataset/006';
-nr_images = 738;
+folder = 'C:/Users/Nick/Documents/Thesis/code/cpp/ardrone_slam/ardrone_slam/dataset/001';
+nr_images = 50;
 byte_order_rgb = 0;
 %width=176; % 176
 %height=38; % 144, but i only stored a part of the buffer at the moment (friday)
@@ -52,5 +52,5 @@ for i = 1:nr_images
 
     figure(1);clf;
     imshow(C, []);
-    pause(0.05);
+    pause(0.5);
 end

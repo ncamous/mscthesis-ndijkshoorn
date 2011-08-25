@@ -244,4 +244,6 @@ void bot_ardrone::set_slam(bool state)
 	}
 
 	slam_state = state;
+
+	printf("SLAM state: %s\n", state ? "ENABLED" : "DISABLED");
 }

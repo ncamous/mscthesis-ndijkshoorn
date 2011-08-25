@@ -14,9 +14,7 @@ slam_module_sensor::slam_module_sensor(slam *controller):
 	this->controller = controller;
 
 
-	//prev_update = clock();
 	counter = 0;
-
 
 
 	/* KF */
@@ -33,7 +31,14 @@ slam_module_sensor::slam_module_sensor(slam *controller):
 	}
 
 	measurementNoiseCov = 0.0f;
-	setIdentity(measurementNoiseCov, Scalar::all(1e-5));
+	//setIdentity(measurementNoiseCov, Scalar::all(1e-5));
+	float MNC[12] = {
+		0.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.0f,
+		0.5f, 0.5f, 0.5f,
+		0.0f, 0.0f, 0.0f
+	};
+	MatSetDiag(measurementNoiseCov, MNC);
 }
 
 
@@ -58,12 +63,6 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	prev_update = m->time;
 
 
-	/* set scale */
-	/*
-	if (!scale_set)
-		calculate_scale(m);
-	*/
-
 
 	/* set initial position: module_frame is not used before position is known */
 	if (!controller->KF_running)
@@ -71,6 +70,8 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 		KF->statePost.at<float>(2) = (float) -m->altitude; // write initial height directly into state vector
 		controller->KF_running = true; // KF is initialized. Now that the initial height of the vehicle is known, the frame module can start working
 	}
+
+	//return;
 
 
 
@@ -97,7 +98,7 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 
 	/* predict */
-	Mat prediction = KF->predict();
+	//Mat prediction = KF->predict();
 
 
 	/* correct */
@@ -125,27 +126,29 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	return;
 	*/
 
-	KF->correct(measurement);
+	//KF->correct(measurement);
 
 
 	/* directly inject attitude into state vector */
+	/*
 	KF->statePost.at<float>(9) = m_or.at<float>(0);
 	KF->statePost.at<float>(10) = m_or.at<float>(1);
 	KF->statePost.at<float>(11) = m_or.at<float>(2);
+	*/
+
+	//printf("GT OR: %f, %f, %f\n", m_or.at<float>(0), m_or.at<float>(1), m_or.at<float>(2));
 	/**/
 
 
 
 	/* elevation map */
-	update_elevation_map(m->altitude);
+	//update_elevation_map(m->altitude);
 
 
 
 	/* state */
 	//randn( processNoise, Scalar(0), Scalar::all(sqrt(KF.processNoiseCov.at<float>(0, 0))));
 	//state = KF.statePost /* + processNoise*/;
-
-	//dumpMatrix(KF->statePost);
 
 	if (counter++ % 1000 == 0)
 	{
@@ -157,7 +160,7 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 		//printf("state: [%f, %f, %f]\n", state->at<float>(0), state->at<float>(1), state->at<float>(2));
 		//printf("gt:    [%f, %f, %f]\n", m->gt_loc[0] * 1000.f, m->gt_loc[1] * 1000.f, m->gt_loc[2] * 1000.f);
-		printf("gt:    [%f, %f, %f]\n", m_or.at<float>(0), m_or.at<float>(1), m_or.at<float>(2));
+		//printf("gt:    [%f, %f, %f]\n", m_or.at<float>(0), m_or.at<float>(1), m_or.at<float>(2));
 	}
 }
 

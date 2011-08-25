@@ -22,13 +22,14 @@ int main(int argc, char *argv[])
 	int nr_bots = 0;
 	bot_ardrone *bots[2];
 
-	/* bot 1: REAL ARDRONE */
+	/* bot 1: USARSim ARDRONE */
+	// deployment location set in bot_ardrone_usarsim.cpp (top)
 	bot_ardrone ardrone(BOT_ARDRONE_INTERFACE_USARSIM);
 	bots[nr_bots++] = &ardrone;
 	//ardrone.set_record();
 
 
-	/* bot 2: USARSim ARDRONE */
+	/* bot 2: REAL ARDRONE */
 	//bot_ardrone ardrone2(BOT_ARDRONE_INTERFACE_ARDRONELIB);
 	//bots[nr_bots++] = &ardrone2;
 	//ardrone2.set_record();
@@ -38,6 +39,6 @@ int main(int argc, char *argv[])
 
 
 
-	Sleep(99999);
+	Sleep(999999);
 	return 0;
 }

@@ -46,7 +46,7 @@ terrain3d::terrain3d(short* map, UINT w, UINT h, byte* texture, float* arrow)
     }
 
     // Initialize the Framework
-    if ( !pFramework->Initialize( "Camera Movement", hInstance, 640, 480, TRUE ) )
+    if ( !pFramework->Initialize( "3D Terrain Map", hInstance, 640, 480, TRUE ) )
     {
         return;
     }
