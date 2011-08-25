@@ -16,12 +16,11 @@ public:
 	slam_module_frame(slam *controller);
 	~slam_module_frame(void);
 	void process(bot_ardrone_frame *f);
-	void process(IplImage *i);
 	int find_robust_matches(vector<Point2f>& p1, vector<Point2f>& p2, vector<DMatch>& matches, vector<short>& mask, int max);
 	int find_object_position(Mat& cam_pos, Mat& cam_or, vector<DMatch>& matches, vector<short>& mask);
-	int find_features(IplImage *img, vector<KeyPoint> &v);
+	int find_features(Mat& frame, vector<KeyPoint> &v);
 
-	void imagepoints_to_world3d(vector<Point2f>& src, vector<Point3f>& dst, bool swap_xy = false);
+	void imagepoints_to_local3d(vector<Point2f>& src, vector<Point3f>& dst);
 	
 	void get_state(Mat& pos, Mat& or);
 	void get_localcam(Mat& pos, Mat& or);
@@ -37,6 +36,8 @@ public:
 
 	void calculate_frame_mask(int width, int height);
 	void add_noise(IplImage *img);
+
+	int frame_counter; // for testing public
 
 
 private:
@@ -61,15 +62,14 @@ private:
 	DescriptorExtractor *de;
 	BruteForceMatcher<L2<float>> dm;
 
-	int frame_counter;
-
 	Mat camera_matrix;
 	Mat camera_matrix_inv;
 
 	Mat world_plane;
 	Mat world_plane_normal;
 
-	//Mat frame_mask;
+	Mat T;
+	Mat originH;
 
 	/* KF */
 	KalmanFilter *KF;

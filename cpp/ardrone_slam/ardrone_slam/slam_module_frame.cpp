@@ -16,10 +16,14 @@ slam_module_frame::slam_module_frame(slam *controller):
 	world_plane(3, 1, CV_32F),
 	world_plane_normal(3, 1, CV_32F),
 
+	T(4, 4, CV_32F),
+	originH(4, 1, CV_32F),
+
 	frame(BOT_ARDRONE_CAM_RESOLUTION_H, BOT_ARDRONE_CAM_RESOLUTION_W, CV_8UC3, NULL, 0), // do not want to allocate data here. HOW?
 	frame_rgba(BOT_ARDRONE_CAM_RESOLUTION_H, BOT_ARDRONE_CAM_RESOLUTION_W, CV_8UC4),
 	frame_gray(BOT_ARDRONE_CAM_RESOLUTION_H, BOT_ARDRONE_CAM_RESOLUTION_W, CV_8U),
 
+	measurement(3, 1, CV_32F),
 	measurementMatrix(3, 12, CV_32F),
 	measurementNoiseCov(3, 3, CV_32F)
 {
@@ -48,10 +52,17 @@ slam_module_frame::slam_module_frame(slam *controller):
 	/**/
 
 
+	T = 0.0f;
+	T.at<float>(3, 3) = 1.0f; // stays always 1
+
+	originH = 0.0f;
+	originH.at<float>(3) = 1.0f;
+
+
 	frame = NULL;
 	prev_frame_descriptors = NULL;
-
 	frame_counter = 0;
+
 
 
 	/* KF */
@@ -62,11 +73,18 @@ slam_module_frame::slam_module_frame(slam *controller):
 	measurementMatrix = 0.0f;
 	for(int i = 0; i < 3; i++)
 	{
-		measurementMatrix.at<float>(i, i) = 1.0f; // measured a
+		measurementMatrix.at<float>(i, i) = 1.0f; // measured pos
 	}
 
 	measurementNoiseCov = 0.0f;
-	setIdentity(measurementNoiseCov, Scalar::all(1e-2));
+	//setIdentity(measurementNoiseCov, Scalar::all(1e-5));
+	float MNC[12] = {
+		3.0f, 3.0f, 20.0f,
+		0.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.0f
+	};
+	MatSetDiag(measurementNoiseCov, MNC);
 }
 
 
@@ -74,8 +92,14 @@ slam_module_frame::~slam_module_frame(void)
 {
 }
 
+
 void slam_module_frame::process(bot_ardrone_frame *f)
 {
+	/* NOTE: the world (position) is solvePnP's object position
+	 * The position of the AR.Drone is retrieved by inverting the camera -> object transformation
+	 * that is returned by solvePnP
+	 */
+
 	// scale not kwown: no use of processing the frame
 	if (!controller->KF_running)
 		return;
@@ -94,47 +118,38 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 	frame.data = (uchar*) &f->data[4];
 
 
-
-	// frames from the real ardrone are received in RGB order instead of BGR
-	/*
+	// frames from the real ardrone are received in RGB order instead of BGR. MOVE TO ARDRONELIB INTERFACE?
 	if (!f->usarsim)
 		cvtColor( frame, frame, CV_RGB2BGR );
-	*/
 
 
 	// convert to gray
-	//cvtColor(frame, gray, CV_BGR2GRAY);
+	cvtColor(frame, frame_gray, CV_BGR2GRAY);
 
 
 
 	/* store current estimated position before computing: otherwise timestamp of frame and position do not match! */
-	/*
 	Mat obj_pos(3, 1, CV_64F);
 	Mat obj_or(3, 1, CV_64F);
 	get_objectpos(obj_pos, obj_or);
-	*/
 
 
 	/* find features */
-	/*
 	vector<cv::KeyPoint> keypoints;
-	int features_found = find_features(gray, keypoints);
+	int features_found = find_features(frame_gray, keypoints);
 
 	current_frame_ip.clear();
 	KeyPoint::convert(keypoints, current_frame_ip);
-	*/
+
 
 	/* calculate descriptors (on greyscale image) */
-	/*
 	Mat descriptors;
-    de->compute(gray, keypoints, descriptors);
-	*/
+    de->compute(frame_gray, keypoints, descriptors);
 
 
 	/* match with previous frame */
 	if (frame_counter > 0)
 	{
-		/*
 		if (keypoints.size() < 20)
 		{
 			printf("Not enough features found: dropping frame\n");
@@ -149,11 +164,9 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 			printf("Not enough features matched (%i): dropping frame\n", matches.size());
 			return;
 		}
-		*/
 
 
 		/* find robust matched descriptors (RANSAC) */
-		/*
 		vector<short> mask;
 		int nr_inliers = find_robust_matches(current_frame_ip, prev_frame_ip, matches, mask, 10);
 
@@ -162,13 +175,11 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 			printf("Not enough inliers found (%i): dropping frame\n", nr_inliers);
 			return;
 		}
-		*/
 
 
 		/* retrieve camera motion from two frames */
-		/*
 		find_object_position(obj_pos, obj_or, matches, mask);
-		*/
+		//printf("local pos: %f, %f, %f\n", obj_pos.at<double>(0), obj_pos.at<double>(1), obj_pos.at<double>(2));
 
 		/*
 		int nr_inliers = find_object_position(obj_pos, obj_or, matches, mask);
@@ -180,36 +191,57 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		*/
 
 
-		/*
 		Mat new_pos(3, 1, CV_32F);
 		Mat new_or(3, 1, CV_32F);
 		object_to_worldpos(obj_pos, obj_or, new_pos, new_or);
 
 		state->at<float>(0) = new_pos.at<float>(0);
 		state->at<float>(1) = new_pos.at<float>(1);
-		//state->at<float>(2) = new_pos.at<float>(2);
+		state->at<float>(2) = new_pos.at<float>(2);
 
-		//state->at<float>(9) = new_or.at<float>(0);
-		//state->at<float>(10) = new_or.at<float>(1);
+		state->at<float>(9) = new_or.at<float>(0);
+		state->at<float>(10) = new_or.at<float>(1);
 		state->at<float>(11) = new_or.at<float>(2);
 
-		printf("Vstate:[%f, %f, %f]\n", state->at<float>(0), state->at<float>(1), state->at<float>(2));
+		/* switch KF matrices */
+		/*
+		KF->measurementMatrix = measurementMatrix;
+		KF->measurementNoiseCov = measurementNoiseCov;
 		*/
+
+
+		/* predict */
+		//Mat prediction = KF->predict();
+
+
+		/* correct */
+		/*
+		measurement.at<float>(0) = new_pos.at<float>(0);
+		measurement.at<float>(1) = new_pos.at<float>(1);
+		measurement.at<float>(2) = new_pos.at<float>(2);
+
+		KF->correct(measurement);
+
+		dumpMatrix(KF->statePost);
+		*/
+
+		printf("Vstate:[%f, %f, %f]\n", state->at<float>(0), state->at<float>(1), state->at<float>(2));
+		printf("Vstate:[%f, %f, %f]\n", state->at<float>(9), state->at<float>(10), state->at<float>(11));
+		printf("\n");
 	}
 
 
 
 	/* store current frame as previous frame */
-	/*
-	prev_frame_descriptors = descriptors; // copy -> switch to pointer?
-	prev_frame_ip = current_frame_ip; // copy -> switch to pointer?
-	imagepoints_to_world3d(current_frame_ip, prev_frame_wc);
-	*/
+	prev_frame_descriptors = descriptors;
+	prev_frame_ip = current_frame_ip;
+	imagepoints_to_local3d(current_frame_ip, prev_frame_wc);
+
 
 	/* add frame to canvas */
 	cvtColor(frame, frame_rgba, CV_BGR2BGRA); // convert to RGBA because Direct3D wants a 4 channel array
 	vector<Point3f> image_corners_wc;
-	imagepoints_to_world3d(image_corners, image_corners_wc, true); // swap x and y
+	imagepoints_to_local3d(image_corners, image_corners_wc);
 	controller->visual_map.update(frame_rgba, image_corners, image_corners_wc);
 
 	frame_counter++;
@@ -288,23 +320,14 @@ int slam_module_frame::find_object_position(Mat& cam_pos, Mat& cam_or, vector<DM
 }
 
 
-void slam_module_frame::imagepoints_to_world3d(vector<Point2f>& src, vector<Point3f>& dst, bool swap_xy)
+void slam_module_frame::imagepoints_to_local3d(vector<Point2f>& src, vector<Point3f>& dst)
 {
 	Mat cam_pos(3, 1, CV_32F);
 	Mat cam_or(3, 1, CV_32F);
 	Mat cam_rot(3, 3, CV_32F);
 
-	Mat rot(3, 3, CV_32F); // tmp
-
 	get_localcam(cam_pos, cam_or);
 	cam_pos.at<float>(2) *= -1.0f;
-
-	if (swap_xy)
-	{
-		float tmp = cam_or.at<float>(0);
-		cam_or.at<float>(0) = cam_or.at<float>(1);
-		cam_or.at<float>(1) = tmp;
-	}
 
 	cv::RotationMatrix3D(cam_or, cam_rot);
 
@@ -388,28 +411,32 @@ void slam_module_frame::get_objectpos(Mat& pos, Mat& or)
 /** HELPERS **/
 void slam_module_frame::object_to_localcam(Mat& pos, Mat& or)
 {
-	Mat rot(3, 3, CV_32F);
-	cv::RotationMatrix3D(or, rot);
-	rot = rot.t();
+	TransformationMatrix(pos, or, T);
+	Mat T_inv = T.inv();
 
-	pos.at<float>(0) *= -1.0f;
-	pos.at<float>(1) *= -1.0f;
-	pos = rot * pos;
+	Mat posH = T_inv * originH;
 
+	pos.at<float>(0) = posH.at<float>(0);
+	pos.at<float>(1) = posH.at<float>(1);
+	pos.at<float>(2) = -posH.at<float>(2);
+
+	Mat rot(T_inv, Rect(0, 0, 3, 3));
 	Rodrigues(rot, or); // rotation matrix to rotation vector
 }
 
 
 void slam_module_frame::localcam_to_object(Mat& pos, Mat& or)
 {
-	Mat rot(3, 3, CV_32F);
-	cv::RotationMatrix3D(or, rot);
-	rot = rot.t();
+	TransformationMatrix(pos, or, T);
+	Mat T_inv = T.inv();
 
-	pos = rot * pos;
-	pos.at<float>(0) *= -1.0f;
-	pos.at<float>(1) *= -1.0f;
+	Mat posH = T_inv * originH;
 
+	pos.at<float>(0) = posH.at<float>(0);
+	pos.at<float>(1) = posH.at<float>(1);
+	pos.at<float>(2) = -posH.at<float>(2);
+
+	Mat rot(T_inv, Rect(0, 0, 3, 3));
 	Rodrigues(rot, or); // rotation matrix to rotation vector
 }
 
@@ -425,7 +452,7 @@ void slam_module_frame::localcam_to_world(Mat& pos, Mat& or)
 	pos.at<float>(2) *= -1.0f;
 
 	// orientation
-	//or = rot * or;
+	or = rot * or;
 }
 
 
@@ -440,34 +467,13 @@ void slam_module_frame::world_to_localcam(Mat& pos, Mat& or)
 	pos.at<float>(2) *= -1.0f;
 
 	// orientation
-	//or = rot * or;
+	or = rot * or;
 }
 /***/
 
 
 
-void slam_module_frame::process(IplImage *i)
-{
-	bot_ardrone_frame *f1 = new bot_ardrone_frame;
-
-	int datasize = i->width * i->height * 3;
-	char data[999999];
-
-	unsigned short w, h;
-	w = htons(i->width);
-	h = htons(i->height);
-
-	memcpy(&data[0], &w, 2);
-	memcpy(&data[2], &h, 2);
-	memcpy(&data[4], i->imageData, datasize);
-
-	f1->data = data;
-
-	process(f1);
-}
-
-
-int slam_module_frame::find_features(IplImage *img, vector<cv::KeyPoint> &v)
+int slam_module_frame::find_features(Mat& frame, vector<cv::KeyPoint> &v)
 {
 	//if (SLAM_USE_OBSTACLE_MASK)
 	//	calculate_frame_mask(img->width, img->height);
@@ -481,7 +487,7 @@ int slam_module_frame::find_features(IplImage *img, vector<cv::KeyPoint> &v)
 	//fd->detect(img, v);
 
 	SURF surf_extractor(SLAM_SURF_HESSIANTHRESHOLD);
-	surf_extractor(img, Mat(), v);
+	surf_extractor(frame, Mat(), v);
 
 	return v.size();
 }

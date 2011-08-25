@@ -1,6 +1,7 @@
 #include "global.h"
 #include "slam.h"
 #include "bot_ardrone.h"
+#include "opencv_helpers.h"
 
 #include <cv.hpp>
 
@@ -16,23 +17,6 @@ slam::slam():
 	m_frame = NULL;
 	m_sensor = NULL;
 	m_ui = NULL;
-
-	/*
-	if (!running)
-		run();
-
-    IplImage* img1 = cvLoadImage("puzzel1.jpg");
-    IplImage* img2 = cvLoadImage("puzzel2.jpg");
-	IplImage* img3 = cvLoadImage("puzzel5.jpg");
-
-	process_frame(img1);
-	cvReleaseImage(&img1);
-	process_frame(img2);
-	cvReleaseImage(&img2);
-	process_frame(img3);
-	*/
-
-	//run();
 }
 
 
@@ -66,12 +50,34 @@ void slam::init_kf()
 	// F vector
 	setIdentity(KF.transitionMatrix); // completed (T added) when measurement received and T is known
 
-	setIdentity(KF.processNoiseCov, Scalar::all(1e-5));
-	setIdentity(KF.errorCovPost, Scalar::all(1));
 
-	// random initial state
-	//randn(KF.statePost, Scalar::all(0), Scalar::all(0.1));
-	KF.statePost = 0.0f;
+	//setIdentity(KF.processNoiseCov, Scalar::all(1e-5));
+	float PNC[12] = {
+		10.0f, 10.0f, 10.0f,
+		10.0f, 10.0f, 10.0f,
+		3.0f, 3.0f, 3.0f,
+		300.0f, 300.0f, 300.0f
+	};
+	MatSetDiag(KF.processNoiseCov, PNC);
+
+
+	//setIdentity(KF.errorCovPost, Scalar::all(1));
+	float ECP[12] = {
+		5.0f, 5.0f, 5.0f,
+		2.5f, 2.5f, 2.5f,
+		0.01f, 0.01f, 0.01f,
+		500.0f, 500.0f, 500.0f
+	};
+	MatSetDiag(KF.errorCovPost, ECP);
+
+
+	// random initial state (p(3), v(3), a(3), q(3))
+	//double mean[12] = { 0.0 };
+	//Mat MatMean(12, 1, CV_64F, mean);
+	//Mat MatCov(12, 1, CV_64F, cov);
+	//randn(KF.statePost, Scalar(0.0) /*MatMean*/, MatCov);
+	//dumpMatrix(KF.statePost);
+	// KF.statePost = 0.0f;
 }
 
 
@@ -89,6 +95,43 @@ void slam::add_input_frame(bot_ardrone_frame *f)
 		queue_frame.push(f);
 	else if(!SLAM_USE_QUEUE)
 		m_frame->process(f);
+
+
+	/*
+	if (m_frame->frame_counter == 0)
+	{
+		char tmp[30];
+
+		for (int i = 1; i < 60; i++)
+		{
+			if (i >= 10)
+				sprintf_s(tmp, 30, "dataset/001/0000%i.raw\0", i);
+			else
+				sprintf_s(tmp, 30, "dataset/001/00000%i.raw\0", i);
+
+			printf("%s\n", tmp);
+
+			add_input_framefile(tmp);
+		}
+	}
+	*/
+}
+
+
+void slam::add_input_framefile(char *filename)
+{
+	bot_ardrone_frame *f = new bot_ardrone_frame;
+	f->usarsim = true;
+	f->data_size = 76036;
+
+	ifstream frame_in(filename, ios::in | ios::binary);
+
+	// data buffer
+	frame_in.read(f->data, f->data_size);
+	frame_in.close();
+
+	m_frame->process(f);
+	Sleep(2000);
 }
 
 
@@ -187,6 +230,8 @@ static DWORD WINAPI start_ui(void* Param)
 		processor->update();
 		Sleep(35);
 	}
+
+	processor->display_canvas();
 
 	return 1;
 }

@@ -13,6 +13,7 @@ public:
 	slam_module_ui(slam *controller);
 	~slam_module_ui(void);
 	void update();
+	void display_canvas();
 
 private:
 	void init();

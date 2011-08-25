@@ -27,6 +27,7 @@ public:
 	void slam::run();
 
 	void add_input_frame(bot_ardrone_frame *f);
+	void add_input_framefile(char *filename);
 	void add_input_sensor(bot_ardrone_measurement *m);
 
 	void get_world_position(float *pos);
