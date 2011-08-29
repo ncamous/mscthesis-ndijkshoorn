@@ -50,7 +50,7 @@ BOOL CTerrain::Initialize( LPDIRECT3DDEVICE9 pDevice, short* map, UINT w, UINT h
     m_ib.SetData( m_numIndices, pIndices, 0 );
     m_vb.SetIndexBuffer( &m_ib );
 
-	if ( FAILED( D3DXCreateTexture( pDevice, 4096, 4096, 0, D3DUSAGE_DYNAMIC, D3DFMT_R8G8B8, D3DPOOL_DEFAULT, &m_pTexture ) ) )
+	if ( FAILED( D3DXCreateTexture( pDevice, 4096, 4096, 1, D3DUSAGE_DYNAMIC /*| D3DUSAGE_WRITEONLY*/, D3DFMT_R8G8B8, D3DPOOL_DEFAULT, &m_pTexture ) ) )
     {
         SHOWERROR( "Unable to create terrain texture.", __FILE__, __LINE__ );
         return FALSE;

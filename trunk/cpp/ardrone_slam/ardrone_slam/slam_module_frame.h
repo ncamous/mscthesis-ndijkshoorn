@@ -19,6 +19,7 @@ public:
 	int find_robust_matches(vector<Point2f>& p1, vector<Point2f>& p2, vector<DMatch>& matches, vector<short>& mask, int max);
 	int find_object_position(Mat& cam_pos, Mat& cam_or, vector<DMatch>& matches, vector<short>& mask);
 	int find_features(Mat& frame, vector<KeyPoint> &v);
+	void calculateMeasurement();
 
 	void imagepoints_to_local3d(vector<Point2f>& src, vector<Point3f>& dst);
 	
@@ -74,9 +75,13 @@ private:
 	/* KF */
 	KalmanFilter *KF;
 	Mat *state;
+	Mat prev_state;
 
 	Mat measurement;
 	Mat measurementMatrix;
 	Mat measurementNoiseCov;
+
+	double difftime;
+	double prev_update;
 };
 

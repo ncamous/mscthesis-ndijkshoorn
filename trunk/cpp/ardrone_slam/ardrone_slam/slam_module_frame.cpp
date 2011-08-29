@@ -23,9 +23,10 @@ slam_module_frame::slam_module_frame(slam *controller):
 	frame_rgba(BOT_ARDRONE_CAM_RESOLUTION_H, BOT_ARDRONE_CAM_RESOLUTION_W, CV_8UC4),
 	frame_gray(BOT_ARDRONE_CAM_RESOLUTION_H, BOT_ARDRONE_CAM_RESOLUTION_W, CV_8U),
 
-	measurement(3, 1, CV_32F),
-	measurementMatrix(3, 12, CV_32F),
-	measurementNoiseCov(3, 3, CV_32F)
+	measurement(9, 1, CV_32F),
+	measurementMatrix(9, 12, CV_32F),
+	measurementNoiseCov(9, 9, CV_32F),
+	prev_state(12, 1, CV_32F)
 {
 	this->controller = controller;
 
@@ -71,18 +72,17 @@ slam_module_frame::slam_module_frame(slam *controller):
 
 	// H vector
 	measurementMatrix = 0.0f;
-	for(int i = 0; i < 3; i++)
+	for(int i = 0; i < 9; i++)
 	{
-		measurementMatrix.at<float>(i, i) = 1.0f; // measured pos
+		measurementMatrix.at<float>(i, i) = 1.0f; // measured pos, velocity and acceleration
 	}
 
 	measurementNoiseCov = 0.0f;
 	//setIdentity(measurementNoiseCov, Scalar::all(1e-5));
 	float MNC[12] = {
-		3.0f, 3.0f, 20.0f,
-		0.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 0.0f
+		3.0f, 3.0f, 3.0f, // pos
+		5.0f, 5.0f, 5.0f, // vel
+		20.0f, 20.0f, 20.0f // accel
 	};
 	MatSetDiag(measurementNoiseCov, MNC);
 }
@@ -195,6 +195,13 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		Mat new_or(3, 1, CV_32F);
 		object_to_worldpos(obj_pos, obj_or, new_pos, new_or);
 
+
+		/* KF measurement */
+		memcpy_s(measurement.data, 12, new_pos.data, 12); // pos: this is the fastest method
+		difftime = f->time - prev_update; // time between consecutive frames
+		calculateMeasurement(); // vel & accel: calculated from new pos and previous state
+
+		/*
 		state->at<float>(0) = new_pos.at<float>(0);
 		state->at<float>(1) = new_pos.at<float>(1);
 		state->at<float>(2) = new_pos.at<float>(2);
@@ -202,32 +209,43 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		state->at<float>(9) = new_or.at<float>(0);
 		state->at<float>(10) = new_or.at<float>(1);
 		state->at<float>(11) = new_or.at<float>(2);
+		*/
+
+
+		/* lock KF */
+		WaitForSingleObject(controller->KFSemaphore, 0L);
+
 
 		/* switch KF matrices */
-		/*
-		KF->measurementMatrix = measurementMatrix;
-		KF->measurementNoiseCov = measurementNoiseCov;
-		*/
+		KF->measurementMatrix	= measurementMatrix;
+		KF->measurementNoiseCov	= measurementNoiseCov;
+
+
+		/* update transition matrix */
+		//difftime = f->time - prev_update;
+		difftime = 0.001f;
+		controller->update_transition_matrix((float) difftime);
 
 
 		/* predict */
-		//Mat prediction = KF->predict();
+		Mat prediction = KF->predict();
 
 
 		/* correct */
-		/*
-		measurement.at<float>(0) = new_pos.at<float>(0);
-		measurement.at<float>(1) = new_pos.at<float>(1);
-		measurement.at<float>(2) = new_pos.at<float>(2);
-
 		KF->correct(measurement);
+		//dumpMatrix(measurement);
 
-		dumpMatrix(KF->statePost);
-		*/
 
-		printf("Vstate:[%f, %f, %f]\n", state->at<float>(0), state->at<float>(1), state->at<float>(2));
-		printf("Vstate:[%f, %f, %f]\n", state->at<float>(9), state->at<float>(10), state->at<float>(11));
-		printf("\n");
+		/* release KF */
+		controller->KF_prev_update = f->time;
+		ReleaseSemaphore(controller->KFSemaphore, 1, NULL);
+
+		
+		//dumpMatrix(KF->statePost);
+
+
+		//printf("Vstate:[%f, %f, %f]\n", state->at<float>(0), state->at<float>(1), state->at<float>(2));
+		//printf("Vstate:[%f, %f, %f]\n", state->at<float>(9), state->at<float>(10), state->at<float>(11));
 	}
 
 
@@ -236,6 +254,11 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 	prev_frame_descriptors = descriptors;
 	prev_frame_ip = current_frame_ip;
 	imagepoints_to_local3d(current_frame_ip, prev_frame_wc);
+
+
+	/* store current state (position) as previous state */
+	prev_update = f->time;
+	memcpy_s(prev_state.data, 48, state->data, 48); // this is the fastest method
 
 
 	/* add frame to canvas */
@@ -317,6 +340,34 @@ int slam_module_frame::find_object_position(Mat& cam_pos, Mat& cam_or, vector<DM
 	//solvePnPRansac(points3d, imagePoints, camera_matrix, dist_coef, cam_or, cam_pos, true, 100, 3.0, 10 /* TODO */, inliers);
 
 	return inliers.size();
+}
+
+
+void slam_module_frame::calculateMeasurement()
+{
+	float dt = (float) difftime;
+
+	/*
+	printf("prev pos: %f, %f, %f,\n", prev_state.at<float>(0), prev_state.at<float>(1), prev_state.at<float>(2));
+	printf("new pos: %f, %f, %f,\n", measurement.at<float>(0), measurement.at<float>(1), measurement.at<float>(2));
+	printf("prev vel: %f, %f, %f,\n", prev_state.at<float>(3), prev_state.at<float>(4), prev_state.at<float>(5));
+	printf("DF: %f\n", dt);
+	*/
+
+	// vel
+	measurement.at<float>(3) = (measurement.at<float>(0) - prev_state.at<float>(0)) / dt;
+	measurement.at<float>(4) = (measurement.at<float>(1) - prev_state.at<float>(1)) / dt;
+	measurement.at<float>(5) = (measurement.at<float>(2) - prev_state.at<float>(2)) / dt;
+
+	// accel
+	measurement.at<float>(6) = (measurement.at<float>(3) - prev_state.at<float>(3)) / dt;
+	measurement.at<float>(7) = (measurement.at<float>(4) - prev_state.at<float>(4)) / dt;
+	measurement.at<float>(8) = (measurement.at<float>(5) - prev_state.at<float>(5)) / dt;
+
+	/*
+	dumpMatrix(measurement);
+	printf("\n\n\n");
+	*/
 }
 
 

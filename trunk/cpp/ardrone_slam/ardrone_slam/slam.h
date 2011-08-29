@@ -29,8 +29,8 @@ public:
 	void add_input_frame(bot_ardrone_frame *f);
 	void add_input_framefile(char *filename);
 	void add_input_sensor(bot_ardrone_measurement *m);
-
 	void get_world_position(float *pos);
+	void update_transition_matrix(float difftime);
 
 
 	/* threads */
@@ -50,7 +50,9 @@ public:
 
 	/* Kalman filter */
 	cv::KalmanFilter KF;
+	double KF_prev_update;
 	bool KF_running;
+	HANDLE KFSemaphore; // resource sharing
 	/* state vector:
      * p(3), v(3), a(3), q(3)
 	 */

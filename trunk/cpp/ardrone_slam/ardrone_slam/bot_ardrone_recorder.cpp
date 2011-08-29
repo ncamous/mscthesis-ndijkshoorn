@@ -133,28 +133,30 @@ void bot_ardrone_recorder::playback(char *dataset)
 		{
 			case BOT_EVENT_MEASUREMENT:
 			{
-				bot_ardrone_measurement m;
-				doc["t"] >> m.time;
-				doc["alt"] >> m.altitude;
-				doc["or"] >> m.or;
-				doc["accel"] >> m.accel;
-				doc["vel"] >> m.vel;
+				bot_ardrone_measurement *m = new bot_ardrone_measurement;
+				//bot_ardrone_measurement m;
+				doc["t"] >> m->time;
+				doc["alt"] >> m->altitude;
+				doc["or"] >> m->or;
+				doc["accel"] >> m->accel;
+				doc["vel"] >> m->vel;
 
 				// usarsim
 				if (doc.FindValue("gt_loc"))
-					doc["gt_loc"] >> m.gt_loc;
+					doc["gt_loc"] >> m->gt_loc;
 
-				bot->measurement_received(&m);
+				bot->measurement_received(m);
 				break;
 			}
 		
 			case BOT_EVENT_CONTROL:
 			{
-				bot_ardrone_control c;
-				doc["t"] >> c.time;
-				doc["vel"] >> c.velocity;
+				//bot_ardrone_control c;
+				bot_ardrone_control *c = &bot->control;
+				doc["t"] >> c->time;
+				doc["vel"] >> c->velocity;
 
-				bot->control_update(&c);
+				bot->control_update(c);
 				break;
 			}
 
@@ -162,20 +164,21 @@ void bot_ardrone_recorder::playback(char *dataset)
 			{
 				char filename[30];
 				string tmpstring;
-				bot_ardrone_frame f;
-				doc["t"] >> f.time;
-				doc["s"] >> f.data_size;
+				//bot_ardrone_frame f;
+				bot_ardrone_frame *f = new bot_ardrone_frame;
+				doc["t"] >> f->time;
+				doc["s"] >> f->data_size;
 				doc["f"] >> tmpstring;
-				strcpy_s(f.filename, 30, tmpstring.c_str());
+				strcpy_s(f->filename, 30, tmpstring.c_str());
 
-				sprintf_s(filename, 30, "%s/%s", dataset_dir, f.filename);
+				sprintf_s(filename, 30, "%s/%s", dataset_dir, f->filename);
 				ifstream frame_in(filename, ios::in | ios::binary);
 
 				// data buffer
-				frame_in.read(f.data, f.data_size);
+				frame_in.read(f->data, f->data_size);
 				frame_in.close();
 
-				bot->frame_received(&f);
+				bot->frame_received(f);
 
 				break;
 			}
