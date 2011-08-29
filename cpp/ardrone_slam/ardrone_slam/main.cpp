@@ -26,6 +26,8 @@ int main(int argc, char *argv[])
 	// deployment location set in bot_ardrone_usarsim.cpp (top)
 	bot_ardrone ardrone(BOT_ARDRONE_INTERFACE_USARSIM);
 	bots[nr_bots++] = &ardrone;
+	//ardrone.set_slam(true);
+	//ardrone.set_playback("001");
 	//ardrone.set_record();
 
 

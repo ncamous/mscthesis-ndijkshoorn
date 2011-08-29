@@ -8,8 +8,9 @@ using namespace cv;
 
 
 slam_module_sensor::slam_module_sensor(slam *controller):
-	measurementMatrix(3, 12, CV_32F),
-	measurementNoiseCov(3, 3, CV_32F)
+	measurement(9, 1, CV_32F),
+	measurementMatrix(9, 12, CV_32F),
+	measurementNoiseCov(9, 9, CV_32F)
 {
 	this->controller = controller;
 
@@ -27,7 +28,6 @@ slam_module_sensor::slam_module_sensor(slam *controller):
 	for(int i = 0; i < 3; i++)
 	{
 		measurementMatrix.at<float>(i, 6+i) = 1.0f; // measured a
-		//KF.measurementMatrix.at<float>(3+i, 9+i) = 1.0f; // measured q (attitude/orientation)
 	}
 
 	measurementNoiseCov = 0.0f;
@@ -53,14 +53,10 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	 * Used to calculate the transition matrix.
 	 * I assume the vehicle is hovering when starting SLAM. So the first couple measurements have a small impact.
 	 */
-	double difftime;
-
 	if (counter == 0)
 		difftime = 0.0001; // it may take some time between class initialization and processing the first measurement.
 	else
-		difftime = m->time - prev_update;
-
-	prev_update = m->time;
+		difftime = m->time - controller->KF_prev_update;
 
 
 
@@ -74,67 +70,59 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	//return;
 
 
-
-	/* switch KF matrices */
-	KF->measurementMatrix = measurementMatrix;
-	KF->measurementNoiseCov = measurementNoiseCov;
-
-
 	/* measurement */
 	Mat m_or = (Mat_<float>(3,1) << m->or[0] * MD_TO_RAD, m->or[1] * MD_TO_RAD, m->or[2] * MD_TO_RAD);
 	Mat m_accel = (Mat_<float>(3,1) << m->accel[0], m->accel[1], m->accel[2]);
 
 
-
-	/* update transition matrix */
-	for (int i = 0; i < 3; i++)
-	{
-		// position (p)
-		KF->transitionMatrix.at<float>(i, 3+i) = float(difftime);
-		KF->transitionMatrix.at<float>(i, 6+i) = float(0.5 * difftime*difftime);
-		// velocity (v)
-		KF->transitionMatrix.at<float>(3+i, 6+i) = float(difftime);
-	}
-
-
-	/* predict */
-	//Mat prediction = KF->predict();
-
-
-	/* correct */
-	measurement = m_accel;
-
-
 	// transform angular acceleration to world accelerations
 	Mat Rw(3, 3, CV_32F);
 	cv::RotationMatrix3D(m_or, Rw);
-	measurement = Rw * measurement;
+	m_accel = Rw * m_accel;
 
 
-	/* compensate for gravity */
+	// compensate for gravity
 	if (!m->usarsim)
-		measurement.at<float>(2) += 1000.0f;
+		m_accel.at<float>(2) += 1000.0f;
+
+	// convert MG to MS2
+	m_accel = m_accel * MG_TO_MM2;
+
+	memcpy_s(measurement.data, 12, m_accel.data, 12); // accel: this is the fastest method
 
 
-	/* convert MG to MS2 */
-	measurement = measurement * MG_TO_MM2;
 
-	/*
-	dumpMatrix(measurement);
-	printf("(%f)\n", m->accel[2]);
-	printf("\n\n");
-	return;
-	*/
+	/* lock KF */
+	WaitForSingleObject(controller->KFSemaphore, 0L);
 
-	//KF->correct(measurement);
+
+	/* switch KF matrices */
+	KF->measurementMatrix	= measurementMatrix;
+	KF->measurementNoiseCov	= measurementNoiseCov;
+
+
+	/* update transition matrix */
+	controller->update_transition_matrix((float) difftime);
+
+
+	/* predict */
+	Mat prediction = KF->predict();
+
+
+	/* correct */
+	KF->correct(measurement);
 
 
 	/* directly inject attitude into state vector */
-	/*
 	KF->statePost.at<float>(9) = m_or.at<float>(0);
 	KF->statePost.at<float>(10) = m_or.at<float>(1);
 	KF->statePost.at<float>(11) = m_or.at<float>(2);
-	*/
+
+
+	/* release KF */
+	controller->KF_prev_update = m->time;
+	ReleaseSemaphore(controller->KFSemaphore, 1, NULL);
+
 
 	//printf("GT OR: %f, %f, %f\n", m_or.at<float>(0), m_or.at<float>(1), m_or.at<float>(2));
 	/**/
@@ -144,11 +132,6 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	/* elevation map */
 	//update_elevation_map(m->altitude);
 
-
-
-	/* state */
-	//randn( processNoise, Scalar(0), Scalar::all(sqrt(KF.processNoiseCov.at<float>(0, 0))));
-	//state = KF.statePost /* + processNoise*/;
 
 	if (counter++ % 1000 == 0)
 	{

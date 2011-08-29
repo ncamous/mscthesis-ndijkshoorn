@@ -9,7 +9,7 @@ using namespace cv;
 
 
 slam::slam():
-	KF(12, 3, 0)
+	KF(12, 9, 0)
 {
 	running = false;
 	KF_running = false;
@@ -53,20 +53,20 @@ void slam::init_kf()
 
 	//setIdentity(KF.processNoiseCov, Scalar::all(1e-5));
 	float PNC[12] = {
-		10.0f, 10.0f, 10.0f,
+		30.0f, 30.0f, 30.0f,
 		10.0f, 10.0f, 10.0f,
 		3.0f, 3.0f, 3.0f,
-		300.0f, 300.0f, 300.0f
+		1.5f, 1.5f, 1.5f
 	};
 	MatSetDiag(KF.processNoiseCov, PNC);
 
 
 	//setIdentity(KF.errorCovPost, Scalar::all(1));
 	float ECP[12] = {
-		5.0f, 5.0f, 5.0f,
-		2.5f, 2.5f, 2.5f,
-		0.01f, 0.01f, 0.01f,
-		500.0f, 500.0f, 500.0f
+		30.0f, 30.0f, 30.0f,
+		10.0f, 10.0f, 10.0f,
+		3.0f, 3.0f, 3.0f,
+		1.5f, 1.5f, 1.5f
 	};
 	MatSetDiag(KF.errorCovPost, ECP);
 
@@ -78,6 +78,19 @@ void slam::init_kf()
 	//randn(KF.statePost, Scalar(0.0) /*MatMean*/, MatCov);
 	//dumpMatrix(KF.statePost);
 	// KF.statePost = 0.0f;
+}
+
+
+void slam::update_transition_matrix(float difftime)
+{
+	for (int i = 0; i < 3; i++)
+	{
+		// position (p)
+		KF.transitionMatrix.at<float>(i, 3+i) = difftime;
+		KF.transitionMatrix.at<float>(i, 6+i) = 0.5f * difftime*difftime;
+		// velocity (v)
+		KF.transitionMatrix.at<float>(3+i, 6+i) = difftime;
+	}
 }
 
 

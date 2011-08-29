@@ -24,9 +24,6 @@ private:
 
 	slam *controller;
 
-	//clock_t prev_update;
-	double prev_update;
-
 	int counter;
 
 
@@ -37,5 +34,8 @@ private:
 	cv::Mat measurement;
 	cv::Mat measurementMatrix;
 	cv::Mat measurementNoiseCov;
+
+	double difftime;
+	double prev_update;
 };
 

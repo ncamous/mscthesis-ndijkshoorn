@@ -29,7 +29,7 @@ void slam_module_ui::update()
 
 	terrain->handle_input(); // mouse and keyboard
 
-	if (clock() - prev_update > /*2 **/ CLOCKS_PER_SEC)
+	if (clock() - prev_update > 2 * CLOCKS_PER_SEC)
 	{
 		int roi[4];
 
