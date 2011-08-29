@@ -67,7 +67,7 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 		controller->KF_running = true; // KF is initialized. Now that the initial height of the vehicle is known, the frame module can start working
 	}
 
-	//return;
+	return;
 
 
 	/* measurement */

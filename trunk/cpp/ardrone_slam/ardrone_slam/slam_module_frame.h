@@ -19,7 +19,9 @@ public:
 	int find_robust_matches(vector<Point2f>& p1, vector<Point2f>& p2, vector<DMatch>& matches, vector<short>& mask, int max);
 	int find_object_position(Mat& cam_pos, Mat& cam_or, vector<DMatch>& matches, vector<short>& mask);
 	int find_features(Mat& frame, vector<KeyPoint> &v);
-	void calculateMeasurement();
+	void add_frame_to_map();
+	void store_prev_frame();
+	void calculate_measurement();
 
 	void imagepoints_to_local3d(vector<Point2f>& src, vector<Point3f>& dst);
 	
@@ -34,15 +36,14 @@ public:
 	void localcam_to_world(Mat& pos, Mat& or);
 	void world_to_localcam(Mat& pos, Mat& or);
 
-
-	void calculate_frame_mask(int width, int height);
+	// testing/experiments
 	void add_noise(IplImage *img);
-
-	int frame_counter; // for testing public
 
 
 private:
 	slam *controller;
+
+	bot_ardrone_frame *f;
 
 	Mat frame;
 	Mat frame_gray;
@@ -53,8 +54,11 @@ private:
 
 	// current frame data
 	vector<Point2f> current_frame_ip;
+	Mat descriptors;
 
 	// previous frame data
+	bool prev_frame_exists;
+	double prev_frame_time;
 	Mat prev_frame_descriptors;
 	vector<Point2f> prev_frame_ip;
 	vector<Point3f> prev_frame_wc;
@@ -82,6 +86,5 @@ private:
 	Mat measurementNoiseCov;
 
 	double difftime;
-	double prev_update;
 };
 
