@@ -29,6 +29,8 @@ slam_module_frame::slam_module_frame(slam *controller):
 	prev_state(12, 1, CV_32F)
 {
 	this->controller = controller;
+	prev_frame_exists = false;
+
 
 	//fd = new SurfFeatureDetector(SLAM_SURF_HESSIANTHRESHOLD, 3, 4);
 	de = new SurfDescriptorExtractor();
@@ -46,6 +48,13 @@ slam_module_frame::slam_module_frame(slam *controller):
 	/**/
 
 
+	/* image corners */
+	image_corners.push_back(Point2f(0.0f, 0.0f));
+	image_corners.push_back(Point2f(0.0f, (float) (BOT_ARDRONE_CAM_RESOLUTION_H - 1)));
+	image_corners.push_back(Point2f((float) (BOT_ARDRONE_CAM_RESOLUTION_W - 1), (float) (BOT_ARDRONE_CAM_RESOLUTION_H - 1)));
+	image_corners.push_back(Point2f((float) (BOT_ARDRONE_CAM_RESOLUTION_W - 1), 0.0f));
+
+
 	/* world plane */
 	world_plane = 0.0f;
 	world_plane_normal = 0.0f;
@@ -60,9 +69,7 @@ slam_module_frame::slam_module_frame(slam *controller):
 	originH.at<float>(3) = 1.0f;
 
 
-	frame = NULL;
 	prev_frame_descriptors = NULL;
-	frame_counter = 0;
 
 
 
@@ -78,7 +85,6 @@ slam_module_frame::slam_module_frame(slam *controller):
 	}
 
 	measurementNoiseCov = 0.0f;
-	//setIdentity(measurementNoiseCov, Scalar::all(1e-5));
 	float MNC[12] = {
 		3.0f, 3.0f, 3.0f, // pos
 		5.0f, 5.0f, 5.0f, // vel
@@ -105,16 +111,7 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		return;
 
 
-	// initialize frame
-	if (frame_counter == 0)
-	{
-		/* image corners */
-		image_corners.push_back(Point2f(0.0f, 0.0f));
-		image_corners.push_back(Point2f(0.0f, (float) (BOT_ARDRONE_CAM_RESOLUTION_H - 1)));
-		image_corners.push_back(Point2f((float) (BOT_ARDRONE_CAM_RESOLUTION_W - 1), (float) (BOT_ARDRONE_CAM_RESOLUTION_H - 1)));
-		image_corners.push_back(Point2f((float) (BOT_ARDRONE_CAM_RESOLUTION_W - 1), 0.0f));
-	}
-
+	this->f = f;
 	frame.data = (uchar*) &f->data[4];
 
 
@@ -127,7 +124,6 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 	cvtColor(frame, frame_gray, CV_BGR2GRAY);
 
 
-
 	/* store current estimated position before computing: otherwise timestamp of frame and position do not match! */
 	Mat obj_pos(3, 1, CV_64F);
 	Mat obj_or(3, 1, CV_64F);
@@ -138,30 +134,32 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 	vector<cv::KeyPoint> keypoints;
 	int features_found = find_features(frame_gray, keypoints);
 
+	if (keypoints.size() < 30)
+	{
+		printf("Not enough features found: dropping frame\n");
+		add_frame_to_map();
+		return;
+	}
+
 	current_frame_ip.clear();
 	KeyPoint::convert(keypoints, current_frame_ip);
 
 
 	/* calculate descriptors (on greyscale image) */
-	Mat descriptors;
     de->compute(frame_gray, keypoints, descriptors);
 
 
 	/* match with previous frame */
-	if (frame_counter > 0)
+	if (prev_frame_exists)
 	{
-		if (keypoints.size() < 20)
-		{
-			printf("Not enough features found: dropping frame\n");
-			return;
-		}
-
 		vector<DMatch> matches;
 		dm.match(descriptors, prev_frame_descriptors, matches);
 
 		if (matches.size() < 10)
 		{
 			printf("Not enough features matched (%i): dropping frame\n", matches.size());
+			store_prev_frame();
+			add_frame_to_map();
 			return;
 		}
 
@@ -173,6 +171,8 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		if (nr_inliers < 4)
 		{
 			printf("Not enough inliers found (%i): dropping frame\n", nr_inliers);
+			store_prev_frame();
+			add_frame_to_map();
 			return;
 		}
 
@@ -198,8 +198,8 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 		/* KF measurement */
 		memcpy_s(measurement.data, 12, new_pos.data, 12); // pos: this is the fastest method
-		difftime = f->time - prev_update; // time between consecutive frames
-		calculateMeasurement(); // vel & accel: calculated from new pos and previous state
+		difftime = f->time - prev_frame_time; // time between consecutive frames
+		calculate_measurement(); // vel & accel: calculated from new pos and previous state
 
 		/*
 		state->at<float>(0) = new_pos.at<float>(0);
@@ -222,8 +222,8 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 
 		/* update transition matrix */
-		//difftime = f->time - prev_update;
-		difftime = 0.001f;
+		difftime = f->time - prev_frame_time;
+		//difftime = 0.001f;
 		controller->update_transition_matrix((float) difftime);
 
 
@@ -233,7 +233,6 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 		/* correct */
 		KF->correct(measurement);
-		//dumpMatrix(measurement);
 
 
 		/* release KF */
@@ -251,23 +250,34 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 
 	/* store current frame as previous frame */
-	prev_frame_descriptors = descriptors;
-	prev_frame_ip = current_frame_ip;
-	imagepoints_to_local3d(current_frame_ip, prev_frame_wc);
+	store_prev_frame();
 
 
 	/* store current state (position) as previous state */
-	prev_update = f->time;
 	memcpy_s(prev_state.data, 48, state->data, 48); // this is the fastest method
 
 
 	/* add frame to canvas */
+	add_frame_to_map();
+}
+
+
+void slam_module_frame::add_frame_to_map()
+{
 	cvtColor(frame, frame_rgba, CV_BGR2BGRA); // convert to RGBA because Direct3D wants a 4 channel array
 	vector<Point3f> image_corners_wc;
 	imagepoints_to_local3d(image_corners, image_corners_wc);
 	controller->visual_map.update(frame_rgba, image_corners, image_corners_wc);
+}
 
-	frame_counter++;
+
+void slam_module_frame::store_prev_frame()
+{
+	prev_frame_exists		= true;
+	prev_frame_time			= f->time;
+	prev_frame_descriptors	= descriptors.clone();
+	prev_frame_ip			= current_frame_ip;
+	imagepoints_to_local3d(current_frame_ip, prev_frame_wc);
 }
 
 
@@ -343,7 +353,7 @@ int slam_module_frame::find_object_position(Mat& cam_pos, Mat& cam_or, vector<DM
 }
 
 
-void slam_module_frame::calculateMeasurement()
+void slam_module_frame::calculate_measurement()
 {
 	float dt = (float) difftime;
 
@@ -541,26 +551,6 @@ int slam_module_frame::find_features(Mat& frame, vector<cv::KeyPoint> &v)
 	surf_extractor(frame, Mat(), v);
 
 	return v.size();
-}
-
-
-void slam_module_frame::calculate_frame_mask(int width, int height)
-{
-	/*
-	IplImage *mask_img = cvCreateImage(cvSize(width, height), 8, 1);
-	Mat h_inverse = prev_frame_h.inv();
-	CvMat invHomography = h_inverse;
-
-	IplImage *obstacle_map_img = cvCreateImageHeader(cvSize(800, 800), 8, 1);
-	obstacle_map_img->imageData = (char*)obstacle_map.data;
-
-	cvWarpPerspective(obstacle_map_img, mask_img, &invHomography, CV_INTER_LINEAR);
-
-	frame_mask = Mat(mask_img, true); // copy
-
-	//imshow("Mask:", mask_img);
-	cvWaitKey(4);
-	*/
 }
 
 
