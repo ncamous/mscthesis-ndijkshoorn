@@ -10,12 +10,23 @@ using namespace cv;
 slam_module_sensor::slam_module_sensor(slam *controller):
 	measurement(9, 1, CV_32F),
 	measurementMatrix(9, 12, CV_32F),
-	measurementNoiseCov(9, 9, CV_32F)
+	measurementNoiseCov(9, 9, CV_32F),
+
+	measurement_or(3, 1, CV_32F),
+	measurement_accel(3, 1, CV_32F),
+	measurement_vel(3, 1, CV_32F),
+
+	prev_state(12, 1, CV_32F)
 {
 	this->controller = controller;
 
 
-	counter = 0;
+	counter	= 0;
+
+
+	// also use to distinguish real AR.Drone and USARSim.. not very nice
+	use_vel_sensor	= SLAM_MODE(controller->mode, SLAM_MODE_VEL);
+	use_sensor		= SLAM_MODE(controller->mode, SLAM_MODE_VEL) || SLAM_MODE(controller->mode, SLAM_MODE_ACCEL);
 
 
 	/* KF */
@@ -25,20 +36,29 @@ slam_module_sensor::slam_module_sensor(slam *controller):
 
 	// H vector
 	measurementMatrix = 0.0f;
-	for(int i = 0; i < 3; i++)
+
+	if (use_vel_sensor)
 	{
-		measurementMatrix.at<float>(i, 6+i) = 1.0f; // measured a
+		for(int i = 0; i < 6; i++)
+			measurementMatrix.at<float>(i, 3+i) = 1.0f; // measured v+a
+	}
+	else
+	{
+		for(int i = 3; i < 6; i++)
+			measurementMatrix.at<float>(i, 3+i) = 1.0f; // measured a
 	}
 
+
 	measurementNoiseCov = 0.0f;
-	//setIdentity(measurementNoiseCov, Scalar::all(1e-5));
 	float MNC[12] = {
-		0.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 0.0f,
-		0.5f, 0.5f, 0.5f,
-		0.0f, 0.0f, 0.0f
+		0.0f, 0.0f, 0.0f, // pos, never measured
+		50.0f, 50.0f, 50.0f, // vel (mm)
+		2.0f, 2.0f, 2.0f // accel (mg)
 	};
 	MatSetDiag(measurementNoiseCov, MNC);
+
+
+	prev_state = 0.0f;
 }
 
 
@@ -53,42 +73,80 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	 * Used to calculate the transition matrix.
 	 * I assume the vehicle is hovering when starting SLAM. So the first couple measurements have a small impact.
 	 */
-	if (counter == 0)
-		difftime = 0.0001; // it may take some time between class initialization and processing the first measurement.
-	else
-		difftime = m->time - controller->KF_prev_update;
-
-
 
 	/* set initial position: module_frame is not used before position is known */
 	if (!controller->KF_running)
 	{
-		KF->statePost.at<float>(2) = (float) -m->altitude; // write initial height directly into state vector
+		state->at<float>(2) = (float) -m->altitude; // write initial height directly into state vector
+		initial_or_z = m->or[2]; // AR.Drone's start Z orientation is alway 0.0
+
+		controller->KF_prev_update = m->time;
 		controller->KF_running = true; // KF is initialized. Now that the initial height of the vehicle is known, the frame module can start working
 	}
 
-	return;
 
 
 	/* measurement */
-	Mat m_or = (Mat_<float>(3,1) << m->or[0] * MD_TO_RAD, m->or[1] * MD_TO_RAD, m->or[2] * MD_TO_RAD);
-	Mat m_accel = (Mat_<float>(3,1) << m->accel[0], m->accel[1], m->accel[2]);
+	measurement_or.at<float>(0) = m->or[0] * MD_TO_RAD;
+	measurement_or.at<float>(1) = m->or[1] * MD_TO_RAD;
+	measurement_or.at<float>(2) = (m->or[2] - initial_or_z) * MD_TO_RAD;
 
 
-	// transform angular acceleration to world accelerations
+	// only use sensor for orientation updates
+	if (!use_sensor)
+	{
+		memcpy_s(&state->data[9 * 4], 12, measurement_or.data, 12);
+		return;
+	}
+
+
+
+	if (use_vel_sensor)
+	{
+		memcpy_s(measurement_vel.data, 12, m->vel, 12);
+	}
+	else
+	{
+		//memcpy_s(measurement_accel.data, 12, m->accel, 12);
+
+		// convert MG to MS2
+		measurement_accel.at<float>(0) = m->accel[0] * MG_TO_MM2;
+		measurement_accel.at<float>(1) = m->accel[1] * MG_TO_MM2;
+		measurement_accel.at<float>(2) = m->accel[2] * MG_TO_MM2;
+	}
+
+
+	// transform local coordinates to world coordinates
 	Mat Rw(3, 3, CV_32F);
-	cv::RotationMatrix3D(m_or, Rw);
-	m_accel = Rw * m_accel;
+	cv::RotationMatrix3D(measurement_or, Rw);
+
+	if (use_vel_sensor)
+		measurement_vel		= Rw * measurement_vel;
+	else
+		measurement_accel	= Rw * measurement_accel;
 
 
-	// compensate for gravity
-	if (!m->usarsim)
-		m_accel.at<float>(2) += 1000.0f;
+	difftime = (float) (m->time - controller->KF_prev_update);
+	if (difftime < 0.0f)
+		difftime = 0.00001f;
 
-	// convert MG to MS2
-	m_accel = m_accel * MG_TO_MM2;
 
-	memcpy_s(measurement.data, 12, m_accel.data, 12); // accel: this is the fastest method
+	// copy data to measurement vector
+	// vel & accel
+	if (use_vel_sensor)
+	{
+		memcpy_s(measurement.data, 12, measurement_vel.data, 12); // vel: this is the fastest method
+
+		measurement.at<float>(3) = (measurement.at<float>(0) - prev_state.at<float>(3)) / difftime;
+		measurement.at<float>(4) = (measurement.at<float>(1) - prev_state.at<float>(4)) / difftime;
+		measurement.at<float>(5) = (measurement.at<float>(2) - prev_state.at<float>(5)) / difftime;
+	}
+	else
+	// accel only
+	{
+		// be aware: measurement.data is uchar, so index 12 is float matrix index 12/4 = 3
+		memcpy_s(&measurement.data[12], 12, measurement_accel.data, 12); // accel: this is the fastest method
+	}
 
 
 
@@ -102,11 +160,11 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 
 	/* update transition matrix */
-	controller->update_transition_matrix((float) difftime);
+	controller->update_transition_matrix(difftime);
 
 
 	/* predict */
-	Mat prediction = KF->predict();
+	KF->predict();
 
 
 	/* correct */
@@ -114,9 +172,12 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 
 	/* directly inject attitude into state vector */
-	KF->statePost.at<float>(9) = m_or.at<float>(0);
-	KF->statePost.at<float>(10) = m_or.at<float>(1);
-	KF->statePost.at<float>(11) = m_or.at<float>(2);
+	/*
+	state->at<float>(9)		= measurement_or.at<float>(0);
+	state->at<float>(10)	= measurement_or.at<float>(1);
+	state->at<float>(11)	= measurement_or.at<float>(2);
+	*/
+	memcpy_s(&state->data[9 * 4], 12, measurement_or.data, 12);
 
 
 	/* release KF */
@@ -124,7 +185,8 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	ReleaseSemaphore(controller->KFSemaphore, 1, NULL);
 
 
-	//printf("GT OR: %f, %f, %f\n", m_or.at<float>(0), m_or.at<float>(1), m_or.at<float>(2));
+	/* store current state (position) as previous state */
+	memcpy_s(prev_state.data, 48, state->data, 48); // this is the fastest method
 	/**/
 
 
@@ -133,6 +195,7 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	//update_elevation_map(m->altitude);
 
 
+	/*
 	if (counter++ % 1000 == 0)
 	{
 		//-52.0,5.68,-4.0
@@ -145,6 +208,7 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 		//printf("gt:    [%f, %f, %f]\n", m->gt_loc[0] * 1000.f, m->gt_loc[1] * 1000.f, m->gt_loc[2] * 1000.f);
 		//printf("gt:    [%f, %f, %f]\n", m_or.at<float>(0), m_or.at<float>(1), m_or.at<float>(2));
 	}
+	*/
 }
 
 
@@ -159,19 +223,6 @@ void slam_module_sensor::accel_compensate_gravity(Mat& accel, cv::Mat& m_or)
 	//printf("\n");
 
 	accel -= gravity;
-}
-
-
-void slam_module_sensor::calculate_scale(bot_ardrone_measurement *m)
-{
-	//scale_set = true;
-
-	double altitude = (double) m->altitude;
-	double scale = 2.0f * tan(((BOT_ARDRONE_CAM_FOV)/180.0f)*PI) * altitude;
-	scale /= (double) BOT_ARDRONE_CAM_RESOLUTION_W;
-	//scale = 1.0 / scale; // mm -> px
-
-	//controller->set_scale(scale);
 }
 
 

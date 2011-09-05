@@ -8,7 +8,7 @@
 using namespace cv;
 
 
-slam::slam():
+slam::slam(unsigned char mode, unsigned char bot_id):
 	KF(12, 9, 0)
 {
 	running = false;
@@ -17,6 +17,11 @@ slam::slam():
 	m_frame = NULL;
 	m_sensor = NULL;
 	m_ui = NULL;
+
+	m_sensor_paused = false;
+
+	this->mode = mode;
+	this->bot_id = bot_id;
 }
 
 
@@ -36,6 +41,10 @@ void slam::run()
 	m_frame = new slam_module_frame((slam*) this);
 	m_sensor = new slam_module_sensor((slam*) this);
 	m_ui = new slam_module_ui((slam*) this);
+
+
+	/* events */
+	event_sensor_resume = CreateEvent(NULL, false, false, (LPTSTR) "SLAM_SENSOR_RESUME");
 
 
 	/* start threads */
@@ -69,15 +78,6 @@ void slam::init_kf()
 		1.5f, 1.5f, 1.5f
 	};
 	MatSetDiag(KF.errorCovPost, ECP);
-
-
-	// random initial state (p(3), v(3), a(3), q(3))
-	//double mean[12] = { 0.0 };
-	//Mat MatMean(12, 1, CV_64F, mean);
-	//Mat MatCov(12, 1, CV_64F, cov);
-	//randn(KF.statePost, Scalar(0.0) /*MatMean*/, MatCov);
-	//dumpMatrix(KF.statePost);
-	// KF.statePost = 0.0f;
 }
 
 
@@ -171,6 +171,26 @@ void slam::get_world_position(float *pos)
 }
 
 
+void slam::sensor_pause(double time)
+{
+	if (m_sensor_paused)
+		return;
+
+	m_sensor_paused_time	= time;
+	m_sensor_paused			= true;
+
+	ResetEvent(event_sensor_resume);
+}
+
+
+void slam::sensor_resume()
+{
+	m_sensor_paused			= false;
+
+	SetEvent(event_sensor_resume);
+}
+
+
 
 /* threads */
 static DWORD WINAPI start_process_frame(void* Param)
@@ -210,6 +230,9 @@ static DWORD WINAPI start_process_sensor(void* Param)
 	bot_ardrone_measurement *item;
 	slam_module_sensor *processor = This->m_sensor;
 
+	bool *paused			= &This->m_sensor_paused;
+	double *paused_time		= &This->m_sensor_paused_time;
+
 	while (!exit_application)
 	{
 		if (q->empty())
@@ -220,6 +243,10 @@ static DWORD WINAPI start_process_sensor(void* Param)
 			continue;
 
 		item = q->front();
+
+		// paused
+		if (*paused && item->time >= *paused_time)
+			WaitForSingleObject(This->event_sensor_resume, 5000);
 
 		processor->process(item);
 

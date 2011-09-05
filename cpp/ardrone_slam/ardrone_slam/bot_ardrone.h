@@ -15,9 +15,9 @@
 #define BOT_ARDRONE_LateralVelocity 2
 #define BOT_ARDRONE_RotationalVelocity 3
 
-#define BOT_ARDRONE_INTERFACE_NONE 0
-#define BOT_ARDRONE_INTERFACE_USARSIM 1
-#define BOT_ARDRONE_INTERFACE_ARDRONELIB 2
+#define BOT_ARDRONE_INTERFACE_NONE 0x00
+#define BOT_ARDRONE_INTERFACE_USARSIM 0x01
+#define BOT_ARDRONE_INTERFACE_ARDRONELIB 0x02
 
 #define BOT_ARDRONBOT_EVENT_MEASUREMENT_SEN 0
 #define BOT_ARDRONBOT_EVENT_MEASUREMENT_STA 1
@@ -84,7 +84,7 @@ struct bot_ardrone_frame {
 class bot_ardrone
 {
 public:
-	bot_ardrone(int botinterface);
+	bot_ardrone(unsigned char id, unsigned char botinterface, unsigned char slam_mode);
 	~bot_ardrone(void);
 	void control_set(int type, int opt, float val);
 	float control_get(int type, int opt);
@@ -102,7 +102,8 @@ public:
 	void set_slam(bool state);
 
 	static clock_t start_clock;
-	int i_id;
+	unsigned char id;
+	unsigned char i_id;
 	botinterface *i;
 	bot_ardrone_control control;
 	bot_ardrone_recorder *recorder;

@@ -120,11 +120,6 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 
 	m->altitude = n->navdata_demo.altitude;
 
-	/*
-	m->or[0] = n->navdata_demo.theta;
-	m->or[1] = n->navdata_demo.phi;
-	m->or[2] = n->navdata_demo.psi;
-	*/
 	m->or[0] = n->navdata_demo.phi;
 	m->or[1] = n->navdata_demo.theta;
 	m->or[2] = n->navdata_demo.psi;
@@ -135,6 +130,12 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 	m->accel[0] = n->navdata_phys_measures.phys_accs[0]; // x-dir
 	m->accel[1] = n->navdata_phys_measures.phys_accs[1]; // y-dir
 	m->accel[2] = n->navdata_phys_measures.phys_accs[2]; // z-dir
+
+	/*
+	m->accel[0] = (float) n->navdata_raw_measures.raw_accs[0];
+	m->accel[1] = (float) n->navdata_raw_measures.raw_accs[1];
+	m->accel[2] = (float) n->navdata_raw_measures.raw_accs[2];
+	*/
 
 	m->vel[0] = n->navdata_demo.vx;
 	m->vel[1] = n->navdata_demo.vy;

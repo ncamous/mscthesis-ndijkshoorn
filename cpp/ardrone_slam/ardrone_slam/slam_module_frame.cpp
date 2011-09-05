@@ -23,29 +23,27 @@ slam_module_frame::slam_module_frame(slam *controller):
 	frame_rgba(BOT_ARDRONE_CAM_RESOLUTION_H, BOT_ARDRONE_CAM_RESOLUTION_W, CV_8UC4),
 	frame_gray(BOT_ARDRONE_CAM_RESOLUTION_H, BOT_ARDRONE_CAM_RESOLUTION_W, CV_8U),
 
+	obj_pos(3, 1, CV_64F),
+	obj_or(3, 1, CV_64F),
+	new_pos(3, 1, CV_32F),
+	new_or(3, 1, CV_32F),
+
 	measurement(9, 1, CV_32F),
 	measurementMatrix(9, 12, CV_32F),
 	measurementNoiseCov(9, 9, CV_32F),
-	prev_state(12, 1, CV_32F)
+	prev_state(12, 1, CV_32F),
+	cur_state(12, 1, CV_32F)
 {
 	this->controller = controller;
 	prev_frame_exists = false;
 
 
+	use_visual = SLAM_MODE(controller->mode, SLAM_MODE_VISUAL);
+
+	set_camera();
+
 	//fd = new SurfFeatureDetector(SLAM_SURF_HESSIANTHRESHOLD, 3, 4);
 	de = new SurfDescriptorExtractor();
-
-
-	/* camera matrix (USARSim) */
-	camera_matrix = 0.0f;
-	camera_matrix.at<float>(0, 0) = 141.76401f; //1.60035f;
-	camera_matrix.at<float>(1, 1) = 141.689265f; //1.60035f;
-	camera_matrix.at<float>(2, 2) = 1.f;
-	camera_matrix.at<float>(0, 2) = 88.0f;
-	camera_matrix.at<float>(1, 2) = 72.0f;
-
-	camera_matrix_inv = camera_matrix.inv();
-	/**/
 
 
 	/* image corners */
@@ -80,15 +78,13 @@ slam_module_frame::slam_module_frame(slam *controller):
 	// H vector
 	measurementMatrix = 0.0f;
 	for(int i = 0; i < 9; i++)
-	{
 		measurementMatrix.at<float>(i, i) = 1.0f; // measured pos, velocity and acceleration
-	}
 
 	measurementNoiseCov = 0.0f;
 	float MNC[12] = {
-		3.0f, 3.0f, 3.0f, // pos
-		5.0f, 5.0f, 5.0f, // vel
-		20.0f, 20.0f, 20.0f // accel
+		8.0f, 8.0f, 40.0f, // pos
+		5.0f, 5.0f, 20.0f, // vel
+		4.0f, 4.0f, 10.0f // accel
 	};
 	MatSetDiag(measurementNoiseCov, MNC);
 }
@@ -120,28 +116,47 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		cvtColor( frame, frame, CV_RGB2BGR );
 
 
-	// convert to gray
-	cvtColor(frame, frame_gray, CV_BGR2GRAY);
-
-
 	/* store current estimated position before computing: otherwise timestamp of frame and position do not match! */
-	Mat obj_pos(3, 1, CV_64F);
-	Mat obj_or(3, 1, CV_64F);
-	get_objectpos(obj_pos, obj_or);
+	save_cur_state();
 
 
-	/* find features */
-	vector<cv::KeyPoint> keypoints;
-	int features_found = find_features(frame_gray, keypoints);
-
-	if (keypoints.size() < 30)
+	// only add to map
+	if (!use_visual)
 	{
-		printf("Not enough features found: dropping frame\n");
 		add_frame_to_map();
 		return;
 	}
 
-	current_frame_ip.clear();
+
+
+	// pause sensor module
+	controller->sensor_pause(f->time);
+
+
+
+	// convert to gray
+	cvtColor(frame, frame_gray, CV_BGR2GRAY);
+
+
+	get_objectpos(obj_pos, obj_or);
+
+
+	/* find features */
+	keypoints.clear(); // necessary?
+	current_frame_ip.clear();  // necessary?
+
+	int features_found = find_features(frame_gray, keypoints);
+	if (keypoints.size() < 30)
+	{
+		printf("Not enough features found: dropping frame\n");
+		prev_frame_exists = false; // needs some testing?
+
+		save_cur_state();
+		controller->sensor_resume();
+		add_frame_to_map();
+		return;
+	}
+
 	KeyPoint::convert(keypoints, current_frame_ip);
 
 
@@ -157,7 +172,9 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 		if (matches.size() < 10)
 		{
-			printf("Not enough features matched (%i): dropping frame\n", matches.size());
+			//printf("Not enough features matched (%i): dropping frame\n", matches.size());
+			save_cur_state();
+			controller->sensor_resume();
 			store_prev_frame();
 			add_frame_to_map();
 			return;
@@ -166,11 +183,13 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 		/* find robust matched descriptors (RANSAC) */
 		vector<short> mask;
-		int nr_inliers = find_robust_matches(current_frame_ip, prev_frame_ip, matches, mask, 10);
+		int nr_inliers = find_robust_matches(current_frame_ip, prev_frame_ip, matches, mask, 30);
 
 		if (nr_inliers < 4)
 		{
-			printf("Not enough inliers found (%i): dropping frame\n", nr_inliers);
+			//printf("Not enough inliers found (%i): dropping frame\n", nr_inliers);
+			save_cur_state();
+			controller->sensor_resume();
 			store_prev_frame();
 			add_frame_to_map();
 			return;
@@ -180,7 +199,6 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		/* retrieve camera motion from two frames */
 		find_object_position(obj_pos, obj_or, matches, mask);
 		//printf("local pos: %f, %f, %f\n", obj_pos.at<double>(0), obj_pos.at<double>(1), obj_pos.at<double>(2));
-
 		/*
 		int nr_inliers = find_object_position(obj_pos, obj_or, matches, mask);
 		if (nr_inliers < 4)
@@ -190,26 +208,16 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		}
 		*/
 
-
-		Mat new_pos(3, 1, CV_32F);
-		Mat new_or(3, 1, CV_32F);
 		object_to_worldpos(obj_pos, obj_or, new_pos, new_or);
+
+		//printf("cam or: %f, %f, %f\n", new_or.at<float>(0), new_or.at<float>(1), new_or.at<float>(2));
+		//printf("state or: %f, %f, %f\n", state->at<float>(9), state->at<float>(10), state->at<float>(11));
 
 
 		/* KF measurement */
 		memcpy_s(measurement.data, 12, new_pos.data, 12); // pos: this is the fastest method
 		difftime = f->time - prev_frame_time; // time between consecutive frames
 		calculate_measurement(); // vel & accel: calculated from new pos and previous state
-
-		/*
-		state->at<float>(0) = new_pos.at<float>(0);
-		state->at<float>(1) = new_pos.at<float>(1);
-		state->at<float>(2) = new_pos.at<float>(2);
-
-		state->at<float>(9) = new_or.at<float>(0);
-		state->at<float>(10) = new_or.at<float>(1);
-		state->at<float>(11) = new_or.at<float>(2);
-		*/
 
 
 		/* lock KF */
@@ -222,39 +230,41 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 
 		/* update transition matrix */
-		difftime = f->time - prev_frame_time;
-		//difftime = 0.001f;
+		difftime = f->time - controller->KF_prev_update;
+		if (difftime < 0.0)
+			difftime = 0.00001;
+
 		controller->update_transition_matrix((float) difftime);
 
 
 		/* predict */
-		Mat prediction = KF->predict();
+		KF->predict();
 
 
 		/* correct */
 		KF->correct(measurement);
 
 
+		/* save current state. This state is used to project IP and add frame to map */
+		save_cur_state();
+
+
 		/* release KF */
 		controller->KF_prev_update = f->time;
 		ReleaseSemaphore(controller->KFSemaphore, 1, NULL);
-
-		
-		//dumpMatrix(KF->statePost);
-
-
-		//printf("Vstate:[%f, %f, %f]\n", state->at<float>(0), state->at<float>(1), state->at<float>(2));
-		//printf("Vstate:[%f, %f, %f]\n", state->at<float>(9), state->at<float>(10), state->at<float>(11));
 	}
 
+
+	/* store current state (position) as previous state. Used to calculate vel/accel */
+	memcpy_s(prev_state.data, 48, state->data, 48); // this is the fastest method
+
+
+	/* process queued sensor data, before new frame is received */
+	controller->sensor_resume();
 
 
 	/* store current frame as previous frame */
 	store_prev_frame();
-
-
-	/* store current state (position) as previous state */
-	memcpy_s(prev_state.data, 48, state->data, 48); // this is the fastest method
 
 
 	/* add frame to canvas */
@@ -357,13 +367,6 @@ void slam_module_frame::calculate_measurement()
 {
 	float dt = (float) difftime;
 
-	/*
-	printf("prev pos: %f, %f, %f,\n", prev_state.at<float>(0), prev_state.at<float>(1), prev_state.at<float>(2));
-	printf("new pos: %f, %f, %f,\n", measurement.at<float>(0), measurement.at<float>(1), measurement.at<float>(2));
-	printf("prev vel: %f, %f, %f,\n", prev_state.at<float>(3), prev_state.at<float>(4), prev_state.at<float>(5));
-	printf("DF: %f\n", dt);
-	*/
-
 	// vel
 	measurement.at<float>(3) = (measurement.at<float>(0) - prev_state.at<float>(0)) / dt;
 	measurement.at<float>(4) = (measurement.at<float>(1) - prev_state.at<float>(1)) / dt;
@@ -373,11 +376,12 @@ void slam_module_frame::calculate_measurement()
 	measurement.at<float>(6) = (measurement.at<float>(3) - prev_state.at<float>(3)) / dt;
 	measurement.at<float>(7) = (measurement.at<float>(4) - prev_state.at<float>(4)) / dt;
 	measurement.at<float>(8) = (measurement.at<float>(5) - prev_state.at<float>(5)) / dt;
+}
 
-	/*
-	dumpMatrix(measurement);
-	printf("\n\n\n");
-	*/
+
+void slam_module_frame::save_cur_state()
+{
+	memcpy_s(cur_state.data, 12 * 4, state->data, 12 * 4);
 }
 
 
@@ -423,13 +427,13 @@ void slam_module_frame::imagepoints_to_local3d(vector<Point2f>& src, vector<Poin
 
 void slam_module_frame::get_state(Mat& pos, Mat& or)
 {
-	pos.at<float>(0) = state->at<float>(0);
-	pos.at<float>(1) = state->at<float>(1);
-	pos.at<float>(2) = state->at<float>(2);
+	pos.at<float>(0) = cur_state.at<float>(0);
+	pos.at<float>(1) = cur_state.at<float>(1);
+	pos.at<float>(2) = cur_state.at<float>(2);
 
-	or.at<float>(0) = state->at<float>(9);
-	or.at<float>(1) = state->at<float>(10);
-	or.at<float>(2) = state->at<float>(11);
+	or.at<float>(0) = cur_state.at<float>(9);
+	or.at<float>(1) = cur_state.at<float>(10);
+	or.at<float>(2) = cur_state.at<float>(11);
 }
 
 
@@ -472,8 +476,38 @@ void slam_module_frame::get_objectpos(Mat& pos, Mat& or)
 /** HELPERS **/
 void slam_module_frame::object_to_localcam(Mat& pos, Mat& or)
 {
+	//dumpMatrix(or);
+
+	/*
+	or.at<float>(0) = 0.0f;
+	or.at<float>(1) = 0.0f;
+	or.at<float>(2) = 0.0f;
+	*/
+
+	/*
+	or.at<float>(0) = cur_state.at<float>(9);
+	or.at<float>(1) = cur_state.at<float>(10);
+	or.at<float>(2) = cur_state.at<float>(11);
+
+	Mat tmp = (Mat_<float>(3,1) << PI, PI, 0.5f * PI);
+	Mat rot2(3, 3, CV_32F);
+	cv::RotationMatrix3D(tmp, rot2);
+
+	or = rot2 * or;
+	*/
+
+	//pos.at<float>(2) = -cur_state.at<float>(2);
+
+	//printf("solvePNP POS: %f, %f, %f\n", pos.at<float>(0), pos.at<float>(1), pos.at<float>(2));
+	//printf("OR: %f, %f, %f\n", cur_state.at<float>(9), cur_state.at<float>(10));
+
 	TransformationMatrix(pos, or, T);
 	Mat T_inv = T.inv();
+
+	//
+	//Mat rot(T_inv, Rect(0, 0, 3, 3));
+	//cv::RotationMatrix3D(or, rot);
+	//
 
 	Mat posH = T_inv * originH;
 
@@ -481,8 +515,51 @@ void slam_module_frame::object_to_localcam(Mat& pos, Mat& or)
 	pos.at<float>(1) = posH.at<float>(1);
 	pos.at<float>(2) = -posH.at<float>(2);
 
-	Mat rot(T_inv, Rect(0, 0, 3, 3));
-	Rodrigues(rot, or); // rotation matrix to rotation vector
+	//float tmp = pos.at<float>(0);
+
+	/*
+	pos.at<float>(0) = -pos.at<float>(0);
+	pos.at<float>(1) = -pos.at<float>(1);
+	*/
+
+
+	/* calculate position shift caused by cam orientation */
+	/*
+	Mat cam_pos(3, 1, CV_32F);
+	Mat cam_or(3, 1, CV_32F);
+	Mat cam_rot(3, 3, CV_32F);
+
+	get_localcam(cam_pos, cam_or);
+	cam_pos.at<float>(0) = 0.0f;
+	cam_pos.at<float>(1) = 0.0f;
+	cam_pos.at<float>(2) *= -1.0f;
+
+	cv::RotationMatrix3D(cam_or, cam_rot);
+
+	Mat point(3, 1, CV_32F);
+	Mat intersection(3, 1, CV_32F);
+
+	point.at<float>(0) = 0.0f;
+	point.at<float>(1) = 0.0f;
+	point.at<float>(2) = 1.0f;
+
+	point = cam_rot * point;
+
+	cv::normalize(point, point);
+
+	CalcLinePlaneIntersection(world_plane, world_plane_normal, cam_pos, point, intersection);
+
+	//dumpMatrix(intersection);
+
+	cam_pos.at<float>(0) -= intersection.at<float>(0);
+	cam_pos.at<float>(1) -= intersection.at<float>(1);
+	*/
+
+	//printf("pos: %f, %f\n", pos.at<float>(0), pos.at<float>(1));
+	//printf("shift: %f, %f\n", intersection.at<float>(0), intersection.at<float>(1));
+
+	//Mat rot(T_inv, Rect(0, 0, 3, 3));
+	//Rodrigues(rot, or); // rotation matrix to rotation vector
 }
 
 
@@ -551,6 +628,39 @@ int slam_module_frame::find_features(Mat& frame, vector<cv::KeyPoint> &v)
 	surf_extractor(frame, Mat(), v);
 
 	return v.size();
+}
+
+
+void slam_module_frame::set_camera()
+{
+	switch (controller->bot_id)
+	{
+		// USARSim
+		case 0x00:
+			camera_matrix = 0.0f;
+			camera_matrix.at<float>(0, 0) = 141.76401f; //1.60035f;
+			camera_matrix.at<float>(1, 1) = 141.689265f; //1.60035f;
+			camera_matrix.at<float>(2, 2) = 1.f;
+			camera_matrix.at<float>(0, 2) = 88.0f;
+			camera_matrix.at<float>(1, 2) = 72.0f;
+			break;
+
+		// Oldest UvA AR.Drone
+		case 0x01:
+			camera_matrix = 0.0f;
+			camera_matrix.at<float>(0, 0) = 197.31999258f; //1.60035f;
+			camera_matrix.at<float>(1, 1) = 215.24223662f; //1.60035f;
+			camera_matrix.at<float>(2, 2) = 1.f;
+			camera_matrix.at<float>(0, 2) = 85.748438497f;
+			camera_matrix.at<float>(1, 2) = 69.141653496f;
+			break;
+
+		default:
+			printf("ERROR: Bot id not found!\n");
+
+	}
+
+	camera_matrix_inv = camera_matrix.inv();
 }
 
 
