@@ -66,6 +66,12 @@ void slam_elevation_map::update(float w_x, float w_y, float w_h, unsigned char c
 
 void slam_elevation_map::update_cell(int x, int y, short h, unsigned char conf)
 {
+	// tmp
+	if (x < 0 || y < 0 
+		||
+		x >= 2 * SLAM_ELEVATION_MAP_DEFAULT_SIZE || y >= 2 * SLAM_ELEVATION_MAP_DEFAULT_SIZE)
+		return;
+
 	if (map.at<short>(x, y) == h || map_p.at<char>(x, y) >= conf)
 		return;
 

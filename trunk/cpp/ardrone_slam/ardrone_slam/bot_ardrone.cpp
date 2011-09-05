@@ -39,17 +39,20 @@ bot_ardrone_frame::~bot_ardrone_frame()
 }
 
 
-bot_ardrone::bot_ardrone(int botinterface)
+bot_ardrone::bot_ardrone(unsigned char id, unsigned char botinterface, unsigned char slam_mode)
 {
-	start_clock = clock();
-	i = NULL;
-	i_id = botinterface;
-	recorder = NULL;
-	record = playback = false;
-	battery = NULL;
-	slam_state = false;
+	start_clock		= clock();
+	id				= id;
+	i				= NULL;
+	i_id			= botinterface;
+	recorder		= NULL;
+	record			= playback = false;
+	battery			= NULL;
+	slam_state		= false;
 
 	control_reset();
+
+
 
 	/* INTERFACE */
 	switch (botinterface)
@@ -69,10 +72,9 @@ bot_ardrone::bot_ardrone(int botinterface)
 	if (i != NULL)
 		i->init();
 
+
 	/* SLAM */
-	slamcontroller = new slam();
-	//if (SLAM_ENABLED)
-	//	slamcontroller->run();
+	slamcontroller = new slam(slam_mode, id);
 }
 
 
@@ -174,7 +176,10 @@ void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 	// time since last frame
 	double diffticks = ((double)clock() - last_measurement_time) / CLOCKS_PER_SEC;
 	if (diffticks < BOT_ARDRONE_MIN_MEASUREMENT_INTERVAL)
+	{
+		delete m;
 		return;
+	}
 
 	last_measurement_time = clock();
 

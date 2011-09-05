@@ -9,6 +9,8 @@
 
 #include "opencv2/core/types_c.h"
 
+
+// structs
 struct bot_ardrone_frame;
 struct bot_ardrone_measurement;
 struct bot_ardrone_control;
@@ -22,7 +24,7 @@ static DWORD WINAPI start_ui(void* Param);
 class slam
 {
 public:
-	slam();
+	slam(unsigned char mode, unsigned char bot_id);
 	~slam();
 	void slam::run();
 
@@ -31,7 +33,12 @@ public:
 	void add_input_sensor(bot_ardrone_measurement *m);
 	void get_world_position(float *pos);
 	void update_transition_matrix(float difftime);
+	void sensor_pause(double time);
+	void sensor_resume();
 
+	/* settings */
+	unsigned char mode;
+	unsigned char bot_id;
 
 	/* threads */
 	HANDLE thread_process_frame;
@@ -44,9 +51,14 @@ public:
 	slam_queue<bot_ardrone_control*> queue_control;
 
 	/* modules (processors) */
-	slam_module_frame *m_frame;
-	slam_module_sensor *m_sensor;
-	slam_module_ui *m_ui;
+	slam_module_frame		*m_frame;
+	slam_module_sensor		*m_sensor;
+	slam_module_ui			*m_ui;
+
+	/* pause */
+	HANDLE event_sensor_resume;
+	bool m_sensor_paused;
+	double m_sensor_paused_time;
 
 	/* Kalman filter */
 	cv::KalmanFilter KF;

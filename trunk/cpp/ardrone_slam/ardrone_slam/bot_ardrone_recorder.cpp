@@ -4,6 +4,10 @@
 #include "yaml.h"
 #include <io.h>
 
+#include <cv.hpp>
+#include <cxcore.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
 
 HANDLE bot_ardrone_recorder::ghSemaphore;
 
@@ -35,6 +39,7 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 {
 	WaitForSingleObject(ghSemaphore, 0L);
 
+	/*
 	fprintf (file_out, "---\n");
 	fprintf (file_out, "e: %i\n", BOT_EVENT_MEASUREMENT);
 	//fprintf (file_out, "s: %i\n", m->sensor); // USARSim now sends all sensors in a single message
@@ -44,13 +49,19 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 	fprintf (file_out, "or: [%f, %f, %f]\n", m->or[0], m->or[1], m->or[2]);
 	fprintf (file_out, "accel: [%f, %f, %f]\n", m->accel[0], m->accel[1], m->accel[2]);
 	fprintf (file_out, "vel: [%f, %f, %f]\n", m->vel[0], m->vel[1], m->vel[2]);
+	*/
+
+	//fprintf (file_out, "%f,%f,%f,%f,%f,%f\n", m->or[0], m->or[1], m->or[2], m->accel[0], m->accel[1], m->accel[2]);
+	fprintf (file_out, "%f,%f,%f,%f,%f,%f\n", m->or[0], m->or[1], m->or[2], m->vel[0], m->vel[1], m->vel[2]);
 
 	/* USARSim only */
+	/*
 	if (m->usarsim)
 	{
 		fprintf (file_out, "gt_loc: [%f, %f, %f]\n", m->gt_loc[0], m->gt_loc[1], m->gt_loc[2]);
 		//fprintf (file_out, "gt_or:\n  - %f\n  - %f\n  - %f\n", m->gt_or[0], m->gt_or[1], m->gt_or[2]);
 	}
+	*/
 
 	ReleaseSemaphore(ghSemaphore, 1, NULL);
 }
@@ -58,6 +69,8 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 
 void bot_ardrone_recorder::record_control(bot_ardrone_control *c)
 {
+	return;
+	
 	WaitForSingleObject(ghSemaphore, 0L);
 
 	fprintf (file_out, "---\n");
@@ -76,7 +89,7 @@ void bot_ardrone_recorder::record_frame(bot_ardrone_frame *f)
 	char filename[25];
 	//printf("recorded frame %i\n", frame_counter);
 
-	sprintf_s(f->filename, 20, "%06d.%s", frame_counter++, USARSIM_FRAME_EXT);
+	sprintf_s(f->filename, 20, "%06d.%s", frame_counter++, BOT_ARDRONE_RECORD_EXT);
 	sprintf_s(filename, 25, "%s/%s", dataset_dir, f->filename);
 
 	fprintf (file_out, "---\n");
@@ -85,10 +98,21 @@ void bot_ardrone_recorder::record_frame(bot_ardrone_frame *f)
 	fprintf (file_out, "s: %i\n", f->data_size);
 	fprintf (file_out, "f: %s\n", f->filename);
 
-	// Replace with FILE for better formance?
-	ofstream frame_out(filename, ios::out | ios::binary);
-	frame_out.write(f->data, f->data_size);
-	frame_out.close();
+	// RAW
+	if (BOT_ARDRONE_RECORD_EXT == "raw")
+	{
+		ofstream frame_out(filename, ios::out | ios::binary);
+		frame_out.write(f->data, f->data_size);
+		frame_out.close();
+	}
+
+	// PNG
+	else if (BOT_ARDRONE_RECORD_EXT == "png")
+	{
+		Mat frame = Mat(BOT_ARDRONE_CAM_RESOLUTION_H, BOT_ARDRONE_CAM_RESOLUTION_W, CV_8UC3, NULL, 0);
+		frame.data = (uchar*) &f->data[4];
+		imwrite(filename, frame);
+	}
 
 	ReleaseSemaphore(ghSemaphore, 1, NULL);
 }

@@ -213,6 +213,9 @@ C_RESULT ardrone_tool_init(int argc, char **argv)
 	// switch to vertical camera
 	ardrone_at_zap(ZAP_CHANNEL_VERT);
 
+	// flat trim
+	ardrone_at_set_flat_trim();
+
 	return res;
 }
 

@@ -53,6 +53,12 @@ void slam_visual_map::update(Mat& frame, vector<Point2f>& lc, vector<Point3f>& w
 
 	int w = frame_roi[1] - frame_roi[0];
 	int h = frame_roi[3] - frame_roi[2];
+
+	if (frame_roi[0] < 0 || frame_roi[2] < 0 
+		||
+		frame_roi[0] + w >= 4096 || frame_roi[2] + h >= 4096)
+		return;
+
 	Mat subCanvas(canvas, Rect(frame_roi[0], frame_roi[2], w, h));
 
 	undoTranslate.at<double>(0, 2) = (double) -frame_roi[0];

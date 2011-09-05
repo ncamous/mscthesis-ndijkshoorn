@@ -7,9 +7,14 @@
 
 /* SLAM */
 #define SLAM_ENABLED true
-#define SLAM_USE_QUEUE false // use a queue to store the controldata and sensor data
-#define SLAM_SURF_HESSIANTHRESHOLD 300.0
+#define SLAM_USE_QUEUE true // use a queue to store the controldata and sensor data
+#define SLAM_SURF_HESSIANTHRESHOLD 50.0
 #define SLAM_ELEVATION_MAP_DEFAULT_SIZE 200 // 10m * 10m in each direction + 1 for center
+
+#define SLAM_MODE(var,mode) ((var) & (mode) ? true : false)
+#define SLAM_MODE_VISUAL 0x01
+#define SLAM_MODE_ACCEL 0x02
+#define SLAM_MODE_VEL 0x04
 
 
 /* USARSIM */
@@ -21,9 +26,9 @@
 /* ARDRONE */
 #define BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE 80000		// at least: 176*144*3 + 4 bytes
 #define USARIM_FRAME_USERAW true
-#define USARSIM_FRAME_EXT "raw"
+#define BOT_ARDRONE_RECORD_EXT "raw"
 #define BOT_ARDRONE_BATTERYLIFE 720 // 720s, 12 minutes
-#define BOT_ARDRONE_RECORD_FRAMES true
+#define BOT_ARDRONE_RECORD_FRAMES false
 #define BOT_ARDRONE_MIN_MEASUREMENT_INTERVAL 0.01 // max 100 measurement/s
 #define BOT_ARDRONE_CAM_RESOLUTION_W 176
 #define BOT_ARDRONE_CAM_RESOLUTION_H 144

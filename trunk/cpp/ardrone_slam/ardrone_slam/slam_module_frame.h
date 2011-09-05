@@ -15,6 +15,8 @@ class slam_module_frame
 public:
 	slam_module_frame(slam *controller);
 	~slam_module_frame(void);
+	void set_camera();
+
 	void process(bot_ardrone_frame *f);
 	int find_robust_matches(vector<Point2f>& p1, vector<Point2f>& p2, vector<DMatch>& matches, vector<short>& mask, int max);
 	int find_object_position(Mat& cam_pos, Mat& cam_or, vector<DMatch>& matches, vector<short>& mask);
@@ -22,6 +24,7 @@ public:
 	void add_frame_to_map();
 	void store_prev_frame();
 	void calculate_measurement();
+	void save_cur_state();
 
 	void imagepoints_to_local3d(vector<Point2f>& src, vector<Point3f>& dst);
 	
@@ -43,16 +46,24 @@ public:
 private:
 	slam *controller;
 
+	bool use_visual;
+
 	bot_ardrone_frame *f;
 
 	Mat frame;
 	Mat frame_gray;
 	Mat frame_rgba;
 
+	Mat obj_pos;
+	Mat obj_or;
+	Mat new_pos;
+	Mat new_or;
+
 	// image corners
 	vector<Point2f> image_corners;
 
 	// current frame data
+	vector<KeyPoint> keypoints;
 	vector<Point2f> current_frame_ip;
 	Mat descriptors;
 
@@ -80,6 +91,7 @@ private:
 	KalmanFilter *KF;
 	Mat *state;
 	Mat prev_state;
+	Mat cur_state;
 
 	Mat measurement;
 	Mat measurementMatrix;
