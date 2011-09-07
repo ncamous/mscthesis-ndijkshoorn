@@ -52,8 +52,8 @@ slam_module_sensor::slam_module_sensor(slam *controller):
 	measurementNoiseCov = 0.0f;
 	float MNC[12] = {
 		0.0f, 0.0f, 0.0f, // pos, never measured
-		50.0f, 50.0f, 50.0f, // vel (mm)
-		2.0f, 2.0f, 2.0f // accel (mg)
+		30.0f, 30.0f, 30.0f, // vel (mm)
+		4.0f, 4.0f, 4.0f // accel (mg)
 	};
 	MatSetDiag(measurementNoiseCov, MNC);
 
@@ -78,10 +78,17 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	if (!controller->KF_running)
 	{
 		state->at<float>(2) = (float) -m->altitude; // write initial height directly into state vector
+		//state->at<float>(2) = -750.0f;
 		initial_or_z = m->or[2]; // AR.Drone's start Z orientation is alway 0.0
+		//alt_correct = m->altitude - 750;
+		//printf("initial height: %f\n", state->at<float>(2));
 
-		controller->KF_prev_update = m->time;
+		controller->KF_prev_update = m->time - 0.001;
 		controller->KF_running = true; // KF is initialized. Now that the initial height of the vehicle is known, the frame module can start working
+	}
+	else if (m->time <= controller->KF_prev_update)
+	{
+		return;
 	}
 
 
@@ -127,8 +134,8 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 
 	difftime = (float) (m->time - controller->KF_prev_update);
-	if (difftime < 0.0f)
-		difftime = 0.00001f;
+	//if (difftime <= 0.0f)
+	//	difftime = 0.0001f;
 
 
 	// copy data to measurement vector
@@ -178,6 +185,7 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	state->at<float>(11)	= measurement_or.at<float>(2);
 	*/
 	memcpy_s(&state->data[9 * 4], 12, measurement_or.data, 12);
+	//dumpMatrix(*state);
 
 
 	/* release KF */
@@ -192,17 +200,18 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 
 	/* elevation map */
-	//update_elevation_map(m->altitude);
-
+	//update_elevation_map(m->altitude - alt_correct);
 
 	/*
-	if (counter++ % 1000 == 0)
+	if (counter++ % 30 == 0)
 	{
+		printf("height: %f\n", state->at<float>(2));
+
 		//-52.0,5.68,-4.0
 
-		m->gt_loc[0] += 52.0f;
-		m->gt_loc[1] -= 5.68f;
-		m->gt_loc[2] += 3.63f;
+		//m->gt_loc[0] += 52.0f;
+		//m->gt_loc[1] -= 5.68f;
+		//m->gt_loc[2] += 3.63f;
 
 		//printf("state: [%f, %f, %f]\n", state->at<float>(0), state->at<float>(1), state->at<float>(2));
 		//printf("gt:    [%f, %f, %f]\n", m->gt_loc[0] * 1000.f, m->gt_loc[1] * 1000.f, m->gt_loc[2] * 1000.f);

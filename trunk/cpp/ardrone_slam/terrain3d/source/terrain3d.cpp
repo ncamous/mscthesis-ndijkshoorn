@@ -88,11 +88,6 @@ bool terrain3d::requires_render()
 	return updated;
 }
 
-void terrain3d::handle_input()
-{
-	m_pFramework->OnUpdateFrame();
-}
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 Summary: Sets the CFramework instnace of the application.
 Parameters:

@@ -46,5 +46,6 @@ private:
 	float difftime;
 	double prev_update;
 	float initial_or_z;
+	int alt_correct;
 };
 

@@ -25,6 +25,7 @@ public:
 	void store_prev_frame();
 	void calculate_measurement();
 	void save_cur_state();
+	bool measurementSeemsOk();
 
 	void imagepoints_to_local3d(vector<Point2f>& src, vector<Point3f>& dst);
 	

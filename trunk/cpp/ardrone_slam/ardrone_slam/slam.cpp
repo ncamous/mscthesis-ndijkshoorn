@@ -62,20 +62,20 @@ void slam::init_kf()
 
 	//setIdentity(KF.processNoiseCov, Scalar::all(1e-5));
 	float PNC[12] = {
-		30.0f, 30.0f, 30.0f,
+		20.0f, 20.0f, 20.0f,
 		10.0f, 10.0f, 10.0f,
 		3.0f, 3.0f, 3.0f,
-		1.5f, 1.5f, 1.5f
+		0.3f, 0.3f, 0.3f
 	};
 	MatSetDiag(KF.processNoiseCov, PNC);
 
 
 	//setIdentity(KF.errorCovPost, Scalar::all(1));
 	float ECP[12] = {
-		30.0f, 30.0f, 30.0f,
+		20.0f, 20.0f, 20.0f,
 		10.0f, 10.0f, 10.0f,
 		3.0f, 3.0f, 3.0f,
-		1.5f, 1.5f, 1.5f
+		0.3f, 0.3f, 0.3f
 	};
 	MatSetDiag(KF.errorCovPost, ECP);
 }
@@ -91,6 +91,12 @@ void slam::update_transition_matrix(float difftime)
 		// velocity (v)
 		KF.transitionMatrix.at<float>(3+i, 6+i) = difftime;
 	}
+}
+
+
+float* slam::get_state()
+{
+	return (float*) KF.statePost.data;
 }
 
 
@@ -271,7 +277,7 @@ static DWORD WINAPI start_ui(void* Param)
 		Sleep(35);
 	}
 
-	processor->display_canvas();
+	//processor->display_canvas();
 
 	return 1;
 }

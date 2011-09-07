@@ -76,22 +76,25 @@ BOOL CFramework::Initialize( char* title, HINSTANCE hInstance, int width, int he
     RegisterClassEx( &wcex );
 
     // Create the window
-    m_hWnd = CreateWindow( title, title,  windowed ? WS_OVERLAPPEDWINDOW : WS_EX_TOPMOST, CW_USEDEFAULT, 
+    m_hWnd = CreateWindow( title, title,  windowed ? WS_OVERLAPPEDWINDOW : WS_EX_TOPMOST, 600, 
         0, width, height, NULL, NULL, hInstance, this );
     
     // Adjust to desired size
     RECT rect = { 0, 0, width, height };
     AdjustWindowRect( &rect, GetWindowLong( m_hWnd, GWL_STYLE ), FALSE );
-    SetWindowPos( m_hWnd, HWND_TOP, 0, 0, rect.right - rect.left, rect.bottom - rect.top, 
-        SWP_NOZORDER | SWP_NOMOVE  );
+    /*SetWindowPos( m_hWnd, HWND_TOP, 0, 0, rect.right - rect.left, rect.bottom - rect.top, 
+        SWP_NOZORDER | SWP_NOMOVE  );*/
+	//MoveWindow(m_hWnd, 600, 0, rect.right - rect.left, rect.bottom - rect.top, false);
 
     ShowWindow( m_hWnd, SW_SHOW );
     UpdateWindow( m_hWnd );
 
     // Save current location/size
+	/*
     ZeroMemory( &m_wp, sizeof( WINDOWPLACEMENT ) );
     m_wp.length = sizeof( WINDOWPLACEMENT );
     GetWindowPlacement( m_hWnd, &m_wp );
+	*/
 
 
     // Initialize Direct3D
@@ -106,10 +109,12 @@ BOOL CFramework::Initialize( char* title, HINSTANCE hInstance, int width, int he
         SHOWERROR( "DirectInput8() - Failed", __FILE__, __LINE__ );
         return FALSE;
     }
+
     if ( !m_mouse.Initialize( m_pDI, m_hWnd, DIT_MOUSE ) )
     {
         return FALSE;
     }
+
     if ( !m_keyboard.Initialize( m_pDI, m_hWnd, DIT_KEYBOARD ) )
     {
         return FALSE;
@@ -120,6 +125,8 @@ BOOL CFramework::Initialize( char* title, HINSTANCE hInstance, int width, int he
     
     OnCreateDevice();
     OnResetDevice();
+
+	thread_input = CreateThread(NULL, 0, start_thread_input, (void*) this, 0, NULL);
 
     // Start the timer
     Pause( FALSE, FALSE );
@@ -191,6 +198,8 @@ void CFramework::OnUpdateFrame()
     {
         m_pTimer->Update();
     }
+
+
 
     if ( m_pGameApp != NULL && m_pGraphics != NULL && m_pTimer != NULL )
     {
@@ -463,4 +472,16 @@ int CFramework::GetHeight()
     }
 
     return m_fullscreenHeight;
+}
+
+static DWORD WINAPI start_thread_input(void* Param)
+{
+	CFramework* This = (CFramework*) Param; 
+
+	while (1)
+	{
+		This->OnUpdateFrame();
+		Sleep(50);
+	}
+
 }

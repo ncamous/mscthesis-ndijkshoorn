@@ -13,7 +13,6 @@
 #include "CCamera.h"
 #include "CArrow.h"
 
-
 class terrain3d : public CBaseApp
 {
 public:
@@ -34,7 +33,6 @@ public:
 	void update_elevation_map(int* roi);
 	void update_texture(int* roi);
 	bool requires_render();
-	void handle_input();
 
 	bool				updated;
 

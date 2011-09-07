@@ -100,6 +100,8 @@ public:
 	void set_record();
 	void set_playback(char *dataset);
 	void set_slam(bool state);
+	void get_slam_pos(float *pos);
+	void flyto(float x, float y, float z = NULL);
 
 	static clock_t start_clock;
 	unsigned char id;

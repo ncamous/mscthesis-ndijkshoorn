@@ -28,6 +28,8 @@ public:
 	~slam();
 	void slam::run();
 
+	float* get_state();
+
 	void add_input_frame(bot_ardrone_frame *f);
 	void add_input_framefile(char *filename);
 	void add_input_sensor(bot_ardrone_measurement *m);
