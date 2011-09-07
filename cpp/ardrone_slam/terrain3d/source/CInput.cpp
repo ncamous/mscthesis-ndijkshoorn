@@ -79,7 +79,8 @@ BOOL CInputDevice::Initialize( LPDIRECTINPUT8 pDI, HWND hWnd, DIRECTINPUTTYPE ty
     }
 
     // Set the cooperative level
-    if( FAILED( m_pDevice->SetCooperativeLevel( hWnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE ) ) )
+	//(type == DIT_MOUSE) ? DISCL_FOREGROUND | DISCL_NONEXCLUSIVE :
+    if( FAILED( m_pDevice->SetCooperativeLevel( hWnd,  DISCL_BACKGROUND | DISCL_NONEXCLUSIVE ) ) )
     {
         SHOWERROR( "Unable to set input cooperative level.", __FILE__, __LINE__ );
         return FALSE;
@@ -161,6 +162,16 @@ void CInputDevice::Read()
             else
             {
                 // Key is pressed if it isn't locked
+				/*
+				if (!m_keyLock[i])
+				{
+					//printf("SendMessage\n");
+					//SendMessage(HWND_BROADCAST, (UINT) i, NULL, NULL);
+					MSG msg;
+					msg.message = (UINT) i;
+					DispatchMessage(&msg);
+				}
+				*/
                 m_pressedKeys[i] = !(m_keyLock[i]);
             }
         }

@@ -29,7 +29,8 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 			}
 			break;
 
-		case 83: // S
+		//case 83: // S
+		case VK_RETURN:
 			if (wParam == WM_KEYDOWN)
 			{
 				for(i=0; i<keyboard_nr_bots; i++)

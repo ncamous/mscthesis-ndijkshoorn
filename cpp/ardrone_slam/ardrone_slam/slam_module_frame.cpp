@@ -82,9 +82,9 @@ slam_module_frame::slam_module_frame(slam *controller):
 
 	measurementNoiseCov = 0.0f;
 	float MNC[12] = {
-		8.0f, 8.0f, 40.0f, // pos
-		5.0f, 5.0f, 20.0f, // vel
-		4.0f, 4.0f, 10.0f // accel
+		50.0f, 50.0f, 500.0f, // pos
+		100.0f, 100.0f, 300.0f, // vel
+		5.0f, 5.0f, 15.0f // accel
 	};
 	MatSetDiag(measurementNoiseCov, MNC);
 }
@@ -107,18 +107,27 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		return;
 
 
+
 	this->f = f;
 	frame.data = (uchar*) &f->data[4];
 
 
-	// frames from the real ardrone are received in RGB order instead of BGR. MOVE TO ARDRONELIB INTERFACE?
-	if (!f->usarsim)
-		cvtColor( frame, frame, CV_RGB2BGR );
+	if (f->usarsim)
+		cvtColor(frame, frame_rgba, CV_BGR2BGRA); // convert to RGBA because Direct3D wants a 4 channel array
+	else
+		// frames from the real ardrone are received in RGB order instead of BGR
+		cvtColor(frame, frame_rgba, CV_RGB2BGRA);
 
 
 	/* store current estimated position before computing: otherwise timestamp of frame and position do not match! */
 	save_cur_state();
 
+
+	// too low altitude
+	/*
+	if (state->at<float>(2) > -250.0f)
+		return;
+	*/
 
 	// only add to map
 	if (!use_visual)
@@ -128,6 +137,20 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 	}
 
 
+	// too large velocity
+	/*
+	if (state->at<float>(3) > 500.0f || state->at<float>(4) > 500.0f)
+	{
+		printf("Too large velocity: dropping frame\n");
+		prev_frame_exists = false; // needs some testing?
+
+		save_cur_state();
+		add_frame_to_map();
+		return;
+	}
+	*/
+
+
 
 	// pause sensor module
 	controller->sensor_pause(f->time);
@@ -135,7 +158,7 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 
 	// convert to gray
-	cvtColor(frame, frame_gray, CV_BGR2GRAY);
+	cvtColor(frame, frame_gray, CV_BGRA2GRAY);
 
 
 	get_objectpos(obj_pos, obj_or);
@@ -146,10 +169,11 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 	current_frame_ip.clear();  // necessary?
 
 	int features_found = find_features(frame_gray, keypoints);
+	printf("Nr features: %i\n", keypoints.size());
 	if (keypoints.size() < 30)
 	{
 		printf("Not enough features found: dropping frame\n");
-		prev_frame_exists = false; // needs some testing?
+		//prev_frame_exists = false; // needs some testing?
 
 		save_cur_state();
 		controller->sensor_resume();
@@ -167,12 +191,20 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 	/* match with previous frame */
 	if (prev_frame_exists)
 	{
-		vector<DMatch> matches;
-		dm.match(descriptors, prev_frame_descriptors, matches);
+		vector<DMatch> matches2;
+		dm.match(descriptors, prev_frame_descriptors, matches2);
 
-		if (matches.size() < 10)
+		vector<DMatch> matches;
+		for (int i = 0; i < (int) matches2.size(); i++)
 		{
-			//printf("Not enough features matched (%i): dropping frame\n", matches.size());
+			if (matches2[i].distance < 0.4f)
+				matches.push_back(matches2[i]);
+		}
+
+		if (matches.size() < 20)
+		{
+			printf("Not enough features matched (%i): dropping frame\n", matches.size());
+			prev_frame_exists = false;
 			save_cur_state();
 			controller->sensor_resume();
 			store_prev_frame();
@@ -183,11 +215,10 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 		/* find robust matched descriptors (RANSAC) */
 		vector<short> mask;
-		int nr_inliers = find_robust_matches(current_frame_ip, prev_frame_ip, matches, mask, 30);
-
-		if (nr_inliers < 4)
+		int nr_inliers = find_robust_matches(current_frame_ip, prev_frame_ip, matches, mask, 20);
+		if (nr_inliers < 6)
 		{
-			//printf("Not enough inliers found (%i): dropping frame\n", nr_inliers);
+			printf("Not enough inliers found (%i): dropping frame\n", nr_inliers);
 			save_cur_state();
 			controller->sensor_resume();
 			store_prev_frame();
@@ -198,20 +229,19 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 		/* retrieve camera motion from two frames */
 		find_object_position(obj_pos, obj_or, matches, mask);
-		//printf("local pos: %f, %f, %f\n", obj_pos.at<double>(0), obj_pos.at<double>(1), obj_pos.at<double>(2));
+
 		/*
 		int nr_inliers = find_object_position(obj_pos, obj_or, matches, mask);
-		if (nr_inliers < 4)
+		if (nr_inliers < 6)
 		{
 			printf("Not enough inliers found (%i): dropping frame\n", nr_inliers);
 			return;
 		}
 		*/
 
+
 		object_to_worldpos(obj_pos, obj_or, new_pos, new_or);
 
-		//printf("cam or: %f, %f, %f\n", new_or.at<float>(0), new_or.at<float>(1), new_or.at<float>(2));
-		//printf("state or: %f, %f, %f\n", state->at<float>(9), state->at<float>(10), state->at<float>(11));
 
 
 		/* KF measurement */
@@ -219,39 +249,53 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		difftime = f->time - prev_frame_time; // time between consecutive frames
 		calculate_measurement(); // vel & accel: calculated from new pos and previous state
 
+		
+		if (measurementSeemsOk())
+		{
 
-		/* lock KF */
-		WaitForSingleObject(controller->KFSemaphore, 0L);
-
-
-		/* switch KF matrices */
-		KF->measurementMatrix	= measurementMatrix;
-		KF->measurementNoiseCov	= measurementNoiseCov;
+			/* lock KF */
+			WaitForSingleObject(controller->KFSemaphore, 0L);
 
 
-		/* update transition matrix */
-		difftime = f->time - controller->KF_prev_update;
-		if (difftime < 0.0)
-			difftime = 0.00001;
-
-		controller->update_transition_matrix((float) difftime);
+			/* switch KF matrices */
+			KF->measurementMatrix	= measurementMatrix;
+			KF->measurementNoiseCov	= measurementNoiseCov;
 
 
-		/* predict */
-		KF->predict();
+			/* update transition matrix */
+			difftime = f->time - controller->KF_prev_update;
+			if (difftime <= 0.0)
+				difftime = 0.0001;
+
+			controller->update_transition_matrix((float) difftime);
 
 
-		/* correct */
-		KF->correct(measurement);
+			/* predict */
+			KF->predict();
 
 
-		/* save current state. This state is used to project IP and add frame to map */
-		save_cur_state();
+			/* correct */
+			KF->correct(measurement);
+
+	
+
+			/* save current state. This state is used to project IP and add frame to map */
+			save_cur_state();
 
 
-		/* release KF */
-		controller->KF_prev_update = f->time;
-		ReleaseSemaphore(controller->KFSemaphore, 1, NULL);
+			/* release KF */
+			controller->KF_prev_update = f->time;
+			ReleaseSemaphore(controller->KFSemaphore, 1, NULL);
+
+		}
+		else
+		{
+			//prev_frame_exists = false;
+			printf("Incorrect measurement filtered!\n");
+			// current state is not updated
+			// drop frame ?
+		}
+
 	}
 
 
@@ -272,9 +316,25 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 }
 
 
+bool slam_module_frame::measurementSeemsOk()
+{
+	//return true;
+
+	if (measurement.at<float>(2) > 0.0f)
+		return false;
+
+	for (int i = 0; i <= 3; i++)
+	{
+		if (abs(measurement.at<float>(i) - cur_state.at<float>(i)) > 200.0f)
+			return false;
+	}
+
+	return true;
+}
+
+
 void slam_module_frame::add_frame_to_map()
 {
-	cvtColor(frame, frame_rgba, CV_BGR2BGRA); // convert to RGBA because Direct3D wants a 4 channel array
 	vector<Point3f> image_corners_wc;
 	imagepoints_to_local3d(image_corners, image_corners_wc);
 	controller->visual_map.update(frame_rgba, image_corners, image_corners_wc);
@@ -313,7 +373,7 @@ int slam_module_frame::find_robust_matches(vector<Point2f>& p1, vector<Point2f>&
 	Mat p1mt;
 	perspectiveTransform(p1m, p1mt, homography);
 	
-	double maxInlierDist = 3;
+	double maxInlierDist = 3.0;
 	int nr_inliers = 0;
 	for (size_t i = 0; i < nr_matches; i++)
 	{
@@ -334,6 +394,9 @@ int slam_module_frame::find_object_position(Mat& cam_pos, Mat& cam_or, vector<DM
 {
 	Mat points3d(mask.size(), 1, CV_32FC3);
 	Mat imagePoints(mask.size(), 1, CV_32FC2);
+
+	//Mat points3d(matches.size(), 1, CV_32FC3);
+	//Mat imagePoints(matches.size(), 1, CV_32FC2);
 
 	int src_i;
 	for (size_t i = 0; i < mask.size(); i++)
@@ -357,7 +420,7 @@ int slam_module_frame::find_object_position(Mat& cam_pos, Mat& cam_or, vector<DM
 
 	solvePnP(points3d, imagePoints, camera_matrix, dist_coef, cam_or, cam_pos, true);
 
-	//solvePnPRansac(points3d, imagePoints, camera_matrix, dist_coef, cam_or, cam_pos, true, 100, 3.0, 10 /* TODO */, inliers);
+	//solvePnPRansac(points3d, imagePoints, camera_matrix, dist_coef, cam_or, cam_pos, true, 150, 3.0, 20 /* TODO */, inliers);
 
 	return inliers.size();
 }

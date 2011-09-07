@@ -8,7 +8,7 @@
 /* SLAM */
 #define SLAM_ENABLED true
 #define SLAM_USE_QUEUE true // use a queue to store the controldata and sensor data
-#define SLAM_SURF_HESSIANTHRESHOLD 50.0
+#define SLAM_SURF_HESSIANTHRESHOLD 70.0
 #define SLAM_ELEVATION_MAP_DEFAULT_SIZE 200 // 10m * 10m in each direction + 1 for center
 
 #define SLAM_MODE(var,mode) ((var) & (mode) ? true : false)

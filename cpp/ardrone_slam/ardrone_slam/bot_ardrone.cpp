@@ -252,3 +252,61 @@ void bot_ardrone::set_slam(bool state)
 
 	printf("SLAM state: %s\n", state ? "ENABLED" : "DISABLED");
 }
+
+
+void bot_ardrone::get_slam_pos(float *pos)
+{
+	if (!slam_state)
+		return;
+
+	memcpy_s(pos, 12, slamcontroller->get_state(), 12);
+}
+
+
+void bot_ardrone::flyto(float x, float y, float z)
+{
+	float pos[3];
+	bool reached = false;
+
+	while (1)
+	{
+		get_slam_pos(pos);
+
+		float dx = x - pos[0];
+		float dy = y - pos[1];
+
+		if (abs(dx) < 100.0f && abs(dy) < 100.0f)
+		{
+			printf("reached!\n");
+			break; 
+		}
+		else
+		{
+			printf("%f, %f\n", dx, dy);
+		}
+
+		float velX = min(0.1f, (dx*dx) / 500000.0f);
+		float velY = min(0.1f, (dy*dy) / 500000.0f);
+
+		if (abs(dx) > abs(dy))
+		{
+			velY *= (abs(dy) / abs(dx));
+		}
+		else
+		{
+			velX *= (abs(dx) / abs(dy));
+		}
+
+		if (dx < 0.0f)
+			velX = -velX;
+
+		if (dy < 0.0f)
+			velY = -velY;
+
+		control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_LinearVelocity, velX);
+		control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_LateralVelocity, velY);
+		control_update();
+
+		Sleep(50);
+	}
+}

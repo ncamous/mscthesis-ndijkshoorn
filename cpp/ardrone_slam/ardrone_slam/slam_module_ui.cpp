@@ -27,7 +27,7 @@ void slam_module_ui::update()
 	if (!initialized)
 		init();
 
-	terrain->handle_input(); // mouse and keyboard
+	//terrain->handle_input(); // mouse and keyboard
 
 	if (clock() - prev_update > 2 * CLOCKS_PER_SEC)
 	{
@@ -80,6 +80,10 @@ void slam_module_ui::init()
 		pos
 	);
 
+
+	HWND consoleWindow = GetConsoleWindow();
+	//SetFocus(consoleWindow);
+	BringWindowToTop(consoleWindow);
 
 	/* OpenCV window */
 	//cvNamedWindow("Image:", CV_WINDOW_AUTOSIZE);

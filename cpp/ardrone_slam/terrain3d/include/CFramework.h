@@ -18,6 +18,8 @@ Modified : 12/03/2005
 #include "CInput.h"
 #include "CTimer.h"
 
+static DWORD WINAPI start_thread_input(void* Param);
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 Summary: Interface that the main game application must implement
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -89,6 +91,8 @@ private:
     CInputDevice    m_mouse;
     CInputDevice    m_keyboard;
     LPDIRECTINPUT8  m_pDI;
+
+	HANDLE				thread_input;
 };
 
 #endif
