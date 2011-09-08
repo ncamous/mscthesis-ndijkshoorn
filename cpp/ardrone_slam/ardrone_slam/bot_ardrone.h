@@ -101,6 +101,7 @@ public:
 	void set_playback(char *dataset);
 	void set_slam(bool state);
 	void get_slam_pos(float *pos);
+	void get_slam_or(float *or);
 	void flyto(float x, float y, float z = NULL);
 
 	static clock_t start_clock;
