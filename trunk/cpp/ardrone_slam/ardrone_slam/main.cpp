@@ -28,26 +28,50 @@ int main(int argc, char *argv[])
 
 	/* bot 1: USARSim ARDRONE */
 	// deployment location set in bot_ardrone_usarsim.cpp (top)
-	bot_ardrone ardrone(0x00, BOT_ARDRONE_INTERFACE_USARSIM, /*SLAM_MODE_VISUAL |*/ SLAM_MODE_ACCEL);
+	//bot_ardrone ardrone(0x00, BOT_ARDRONE_INTERFACE_USARSIM, /*SLAM_MODE_VISUAL |*/ SLAM_MODE_ACCEL);
+	bot_ardrone ardrone(0x01, BOT_ARDRONE_INTERFACE_ARDRONELIB, /*SLAM_MODE_VISUAL |*/ SLAM_MODE_VEL);
 	bots[nr_bots++] = &ardrone;
 
-
+	ardrone.recover(true);
 	printf("Standby\n");
-	Sleep(5000);
+	Sleep(3000);
 
 	ardrone.set_slam(true);
-	ardrone.flyto(3000.0f, -2000.0f);
+	Sleep(500);
+	ardrone.take_off();
+
+	Sleep(5000); // safe?
+	/*
+	ardrone.flyto(1000.0f, 0.0f);
+	ardrone.flyto(1500.0f, -1000.0f);
+	ardrone.flyto(1000.0f, -1500.0f);
+	ardrone.flyto(-1000.0f, -1500);
+	ardrone.flyto(-1500.0f, -1000.0f);
+	ardrone.flyto(-1000.0f, 0.0f);
+	ardrone.flyto(0.0f, 0.0f);
 	ardrone.control_reset();
 	ardrone.control_update();
+	ardrone.land();
+	*/
+
+	while (1)
+	{
+	ardrone.flyto(1000.0f, 0.0f);
+	ardrone.flyto(1000.0f, -2000.0f);
+	ardrone.flyto(-1000.0f, -2000.0f);
+	ardrone.flyto(-1000.0, 0.0f);
+	ardrone.flyto(0.0f, 0.0f);
+	ardrone.control_reset();
+	ardrone.control_update();
+	printf("ROUND Done\n");
+	Sleep(4000);
+	}
 
 
-	/* bot 2: REAL ARDRONE */
-	//bot_ardrone ardrone2(0x01, BOT_ARDRONE_INTERFACE_NONE, /*SLAM_MODE_VISUAL |*/ SLAM_MODE_VEL);
-	//bots[nr_bots++] = &ardrone2;
-	//ardrone2.set_record();
+	ardrone.land();
 
 
-	//bot_ardrone_keyboard kb(bots, nr_bots);
+	bot_ardrone_keyboard kb(bots, nr_bots);
 
 
 

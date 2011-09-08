@@ -2,6 +2,7 @@
 #include "bot_ardrone.h"
 #include "bot_ardrone_usarsim.h"
 #include "bot_ardrone_recorder.h"
+#include "opencv_helpers.h"
 
 using namespace std;
 
@@ -263,49 +264,83 @@ void bot_ardrone::get_slam_pos(float *pos)
 }
 
 
+void bot_ardrone::get_slam_or(float *or)
+{
+	if (!slam_state)
+		return;
+
+	float *state = slamcontroller->get_state();
+	memcpy_s(or, 12, &state[9], 12);
+}
+
+
 void bot_ardrone::flyto(float x, float y, float z)
 {
 	float pos[3];
+	float or[3];
+	float dx, dy;
 	bool reached = false;
+
+	Mat Mpos(3, 1, CV_32F);
+	Mat Mor(3, 1, CV_32F);
+	Mat Mrot(3, 3, CV_32F);
+	Mor = 0.0f;
 
 	while (1)
 	{
 		get_slam_pos(pos);
+		get_slam_or(or);
 
-		float dx = x - pos[0];
-		float dy = y - pos[1];
+		//float dx = x - pos[0];
+		//float dy = y - pos[1];
 
-		if (abs(dx) < 100.0f && abs(dy) < 100.0f)
+		Mpos.at<float>(0) = x - pos[0];
+		Mpos.at<float>(1) = y - pos[1];
+		Mpos.at<float>(2) = 0.0f;
+
+		//or[2] = -0.5 * PI;
+		Mor.at<float>(2) = -or[2];
+		cv::RotationMatrix3D(Mor, Mrot);
+
+		/* convert world distance to distance relative to ARDrone's orientation */
+		Mpos = Mrot * Mpos;
+		dx = Mpos.at<float>(0);
+		dy = Mpos.at<float>(1);
+
+		if (abs(dx) < 300.0f && abs(dy) < 300.0f)
 		{
-			printf("reached!\n");
+			control_reset();
+			control_update();
+			printf("reached %f, %f!\n", x, y);
+			Sleep(5000);
 			break; 
 		}
 		else
 		{
-			printf("%f, %f\n", dx, dy);
+			//printf("pos: %f, %f dist: %f, %f OR: %f\n", pos[0], pos[1], dx, dy, or[2]);
 		}
 
-		float velX = min(0.1f, (dx*dx) / 500000.0f);
-		float velY = min(0.1f, (dy*dy) / 500000.0f);
+		float velX = min(0.065f, (dx*dx) / 1800000.0f);
+		float velY = min(0.065f, (dy*dy) / 1800000.0f);
 
+		/*
 		if (abs(dx) > abs(dy))
-		{
 			velY *= (abs(dy) / abs(dx));
-		}
 		else
-		{
 			velX *= (abs(dx) / abs(dy));
-		}
+		*/
 
 		if (dx < 0.0f)
-			velX = -velX;
+			velX = -abs(velX);
 
 		if (dy < 0.0f)
-			velY = -velY;
+			velY = -abs(velY);
 
 		control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_LinearVelocity, velX);
 		control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_LateralVelocity, velY);
 		control_update();
+
+		//printf("vel: %f, %f\n", velX, velY);
 
 		Sleep(50);
 	}

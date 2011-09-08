@@ -278,7 +278,6 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 			KF->correct(measurement);
 
 	
-
 			/* save current state. This state is used to project IP and add frame to map */
 			save_cur_state();
 
