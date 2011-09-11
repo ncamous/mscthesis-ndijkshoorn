@@ -31,14 +31,12 @@ slam_module_frame::slam_module_frame(slam *controller):
 	measurement(9, 1, CV_32F),
 	measurementMatrix(9, 12, CV_32F),
 	measurementNoiseCov(9, 9, CV_32F),
+
 	prev_state(12, 1, CV_32F),
 	cur_state(12, 1, CV_32F)
 {
 	this->controller = controller;
 	prev_frame_exists = false;
-
-
-	use_visual = SLAM_MODE(controller->mode, SLAM_MODE_VISUAL);
 
 	set_camera();
 
@@ -81,7 +79,7 @@ slam_module_frame::slam_module_frame(slam *controller):
 		measurementMatrix.at<float>(i, i) = 1.0f; // measured pos, velocity and acceleration
 
 	measurementNoiseCov = 0.0f;
-	float MNC[12] = {
+	float MNC[9] = {
 		50.0f, 50.0f, 500.0f, // pos
 		100.0f, 100.0f, 300.0f, // vel
 		5.0f, 5.0f, 15.0f // accel
@@ -107,45 +105,42 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		return;
 
 
-
 	this->f = f;
 	frame.data = (uchar*) &f->data[4];
 
 
+	// convert to RGBA because Direct3D wants a 4 channel array
 	if (f->usarsim)
-		cvtColor(frame, frame_rgba, CV_BGR2BGRA); // convert to RGBA because Direct3D wants a 4 channel array
+		cvtColor(frame, frame_rgba, CV_BGR2BGRA);
 	else
-		// frames from the real ardrone are received in RGB order instead of BGR
 		cvtColor(frame, frame_rgba, CV_RGB2BGRA);
 
 
-	/* store current estimated position before computing: otherwise timestamp of frame and position do not match! */
+	// TODO: attach current state to frame struct, when frame is received
 	save_cur_state();
 
 
-	// too low altitude
-	/*
-	if (state->at<float>(2) > -250.0f)
-		return;
-	*/
+	if (controller->mode(SLAM_MODE_VISUALMOTION))
+		process_visual_state();
 
-	// only add to map
-	if (!use_visual)
-	{
+
+	if (controller->mode(SLAM_MODE_VISUALLOC))
+		process_visual_loc();
+
+
+	if (controller->mode(SLAM_MODE_MAP))
 		add_frame_to_map();
-		return;
-	}
+}
 
 
+void slam_module_frame::process_visual_state()
+{
 	// too large velocity
 	/*
 	if (state->at<float>(3) > 500.0f || state->at<float>(4) > 500.0f)
 	{
 		printf("Too large velocity: dropping frame\n");
 		prev_frame_exists = false; // needs some testing?
-
-		save_cur_state();
-		add_frame_to_map();
 		return;
 	}
 	*/
@@ -154,7 +149,6 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 	// pause sensor module
 	controller->sensor_pause(f->time);
-
 
 
 	// convert to gray
@@ -169,19 +163,19 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 	current_frame_ip.clear();  // necessary?
 
 	int features_found = find_features(frame_gray, keypoints);
-	printf("Nr features: %i\n", keypoints.size());
+	//printf("Nr features: %i\n", keypoints.size());
 	if (keypoints.size() < 30)
 	{
 		printf("Not enough features found: dropping frame\n");
-		//prev_frame_exists = false; // needs some testing?
 
-		save_cur_state();
 		controller->sensor_resume();
-		add_frame_to_map();
 		return;
 	}
 
 	KeyPoint::convert(keypoints, current_frame_ip);
+
+	for (size_t i = 0; i < keypoints.size(); i++)
+		circle(frame_rgba, keypoints[i].pt, 3, Scalar(0,0,255), 1, 8);
 
 
 	/* calculate descriptors (on greyscale image) */
@@ -205,10 +199,8 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		{
 			printf("Not enough features matched (%i): dropping frame\n", matches.size());
 			prev_frame_exists = false;
-			save_cur_state();
 			controller->sensor_resume();
 			store_prev_frame();
-			add_frame_to_map();
 			return;
 		}
 
@@ -219,10 +211,8 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		if (nr_inliers < 6)
 		{
 			printf("Not enough inliers found (%i): dropping frame\n", nr_inliers);
-			save_cur_state();
 			controller->sensor_resume();
 			store_prev_frame();
-			add_frame_to_map();
 			return;
 		}
 
@@ -249,7 +239,7 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 		difftime = f->time - prev_frame_time; // time between consecutive frames
 		calculate_measurement(); // vel & accel: calculated from new pos and previous state
 
-		
+
 		if (measurementSeemsOk())
 		{
 
@@ -308,17 +298,79 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 	/* store current frame as previous frame */
 	store_prev_frame();
+}
 
 
-	/* add frame to canvas */
-	add_frame_to_map();
+void slam_module_frame::process_visual_loc()
+{
+	vector<CornerHist> corners;
+	vector<Point3f> image_corners_wc;
+	Mat frameT;
+
+	// get local world coordinates of the image corners
+	imagepoints_to_local3d(image_corners, image_corners_wc);
+
+	// transform frame to canvas
+	controller->visual_map.frame_to_canvas(frame, frameT, image_corners, image_corners_wc);
+
+	// find corners in transformed frame
+	controller->visual_map.find_corners(frameT, corners);
+
+	printf("frame corners: %i\n", corners.size());
+
+	// match (P) histograms + distance
+	vector<DMatch> matches;
+	CornerHistMatch(corners, controller->visual_map.corners, matches, (float*) state->data);
+
+	/*
+	for (int i = 0; i < (int) matches.size(); i++)
+	{
+		printf("query %i -> %i (%f)\n", matches[i].queryIdx, matches[i].trainIdx, matches[i].distance);
+	}
+	*/
+
+	// ransac for inliers
+
+	Sleep(3000);
+}
+
+
+void slam_module_frame::CornerHistMatch(vector<CornerHist>& query_descriptors, vector<CornerHist>& train_descriptors, vector<DMatch>& matches, float *pos)
+{
+	matches.reserve(query_descriptors.size());
+	size_t query_size = query_descriptors.size();
+	size_t train_size = train_descriptors.size();
+	Point2f estimated_pos(pos[0], pos[1]);
+	double score;
+	double min_distance;
+	int best_iIdx;
+
+    for( size_t qIdx = 0; qIdx < query_size; qIdx++ )
+    {
+			min_distance = 99999.0;
+
+            for( size_t iIdx = 0; iIdx < train_size; iIdx++ )
+            {
+                score = 1.0 - compareHist( query_descriptors[qIdx].hist, train_descriptors[iIdx].hist, 0 );
+				//score += norm(estimated_pos - train_descriptors[iIdx].wc) / 50000.0f;
+
+				printf("[%i,%i] = %f\n", qIdx, iIdx, score);
+
+				if (score < min_distance)
+				{
+					min_distance = score;
+					best_iIdx = iIdx;
+				}
+            }
+
+			matches.push_back( DMatch( qIdx, best_iIdx, (float) min_distance ) );
+            //std::sort( curMatches->begin(), curMatches->end() );
+    }
 }
 
 
 bool slam_module_frame::measurementSeemsOk()
 {
-	//return true;
-
 	if (measurement.at<float>(2) > 0.0f)
 		return false;
 
@@ -334,6 +386,10 @@ bool slam_module_frame::measurementSeemsOk()
 
 void slam_module_frame::add_frame_to_map()
 {
+	// flying too low, dont add to map (dark image)
+	if (cur_state.at<float>(2) > -250.0f)
+		return;
+
 	vector<Point3f> image_corners_wc;
 	imagepoints_to_local3d(image_corners, image_corners_wc);
 	controller->visual_map.update(frame_rgba, image_corners, image_corners_wc);
