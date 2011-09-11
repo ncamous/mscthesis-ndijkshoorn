@@ -24,11 +24,6 @@ slam_module_sensor::slam_module_sensor(slam *controller):
 	counter	= 0;
 
 
-	// also use to distinguish real AR.Drone and USARSim.. not very nice
-	use_vel_sensor	= SLAM_MODE(controller->mode, SLAM_MODE_VEL);
-	use_sensor		= SLAM_MODE(controller->mode, SLAM_MODE_VEL) || SLAM_MODE(controller->mode, SLAM_MODE_ACCEL);
-
-
 	/* KF */
 	KF = &controller->KF;
 	state = &KF->statePost;
@@ -36,22 +31,23 @@ slam_module_sensor::slam_module_sensor(slam *controller):
 
 	// H vector
 	measurementMatrix = 0.0f;
+	measurementMatrix.at<float>(2, 2); // measured altitude
 
-	if (use_vel_sensor)
+	if (controller->mode(SLAM_MODE_VEL))
 	{
-		for(int i = 0; i < 6; i++)
-			measurementMatrix.at<float>(i, 3+i) = 1.0f; // measured v+a
+		for(int i = 3; i < 9; i++)
+			measurementMatrix.at<float>(i, i) = 1.0f; // measured v+a
 	}
-	else
+	else if (controller->mode(SLAM_MODE_ACCEL))
 	{
-		for(int i = 3; i < 6; i++)
-			measurementMatrix.at<float>(i, 3+i) = 1.0f; // measured a
+		for(int i = 6; i < 9; i++)
+			measurementMatrix.at<float>(i, i) = 1.0f; // measured a
 	}
 
 
 	measurementNoiseCov = 0.0f;
-	float MNC[12] = {
-		0.0f, 0.0f, 0.0f, // pos, never measured
+	float MNC[9] = {
+		0.0f, 0.0f, 200.0f, // pos
 		30.0f, 30.0f, 30.0f, // vel (mm)
 		4.0f, 4.0f, 4.0f // accel (mg)
 	};
@@ -92,6 +88,10 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	}
 
 
+	bool use_accel	= controller->mode(SLAM_MODE_ACCEL);
+	bool use_vel	= controller->mode(SLAM_MODE_VEL);
+
+
 
 	/* measurement */
 	measurement_or.at<float>(0) = m->or[0] * MD_TO_RAD;
@@ -100,15 +100,14 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 
 	// only use sensor for orientation updates
-	if (!use_sensor)
+	if (!use_accel && !use_vel)
 	{
 		memcpy_s(&state->data[9 * 4], 12, measurement_or.data, 12);
 		return;
 	}
 
 
-
-	if (use_vel_sensor)
+	if (use_vel)
 	{
 		memcpy_s(measurement_vel.data, 12, m->vel, 12);
 	}
@@ -125,12 +124,20 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 	// transform local coordinates to world coordinates
 	Mat Rw(3, 3, CV_32F);
-	cv::RotationMatrix3D(measurement_or, Rw);
 
-	if (use_vel_sensor)
+	if (use_vel)
+	{
+		Mat measurement_or_yaw = measurement_or.clone();
+		measurement_or_yaw.at<float>(0) = 0.0f;
+		measurement_or_yaw.at<float>(1) = 0.0f;
+		cv::RotationMatrix3D(measurement_or_yaw, Rw);
 		measurement_vel		= Rw * measurement_vel;
+	}
 	else
+	{
+		cv::RotationMatrix3D(measurement_or, Rw);
 		measurement_accel	= Rw * measurement_accel;
+	}
 
 
 	difftime = (float) (m->time - controller->KF_prev_update);
@@ -138,21 +145,25 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	//	difftime = 0.0001f;
 
 
+	// copy sonar altitude to measurement vector
+	measurement.at<float>(2) = (float) -m->altitude;
+
+
 	// copy data to measurement vector
 	// vel & accel
-	if (use_vel_sensor)
+	if (use_vel)
 	{
-		memcpy_s(measurement.data, 12, measurement_vel.data, 12); // vel: this is the fastest method
+		memcpy_s(&measurement.data[3 * 4], 12, measurement_vel.data, 12); // vel: this is the fastest method
 
-		measurement.at<float>(3) = (measurement.at<float>(0) - prev_state.at<float>(3)) / difftime;
-		measurement.at<float>(4) = (measurement.at<float>(1) - prev_state.at<float>(4)) / difftime;
-		measurement.at<float>(5) = (measurement.at<float>(2) - prev_state.at<float>(5)) / difftime;
+		measurement.at<float>(6) = (measurement.at<float>(3) - prev_state.at<float>(3)) / difftime;
+		measurement.at<float>(7) = (measurement.at<float>(4) - prev_state.at<float>(4)) / difftime;
+		measurement.at<float>(8) = (measurement.at<float>(5) - prev_state.at<float>(5)) / difftime;
 	}
 	else
 	// accel only
 	{
 		// be aware: measurement.data is uchar, so index 12 is float matrix index 12/4 = 3
-		memcpy_s(&measurement.data[12], 12, measurement_accel.data, 12); // accel: this is the fastest method
+		memcpy_s(&measurement.data[6 * 4], 12, measurement_accel.data, 12); // accel: this is the fastest method
 	}
 
 
@@ -185,7 +196,6 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	state->at<float>(11)	= measurement_or.at<float>(2);
 	*/
 	memcpy_s(&state->data[9 * 4], 12, measurement_or.data, 12);
-	//dumpMatrix(*state);
 
 
 	/* release KF */
@@ -200,7 +210,8 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 
 	/* elevation map */
-	//update_elevation_map(m->altitude - alt_correct);
+	// check is mapping mode is on
+	update_elevation_map(m->altitude/* - alt_correct*/);
 
 	/*
 	if (counter++ % 30 == 0)

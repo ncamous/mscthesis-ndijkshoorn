@@ -75,6 +75,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bot_ardrone_ardronelib.cpp" />
+    <ClCompile Include="bot_ardrone_behavior.cpp" />
     <ClCompile Include="bot_ardrone_keyboard.cpp" />
     <ClCompile Include="bot_ardrone_recorder.cpp" />
     <ClCompile Include="bot_ardrone_usarsim.cpp" />
@@ -94,6 +95,7 @@
     <ClInclude Include="bot.h" />
     <ClInclude Include="botinterface.h" />
     <ClInclude Include="bot_ardrone_ardronelib.h" />
+    <ClInclude Include="bot_ardrone_behavior.h" />
     <ClInclude Include="bot_ardrone_keyboard.h" />
     <ClInclude Include="bot_ardrone_recorder.h" />
     <ClInclude Include="bot_ardrone_usarsim.h" />

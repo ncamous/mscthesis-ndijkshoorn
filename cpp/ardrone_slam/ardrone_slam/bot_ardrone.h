@@ -99,10 +99,11 @@ public:
 	static double get_clock();
 	void set_record();
 	void set_playback(char *dataset);
+	slam* get_slam();
 	void set_slam(bool state);
 	void get_slam_pos(float *pos);
 	void get_slam_or(float *or);
-	void flyto(float x, float y, float z = NULL);
+	bool flyto(float x, float y, float z = NULL);
 
 	static clock_t start_clock;
 	unsigned char id;

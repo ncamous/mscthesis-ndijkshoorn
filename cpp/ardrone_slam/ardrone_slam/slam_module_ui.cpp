@@ -27,7 +27,6 @@ void slam_module_ui::update()
 	if (!initialized)
 		init();
 
-	//terrain->handle_input(); // mouse and keyboard
 
 	if (clock() - prev_update > CLOCKS_PER_SEC)
 	{
@@ -43,6 +42,10 @@ void slam_module_ui::update()
 		controller->elevation_map.worldpos_to_cell(pos);
 
 		prev_update = clock();
+
+		terrain->render();
+
+		return;
 	}
 
 	if (terrain->requires_render())

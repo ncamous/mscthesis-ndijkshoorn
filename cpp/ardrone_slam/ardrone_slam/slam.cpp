@@ -20,8 +20,10 @@ slam::slam(unsigned char mode, unsigned char bot_id):
 
 	m_sensor_paused = false;
 
-	this->mode = mode;
+	this->_mode = mode;
 	this->bot_id = bot_id;
+
+	//run();
 }
 
 
@@ -38,9 +40,9 @@ void slam::run()
 
 
 	/* modules */
-	m_frame = new slam_module_frame((slam*) this);
-	m_sensor = new slam_module_sensor((slam*) this);
-	m_ui = new slam_module_ui((slam*) this);
+	m_frame		= new slam_module_frame((slam*) this);
+	m_sensor	= new slam_module_sensor((slam*) this);
+	m_ui		= new slam_module_ui((slam*) this);
 
 
 	/* events */
@@ -48,9 +50,9 @@ void slam::run()
 
 
 	/* start threads */
-	thread_process_frame = CreateThread(NULL, 0, start_process_frame, (void*) this, 0, NULL);
-	thread_process_sensor = CreateThread(NULL, 0, start_process_sensor, (void*) this, 0, NULL);
-	thread_ui = CreateThread(NULL, 0, start_ui, (void*) this, 0, NULL);
+	thread_process_frame	= CreateThread(NULL, 0, start_process_frame, (void*) this, 0, NULL);
+	thread_process_sensor	= CreateThread(NULL, 0, start_process_sensor, (void*) this, 0, NULL);
+	thread_ui				= CreateThread(NULL, 0, start_ui, (void*) this, 0, NULL);
 }
 
 
@@ -94,6 +96,24 @@ void slam::update_transition_matrix(float difftime)
 }
 
 
+bool slam::mode(unsigned char mode)
+{
+	return ((this->_mode & mode) != 0x00);
+}
+
+
+void slam::on(unsigned char mode)
+{
+	this->_mode |= mode;
+}
+
+
+void slam::off(unsigned char mode)
+{
+	this->_mode &= ~mode;
+}
+
+
 float* slam::get_state()
 {
 	return (float*) KF.statePost.data;
@@ -114,6 +134,8 @@ void slam::add_input_frame(bot_ardrone_frame *f)
 		queue_frame.push(f);
 	else if(!SLAM_USE_QUEUE)
 		m_frame->process(f);
+	else
+		delete f;
 
 
 	/*

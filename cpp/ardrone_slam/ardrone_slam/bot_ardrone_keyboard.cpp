@@ -33,10 +33,18 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 		case VK_RETURN:
 			if (wParam == WM_KEYDOWN)
 			{
-				for(i=0; i<keyboard_nr_bots; i++)
-					keyboard_bot[i]->set_slam(!keyboard_bot[i]->slam_state);
+				stop_behavior = !stop_behavior;
+				//for(i=0; i<keyboard_nr_bots; i++)
+					//keyboard_bot[i]->set_slam(!keyboard_bot[i]->slam_state);
 			}
 			break;
+
+		case 77: // M
+			for(i=0; i<keyboard_nr_bots; i++)
+			{
+				keyboard_bot[i]->get_slam()->off(SLAM_MODE_MAP);
+				keyboard_bot[i]->get_slam()->on(SLAM_MODE_VISUALLOC);
+			}
 
 		case 82: // R (recover)
 			for(i=0; i<keyboard_nr_bots; i++)
@@ -136,7 +144,6 @@ void keyboard_set(int action, int type, bool increment)
 		/* keydown */
 		else if (action == WM_KEYDOWN)
 			val = increment ? keyboard_vel : -keyboard_vel;
-
 
 		if (keyboard_bot[i]->control_get(BOT_ARDRONE_Velocity, type) != val)
 		{

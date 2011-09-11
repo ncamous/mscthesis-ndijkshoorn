@@ -241,14 +241,14 @@ void bot_ardrone::set_playback(char *dataset)
 }
 
 
+slam* bot_ardrone::get_slam()
+{
+	return slamcontroller;
+}
+
+
 void bot_ardrone::set_slam(bool state)
 {
-	if (!SLAM_ENABLED)
-	{
-		printf("Unable to set SLAM state, because SLAM_ENABLED is FALSE\n");
-		return;
-	}
-
 	slam_state = state;
 
 	printf("SLAM state: %s\n", state ? "ENABLED" : "DISABLED");
@@ -274,7 +274,7 @@ void bot_ardrone::get_slam_or(float *or)
 }
 
 
-void bot_ardrone::flyto(float x, float y, float z)
+bool bot_ardrone::flyto(float x, float y, float z)
 {
 	float pos[3];
 	float or[3];
@@ -307,7 +307,7 @@ void bot_ardrone::flyto(float x, float y, float z)
 		dx = Mpos.at<float>(0);
 		dy = Mpos.at<float>(1);
 
-		if (abs(dx) < 300.0f && abs(dy) < 300.0f)
+		if (abs(dx) < 350.0f && abs(dy) < 350.0f)
 		{
 			control_reset();
 			control_update();
@@ -320,21 +320,14 @@ void bot_ardrone::flyto(float x, float y, float z)
 			//printf("pos: %f, %f dist: %f, %f OR: %f\n", pos[0], pos[1], dx, dy, or[2]);
 		}
 
-		float velX = min(0.065f, (dx*dx) / 1800000.0f);
-		float velY = min(0.065f, (dy*dy) / 1800000.0f);
-
-		/*
-		if (abs(dx) > abs(dy))
-			velY *= (abs(dy) / abs(dx));
-		else
-			velX *= (abs(dx) / abs(dy));
-		*/
+		float velX = min(0.25f, (dx*dx) / 3000000.0f);
+		float velY = min(0.25f, (dy*dy) / 3000000.0f);
 
 		if (dx < 0.0f)
-			velX = -abs(velX);
+			velX = -velX;
 
 		if (dy < 0.0f)
-			velY = -abs(velY);
+			velY = -velY;
 
 		control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_LinearVelocity, velX);
 		control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_LateralVelocity, velY);
@@ -342,6 +335,11 @@ void bot_ardrone::flyto(float x, float y, float z)
 
 		//printf("vel: %f, %f\n", velX, velY);
 
-		Sleep(50);
+		if (stop_behavior)
+			return false;
+
+		Sleep(100);
 	}
+
+	return true;
 }

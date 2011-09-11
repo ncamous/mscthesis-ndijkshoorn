@@ -26,8 +26,6 @@ private:
 	slam *controller;
 
 	int counter;
-	bool use_vel_sensor;
-	bool use_sensor;
 
 
 	/* KF */

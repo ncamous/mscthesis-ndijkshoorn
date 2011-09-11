@@ -29,6 +29,9 @@ public:
 	void slam::run();
 
 	float* get_state();
+	bool mode(unsigned char mode);
+	void on(unsigned char mode);
+	void off(unsigned char mode);
 
 	void add_input_frame(bot_ardrone_frame *f);
 	void add_input_framefile(char *filename);
@@ -39,7 +42,7 @@ public:
 	void sensor_resume();
 
 	/* settings */
-	unsigned char mode;
+	unsigned char _mode;
 	unsigned char bot_id;
 
 	/* threads */

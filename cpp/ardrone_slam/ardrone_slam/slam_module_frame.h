@@ -1,5 +1,6 @@
 #pragma once
 
+#include "slam_visual_map.h"
 #include "opencv2/core/types_c.h"
 #include "opencv2/video/tracking.hpp"
 #include "opencv2/features2d/features2d.hpp"
@@ -18,6 +19,10 @@ public:
 	void set_camera();
 
 	void process(bot_ardrone_frame *f);
+	void process_visual_state();
+	void process_visual_loc();
+	void CornerHistMatch(vector<CornerHist>& query_descriptors, vector<CornerHist>& train_descriptors, vector<DMatch>& matches, float *pos);
+
 	int find_robust_matches(vector<Point2f>& p1, vector<Point2f>& p2, vector<DMatch>& matches, vector<short>& mask, int max);
 	int find_object_position(Mat& cam_pos, Mat& cam_or, vector<DMatch>& matches, vector<short>& mask);
 	int find_features(Mat& frame, vector<KeyPoint> &v);
@@ -46,8 +51,6 @@ public:
 
 private:
 	slam *controller;
-
-	bool use_visual;
 
 	bot_ardrone_frame *f;
 
