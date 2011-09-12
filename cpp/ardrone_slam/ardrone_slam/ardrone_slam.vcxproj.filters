@@ -58,6 +58,12 @@
     <Filter Include="Source Files\helpers\opencv">
       <UniqueIdentifier>{8d0dcb2c-9690-455e-b0e8-ea1179136d34}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\forcefield">
+      <UniqueIdentifier>{822032dd-a475-4622-9e9c-644a93b31ff3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\forcefield">
+      <UniqueIdentifier>{26e20097-b87c-417c-a075-965d4ed45da2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -107,6 +113,18 @@
     </ClCompile>
     <ClCompile Include="bot_ardrone_behavior.cpp">
       <Filter>Source Files\bots\ardrone</Filter>
+    </ClCompile>
+    <ClCompile Include="linalg.cpp">
+      <Filter>Source Files\forcefield</Filter>
+    </ClCompile>
+    <ClCompile Include="reinflearn.cpp">
+      <Filter>Source Files\forcefield</Filter>
+    </ClCompile>
+    <ClCompile Include="rl_forcefield.cpp">
+      <Filter>Source Files\forcefield</Filter>
+    </ClCompile>
+    <ClCompile Include="rl_stage.cpp">
+      <Filter>Source Files\forcefield</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -166,6 +184,15 @@
     </ClInclude>
     <ClInclude Include="opencv_helpers.h">
       <Filter>Header Files\helpers\opencv</Filter>
+    </ClInclude>
+    <ClInclude Include="linalg.h">
+      <Filter>Header Files\forcefield</Filter>
+    </ClInclude>
+    <ClInclude Include="reinflearn.h">
+      <Filter>Header Files\forcefield</Filter>
+    </ClInclude>
+    <ClInclude Include="rl_forcefield.h">
+      <Filter>Header Files\forcefield</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

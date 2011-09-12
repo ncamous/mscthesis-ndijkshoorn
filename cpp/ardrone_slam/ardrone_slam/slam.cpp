@@ -58,6 +58,9 @@ void slam::run()
 
 void slam::init_kf()
 {
+	//KF.statePost.at<float>(1) = 1500.0f;
+
+
 	// F vector
 	setIdentity(KF.transitionMatrix); // completed (T added) when measurement received and T is known
 

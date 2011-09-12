@@ -27,10 +27,9 @@ int main(int argc, char *argv[])
 
 
 	Sleep(3000);
-	ardrone.set_slam(true);
 
 
-	//bot_ardrone_behavior autonomous(&ardrone);
+	bot_ardrone_behavior autonomous(&ardrone);
 
 
 	bot_ardrone_keyboard kb(bots, nr_bots);

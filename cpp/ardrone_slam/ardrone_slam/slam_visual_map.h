@@ -20,13 +20,15 @@ public:
 	void update(cv::Mat& frame, std::vector<cv::Point2f>& lc, std::vector<cv::Point3f>& wc);
 	void frame_to_canvas(cv::Mat& frame, cv::Mat& frameT, std::vector<cv::Point2f>& lc, std::vector<cv::Point3f>& wc);
 	bool is_updated(int* dst, bool reset_roi = false);
-	void find_corners(cv::Mat& img, std::vector<CornerHist>& list, bool unique = false);
+	void find_corners(cv::Mat& img, std::vector<CornerHist>& list, std::vector<cv::Point2f>& list_p, bool unique = false);
 	bool corner_at_wc(cv::Point2f wc);
+	bool inside(cv::Mat& m, cv::Rect& r);
 
 	cv::Mat canvas;
 
 	/* corners */
 	std::vector<CornerHist> corners;
+	std::vector<cv::Point2f> corners_p;
 	int channels[2];
 	int h_bins;
 	int s_bins;
