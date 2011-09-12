@@ -33,9 +33,9 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 		case VK_RETURN:
 			if (wParam == WM_KEYDOWN)
 			{
-				stop_behavior = !stop_behavior;
-				//for(i=0; i<keyboard_nr_bots; i++)
-					//keyboard_bot[i]->set_slam(!keyboard_bot[i]->slam_state);
+				//stop_behavior = !stop_behavior;
+				for(i=0; i<keyboard_nr_bots; i++)
+					keyboard_bot[i]->set_slam(!keyboard_bot[i]->slam_state);
 			}
 			break;
 
@@ -120,9 +120,16 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 			break;
 		
 		case VK_ESCAPE:
+			if (wParam == WM_KEYDOWN)
+			{
+				stop_behavior = !stop_behavior;
+				printf("Autonomous behavior: %s\n", stop_behavior ? "Stopped" : "Running");
+			}
+			/*
 			exit_application = true;
 			UnhookWindowsHookEx(hHook);
 			PostQuitMessage(0);
+			*/
 			break;
 	}
 

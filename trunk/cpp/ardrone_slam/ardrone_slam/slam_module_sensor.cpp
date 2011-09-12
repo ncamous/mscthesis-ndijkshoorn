@@ -211,7 +211,7 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 	/* elevation map */
 	// check is mapping mode is on
-	update_elevation_map(m->altitude/* - alt_correct*/);
+	//update_elevation_map(m->altitude/* - alt_correct*/);
 
 	/*
 	if (counter++ % 30 == 0)

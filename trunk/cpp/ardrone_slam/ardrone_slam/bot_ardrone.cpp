@@ -312,7 +312,6 @@ bool bot_ardrone::flyto(float x, float y, float z)
 			control_reset();
 			control_update();
 			printf("reached %f, %f!\n", x, y);
-			Sleep(5000);
 			break; 
 		}
 		else
@@ -331,6 +330,52 @@ bool bot_ardrone::flyto(float x, float y, float z)
 
 		control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_LinearVelocity, velX);
 		control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_LateralVelocity, velY);
+		control_update();
+
+		//printf("vel: %f, %f\n", velX, velY);
+
+		if (stop_behavior)
+			return false;
+
+		Sleep(100);
+	}
+
+	return true;
+}
+
+
+bool bot_ardrone::heightto(float z)
+{
+	float pos[3];
+	float dz;
+	bool reached = false;
+
+	Mat Mpos(3, 1, CV_32F);
+
+	while (1)
+	{
+		get_slam_pos(pos);
+
+		dz = z - pos[2];
+
+		if (abs(dz) < 200.0f)
+		{
+			control_reset();
+			control_update();
+			printf("reached alt %f!\n", z);
+			break; 
+		}
+		else
+		{
+			//printf("pos: %f, %f dist: %f, %f OR: %f\n", pos[0], pos[1], dx, dy, or[2]);
+		}
+
+		float velZ = min(0.4f, (dz*dz) / 3000000.0f);
+
+		if (dz > 0.0f)
+			velZ = -velZ;
+
+		control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_AltitudeVelocity, velZ);
 		control_update();
 
 		//printf("vel: %f, %f\n", velX, velY);

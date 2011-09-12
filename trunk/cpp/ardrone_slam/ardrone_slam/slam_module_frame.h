@@ -23,7 +23,7 @@ public:
 	void process_visual_loc();
 	void CornerHistMatch(vector<CornerHist>& query_descriptors, vector<CornerHist>& train_descriptors, vector<DMatch>& matches, float *pos);
 
-	int find_robust_matches(vector<Point2f>& p1, vector<Point2f>& p2, vector<DMatch>& matches, vector<short>& mask, int max);
+	int find_robust_matches(vector<Point2f>& p1, vector<Point2f>& p2, vector<DMatch>& matches, vector<short>& mask, int max, cv::Mat& H, double maxInlierDist = 3.0);
 	int find_object_position(Mat& cam_pos, Mat& cam_or, vector<DMatch>& matches, vector<short>& mask);
 	int find_features(Mat& frame, vector<KeyPoint> &v);
 	void add_frame_to_map();
@@ -102,5 +102,7 @@ private:
 	Mat measurementNoiseCov;
 
 	double difftime;
+
+	clock_t last_loc;
 };
 

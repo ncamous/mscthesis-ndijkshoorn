@@ -95,15 +95,15 @@ void slam_visual_map::update(Mat& frame, vector<Point2f>& lc, vector<Point3f>& w
 
 
 	// find corners
-	find_corners(subCanvas, corners, true);
+	find_corners(subCanvas, corners, corners_p, true);
 
-	/*
+
 	for (size_t i = 0; i < corners.size(); i++)
 	{
-		circle(canvas, corners[i].cc, 10, Scalar(0,0,255), 1, 8);
-		printf("wc: %f, %f\n", corners[i].wc.x, corners[i].wc.y);
+		circle(canvas, corners[i].cc, 15, Scalar(0,0,255), 1, 8);
+		//printf("wc: %f, %f\n", corners[i].wc.x, corners[i].wc.y);
 	}
-	*/
+
 	//printf("#corners: %i\n", corners.size());
 
 
@@ -216,7 +216,7 @@ void slam_visual_map::update_roi(int *src, int *dst)
 }
 
 
-void slam_visual_map::find_corners(Mat& img, vector<CornerHist>& list, bool unique)
+void slam_visual_map::find_corners(Mat& img, vector<CornerHist>& list, vector<Point2f>& list_p, bool unique)
 {
 	Mat gray(img.rows, img.cols, CV_8U);
 	Mat hsv(img.rows, img.cols, CV_8UC3);
@@ -225,33 +225,50 @@ void slam_visual_map::find_corners(Mat& img, vector<CornerHist>& list, bool uniq
 
 	vector<Point2f> points;
 
-	goodFeaturesToTrack(gray, points, 20, 0.3, 20, Mat(), 3, 0, 0.04);
+	goodFeaturesToTrack(gray, points, 50, 0.1, 15, Mat(), 3, 0, 0.04);
+
+	printf("%i\n", points.size());
 
 	if (points.size() == 0)
 		return;
 
-	cornerSubPix(gray, points, Size(10,10), cvSize(-1,-1), termcrit);
+	cornerSubPix(gray, points, Size(30,30), cvSize(-1,-1), termcrit);
 
 	Point2f wc;
+	Rect area;
 
 	for(size_t i = 0; i < points.size(); i++)
 	{
 		cell_to_worldpos(points[i], wc);
 
-		points[i].x += frame_roi[0];
-		points[i].y += frame_roi[2];
-
 		if (unique && corner_at_wc(wc))
 			continue;
+
+		area.x = (int) (points[i].x - 15.0f);
+		area.y = (int) (points[i].y - 15.0f);
+		area.width = area.height = 30;
+		printf("%f, %f\n", points[i].x, points[i].y);
+
+		if (!inside(hsv, area))
+		{
+			printf("area not in img\n");
+			continue;
+		}
+
+		Mat window(hsv, area);
+
+		points[i].x += frame_roi[0];
+		points[i].y += frame_roi[2];
 
 		CornerHist hist;
 		hist.wc = wc;
 		hist.cc = points[i];
 		//circle(img, points[i], 10, Scalar(0,0,255), 2, 8);
-		calcHist(&hsv, 1, channels, Mat(), hist.hist, 2, histSize, ranges, true, false);
+		calcHist(&window, 1, channels, Mat(), hist.hist, 2, histSize, ranges, true, false);
 		normalize(hist.hist, hist.hist, 0, 1, NORM_MINMAX, -1, Mat());
 
 		list.push_back(hist);
+		list_p.push_back(hist.wc);
 	}
 }
 
@@ -265,4 +282,15 @@ bool slam_visual_map::corner_at_wc(Point2f wc)
 	}
 
 	return false;
+}
+
+
+bool slam_visual_map::inside(Mat& m, Rect& r)
+{
+	Size size = m.size();
+
+	if (r.x + r.width >= size.width || r.y + r.height >= size.height || r.x - r.width < 0 || r.y - r.height < 0)
+		return false;
+
+	return true;
 }

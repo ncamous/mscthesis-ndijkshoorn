@@ -80,9 +80,13 @@
     <ClCompile Include="bot_ardrone_recorder.cpp" />
     <ClCompile Include="bot_ardrone_usarsim.cpp" />
     <ClCompile Include="bot_ardrone.cpp" />
+    <ClCompile Include="linalg.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mysocket.cpp" />
     <ClCompile Include="opencv_helpers.cpp" />
+    <ClCompile Include="reinflearn.cpp" />
+    <ClCompile Include="rl_forcefield.cpp" />
+    <ClCompile Include="rl_stage.cpp" />
     <ClCompile Include="slam.cpp" />
     <ClCompile Include="slam_elevation_map.cpp" />
     <ClCompile Include="slam_module_frame.cpp" />
@@ -101,8 +105,11 @@
     <ClInclude Include="bot_ardrone_usarsim.h" />
     <ClInclude Include="bot_ardrone.h" />
     <ClInclude Include="global.h" />
+    <ClInclude Include="linalg.h" />
     <ClInclude Include="mysocket.h" />
     <ClInclude Include="opencv_helpers.h" />
+    <ClInclude Include="reinflearn.h" />
+    <ClInclude Include="rl_forcefield.h" />
     <ClInclude Include="slam.h" />
     <ClInclude Include="slam_elevation_map.h" />
     <ClInclude Include="slam_module_frame.h" />

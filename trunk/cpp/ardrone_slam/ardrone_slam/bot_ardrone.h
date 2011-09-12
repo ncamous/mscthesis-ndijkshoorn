@@ -104,6 +104,7 @@ public:
 	void get_slam_pos(float *pos);
 	void get_slam_or(float *or);
 	bool flyto(float x, float y, float z = NULL);
+	bool heightto(float z);
 
 	static clock_t start_clock;
 	unsigned char id;
