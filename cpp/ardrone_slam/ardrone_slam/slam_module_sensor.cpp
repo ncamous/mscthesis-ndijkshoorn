@@ -87,6 +87,8 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 		return;
 	}
 
+	//printf("sonar: %i\n", m->altitude);
+
 
 	bool use_accel	= controller->mode(SLAM_MODE_ACCEL);
 	bool use_vel	= controller->mode(SLAM_MODE_VEL);

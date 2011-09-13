@@ -318,7 +318,7 @@ void slam_module_frame::process_visual_loc()
 	vector<Point3f> image_corners_wc;
 	Mat frameT;
 
-	controller->sensor_pause(f->time);
+	//controller->sensor_pause(f->time);
 
 	// get local world coordinates of the image corners
 	imagepoints_to_local3d(image_corners, image_corners_wc);
@@ -326,10 +326,11 @@ void slam_module_frame::process_visual_loc()
 	// transform frame to canvas
 	controller->visual_map.frame_to_canvas(frame, frameT, image_corners, image_corners_wc);
 
+
 	// find corners in transformed frame
 	controller->visual_map.find_corners(frameT, corners, corners_p, false);
 
-	printf("frame corners: %i\n", corners.size());
+	//printf("frame corners: %i\n", corners.size());
 
 	// match (P) histograms + distance
 	//printf("Matching\n");
@@ -341,7 +342,8 @@ void slam_module_frame::process_visual_loc()
 
 	CornerHistMatch(corners, controller->visual_map.corners, matches, (float*) cam_pos.data);
 
-	if (matches.size() > 0)
+	/*
+	if (matches.size() < 4)
 	{
 		//printf("%i matches: 1 point LOC\n", matches.size());
 
@@ -358,8 +360,6 @@ void slam_module_frame::process_visual_loc()
 			}
 		}
 
-		printf("best dist: %f\n", best_distance);
-
 		if (best_distance <= 0.3)
 		{
 
@@ -367,17 +367,21 @@ void slam_module_frame::process_visual_loc()
 			int tIdx = matches[ best_i ].trainIdx;
 
 			Point2f translate = corners[ qIdx ].wc - controller->visual_map.corners[ tIdx ].wc;
+			//translate.x = corners[ qIdx ].wc.x - controller->visual_map.corners[ tIdx ].wc.x;
+			//translate.y = corners[ qIdx ].wc.y - controller->visual_map.corners[ tIdx ].wc.y;
 
-			cam_pos.at<float>(0) += translate.x;
-			cam_pos.at<float>(1) += translate.y;
+			//printf("%f, %f\n", translate.x, translate.y);
 
-			/* lock KF */
+			cam_pos.at<float>(0) -= translate.x;
+			cam_pos.at<float>(1) -= translate.y;
+
 			WaitForSingleObject(controller->KFSemaphore, 0L);
+
+			localcam_to_world(cam_pos, cam_or);
 
 			state->at<float>(0) = cam_pos.at<float>(0);
 			state->at<float>(1) = cam_pos.at<float>(1);
 
-			/* unlock KF */
 			ReleaseSemaphore(controller->KFSemaphore, 1, NULL);
 			last_loc = clock();
 
@@ -386,44 +390,53 @@ void slam_module_frame::process_visual_loc()
 		}
 
 	}
-	/*
-	else
+	else*/
+	if (matches.size() >= 4)
 	{
-
+		/*
 		for (int i = 0; i < (int) matches.size(); i++)
 		{
 			printf("query %i -> %i (%f)\n", matches[i].queryIdx, matches[i].trainIdx, matches[i].distance);
 		}
+		*/
 
 		// ransac for inliers
 		vector<short> mask;
 		vector<Point2f> ip;
 		Mat H(3, 3, CV_64F);
 
-		int nr_inliers = find_robust_matches(corners_p, controller->visual_map.corners_p, matches, mask, 50, H, 10.0);
-		printf("found %i - inliers: %i\n", corners.size(), nr_inliers);
-		if (nr_inliers > 2)
+		int nr_inliers = find_robust_matches(corners_p, controller->visual_map.corners_p, matches, mask, 50, H, 8.0);
+		//printf("found %i - inliers: %i\n", corners.size(), nr_inliers);
+		if (nr_inliers > 3)
 		{
-
 			float translate[2];
 			translate[0] = (float) H.at<double>(0, 2);
 			translate[1] = (float) H.at<double>(1, 2);
 
-			//dumpMatrix(H);
+			dumpMatrix(H);
 
 			//printf("%f, %f\n", translate[0], translate[1]);
 
-			printf("state: %f, %f\n", state->at<float>(0), state->at<float>(1));
+			//printf("state: %f, %f\n", state->at<float>(0), state->at<float>(1));
 
 			cam_pos.at<float>(0) += translate[0];
 			cam_pos.at<float>(1) += translate[1];
 
-			//object_to_worldpos(obj_pos, obj_or, new_pos, new_or);
+			/* lock KF */
+			WaitForSingleObject(controller->KFSemaphore, 0L);
+
 			localcam_to_world(cam_pos, cam_or);
 
-			printf("loc state: %f, %f\n", cam_pos.at<float>(0), cam_pos.at<float>(1));
+			state->at<float>(0) = cam_pos.at<float>(0);
+			state->at<float>(1) = cam_pos.at<float>(1);
+
+			/* unlock KF */
+			ReleaseSemaphore(controller->KFSemaphore, 1, NULL);
+			last_loc = clock();
+
+			printf("!!!!! performed LOC update (multiple)\n");
 		}
-	}*/
+	}
 
 	controller->sensor_resume();
 }
@@ -446,6 +459,9 @@ void slam_module_frame::CornerHistMatch(vector<CornerHist>& query_descriptors, v
             for( size_t iIdx = 0; iIdx < train_size; iIdx++ )
             {
                 score = 1.0 - compareHist( query_descriptors[qIdx].hist, train_descriptors[iIdx].hist, 0 );
+				if (score > 0.1)
+					continue;
+
 				score += norm(estimated_pos - train_descriptors[iIdx].wc) / 10000.0f;
 
 				//printf("[%i,%i] = %f\n", qIdx, iIdx, score);
@@ -457,7 +473,7 @@ void slam_module_frame::CornerHistMatch(vector<CornerHist>& query_descriptors, v
 				}
             }
 
-			if (min_distance < 0.4f)
+			if (min_distance < 0.5f)
 			{
 				matches.push_back( DMatch( qIdx, best_iIdx, (float) min_distance ) );
 			}

@@ -307,7 +307,7 @@ bool bot_ardrone::flyto(float x, float y, float z)
 		dx = Mpos.at<float>(0);
 		dy = Mpos.at<float>(1);
 
-		if (abs(dx) < 350.0f && abs(dy) < 350.0f)
+		if (abs(dx) < 500.0f && abs(dy) < 500.0f)
 		{
 			control_reset();
 			control_update();
@@ -319,8 +319,8 @@ bool bot_ardrone::flyto(float x, float y, float z)
 			//printf("pos: %f, %f dist: %f, %f OR: %f\n", pos[0], pos[1], dx, dy, or[2]);
 		}
 
-		float velX = min(0.25f, (dx*dx) / 3000000.0f);
-		float velY = min(0.25f, (dy*dy) / 3000000.0f);
+		float velX = min(0.10f, (dx*dx) / 3000000.0f);
+		float velY = min(0.10f, (dy*dy) / 3000000.0f);
 
 		if (dx < 0.0f)
 			velX = -velX;

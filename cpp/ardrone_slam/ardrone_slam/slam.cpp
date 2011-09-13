@@ -58,7 +58,7 @@ void slam::run()
 
 void slam::init_kf()
 {
-	//KF.statePost.at<float>(1) = 1500.0f;
+	//KF.statePost.at<float>(1) = -1500.0f;
 
 
 	// F vector

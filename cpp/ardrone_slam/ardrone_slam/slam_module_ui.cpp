@@ -28,7 +28,7 @@ void slam_module_ui::update()
 		init();
 
 
-	if (clock() - prev_update > CLOCKS_PER_SEC)
+	if (clock() - prev_update > 0.5f * CLOCKS_PER_SEC)
 	{
 		int roi[4];
 
