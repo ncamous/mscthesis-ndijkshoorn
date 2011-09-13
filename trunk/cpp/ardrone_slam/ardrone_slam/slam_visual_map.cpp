@@ -2,6 +2,11 @@
 #include "slam_visual_map.h"
 #include "opencv_helpers.h"
 
+// TMP
+#include <cv.hpp>
+#include <cxcore.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
 using namespace std;
 using namespace cv;
 
@@ -97,12 +102,13 @@ void slam_visual_map::update(Mat& frame, vector<Point2f>& lc, vector<Point3f>& w
 	// find corners
 	find_corners(subCanvas, corners, corners_p, true);
 
-
+	/*
 	for (size_t i = 0; i < corners.size(); i++)
 	{
-		circle(canvas, corners[i].cc, 15, Scalar(0,0,255), 1, 8);
+		circle(canvas, corners[i].cc, 5, Scalar(0,0,255), 3, 8);
 		//printf("wc: %f, %f\n", corners[i].wc.x, corners[i].wc.y);
 	}
+	*/
 
 	//printf("#corners: %i\n", corners.size());
 
@@ -218,58 +224,78 @@ void slam_visual_map::update_roi(int *src, int *dst)
 
 void slam_visual_map::find_corners(Mat& img, vector<CornerHist>& list, vector<Point2f>& list_p, bool unique)
 {
-	Mat gray(img.rows, img.cols, CV_8U);
+	//vector<Mat> channels;
+	//split(img, channels);
+	Mat gray(img.rows, img.cols, CV_8UC1);
 	Mat hsv(img.rows, img.cols, CV_8UC3);
-	cvtColor(img, gray, CV_BGR2GRAY);
 	cvtColor(img, hsv, CV_BGR2HSV);
+	cvtColor(img, gray, CV_BGR2GRAY);
 
 	vector<Point2f> points;
 
-	goodFeaturesToTrack(gray, points, 50, 0.1, 15, Mat(), 3, 0, 0.04);
+	/*
+		cvNamedWindow("B", CV_WINDOW_AUTOSIZE);
+		imshow("B", channels[0]);
+		cvWaitKey(4);
+		cvNamedWindow("G", CV_WINDOW_AUTOSIZE);
+		imshow("G", channels[1]);
+		cvWaitKey(4);
+		cvNamedWindow("R", CV_WINDOW_AUTOSIZE);
+		imshow("R", channels[2]);
+		cvWaitKey(4);
+	*/
 
-	printf("%i\n", points.size());
+	//for (size_t i = 0; i < channels.size(); i++)
+	//{
+		goodFeaturesToTrack(gray, points, 50, 0.065, 10, Mat(), 3, 0, 0.04);
 
-	if (points.size() == 0)
-		return;
+		if (points.size() == 0)
+			return;
 
-	cornerSubPix(gray, points, Size(30,30), cvSize(-1,-1), termcrit);
+		cornerSubPix(gray, points, Size(10,10), cvSize(-1,-1), termcrit);
 
-	Point2f wc;
-	Rect area;
+		Point2f wc;
+		Rect area;
 
-	for(size_t i = 0; i < points.size(); i++)
-	{
-		cell_to_worldpos(points[i], wc);
-
-		if (unique && corner_at_wc(wc))
-			continue;
-
-		area.x = (int) (points[i].x - 15.0f);
-		area.y = (int) (points[i].y - 15.0f);
-		area.width = area.height = 30;
-		printf("%f, %f\n", points[i].x, points[i].y);
-
-		if (!inside(hsv, area))
+		for(size_t i = 0; i < points.size(); i++)
 		{
-			printf("area not in img\n");
-			continue;
+			cell_to_worldpos(points[i], wc);
+
+			//if (unique && corner_at_wc(wc))
+			//	continue;
+
+			area.x = (int) (points[i].x - 5.0f);
+			area.y = (int) (points[i].y - 5.0f);
+			area.width = area.height = 10;
+
+			if (!inside(hsv, area))
+				continue;
+
+			Mat window(hsv, area);
+
+			Mat tmp = img.clone();
+
+			/*
+			circle(tmp, points[i], 5, Scalar(0,0,255), 3, 8);
+			cvNamedWindow("B", CV_WINDOW_AUTOSIZE);
+			imshow("B", tmp);
+			cvWaitKey(4);
+			*/
+
+			points[i].x += frame_roi[0];
+			points[i].y += frame_roi[2];
+
+			CornerHist hist;
+			hist.wc = wc;
+			hist.cc = points[i];
+			circle(img, points[i], 5, Scalar(0,0,255), 2, 8);
+			calcHist(&window, 1, this->channels, Mat(), hist.hist, 2, histSize, ranges, true, false);
+			normalize(hist.hist, hist.hist, 0, 1, NORM_MINMAX, -1, Mat());
+
+			list.push_back(hist);
+			list_p.push_back(hist.wc);
 		}
-
-		Mat window(hsv, area);
-
-		points[i].x += frame_roi[0];
-		points[i].y += frame_roi[2];
-
-		CornerHist hist;
-		hist.wc = wc;
-		hist.cc = points[i];
-		//circle(img, points[i], 10, Scalar(0,0,255), 2, 8);
-		calcHist(&window, 1, channels, Mat(), hist.hist, 2, histSize, ranges, true, false);
-		normalize(hist.hist, hist.hist, 0, 1, NORM_MINMAX, -1, Mat());
-
-		list.push_back(hist);
-		list_p.push_back(hist.wc);
-	}
+	//}
 }
 
 

@@ -34,25 +34,15 @@ void bot_ardrone_behavior::map()
 
 	Sleep(5000); // safe?
 
-	if(stop_behavior || !bot->heightto(-2000.0f))
+	if(stop_behavior || !bot->heightto(-1500.0f))
 		return;
 
-	if(stop_behavior || !bot->flyto(0.0f, 1500.0f))
-		return;
-
+	//1
 	if(stop_behavior || !bot->flyto(6000.0f, 1500.0f))
 		return;
 
+	//2
 	if(stop_behavior || !bot->flyto(6000.0f, -1500.0f))
-		return;
-
-	if(stop_behavior || !bot->flyto(-6300.0, -1500.0f))
-		return;
-
-	if(stop_behavior || !bot->flyto(-6300.0f, 1500.0f))
-		return;
-
-	if(stop_behavior || !bot->flyto(0.0f, 1500.0f))
 		return;
 
 	if(stop_behavior || !bot->flyto(0.0f, -1500.0f))
@@ -61,7 +51,23 @@ void bot_ardrone_behavior::map()
 	if(stop_behavior || !bot->flyto(0.0f, 1500.0f))
 		return;
 
-	if(stop_behavior || !bot->heightto(-1000.0f))
+	//3.5
+	if(stop_behavior || !bot->flyto(-6300.0f, 1500.0f))
+		return;
+
+	//4
+	if(stop_behavior || !bot->flyto(-6300.0, -1500.0f))
+		return;
+
+	//5
+	if(stop_behavior || !bot->flyto(0.0f, -1500.0f))
+		return;
+
+	//6
+	if(stop_behavior || !bot->flyto(0.0f, -1500.0f))
+		return;
+
+	if(stop_behavior || !bot->heightto(-1200.0f))
 		return;
 
 	bot->control_reset();
@@ -72,7 +78,7 @@ void bot_ardrone_behavior::map()
 void bot_ardrone_behavior::forcefield()
 {
 	bot->get_slam()->off(SLAM_MODE_MAP);
-	bot->get_slam()->on(SLAM_MODE_VISUALLOC);
+	//bot->get_slam()->on(SLAM_MODE_VISUALLOC);
 	reinflearn *rf = new reinflearn(bot);
 
 	//delete[] rf;

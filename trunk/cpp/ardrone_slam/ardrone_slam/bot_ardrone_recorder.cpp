@@ -39,7 +39,6 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 {
 	WaitForSingleObject(ghSemaphore, 0L);
 
-	/*
 	fprintf (file_out, "---\n");
 	fprintf (file_out, "e: %i\n", BOT_EVENT_MEASUREMENT);
 	//fprintf (file_out, "s: %i\n", m->sensor); // USARSim now sends all sensors in a single message
@@ -49,10 +48,9 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 	fprintf (file_out, "or: [%f, %f, %f]\n", m->or[0], m->or[1], m->or[2]);
 	fprintf (file_out, "accel: [%f, %f, %f]\n", m->accel[0], m->accel[1], m->accel[2]);
 	fprintf (file_out, "vel: [%f, %f, %f]\n", m->vel[0], m->vel[1], m->vel[2]);
-	*/
 
 	//fprintf (file_out, "%f,%f,%f,%f,%f,%f\n", m->or[0], m->or[1], m->or[2], m->accel[0], m->accel[1], m->accel[2]);
-	fprintf (file_out, "%f,%f,%f,%f,%f,%f\n", m->or[0], m->or[1], m->or[2], m->vel[0], m->vel[1], m->vel[2]);
+	//fprintf (file_out, "%f,%f,%f,%f,%f,%f\n", m->or[0], m->or[1], m->or[2], m->vel[0], m->vel[1], m->vel[2]);
 
 	/* USARSim only */
 	/*

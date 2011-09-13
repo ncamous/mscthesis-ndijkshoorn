@@ -25,8 +25,13 @@ int main(int argc, char *argv[])
 	//bot_ardrone ardrone(0x00, BOT_ARDRONE_INTERFACE_USARSIM, SLAM_MODE_MAP | SLAM_MODE_ACCEL);
 	bots[nr_bots++] = &ardrone;
 
+	//ardrone.set_record();
+
 
 	Sleep(3000);
+
+	//Sleep(1000);
+	//ardrone.set_slam(true);
 
 
 	bot_ardrone_behavior autonomous(&ardrone);
