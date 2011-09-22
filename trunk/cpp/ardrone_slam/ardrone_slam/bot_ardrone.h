@@ -70,12 +70,13 @@ struct bot_ardrone_measurement {
 
 struct bot_ardrone_frame {
 	double time;
+	unsigned short w;
+	unsigned short h;
 	char *data;
 	char *data_start;
 	int data_size;
 	int dest_size;
 	char filename[25];
-	bool usarsim;
 
 	bot_ardrone_frame();
 	~bot_ardrone_frame();

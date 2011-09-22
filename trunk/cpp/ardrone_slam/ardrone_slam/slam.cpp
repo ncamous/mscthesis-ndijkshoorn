@@ -165,8 +165,7 @@ void slam::add_input_frame(bot_ardrone_frame *f)
 void slam::add_input_framefile(char *filename)
 {
 	bot_ardrone_frame *f = new bot_ardrone_frame;
-	f->usarsim = true;
-	f->data_size = 76036;
+	f->data_size = 101376;
 
 	ifstream frame_in(filename, ios::in | ios::binary);
 
@@ -175,7 +174,6 @@ void slam::add_input_framefile(char *filename)
 	frame_in.close();
 
 	m_frame->process(f);
-	Sleep(2000);
 }
 
 

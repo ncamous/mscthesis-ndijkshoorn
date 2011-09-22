@@ -122,7 +122,7 @@ Parameters:
 void terrain3d::OnCreateDevice( LPDIRECT3DDEVICE9 pDevice )
 {
 	m_terrain.Initialize( pDevice, elevation_map, elevation_map_w, elevation_map_h, texture );
-	m_terrain.ScaleAbs( 0.5f, 0.02f, 0.5f ); // 50mm x 1mm x 50mm
+	m_terrain.ScaleAbs( 0.5f, /*0.02f*/ 0.01f, 0.5f ); // 50mm x 1mm x 50mm
 
 	// NICK
 	m_arrow.Initialize( pDevice, arrow );

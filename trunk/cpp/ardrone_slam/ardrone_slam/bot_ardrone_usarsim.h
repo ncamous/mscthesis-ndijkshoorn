@@ -1,7 +1,11 @@
 #pragma once
+#include "global.h"
 #include "botinterface.h"
 #include "mysocket.h"
 #include <string>
+
+#include <cv.hpp>
+#include <cxcore.hpp>
 
 #define BOT_ARDRONE_USARSIM_SOCKET_CONTROL 1
 #define BOT_ARDRONE_USARSIM_SOCKET_FRAME 2
@@ -42,4 +46,7 @@ private:
 	bot_ardrone *bot;
 	mysocket *control_socket;
 	mysocket *frame_socket;
+	char frame_buffer[BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE];
+	cv::Mat img_bgr;
+	cv::Mat img_bgra;
 };

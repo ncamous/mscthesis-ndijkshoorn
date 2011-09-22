@@ -3,11 +3,13 @@
 #include <windows.h>
 #include <string>
 
-#include <ardrone_tool/Navdata/ardrone_navdata_client.h>
+#include <ardrone_api.h>
 
+#include <cv.hpp>
+#include <cxcore.hpp>
 
-#define DRONE_VIDEO_MAX_WIDTH 640
-#define DRONE_VIDEO_MAX_HEIGHT 480
+#define DRONE_VIDEO_MAX_WIDTH 512
+#define DRONE_VIDEO_MAX_HEIGHT 512
 
 class bot_ardrone;
 struct bot_ardrone_control;
@@ -55,6 +57,9 @@ private:
 	bot_ardrone *bot;
 	HANDLE ardrone_thread;
 
+	cv::Mat img_bgr565;
+	cv::Mat img_bgra;
+
 	// temp
-	int m_counter;
+	unsigned int m_counter;
 };

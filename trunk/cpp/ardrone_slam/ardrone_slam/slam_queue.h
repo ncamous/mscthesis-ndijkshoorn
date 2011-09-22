@@ -9,8 +9,8 @@ class slam_queue
 public:
 	slam_queue()
 	{
-		event_pushed = CreateEvent(NULL, false, false, (LPTSTR) "SLAM_QUEUE_PUSHED");
-		event_empty = CreateEvent(NULL, false, false, (LPTSTR) "SLAM_QUEUE_EMPTY");
+		event_pushed = CreateEvent(NULL, false, false, NULL /*(LPTSTR) "SLAM_QUEUE_PUSHED"*/);
+		event_empty = CreateEvent(NULL, false, true, NULL /*(LPTSTR) "SLAM_QUEUE_EMPTY"*/);
 	}
 
 	~slam_queue()
@@ -20,6 +20,7 @@ public:
 	void push(const T &t)
 	{
 		q.push(t);
+		ResetEvent(event_empty);
 		SetEvent(event_pushed);
 	}
 

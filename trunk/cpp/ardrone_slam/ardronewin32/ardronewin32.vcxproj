@@ -52,7 +52,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ARDroneLibDir);$(ARDroneLibDir)\VP_SDK\VP_Com\win32;$(ARDroneLibDir)\VP_SDK\VP_Os\win32;$(ARDroneLibDir)\Soft\Lib;$(ARDroneLibDir)\Soft\Common;$(ARDroneLibDir)\VLIB;$(ARDroneLibDir)\VP_SDK;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NO_ARDRONE_MAINLOOP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -62,8 +62,8 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;ArDroneAPI.lib;dinput8.lib;dxguid.lib;comctl32.lib;d3dx9d.lib;dxerr.lib;winmm.lib;d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ws2_32.lib;ARDroneAPI.lib;comctl32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
@@ -103,17 +103,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ardrone_tool_win32.c" />
-    <ClCompile Include="custom_code.c" />
-    <ClCompile Include="Navdata\navdata.c" />
-    <ClCompile Include="Video\video_stage.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ardrone_tool_win32.h" />
-    <ClInclude Include="custom_code.h" />
-    <ClInclude Include="Navdata\navdata.h" />
-    <ClInclude Include="UI\ui.h" />
-    <ClInclude Include="Video\video_stage.h" />
-    <ClInclude Include="win32_custom.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

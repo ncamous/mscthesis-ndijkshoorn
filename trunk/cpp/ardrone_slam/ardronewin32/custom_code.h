@@ -23,12 +23,6 @@ extern "C" {
 #include <stdio.h>
 #include <VP_Os/vp_os_types.h>
 
-C_RESULT signal_exit();
-
-void ARWin32Demo_SetConsoleCursor(int x,int y);
-void ARWin32Demo_AcquireConsole();
-void ARWin32Demo_ReleaseConsole();
-
 #ifdef __cplusplus
 }
 #endif

@@ -56,7 +56,7 @@ private:
 
 	Mat frame;
 	Mat frame_gray;
-	Mat frame_rgba;
+	//Mat frame_rgba;
 
 	Mat obj_pos;
 	Mat obj_or;

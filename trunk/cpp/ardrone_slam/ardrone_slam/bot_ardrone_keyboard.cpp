@@ -42,12 +42,15 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 		case 77: // M
 			for(i=0; i<keyboard_nr_bots; i++)
 			{
+				/*
 				keyboard_bot[i]->get_slam()->off(SLAM_MODE_MAP);
 				keyboard_bot[i]->get_slam()->off(SLAM_MODE_ACCEL);
 				keyboard_bot[i]->get_slam()->KF.statePost.at<float>(1) += 1500.0f;
 				printf("Performed kidnapping!\n");
 				Sleep(2000);
 				keyboard_bot[i]->get_slam()->on(SLAM_MODE_VISUALLOC);
+				*/
+				keyboard_bot[i]->get_slam()->off(SLAM_MODE_MAP);
 			}
 
 		case 82: // R (recover)
