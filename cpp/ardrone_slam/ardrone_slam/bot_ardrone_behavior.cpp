@@ -77,10 +77,11 @@ void bot_ardrone_behavior::map()
 
 void bot_ardrone_behavior::forcefield()
 {
+	/*
 	bot->get_slam()->off(SLAM_MODE_MAP);
 	//bot->get_slam()->on(SLAM_MODE_VISUALLOC);
 	reinflearn *rf = new reinflearn(bot);
-
+	*/
 	//delete[] rf;
 }
 

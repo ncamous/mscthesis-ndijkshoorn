@@ -6,18 +6,19 @@
 
 using namespace std;
 
-bot_ardrone_usarsim::bot_ardrone_usarsim(bot_ardrone *bot)
+bot_ardrone_usarsim::bot_ardrone_usarsim(bot_ardrone *bot):
+	img_bgr(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC3, NULL, 0),
+	img_bgra(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC3, NULL, 0)
 {
 	this->bot = bot;
 
 	frame = new bot_ardrone_frame;
-	frame->usarsim = true;
 
 	/* sockets */
 	printf("Connecting to USARSim\n");
 	control_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CONTROL, USARSIM_PORT, USARSIM_IP, NULL, BOT_ARDRONE_USARSIM_CONTROL_BUFSIZE, (botinterface*) this);
 	printf("Connecting to UPIS\n");
-	frame_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_FRAME, UPIS_PORT, USARSIM_IP, frame->data, BOT_ARDRONE_USARSIM_FRAME_BLOCKSIZE, (botinterface*) this);
+	frame_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_FRAME, UPIS_PORT, USARSIM_IP, /*frame->data,*/frame_buffer, BOT_ARDRONE_USARSIM_FRAME_BLOCKSIZE, (botinterface*) this);
 }
 
 
@@ -34,7 +35,7 @@ void bot_ardrone_usarsim::init(void)
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -51.7,5.9,-4.4}\r\n");
 
 	// doolhof: 8-experiment
-	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -54.2,-6.05,-6.6}\r\n");
+	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -54.2,-6.05,-6.6}\r\n");
 
 	// zebrapad
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -19.3,57.1,-1.1}\r\n");
@@ -43,7 +44,7 @@ void bot_ardrone_usarsim::init(void)
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,10.0,-3.0}\r\n");
 
 	// gym
-	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,0.0,1.5}\r\n");
+	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,0.0,1.5}\r\n");
 
 	control_send("SET {Type Viewports} {Config SingleView} {Viewport1 Camera2}\r\n");
 	//control_send("SET {Type Camera} {Robot ARDrone} {Name Camera2} {Client 10.0.0.2}\r\n");
@@ -211,44 +212,51 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 
 
 	// we dont know image size (bytes) yet
-	if (frame->dest_size == 0 && frame->data_size >= 5)
+	if (frame->dest_size == 0 && frame->data_size >= 9)
 	{
 		unsigned long sizebytes;
-		memcpy_s(&sizebytes, 4, &frame->data[1], 4);
+		memcpy_s(&sizebytes, 4, frame_buffer + 1, 4);
 		frame->dest_size = ntohl(sizebytes);
-		//printf("dest size: %i\n", frame->dest_size);
+
+		memcpy_s(&frame->w, 2, frame_buffer + 5, 2);
+		memcpy_s(&frame->h, 2, frame_buffer + 7, 2);
+		frame->w = ntohs(frame->w);
+		frame->h = ntohs(frame->h);
 
 		frame->time = bot->get_clock(); // get clock time now
 	}
 
-	//printf("Received %i of advertised %i\n", frame->data_size, frame->dest_size);
 
 	// image complete
 	if (frame->dest_size > 0 && frame->data_size-5 >= frame->dest_size) {
 		if (USARIM_FRAME_USERAW || !frame_socket->bytes_waiting())
 		{
-			//printf("completed with %i of advertised %i\n", frame->data_size-5, frame->dest_size); 
-
-			// remove header
-			frame->data += 5;
-			frame->data_size -= 5;
+			frame->data_size -= 9; //5;
 
 			if (check_frame())
-				bot->frame_received(frame);
+			{
+				img_bgr.data = (uchar*) frame_buffer + 9;
+				img_bgra.data = (uchar*) frame->data;
+				cvtColor(img_bgr, img_bgra, CV_BGR2BGRA);
 
-			//reset_frame(frame);
+				bot->frame_received(frame);
+			}
+
+
 			frame = new bot_ardrone_frame;
-			frame->usarsim = true;
-			frame_socket->buffer = frame->data;
+			frame_socket->buffer = frame_buffer;
+
 
 			// slam enabled and queue not empty -> wait
 			if (BOT_ARDRONE_USARSIM_FRAME_MODE == 1 && bot->slam_state)
 			{
-				bot->slamcontroller->queue_frame.wait_until_empty(INFINITE); // move this function to bot_ardrone?
+				bot->slamcontroller->queue_frame.wait_until_empty(INFINITE);
 			}
 			// slam not (yet) enabled, or fixed fps mode
 			else if ((BOT_ARDRONE_USARSIM_FRAME_MODE == 1 && !bot->slam_state) || BOT_ARDRONE_USARSIM_FRAME_MODE == 2)
+			{
 				Sleep(BOT_ARDRONE_USARSIM_FRAME_REQDELAY - 30);
+			}
 
 			frame_socket->send("OK");
 		}
@@ -258,19 +266,11 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 
 bool bot_ardrone_usarsim::check_frame()
 {
-	unsigned short w, h;
-
-	memcpy_s(&w, 2, &frame->data[0], 2);
-	memcpy_s(&h, 2, &frame->data[2], 2);
-
-	w = ntohs(w);
-	h = ntohs(h);
-
-	if (w != BOT_ARDRONE_CAM_RESOLUTION_W || h != BOT_ARDRONE_CAM_RESOLUTION_H)
+	if (frame->w != BOT_ARDRONE_FRAME_W || frame->h != BOT_ARDRONE_FRAME_H)
 	{
 		printf("ERROR: received frame size does not match frame width defined in global (%i, %i)\n",
-			BOT_ARDRONE_CAM_RESOLUTION_W,
-			BOT_ARDRONE_CAM_RESOLUTION_H
+			BOT_ARDRONE_FRAME_W,
+			BOT_ARDRONE_FRAME_H
 		);
 
 		return false;

@@ -14,311 +14,24 @@
  *
  *******************************************************************/
 
-
 #pragma warning( disable : 4996 ) // disable deprecation warning 
 
 #include <stdlib.h>
 
-#include <VP_Os/vp_os_malloc.h>
-#include <VP_Os/vp_os_print.h>
-#include <VP_Api/vp_api_thread_helper.h>
-
-#include <VP_Com/vp_com.h>
-
 #include <ardrone_tool/ardrone_tool.h>
-#include <ardrone_tool/ardrone_time.h>
+#include <ardrone_tool/ardrone_tool_configuration.h>
 #include <ardrone_tool/Control/ardrone_control.h>
-#include <ardrone_tool/Control/ardrone_control_ack.h>
 #include <ardrone_tool/Navdata/ardrone_navdata_client.h>
+#include <ardrone_tool/Video/video_stage.h>
 #include <ardrone_tool/UI/ardrone_input.h>
+#include <VP_Com/vp_com.h>
 #include <ardrone_tool/Com/config_com.h>
 
+#include <ardrone_tool_win32.h>
+
+
+
 extern HANDLE ardrone_ready;
-
-int32_t MiscVar[NB_MISC_VARS] = { 
-               DEFAULT_MISC1_VALUE, 
-               DEFAULT_MISC2_VALUE,
-               DEFAULT_MISC3_VALUE, 
-               DEFAULT_MISC4_VALUE
-                                };
-
-static bool_t need_update   = TRUE;
-static ardrone_timer_t ardrone_tool_timer;
-static int ArdroneToolRefreshTimeInMs = ARDRONE_REFRESH_MS;
-
-/* Those should be defined in ArDroneLib, but there are compilation issues to solve */
-unsigned long bswap(unsigned long x) { return _byteswap_ulong(x); }
-/*
-#include <cmnintrin.h>
-int clz(unsigned long x) { return _CountLeadingZeros(x); }
-*/
-
-int clz(unsigned long x)
-{
-	/* Barbarian counting method if no instrinsic is available */
-	int i; const int L=sizeof(x)*8-1;
-	const unsigned long mask = ( 1 << L );
-	if (x==0) { return L+1; }
-	for (i=0;i<L;i++) { if (x&mask) return i; x<<=1; } 
-	return i;
-}
-
-
-char wifi_ardrone_ip[256] = { WIFI_ARDRONE_IP };
-
-
-/*---------------------------------------------------------------------------------------------------------------------
-Array containing parameters to be sent to the drone before starting flight.
-Those parameters are sent one by one with the use of an acknowledgment to make sure they
-were properly set on the drone.
----------------------------------------------------------------------------------------------------------------------*/
-/// Remote data configuration ///
-ardrone_tool_configure_data_t configure_data[] = {
-  { "general:navdata_demo", "FALSE" },
-  { "control:altitude_max", "10000" },
-  { "control:control_vz_max", "1000" },
-  { "control:outdoor", "FALSE" },
-  //{ "video:camif_fps", "5" },
-  //{ "control:altitude_min", "5000" },
-  //{ "control:flight_without_shell", "FALSE" },
-  { NULL, NULL }
-};
-
-
-
-static int32_t configure_index = 0;
-static ardrone_control_ack_event_t ack_config;
-static bool_t send_com_watchdog = FALSE;
-
-
-
-/*---------------------------------------------------------------------------------------------------------------------
-Makes ardrone tool send a keepalive command to the drone, when the drone detects inactivity for too long.
----------------------------------------------------------------------------------------------------------------------*/
-void ardrone_tool_send_com_watchdog( void )
-{
-  send_com_watchdog = TRUE;
-}
-
-
-/*---------------------------------------------------------------------------------------------------------------------
-Callback function used by 'ardrone_tool_configure' and by itself.
-This function uses the drone control socket and its acknowlegment system to securely
-set some parameters on the drone.
-The parameters to set are stored in the 'configure_data' array.
----------------------------------------------------------------------------------------------------------------------*/
-
-static void ardrone_tool_end_configure( struct _ardrone_control_event_t* event )
-{
-
-  if( event->status == ARDRONE_CONTROL_EVENT_FINISH_SUCCESS )
-    configure_index ++;
-
-  if( configure_data[configure_index].var != NULL && configure_data[configure_index].value != NULL )
-  {
-    ack_config.event                        = ACK_CONTROL_MODE;
-    ack_config.num_retries                  = 20;
-    ack_config.status                       = ARDRONE_CONTROL_EVENT_WAITING;
-    ack_config.ardrone_control_event_start  = NULL;
-    ack_config.ardrone_control_event_end    = ardrone_tool_end_configure;
-    ack_config.ack_state                    = ACK_COMMAND_MASK_TRUE;
-
-    ardrone_at_set_toy_configuration( configure_data[configure_index].var, configure_data[configure_index].value );
-    ardrone_at_send();
-
-    ardrone_control_send_event( (ardrone_control_event_t*)&ack_config );
-  }
-}
-
-
-/*---------------------------------------------------------------------------------------------------------------------
-See 'ardrone_tool_end_configure'
----------------------------------------------------------------------------------------------------------------------*/
-
-static C_RESULT ardrone_tool_configure()
-{
-
-  if( configure_data[configure_index].var != NULL && configure_data[configure_index].value != NULL )
-  {
-    ack_config.event                        = ACK_CONTROL_MODE;
-    ack_config.num_retries                  = 20;
-    ack_config.status                       = ARDRONE_CONTROL_EVENT_WAITING;
-    ack_config.ardrone_control_event_start  = NULL;
-    ack_config.ardrone_control_event_end    = ardrone_tool_end_configure;
-    ack_config.ack_state                    = ACK_COMMAND_MASK_TRUE;
-
-    ardrone_at_set_toy_configuration( configure_data[configure_index].var, configure_data[configure_index].value );
-    ardrone_at_send();
-
-    ardrone_control_send_event( (ardrone_control_event_t*)&ack_config );
-  }
-
-  return C_OK;
-}
-
-
-/*---------------------------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------------------------*/
-static void ardrone_toy_network_adapter_cb( const char* name )
-{
-  strcpy( COM_CONFIG_NAVDATA()->itfName, name );
-}
-
-
-/*---------------------------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------------------------*/
-C_RESULT ardrone_tool_setup_com( const char* ssid )
-{
-  C_RESULT res = C_OK;
-
-  vp_com_init(COM_NAVDATA());
-  vp_com_local_config(COM_NAVDATA(), COM_CONFIG_NAVDATA());
-  vp_com_connect(COM_NAVDATA(), COM_CONNECTION_NAVDATA(), NUM_ATTEMPTS);
-  ((vp_com_wifi_connection_t*)wifi_connection())->is_up=1;
-  return res;
-}
-
-
-/*---------------------------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------------------------*/
-C_RESULT ardrone_tool_init(int argc, char **argv)
-{
-	C_RESULT res;
-
-	//Fill structure AT codec and built the library AT commands.
-	ardrone_at_init( wifi_ardrone_ip, strlen( wifi_ardrone_ip) );
-
-	// Init subsystems
-	ardrone_timer_reset(&ardrone_tool_timer);
-
-	ardrone_tool_input_init();
-	ardrone_control_init();
-	ardrone_navdata_client_init();
-
-	// Init custom tool
-	res = ardrone_tool_init_custom(argc, argv);
-
-   //Opens a connection to AT port.
-	ardrone_at_open();
-
-	START_THREAD(navdata_update, 0);
-	START_THREAD(ardrone_control, 0);
-
-	ardrone_tool_configure();
-
-	// Send start up configuration
-	ardrone_at_set_pmode( MiscVar[0] );
-	ardrone_at_set_ui_misc( MiscVar[0], MiscVar[1], MiscVar[2], MiscVar[3] );
-
-	// switch to vertical camera
-	ardrone_at_zap(ZAP_CHANNEL_VERT);
-
-	// flat trim
-	ardrone_at_set_flat_trim();
-
-	return res;
-}
-
-
-C_RESULT ardrone_tool_set_refresh_time(int refresh_time_in_ms)
-{
-  ArdroneToolRefreshTimeInMs = refresh_time_in_ms;
-
-  return C_OK;
-}
-
-C_RESULT ardrone_tool_pause( void )
-{
-   ardrone_navdata_client_suspend();
-
-   return C_OK;
-}
-
-C_RESULT ardrone_tool_resume( void )
-{
-   ardrone_navdata_client_resume();
-
-   return C_OK;
-}
-
-
-
-/*---------------------------------------------------------------------------------------------------------------------
-Updates the AT command client by flushing pending commands.
----------------------------------------------------------------------------------------------------------------------*/
-C_RESULT ardrone_tool_update()
-{
-	int delta;
-
-	C_RESULT res = C_OK;
-
-	// Update subsystems & custom tool
-	if( need_update )
-	{
-		ardrone_timer_update(&ardrone_tool_timer);
-
-		ardrone_tool_input_update();
-		res = ardrone_tool_update_custom();
-
-		if( send_com_watchdog == TRUE )
-		{
-			ardrone_at_reset_com_watchdog();
-			send_com_watchdog = FALSE;
-		}
-		// Send all pushed messages
-		ardrone_at_send();
-
-		need_update = FALSE;
-	}
-
-	delta = ardrone_timer_delta_ms(&ardrone_tool_timer);
-	if( delta >= ArdroneToolRefreshTimeInMs)
-	{
-		// Render frame
-		res = ardrone_tool_display_custom();
-		need_update = TRUE;
-	}
-	else
-	{
-		Sleep((ArdroneToolRefreshTimeInMs - delta));
-	}
-
-	return res;
-}
-
-
-
-
-/*---------------------------------------------------------------------------------------------------------------------
-Stops the drone controlling subsystem.
----------------------------------------------------------------------------------------------------------------------*/
-C_RESULT ardrone_tool_shutdown()
-{
-  C_RESULT res = C_OK;
-  
-#ifndef NO_ARDRONE_MAINLOOP
-  res = ardrone_tool_shutdown_custom();
-#endif
-
-  // Shutdown subsystems
-  ardrone_navdata_client_shutdown();
-  ardrone_control_shutdown();
-  ardrone_tool_input_shutdown();
- 
-  JOIN_THREAD(ardrone_control); 
-  JOIN_THREAD(navdata_update);
-
-  // Shutdown AT Commands
-  ATcodec_exit_thread();
-  ATcodec_Shutdown_Library();
-
-  vp_com_disconnect(COM_NAVDATA());
-  vp_com_shutdown(COM_NAVDATA());
-
-  PRINT("Custom ardrone tool ended\n");
-
-  return res;
-}
 
 
 
@@ -411,62 +124,94 @@ int test_drone_connection()
 Main application function
 ---------------------------------------------------------------------------------------------------------------------*/
 
-int sdk_demo_stop=0;
-
 int ardronewin32()
 {
-	  C_RESULT res;
-	  int argc = 1;
-	  char *argv[1];
+	C_RESULT res;
 
-	  WSADATA wsaData = {0};
-	  int iResult = 0;
+	char drone_address[16]			= "192.168.1.1";
+	char appName[APPLI_NAME_SIZE]	= "ardrone_slam";
+	char usrName[USER_NAME_SIZE]	= "Nick";
 
-	  argv[0] = "Dummy";
-
+	WSADATA wsaData = {0};
+	int iResult = 0;
 
 	/* Initializes Windows socket subsystem */
-		iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-		if (iResult != 0) {	wprintf(L"WSAStartup failed: %d\n", iResult);	return 1;	}
-			
-	/* Includes the Pthread for Win32 Library if necessary */
-		#include <VP_Os/vp_os_signal.h>
-			#if defined USE_PTHREAD_FOR_WIN32
-			#pragma comment (lib,"pthreadVC2.lib")
-			#endif
+	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (iResult != 0)
+	{
+		wprintf(L"WSAStartup failed: %d\n", iResult);
+		return 1;
+	}
+
  
-	/* 	Initializes communication sockets	*/	
-		res = test_drone_connection(); // Nick disabled the press enter (wait)
-		if(res!=0){
-			printf("%s","Could not detect the drone version ... press <Enter> to try connecting anyway.\n");
-			getchar();
-			//WSACleanup(); exit(-1);
-		}
+	/* Initializes communication sockets */	
+	res = test_drone_connection(); // Nick disabled the press enter (wait)
+	if(res!=0)
+	{
+		printf("%s","Could not detect the drone version ... press <Enter> to try connecting anyway.\n");
+		getchar();
+		//WSACleanup(); exit(-1);
+	}
 
 
-		res = ardrone_tool_setup_com( NULL );
-		if( FAILED(res) ){  PRINT("Wifi initialization failed.\n");  return -1;	}
+	res = ardrone_tool_setup_com( NULL );
+	if( FAILED(res) )
+	{
+		PRINT("Wifi initialization failed.\n");
+		return -1;
+	}
 
-	/* Initialises ARDroneTool */
-	   res = ardrone_tool_init(argc, argv);
+		
+	START_THREAD(video_stage, 0);
 
-	/* Notify the dataset collector application */
-	   SetEvent(ardrone_ready);
+	res = ardrone_tool_init(drone_address, strlen(drone_address), NULL, appName, usrName);
 
-   /* Keeps sending AT commands to control the drone as long as 
-		everything is OK */
-      while( VP_SUCCEEDED(res) && ardrone_tool_exit() == FALSE ) {
-        res = ardrone_tool_update();
-	  }
+	//ardrone_tool_set_refresh_time(20); // 20 ms
 
-   /**/
-      res = ardrone_tool_shutdown();
+	ardrone_at_reset_com_watchdog();
 
-	  WSACleanup();
 
-	/* Bye bye */
-	//system("cls");
+	// config
+	ardrone_control_config.video_channel	= ZAP_CHANNEL_VERT;
+	ardrone_control_config.video_codec		= P264_CODEC;
+	ardrone_control_config.navdata_demo		= FALSE;
+	ardrone_control_config.altitude_max		= 10000;
+	ardrone_control_config.control_vz_max	= 1000.0f;
+	ardrone_control_config.outdoor			= FALSE;
+
+	ARDRONE_TOOL_CONFIGURATION_ADDEVENT(video_channel, &ardrone_control_config.video_channel, NULL);
+	ARDRONE_TOOL_CONFIGURATION_ADDEVENT(video_codec, &ardrone_control_config.video_codec, NULL);
+	ARDRONE_TOOL_CONFIGURATION_ADDEVENT (navdata_demo, &ardrone_control_config.navdata_demo, NULL);
+	ARDRONE_TOOL_CONFIGURATION_ADDEVENT (altitude_max, &ardrone_control_config.altitude_max, NULL);
+	ARDRONE_TOOL_CONFIGURATION_ADDEVENT (control_vz_max, &ardrone_control_config.control_vz_max, NULL);
+	ARDRONE_TOOL_CONFIGURATION_ADDEVENT (outdoor, &ardrone_control_config.outdoor, NULL);
+
+
+	// flat trim
+	ardrone_at_set_flat_trim();
+
+	SetEvent(ardrone_ready);
+
+	while( VP_SUCCEEDED(res) && ardrone_tool_exit() == FALSE )
+	{
+		res = ardrone_tool_update();
+	}
+
+	JOIN_THREAD(video_stage);
+
+	res = ardrone_tool_shutdown();
+
+	WSACleanup();
+
 	return VP_SUCCEEDED(res) ? 0 : -1;
+}
+
+
+void demo_video_client_process()
+{
+	video_stage_config_t *config = video_stage_get();
+
+	bot_ardrone_ardronelib_process_frame((unsigned char*) config->data, config->widthImage, config->heightImage);
 }
 
 
@@ -497,9 +242,44 @@ void ardronewin32_recover(int send)
 }
 
 
-// Default implementation for weak functions
-C_RESULT ardrone_tool_update_custom() { return C_OK; }
-C_RESULT ardrone_tool_display_custom() { return C_OK; }
-C_RESULT ardrone_tool_check_argc_custom( int32_t argc) { return C_OK; }
-void ardrone_tool_display_cmd_line_custom( void ) {}
-bool_t ardrone_tool_parse_cmd_line_custom( const char* cmd ) { return TRUE; }
+
+
+
+inline C_RESULT demo_navdata_client_init( void* data )
+{
+  return C_OK;
+}
+
+inline C_RESULT demo_navdata_client_process( const navdata_unpacked_t* const navdata )
+{
+    navdata_unpacked_t *nd = (navdata_unpacked_t*)navdata;
+
+	bot_ardrone_ardronelib_process_navdata(nd);	
+
+	return C_OK;
+}
+
+inline C_RESULT demo_navdata_client_release( void )
+{
+  return C_OK;
+}
+
+
+
+/* Implementing thread table in which you add routines of your application and those provided by the SDK */
+BEGIN_THREAD_TABLE
+  THREAD_TABLE_ENTRY( ardrone_control, 20 )
+  THREAD_TABLE_ENTRY( navdata_update, 20 )
+  THREAD_TABLE_ENTRY( video_stage, 20 )
+END_THREAD_TABLE
+
+
+/* 
+Registering the navdata handling function to 'navdata client' which is part 
+of the ARDroneTool.
+You can add as many navdata handlers as you want.
+Terminate the table with a NULL pointer.
+*/
+BEGIN_NAVDATA_HANDLER_TABLE
+  NAVDATA_HANDLER_TABLE_ENTRY(demo_navdata_client_init, demo_navdata_client_process, demo_navdata_client_release, NULL)
+END_NAVDATA_HANDLER_TABLE

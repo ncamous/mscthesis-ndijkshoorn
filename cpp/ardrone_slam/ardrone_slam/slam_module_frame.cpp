@@ -19,9 +19,9 @@ slam_module_frame::slam_module_frame(slam *controller):
 	T(4, 4, CV_32F),
 	originH(4, 1, CV_32F),
 
-	frame(BOT_ARDRONE_CAM_RESOLUTION_H, BOT_ARDRONE_CAM_RESOLUTION_W, CV_8UC3, NULL, 0), // do not want to allocate data here. HOW?
-	frame_rgba(BOT_ARDRONE_CAM_RESOLUTION_H, BOT_ARDRONE_CAM_RESOLUTION_W, CV_8UC4),
-	frame_gray(BOT_ARDRONE_CAM_RESOLUTION_H, BOT_ARDRONE_CAM_RESOLUTION_W, CV_8U),
+	//frame(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC3, NULL, 0), // do not want to allocate data here. HOW?
+	frame(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC4, NULL, 0),
+	frame_gray(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8U),
 
 	obj_pos(3, 1, CV_64F),
 	obj_or(3, 1, CV_64F),
@@ -46,9 +46,9 @@ slam_module_frame::slam_module_frame(slam *controller):
 
 	/* image corners */
 	image_corners.push_back(Point2f(0.0f, 0.0f));
-	image_corners.push_back(Point2f(0.0f, (float) (BOT_ARDRONE_CAM_RESOLUTION_H - 1)));
-	image_corners.push_back(Point2f((float) (BOT_ARDRONE_CAM_RESOLUTION_W - 1), (float) (BOT_ARDRONE_CAM_RESOLUTION_H - 1)));
-	image_corners.push_back(Point2f((float) (BOT_ARDRONE_CAM_RESOLUTION_W - 1), 0.0f));
+	image_corners.push_back(Point2f(0.0f, (float) (BOT_ARDRONE_FRAME_H - 1)));
+	image_corners.push_back(Point2f((float) (BOT_ARDRONE_FRAME_W - 1), (float) (BOT_ARDRONE_FRAME_H - 1)));
+	image_corners.push_back(Point2f((float) (BOT_ARDRONE_FRAME_W - 1), 0.0f));
 
 
 	/* world plane */
@@ -110,14 +110,11 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 
 	this->f = f;
-	frame.data = (uchar*) &f->data[4];
+	frame.data = (uchar*) f->data;
 
-
-	// convert to RGBA because Direct3D wants a 4 channel array
-	if (f->usarsim)
-		cvtColor(frame, frame_rgba, CV_BGR2BGRA);
-	else
-		cvtColor(frame, frame_rgba, CV_RGB2BGRA);
+	cvNamedWindow("Image:", CV_WINDOW_AUTOSIZE);
+	imshow("Image:", frame);
+	cvWaitKey(4);
 
 
 	// TODO: attach current state to frame struct, when frame is received
@@ -179,7 +176,7 @@ void slam_module_frame::process_visual_state()
 	KeyPoint::convert(keypoints, current_frame_ip);
 
 	for (size_t i = 0; i < keypoints.size(); i++)
-		circle(frame_rgba, keypoints[i].pt, 3, Scalar(0,0,255), 1, 8);
+		circle(frame, keypoints[i].pt, 3, Scalar(0,0,255), 1, 8);
 
 
 	/* calculate descriptors (on greyscale image) */
@@ -505,7 +502,7 @@ void slam_module_frame::add_frame_to_map()
 
 	vector<Point3f> image_corners_wc;
 	imagepoints_to_local3d(image_corners, image_corners_wc);
-	controller->visual_map.update(frame_rgba, image_corners, image_corners_wc);
+	controller->visual_map.update(frame, image_corners, image_corners_wc);
 }
 
 

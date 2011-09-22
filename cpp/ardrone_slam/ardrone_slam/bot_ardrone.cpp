@@ -30,7 +30,6 @@ bot_ardrone_frame::bot_ardrone_frame()
 	memset(this, 0, sizeof(bot_ardrone_frame));
 	this->data = new char[BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE];
 	data_start = this->data;
-	usarsim = false;
 }
 
 

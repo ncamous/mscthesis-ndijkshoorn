@@ -107,7 +107,7 @@ void bot_ardrone_recorder::record_frame(bot_ardrone_frame *f)
 	// PNG
 	else if (BOT_ARDRONE_RECORD_EXT == "png")
 	{
-		Mat frame = Mat(BOT_ARDRONE_CAM_RESOLUTION_H, BOT_ARDRONE_CAM_RESOLUTION_W, CV_8UC3, NULL, 0);
+		Mat frame = Mat(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC3, NULL, 0);
 		frame.data = (uchar*) &f->data[4];
 		imwrite(filename, frame);
 	}
@@ -142,8 +142,8 @@ void bot_ardrone_recorder::playback(char *dataset)
 		event_time = doc["t"];
 		wait = int((event_time - last_event_time) * 1000.0);
 		last_event_time = event_time;
-		if (wait > 0)
-			Sleep(wait);
+		//if (wait > 0)
+		//	Sleep(wait);
 		//
 
 		//printf("%f\n", event_time);
@@ -164,8 +164,8 @@ void bot_ardrone_recorder::playback(char *dataset)
 				doc["vel"] >> m->vel;
 
 				// usarsim
-				if (doc.FindValue("gt_loc"))
-					doc["gt_loc"] >> m->gt_loc;
+				//if (doc.FindValue("gt_loc"))
+				//	doc["gt_loc"] >> m->gt_loc;
 
 				bot->measurement_received(m);
 				break;

@@ -3,6 +3,8 @@
 #include "bot_ardrone.h"
 #include "ardrone_tool_win32.h"
 
+using namespace cv;
+
 
 extern "C" {
 	HANDLE ardrone_ready;
@@ -41,7 +43,9 @@ void bot_ardrone_ardronelib_process_frame(unsigned char* rgbtexture, int w, int 
 
 
 
-bot_ardrone_ardronelib::bot_ardrone_ardronelib(bot_ardrone *bot)
+bot_ardrone_ardronelib::bot_ardrone_ardronelib(bot_ardrone *bot):
+	img_bgr565(DRONE_VIDEO_MAX_HEIGHT, DRONE_VIDEO_MAX_WIDTH, CV_8UC2, NULL, 0),
+	img_bgra(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC4, NULL, 0)
 {
 	myinstance = (bot_ardrone_ardronelib*) this;
 
@@ -49,8 +53,8 @@ bot_ardrone_ardronelib::bot_ardrone_ardronelib(bot_ardrone *bot)
 
 	frame = new bot_ardrone_frame;
 
-	// temp
-	m_counter = 1;
+	m_counter = 0;
+
 
 	// start thread
 	printf("Connecting to ARDrone\n");
@@ -109,14 +113,11 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 {
 	bot_ardrone_measurement *m = new bot_ardrone_measurement;
 
-	// print initial battery state
-	if (bot->battery == NULL)
-		printf("Battery: %i\n", n->navdata_demo.vbat_flying_percentage);
-
-	// print low battery state
+	// battery
 	bot->battery = n->navdata_demo.vbat_flying_percentage;
-	if (bot->battery < 10)
-		printf("Low battery: %i\n", bot->battery);
+	
+	if (m_counter % 1500 == 0)
+		printf("Battery: %i%%\n", bot->battery);
 
 	m->altitude = n->navdata_demo.altitude;
 
@@ -142,17 +143,16 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 	//m.ins_vel[2] = n->navdata_demo.vz; // is always zero
 	m->vel[2] = n->navdata_altitude.altitude_vz;
 
+	m_counter++;
+
 	bot->measurement_received(m);
 }
 
 
 void bot_ardrone_ardronelib::process_frame(unsigned char* rgbtexture, int w, int h)
 {
-	int bufpos, y;
-	char *rgb_src = (char *)rgbtexture;
-
 	// size check
-	if (w*h*3 + 4 > BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE)
+	if (w*h*4 > BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE)
 	{
 		printf("ARDRONE FRAME TOO LARGE... SKIPPING FRAME (w: %i, h: %i\n", w, h);
 		return;
@@ -160,23 +160,17 @@ void bot_ardrone_ardronelib::process_frame(unsigned char* rgbtexture, int w, int
 
 	frame = new bot_ardrone_frame;
 	frame->time = bot->get_clock(); // get clock time now
+	frame->w = (short) BOT_ARDRONE_FRAME_W;
+	frame->h = (short) BOT_ARDRONE_FRAME_H;
 
-	// write width and height to first 4 bytes
-	unsigned short w_bytes = htons(w);
-	unsigned short h_bytes = htons(h);
-	memcpy_s(frame->data, BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE, &w_bytes, 2);
-	memcpy_s(frame->data + 2, BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE, &h_bytes, 2);
+	img_bgr565.data		= rgbtexture;
+	img_bgra.data		= (unsigned char*) frame->data;
 
-	bufpos = 4;
+	Mat crop(img_bgr565, Rect(0, 0, BOT_ARDRONE_FRAME_W, BOT_ARDRONE_FRAME_H));
 
-	for(y=0; y<h; y++)
-	{
-		rgb_src = (char *)rgbtexture + y*DRONE_VIDEO_MAX_WIDTH*3;
-		memcpy_s(frame->data + bufpos, BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE - bufpos, rgb_src, w*3);
-		bufpos += w*3;
-	}
+	cvtColor(crop, img_bgra, CV_BGR5652BGRA);
 
-	frame->data_size = 4 + w*h*3;
+	frame->data_size = w*h*4;
 
 	bot->frame_received(frame);
 }

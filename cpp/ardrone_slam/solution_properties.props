@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="UserMacros">
-    <ARDroneLibDir>C:\Users\Nick\Documents\Thesis\code\ARDrone_SDK_1_6_20110224\ARDroneLib</ARDroneLibDir>
+    <ARDroneLibDir>C:\Users\Nick\Documents\Thesis\code\ARDrone_SDK_Version_1_8_20110726\ARDroneLib</ARDroneLibDir>
 	<ARDroneWin32Dir>C:\Users\Nick\Documents\Thesis\code\cpp\ardrone_slam\ardronewin32</ARDroneWin32Dir>
     <OpenCVDir>C:\Users\Nick\Documents\Thesis\code\OpenCV</OpenCVDir>
     <SDLDir>C:\Users\Nick\Documents\Thesis\code\SDL-1.2.14</SDLDir>

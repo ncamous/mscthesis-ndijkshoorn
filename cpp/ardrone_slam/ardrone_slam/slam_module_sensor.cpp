@@ -31,7 +31,7 @@ slam_module_sensor::slam_module_sensor(slam *controller):
 
 	// H vector
 	measurementMatrix = 0.0f;
-	measurementMatrix.at<float>(2, 2); // measured altitude
+	//measurementMatrix.at<float>(2, 2); // measured altitude
 
 	if (controller->mode(SLAM_MODE_VEL))
 	{
@@ -213,7 +213,8 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 	/* elevation map */
 	// check is mapping mode is on
-	//update_elevation_map(m->altitude/* - alt_correct*/);
+	//if (!controller->mode(SLAM_MODE_MAP))
+		//update_elevation_map(m->altitude/* - alt_correct*/);
 
 	/*
 	if (counter++ % 30 == 0)
@@ -281,7 +282,7 @@ void slam_module_sensor::update_elevation_map(int sonar_height)
 
 	if (abs(h) >= 70.0f)
 	{
-		controller->elevation_map.update(hit.at<float>(0), hit.at<float>(1), hit.at<float>(2), 10);
+		controller->elevation_map.update(hit.at<float>(0), hit.at<float>(1), hit.at<float>(2), 10, 200);
 	}
 	else
 	{
