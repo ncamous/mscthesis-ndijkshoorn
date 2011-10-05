@@ -18,26 +18,23 @@ public:
 	~slam_visual_map();
 	byte* get_array();
 	void update(cv::Mat& frame, std::vector<cv::Point2f>& lc, std::vector<cv::Point3f>& wc);
+	void update(std::vector<cv::KeyPoint>& keypoints, cv::Mat& descriptors, std::vector<cv::Point3f>& wc);
+	void get_local_descriptors(cv::Mat& map_descriptors, cv::Mat& map_keypoints, float radius);
+
 	void frame_to_canvas(cv::Mat& frame, cv::Mat& frameT, std::vector<cv::Point2f>& lc, std::vector<cv::Point3f>& wc);
 	bool is_updated(int* dst, bool reset_roi = false);
 	void find_corners(cv::Mat& img, std::vector<CornerHist>& list, std::vector<cv::Point2f>& list_p, bool unique = false);
 	bool corner_at_wc(cv::Point2f wc);
 	bool inside(cv::Mat& m, cv::Rect& r);
 
+
 	cv::Mat canvas;
+	cv::Mat descriptors; // descriptors
+	cv::Mat descriptors_grid; // grid with index to descriptors matrix row
+	cv::Mat keypoints_wc; // local world coordinates
+	unsigned short descriptors_count;
+	std::vector<cv::KeyPoint> keypoints;
 
-	/* corners */
-	std::vector<CornerHist> corners;
-	std::vector<cv::Point2f> corners_p;
-	int channels[2];
-	int h_bins;
-	int s_bins;
-	int histSize[2];
-
-	// hue varies from 0 to 256, saturation from 0 to 180
-	float h_ranges[2];
-	float s_ranges[2];
-	const float* ranges[2];
 
 	float resolution;
 	float resolution_inv;
@@ -58,8 +55,12 @@ private:
 
 	cv::TermCriteria termcrit;
 
-	void worldpos_to_cell(cv::Point3f& src, cv::Point2f& dst);
-	void cell_to_worldpos(cv::Point2f& src, cv::Point2f& dst);
+	std::map<int, unsigned short> cell_best_keypoints;
+	std::map<int, unsigned short>::iterator it;
+
+	void worldpos_to_canvaspos(cv::Point3f& src, cv::Point2f& dst);
+	void canvaspos_to_worldpos(cv::Point2f& src, cv::Point2f& dst);
+	void worldpos_to_dgridpos(std::vector<cv::Point3f>& src, unsigned short *x, unsigned short *y);
 	void update_roi(cv::Point2f& p, int *roi);
 	void update_roi(int *src, int *dst);
 };

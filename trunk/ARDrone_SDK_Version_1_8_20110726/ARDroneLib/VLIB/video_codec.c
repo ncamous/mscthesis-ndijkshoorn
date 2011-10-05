@@ -90,22 +90,22 @@ static C_RESULT video_codec_open_private( video_controller_t* controller, codec_
   switch( codec_type )
   {
     case UVLC_CODEC:
-	 printf("open video codec UVLC\n");
+      printf("open video codec UVLC\n");
       uvlc_codec_alloc( controller );
       break;
 
     case P263_CODEC:
-		printf("open video codec P263\n");
+	  printf("open video codec P263\n");
       p263_codec_alloc( controller );
       break;
 
     case P264_CODEC:
-		printf("open video codec P264\n");
+	  printf("open video codec P264\n");
       p264_codec_alloc( controller );
       break;
 
     default:
-		printf("open video codec default\n");
+      printf("open video codec default\n");
       controller->video_codec = NULL;
       break;
   }
@@ -186,6 +186,8 @@ C_RESULT video_codec_type_select(video_controller_t* controller, video_stream_t*
    video_peek_data( stream, &codec_type, 22 );
    // extract codec tag
    //codec_type = codec_type>>5;
+
+   //printf("video_codec_type_select: %i\n", codec_type);
 
    if (codec_type != controller->codec_type)
    {

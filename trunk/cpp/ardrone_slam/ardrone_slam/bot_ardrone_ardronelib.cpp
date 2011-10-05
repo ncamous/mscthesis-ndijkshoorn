@@ -17,13 +17,6 @@ using namespace std;
 bot_ardrone_ardronelib *bot_ardrone_ardronelib::myinstance = 0;
 
 
-static DWORD WINAPI start_ardrone_api_thread(void* Param)
-{
-	ardronewin32();
-	return 0;
-}
-
-
 bot_ardrone_ardronelib* bot_ardrone_ardronelib::instance()
 {
 	return myinstance;
@@ -59,7 +52,8 @@ bot_ardrone_ardronelib::bot_ardrone_ardronelib(bot_ardrone *bot):
 	// start thread
 	printf("Connecting to ARDrone\n");
 	ardrone_ready = CreateEvent(NULL, false, false, NULL);
-	ardrone_thread = CreateThread(NULL, 0, start_ardrone_api_thread, (void*) this, 0, NULL);
+	
+	ardronewin32();
 
 	// wait untill the Drone is completely ready (communication started)
 	WaitForSingleObject(ardrone_ready, INFINITE);
@@ -162,13 +156,14 @@ void bot_ardrone_ardronelib::process_frame(unsigned char* rgbtexture, int w, int
 	frame->time = bot->get_clock(); // get clock time now
 	frame->w = (short) BOT_ARDRONE_FRAME_W;
 	frame->h = (short) BOT_ARDRONE_FRAME_H;
+	frame->data_start = frame->data;
 
 	img_bgr565.data		= rgbtexture;
 	img_bgra.data		= (unsigned char*) frame->data;
 
 	Mat crop(img_bgr565, Rect(0, 0, BOT_ARDRONE_FRAME_W, BOT_ARDRONE_FRAME_H));
 
-	cvtColor(crop, img_bgra, CV_BGR5652BGRA);
+	cvtColor(crop, img_bgra, CV_BGR5652BGRA, 4);
 
 	frame->data_size = w*h*4;
 

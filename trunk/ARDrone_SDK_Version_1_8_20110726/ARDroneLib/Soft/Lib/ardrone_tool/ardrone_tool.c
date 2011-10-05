@@ -132,15 +132,15 @@ C_RESULT ardrone_tool_init( const char* ardrone_ip, size_t n, AT_CODEC_FUNCTIONS
 	// Save appname/appid for reconnections
 	if (NULL != appname)
 	{
-	  //ardrone_gen_appid (appname, __SDK_VERSION__, app_id, app_name, sizeof (app_name));
+	  ardrone_gen_appid (appname, __SDK_VERSION__, app_id, app_name, sizeof (app_name));
 	}
 	// Save usrname/usrid for reconnections
 	if (NULL != usrname)
 	{
-		//ardrone_gen_usrid (usrname, usr_id, usr_name, sizeof (usr_name));
+		ardrone_gen_usrid (usrname, usr_id, usr_name, sizeof (usr_name));
 	}
 	// Create pseudorandom session id
-	//ardrone_gen_sessionid (ses_id, ses_name, sizeof (ses_name));
+	ardrone_gen_sessionid (ses_id, ses_name, sizeof (ses_name));
 
 	// Init subsystems
 	ardrone_timer_reset(&ardrone_tool_timer);
@@ -163,9 +163,9 @@ C_RESULT ardrone_tool_init( const char* ardrone_ip, size_t n, AT_CODEC_FUNCTIONS
 	ardrone_at_set_ui_misc( MiscVar[0], MiscVar[1], MiscVar[2], MiscVar[3] );
 
 	// NICK
-	//ARDRONE_TOOL_CONFIGURATION_ADDEVENT(session_id, ses_id, NULL);
-	//ARDRONE_TOOL_CONFIGURATION_ADDEVENT(profile_id, usr_id, NULL);
-	//ARDRONE_TOOL_CONFIGURATION_ADDEVENT(application_id, app_id, NULL);
+	ARDRONE_TOOL_CONFIGURATION_ADDEVENT(session_id, ses_id, NULL);
+	ARDRONE_TOOL_CONFIGURATION_ADDEVENT(profile_id, usr_id, NULL);
+	ARDRONE_TOOL_CONFIGURATION_ADDEVENT(application_id, app_id, NULL);
 
 	return C_OK;
 }

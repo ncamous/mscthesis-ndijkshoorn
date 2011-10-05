@@ -7,8 +7,10 @@
 
 /* SLAM */
 #define SLAM_USE_QUEUE true // use a queue to store the controldata and sensor data
-#define SLAM_SURF_HESSIANTHRESHOLD 70.0
+#define SLAM_SURF_HESSIANTHRESHOLD 40.0
 #define SLAM_ELEVATION_MAP_DEFAULT_SIZE 200 // 10m * 10m in each direction + 1 for center
+#define SLAM_DESCRIPTOR_SIZE 64 * sizeof(float)
+#define SLAM_LOC_WRITE_STATE_DIRECTLY true // remove line if false
 
 #define SLAM_MODE_VISUALMOTION 0x01
 #define SLAM_MODE_ACCEL 0x02
@@ -43,7 +45,7 @@
 	#define BOT_ARDRONE_USARSIM_FRAME_MODE 1 // 1: request new frame when SLAM queue empty, 2: fixed framerate
 
 	/* keyboard */
-	#define BOT_ARDRONE_KEYBOARD_VEL 0.06f
+	#define BOT_ARDRONE_KEYBOARD_VEL 0.1f
 
 
 extern bool exit_application;
@@ -55,5 +57,5 @@ extern bool stop_behavior;
 #define MD_TO_RAD 1.745329252e-05f
 
 #ifndef M_PI
-	#define M_PI 3.14159265358979323846
+	#define M_PI 3.14159265358979323846f
 #endif

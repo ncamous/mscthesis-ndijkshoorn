@@ -21,19 +21,24 @@ public:
 	void process(bot_ardrone_frame *f);
 	void process_visual_state();
 	void process_visual_loc();
-	void CornerHistMatch(vector<CornerHist>& query_descriptors, vector<CornerHist>& train_descriptors, vector<DMatch>& matches, float *pos);
+	void process_map();
 
-	int find_robust_matches(vector<Point2f>& p1, vector<Point2f>& p2, vector<DMatch>& matches, vector<short>& mask, int max, cv::Mat& H, double maxInlierDist = 3.0);
+	double find_robust_affine(InputArray p1, InputArray p2, vector<DMatch>& matches, vector<short>& mask, int max, cv::Mat& H, double maxInlierDist = 3.0);
+	int find_robust_matches(InputArray p1, InputArray p2, vector<DMatch>& matches, vector<short>& mask, int max, cv::Mat& H, double maxInlierDist = 3.0);
 	int find_object_position(Mat& cam_pos, Mat& cam_or, vector<DMatch>& matches, vector<short>& mask);
-	int find_features(Mat& frame, vector<KeyPoint> &v);
-	void add_frame_to_map();
+
+	void get_features(Mat& frame, vector<KeyPoint> &v);
+	void get_descriptors(Mat& frame, vector<KeyPoint> &v, Mat& descriptors);
+	void get_matches(Mat& q_descriptors, Mat& t_descriptors, vector<DMatch>& matches, bool use_unique = false);
+
 	void store_prev_frame();
 	void calculate_measurement();
 	void save_cur_state();
 	bool measurementSeemsOk();
 
 	void imagepoints_to_local3d(vector<Point2f>& src, vector<Point3f>& dst);
-	
+	void imagepoints_to_local3d(vector<Point2f>& src, vector<Point2f>& dst);
+
 	void get_state(Mat& pos, Mat& or);
 	void get_localcam(Mat& pos, Mat& or);
 	void object_to_worldpos(Mat& obj_pos, Mat& obj_or, Mat& pos, Mat& or); // in: double!
@@ -68,7 +73,7 @@ private:
 
 	// current frame data
 	vector<KeyPoint> keypoints;
-	vector<Point2f> current_frame_ip;
+	vector<Point2f> imagepoints;
 	Mat descriptors;
 
 	// previous frame data
@@ -104,5 +109,9 @@ private:
 	double difftime;
 
 	clock_t last_loc;
+
+	// tmp
+	bool first_frame2;
+	Mat first_frame;
 };
 

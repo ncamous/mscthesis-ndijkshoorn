@@ -1,6 +1,7 @@
 #include "global.h"
 #include "bot_ardrone.h"
 #include "bot_ardrone_usarsim.h"
+#include "bot_ardrone_ardronelib.h"
 #include "bot_ardrone_recorder.h"
 #include "opencv_helpers.h"
 

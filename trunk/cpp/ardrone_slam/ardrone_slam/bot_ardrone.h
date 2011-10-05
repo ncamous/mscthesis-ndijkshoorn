@@ -2,8 +2,6 @@
 
 #include "bot.h"
 #include "botinterface.h"
-#include "bot_ardrone_usarsim.h"
-#include "bot_ardrone_ardronelib.h"
 #include "bot_ardrone_recorder.h"
 #include "slam.h"
 

@@ -1,5 +1,6 @@
 #include "usarsim_msgparser.h"
 #include "bot_ardrone.h"
+#include "global.h"
 
 
 bool usarsim_msgparser_value(string *input, string *key, string *value)
@@ -88,8 +89,8 @@ void usarsim_msgparser_float3(string *input, char *tag, float *f)
 
 float usarsim_msgparser_rad_to_mildeg(float f)
 {
-	if (f > PI)
-		f -= 2*PI;
+	if (f > M_PI)
+		f -= 2*M_PI;
 
 	f *= RAD_TO_MILDEG;
 

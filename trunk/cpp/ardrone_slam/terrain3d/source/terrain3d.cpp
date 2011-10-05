@@ -220,22 +220,22 @@ void terrain3d::ProcessInput( long xDelta, long yDelta, long zDelta, BOOL* pMous
         m_camera.Pitch( yDelta * elapsedTime * 0.1f );
 		updated = true;
     }
-    if ( pPressedKeys[DIK_W] )
+    if ( pPressedKeys[DIK_I] )
     {
         m_camera.MoveForward( cameraSpeed * elapsedTime );
 		updated = true;
     }
-    if ( pPressedKeys[DIK_A] )
+    if ( pPressedKeys[DIK_J] )
     {
         m_camera.Strafe( -cameraSpeed * elapsedTime );
 		updated = true;
     }
-    if ( pPressedKeys[DIK_S] )
+    if ( pPressedKeys[DIK_K] )
     {
         m_camera.MoveForward( -cameraSpeed * elapsedTime );
 		updated = true;
     }
-    if ( pPressedKeys[DIK_D] )
+    if ( pPressedKeys[DIK_L] )
     {
         m_camera.Strafe( cameraSpeed * elapsedTime );
 		updated = true;

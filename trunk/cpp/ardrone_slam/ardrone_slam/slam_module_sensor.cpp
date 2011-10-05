@@ -31,7 +31,7 @@ slam_module_sensor::slam_module_sensor(slam *controller):
 
 	// H vector
 	measurementMatrix = 0.0f;
-	//measurementMatrix.at<float>(2, 2); // measured altitude
+	measurementMatrix.at<float>(2, 2); // measured altitude
 
 	if (controller->mode(SLAM_MODE_VEL))
 	{

@@ -1,11 +1,13 @@
 #include "global.h"
 #include "slam_visual_map.h"
 #include "opencv_helpers.h"
+#include <map>
 
 // TMP
 #include <cv.hpp>
 #include <cxcore.hpp>
 #include <opencv2/highgui/highgui.hpp>
+
 
 using namespace std;
 using namespace cv;
@@ -14,11 +16,15 @@ using namespace cv;
 slam_visual_map::slam_visual_map(void):
 	canvas(4096, 4096, CV_8UC4), // image, last channel not used
 	undoTranslate(3, 3, CV_64F), // do not forget to set identity matrix
+	descriptors(1000, 64, CV_32F),
+	keypoints_wc(1000, 1, CV_32FC2),
+	descriptors_grid(200, 200, CV_16U),
 
 	termcrit(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS,20,0.03)
 {
-	canvas = Scalar(140, 140, 140, 0);
-	map_updated = false;
+	canvas				= Scalar(140, 140, 140, 0);
+	descriptors_grid	= Scalar(0);
+	map_updated			= false;
 
 	setIdentity(undoTranslate);
 
@@ -36,23 +42,10 @@ slam_visual_map::slam_visual_map(void):
 	origin_x = 2048;
 	origin_y = 2048;
 
-	/* corners */
-	channels[0] = 0;
-	channels[1] = 1;
 
-	h_bins = 20;
-	s_bins = 40;
 
-	histSize[0] = h_bins;
-	histSize[1] = s_bins;
-
-	// hue varies from 0 to 256, saturation from 0 to 180
-	h_ranges[0] = 0;
-	h_ranges[1] = 256;
-	s_ranges[0] = 0;
-	s_ranges[1] = 180;
-	ranges[0] = h_ranges;
-	ranges[1] = s_ranges;
+	/* features */
+	descriptors_count = 1;
 }
 
 
@@ -71,7 +64,7 @@ void slam_visual_map::update(Mat& frame, vector<Point2f>& lc, vector<Point3f>& w
 	for (int i = 0; i < 4; i++)
 	{
 		src[i] = Point2f(lc[i].x, lc[i].y);
-		worldpos_to_cell(wc[i], dst[i]);
+		worldpos_to_canvaspos(wc[i], dst[i]);
 		update_roi(dst[i], frame_roi);
 	}
 
@@ -80,6 +73,7 @@ void slam_visual_map::update(Mat& frame, vector<Point2f>& lc, vector<Point3f>& w
 	int w = frame_roi[1] - frame_roi[0];
 	int h = frame_roi[3] - frame_roi[2];
 
+	// DIRTY...
 	if (frame_roi[0] < 0 || frame_roi[2] < 0 
 		||
 		frame_roi[0] + w >= 4096 || frame_roi[2] + h >= 4096)
@@ -98,24 +92,102 @@ void slam_visual_map::update(Mat& frame, vector<Point2f>& lc, vector<Point3f>& w
 	warpPerspective(frame, subCanvas, T, canvasSize, INTER_LINEAR, BORDER_TRANSPARENT);
 	//warpPerspective(frame, canvas, T, canvasSize, INTER_LINEAR, BORDER_TRANSPARENT);
 
-
-	// find corners
-	find_corners(subCanvas, corners, corners_p, true);
-
-	/*
-	for (size_t i = 0; i < corners.size(); i++)
-	{
-		circle(canvas, corners[i].cc, 5, Scalar(0,0,255), 3, 8);
-		//printf("wc: %f, %f\n", corners[i].wc.x, corners[i].wc.y);
-	}
-	*/
-
-	//printf("#corners: %i\n", corners.size());
-
-
 	// set ROI updated
 	update_roi(frame_roi, sync_roi);
 	map_updated = true;
+}
+
+
+void slam_visual_map::update(vector<KeyPoint>& keypoints, Mat& descriptors, vector<Point3f>& wc)
+{
+	int key;
+	unsigned short *key_p;
+	unsigned short i, key_x, key_y;
+
+	key_p = (unsigned short*) &key;
+
+	int size = keypoints.size();
+	unsigned short *x = NULL;
+	unsigned short *y = NULL;
+
+	// double the size of the matrix
+	if (descriptors_count + size > this->descriptors.rows)
+	{
+		this->descriptors.resize(this->descriptors.rows * 2);
+		this->keypoints_wc.resize(this->keypoints_wc.rows * 2);
+	}
+
+	printf("%i\n", descriptors_count, keypoints.size());
+
+
+	x = new unsigned short[size]; // faster than vector
+	y = new unsigned short[size]; // faster than vector
+
+	// convert all at once
+	worldpos_to_dgridpos(wc, x, y);
+
+	cell_best_keypoints.clear();
+
+	for (i = 0; i < descriptors.rows; i++)
+	{
+		if (descriptors_grid.at<unsigned short>(y[i], x[i]) > 0)
+			continue;
+
+		memcpy_s(key_p, 2, &x[i], 2);
+		memcpy_s(key_p + 1, 2, &y[i], 2);
+
+		it = cell_best_keypoints.find(key);
+
+		if (it == cell_best_keypoints.end() || keypoints[i].response > keypoints[it->second].response)
+		{
+			cell_best_keypoints[key] = i;
+			//printf("%u,%u -> %i\n", x[i], y[i], key);
+		}
+	}
+
+
+
+	// get all cells from map
+	for(it = cell_best_keypoints.begin(); it != cell_best_keypoints.end(); it++)
+	{
+		key = it->first;
+		i = it->second;
+
+		memcpy_s(&key_x, 2, key_p, 2);
+		memcpy_s(&key_y, 2, key_p + 1, 2);
+
+		// descriptor
+		memcpy_s(
+			this->descriptors.data + (descriptors_count * SLAM_DESCRIPTOR_SIZE),
+			this->descriptors.rows * SLAM_DESCRIPTOR_SIZE,
+			descriptors.data + (i * SLAM_DESCRIPTOR_SIZE),
+			SLAM_DESCRIPTOR_SIZE
+		);
+
+		// keypoint
+		keypoints_wc.at<Vec2f>(descriptors_count)[0] = wc[i].x;
+		keypoints_wc.at<Vec2f>(descriptors_count)[1] = wc[i].y;
+
+		this->keypoints.push_back(keypoints[i]);
+
+		descriptors_grid.at<unsigned short>(key_y, key_x) = descriptors_count++;
+	}
+
+	delete [] x;
+	delete [] y;
+
+	//imshow("DescriptorGrid", descriptors_grid);
+	//cvWaitKey(4);
+}
+
+
+void slam_visual_map::get_local_descriptors(Mat& map_descriptors, Mat& map_keypoints, float radius)
+{
+	// return all keypoints + descriptors
+	Range rows = Range(1, descriptors_count);
+
+	map_descriptors = Mat(descriptors, rows); // efficient?
+	map_keypoints = Mat(keypoints_wc, rows);
 }
 
 
@@ -128,7 +200,7 @@ void slam_visual_map::frame_to_canvas(Mat& frame, Mat& frameT, vector<Point2f>& 
 	for (int i = 0; i < 4; i++)
 	{
 		src[i] = Point2f(lc[i].x, lc[i].y);
-		worldpos_to_cell(wc[i], dst[i]);
+		worldpos_to_canvaspos(wc[i], dst[i]);
 		update_roi(dst[i], frame_roi);
 	}
 
@@ -174,7 +246,7 @@ byte* slam_visual_map::get_array()
 }
 
 
-void slam_visual_map::worldpos_to_cell(Point3f& src, Point2f& dst)
+void slam_visual_map::worldpos_to_canvaspos(Point3f& src, Point2f& dst)
 {
 	// convert local coordinates to world
 	// round: add 0.5 and floor
@@ -183,10 +255,20 @@ void slam_visual_map::worldpos_to_cell(Point3f& src, Point2f& dst)
 }
 
 
-void slam_visual_map::cell_to_worldpos(Point2f& src, Point2f& dst)
+void slam_visual_map::canvaspos_to_worldpos(Point2f& src, Point2f& dst)
 {
 	dst.x = (src.x + frame_roi[0] - (float) origin_x) * resolution_inv;
 	dst.y = (src.y + frame_roi[2] - (float) origin_y) * resolution_inv;
+}
+
+
+void slam_visual_map::worldpos_to_dgridpos(std::vector<cv::Point3f>& src, unsigned short *x, unsigned short *y)
+{
+	for (size_t i = 0; i < src.size(); i++)
+	{
+		x[i] = (unsigned short) floor(src[i].x * 0.01f + 0.5f) + 100;
+		y[i] = (unsigned short) floor(src[i].y * 0.01f + 0.5f) + 100;
+	}
 }
 
 
@@ -219,95 +301,6 @@ void slam_visual_map::update_roi(int *src, int *dst)
 
 	if (dst[3] == -1 || src[3] > dst[3])
 		dst[3] = src[3];
-}
-
-
-void slam_visual_map::find_corners(Mat& img, vector<CornerHist>& list, vector<Point2f>& list_p, bool unique)
-{
-	//vector<Mat> channels;
-	//split(img, channels);
-	Mat gray(img.rows, img.cols, CV_8UC1);
-	Mat hsv(img.rows, img.cols, CV_8UC3);
-	cvtColor(img, hsv, CV_BGR2HSV);
-	cvtColor(img, gray, CV_BGR2GRAY);
-
-	vector<Point2f> points;
-
-	/*
-		cvNamedWindow("B", CV_WINDOW_AUTOSIZE);
-		imshow("B", channels[0]);
-		cvWaitKey(4);
-		cvNamedWindow("G", CV_WINDOW_AUTOSIZE);
-		imshow("G", channels[1]);
-		cvWaitKey(4);
-		cvNamedWindow("R", CV_WINDOW_AUTOSIZE);
-		imshow("R", channels[2]);
-		cvWaitKey(4);
-	*/
-
-	//for (size_t i = 0; i < channels.size(); i++)
-	//{
-		goodFeaturesToTrack(gray, points, 50, 0.065, 10, Mat(), 3, 0, 0.04);
-
-		if (points.size() == 0)
-			return;
-
-		cornerSubPix(gray, points, Size(10,10), cvSize(-1,-1), termcrit);
-
-		Point2f wc;
-		Rect area;
-
-		for(size_t i = 0; i < points.size(); i++)
-		{
-			cell_to_worldpos(points[i], wc);
-
-			//if (unique && corner_at_wc(wc))
-			//	continue;
-
-			area.x = (int) (points[i].x - 5.0f);
-			area.y = (int) (points[i].y - 5.0f);
-			area.width = area.height = 10;
-
-			if (!inside(hsv, area))
-				continue;
-
-			Mat window(hsv, area);
-
-			Mat tmp = img.clone();
-
-			/*
-			circle(tmp, points[i], 5, Scalar(0,0,255), 3, 8);
-			cvNamedWindow("B", CV_WINDOW_AUTOSIZE);
-			imshow("B", tmp);
-			cvWaitKey(4);
-			*/
-
-			points[i].x += frame_roi[0];
-			points[i].y += frame_roi[2];
-
-			CornerHist hist;
-			hist.wc = wc;
-			hist.cc = points[i];
-			circle(img, points[i], 5, Scalar(0,0,255), 2, 8);
-			calcHist(&window, 1, this->channels, Mat(), hist.hist, 2, histSize, ranges, true, false);
-			normalize(hist.hist, hist.hist, 0, 1, NORM_MINMAX, -1, Mat());
-
-			list.push_back(hist);
-			list_p.push_back(hist.wc);
-		}
-	//}
-}
-
-
-bool slam_visual_map::corner_at_wc(Point2f wc)
-{
-	for (size_t i = 0; i < corners.size(); i++)
-	{
-		if (norm(corners[i].wc - wc) <= 150.0f)
-			return true;
-	}
-
-	return false;
 }
 
 

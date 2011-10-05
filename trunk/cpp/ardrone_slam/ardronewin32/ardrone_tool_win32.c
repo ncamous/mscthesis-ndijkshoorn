@@ -126,11 +126,14 @@ Main application function
 
 int ardronewin32()
 {
-	C_RESULT res;
+	START_THREAD(ihm, 0);
 
-	char drone_address[16]			= "192.168.1.1";
-	char appName[APPLI_NAME_SIZE]	= "ardrone_slam";
-	char usrName[USER_NAME_SIZE]	= "Nick";
+	return 1;
+}
+
+DEFINE_THREAD_ROUTINE(ihm, data)
+{
+	C_RESULT res;
 
 	WSADATA wsaData = {0};
 	int iResult = 0;
@@ -150,7 +153,8 @@ int ardronewin32()
 	{
 		printf("%s","Could not detect the drone version ... press <Enter> to try connecting anyway.\n");
 		getchar();
-		//WSACleanup(); exit(-1);
+		//WSACleanup();
+		exit(-1);
 	}
 
 
@@ -164,7 +168,7 @@ int ardronewin32()
 		
 	START_THREAD(video_stage, 0);
 
-	res = ardrone_tool_init(drone_address, strlen(drone_address), NULL, appName, usrName);
+	res = ardrone_tool_init(WIFI_ARDRONE_IP, strlen(WIFI_ARDRONE_IP), NULL, ARDRONE_CLIENT_APPNAME, ARDRONE_CLIENT_USRNAME);
 
 	//ardrone_tool_set_refresh_time(20); // 20 ms
 
@@ -173,7 +177,7 @@ int ardronewin32()
 
 	// config
 	ardrone_control_config.video_channel	= ZAP_CHANNEL_VERT;
-	ardrone_control_config.video_codec		= P264_CODEC;
+	ardrone_control_config.video_codec		= UVLC_CODEC; //P264_CODEC;
 	ardrone_control_config.navdata_demo		= FALSE;
 	ardrone_control_config.altitude_max		= 10000;
 	ardrone_control_config.control_vz_max	= 1000.0f;
@@ -203,7 +207,8 @@ int ardronewin32()
 
 	WSACleanup();
 
-	return VP_SUCCEEDED(res) ? 0 : -1;
+	//return VP_SUCCEEDED(res) ? 0 : -1;
+	return (THREAD_RET)res;
 }
 
 
@@ -268,6 +273,7 @@ inline C_RESULT demo_navdata_client_release( void )
 
 /* Implementing thread table in which you add routines of your application and those provided by the SDK */
 BEGIN_THREAD_TABLE
+  THREAD_TABLE_ENTRY( ihm, 20 )
   THREAD_TABLE_ENTRY( ardrone_control, 20 )
   THREAD_TABLE_ENTRY( navdata_update, 20 )
   THREAD_TABLE_ENTRY( video_stage, 20 )
