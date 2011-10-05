@@ -8,6 +8,8 @@
 #define WIFI_BROADCAST "192.168.1.255"
 #define WIFI_ARDRONE_IP "192.168.1.1"
 #define WIFI_MOBILE_IP "192.168.1.2"
+#define ARDRONE_CLIENT_APPNAME "ardrone_slam"
+#define ARDRONE_CLIENT_USRNAME "Nick"
 
 
 #ifdef __cplusplus

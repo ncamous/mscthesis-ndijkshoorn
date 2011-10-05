@@ -35,7 +35,7 @@ void bot_ardrone_usarsim::init(void)
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -51.7,5.9,-4.4}\r\n");
 
 	// doolhof: 8-experiment
-	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -54.2,-6.05,-6.6}\r\n");
+	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -54.2,-6.05,-6.6}\r\n");
 
 	// zebrapad
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -19.3,57.1,-1.1}\r\n");
@@ -44,7 +44,7 @@ void bot_ardrone_usarsim::init(void)
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,10.0,-3.0}\r\n");
 
 	// gym
-	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,0.0,1.5}\r\n");
+	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,0.0,1.5}\r\n");
 
 	control_send("SET {Type Viewports} {Config SingleView} {Viewport1 Camera2}\r\n");
 	//control_send("SET {Type Camera} {Robot ARDrone} {Name Camera2} {Client 10.0.0.2}\r\n");
@@ -237,7 +237,7 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 			{
 				img_bgr.data = (uchar*) frame_buffer + 9;
 				img_bgra.data = (uchar*) frame->data;
-				cvtColor(img_bgr, img_bgra, CV_BGR2BGRA);
+				cvtColor(img_bgr, img_bgra, CV_BGR2BGRA, 4);
 
 				bot->frame_received(frame);
 			}

@@ -76,7 +76,7 @@ C_RESULT vlib_stage_decoding_transform(vlib_stage_decoding_config_t *cfg, vp_api
       cfg->controller.in_stream.length  = 32;
       cfg->controller.in_stream.code    = 0;
 
-	      video_decode_blockline( &cfg->controller, cfg->picture, &got_image );
+	  video_decode_blockline( &cfg->controller, cfg->picture, &got_image );
     }
     else
     {

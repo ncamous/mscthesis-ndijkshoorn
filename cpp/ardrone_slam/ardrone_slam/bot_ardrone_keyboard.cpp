@@ -19,17 +19,18 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 
 	switch (kd->vkCode)
 	{
-		case 84: // T
+		case VK_T: // T
 			if (wParam == WM_KEYDOWN)
 			{
+				/*
 				printf("Start recording\n");
 				for(i=0; i<keyboard_nr_bots; i++)
 					keyboard_bot[i]->set_record();
-				//printf("Recording button disabled!\n");
+				*/
+				printf("Recording button disabled!\n");
 			}
 			break;
 
-		//case 83: // S
 		case VK_RETURN:
 			if (wParam == WM_KEYDOWN)
 			{
@@ -39,26 +40,21 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 			}
 			break;
 
-		case 77: // M
+		case VK_M:
 			for(i=0; i<keyboard_nr_bots; i++)
 			{
-				/*
 				keyboard_bot[i]->get_slam()->off(SLAM_MODE_MAP);
 				keyboard_bot[i]->get_slam()->off(SLAM_MODE_ACCEL);
-				keyboard_bot[i]->get_slam()->KF.statePost.at<float>(1) += 1500.0f;
-				printf("Performed kidnapping!\n");
-				Sleep(2000);
+				keyboard_bot[i]->get_slam()->off(SLAM_MODE_VEL);
 				keyboard_bot[i]->get_slam()->on(SLAM_MODE_VISUALLOC);
-				*/
-				keyboard_bot[i]->get_slam()->off(SLAM_MODE_MAP);
 			}
 
-		case 82: // R (recover)
+		case VK_R: // R (recover)
 			for(i=0; i<keyboard_nr_bots; i++)
 				keyboard_bot[i]->recover(wParam == WM_KEYDOWN);
 			break;
 
-		case 191: // NL keyboard
+		case VK_NL_PLUS: // NL keyboard
 		case VK_OEM_PLUS:
 			if (wParam == WM_KEYDOWN)
 			{
@@ -67,7 +63,7 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 			}
 			break;
 
-		case 219: // NL keyboard
+		case VK_NL_MINUS: // NL keyboard
 		case VK_OEM_MINUS:
 			if (wParam == WM_KEYDOWN)
 			{
@@ -75,7 +71,6 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 				printf("Keyboard velocity set to: %f\n", keyboard_vel);
 			}
 			break;
-
 
 		case VK_UP:
 			keyboard_set(wParam, BOT_ARDRONE_LinearVelocity, true);
@@ -93,23 +88,19 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 			keyboard_set(wParam, BOT_ARDRONE_LateralVelocity, true);
 			break;
 
-		case 73:
-		//case VK_Q:
+		case VK_W:
 			keyboard_set(wParam, BOT_ARDRONE_AltitudeVelocity, true);
 			break;
 
-		case 75:
-		//case VK_A:
+		case VK_S:
 			keyboard_set(wParam, BOT_ARDRONE_AltitudeVelocity, false);
 			break;
 
-		case 74:
-		//case VK_LSHIFT:
+		case VK_A:
 			keyboard_set(wParam, BOT_ARDRONE_RotationalVelocity, false);
 			break;
 
-		case 76:
-		//case VK_RSHIFT:
+		case VK_D:
 			keyboard_set(wParam, BOT_ARDRONE_RotationalVelocity, true);
 			break;
 
@@ -125,7 +116,7 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 				}
 			}
 			break;
-		
+
 		case VK_ESCAPE:
 			if (wParam == WM_KEYDOWN)
 			{

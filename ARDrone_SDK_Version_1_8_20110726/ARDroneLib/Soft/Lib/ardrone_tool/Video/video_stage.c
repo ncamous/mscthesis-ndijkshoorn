@@ -137,7 +137,7 @@ DEFINE_THREAD_ROUTINE(video_stage, data)
 //#endif
 	
 	/// Picture configuration
-	picture.format        = PIX_FMT_RGB565;
+	picture.format        = /*PIX_FMT_YUV420P */ PIX_FMT_RGB565;
 	
 	picture.width         = 512;
 	picture.height        = 512;
@@ -146,7 +146,7 @@ DEFINE_THREAD_ROUTINE(video_stage, data)
 	picture.y_buf   = vp_os_malloc( picture.width * picture.height * 2);
 	picture.cr_buf  = NULL;
 	picture.cb_buf  = NULL;
-	
+
 	picture.y_line_size   = picture.width * 2;
 	picture.cb_line_size  = 0;
 	picture.cr_line_size  = 0;

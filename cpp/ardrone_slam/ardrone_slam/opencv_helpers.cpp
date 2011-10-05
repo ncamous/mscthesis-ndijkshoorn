@@ -4,6 +4,131 @@
 
 namespace cv {
 
+
+Mat getTranslationTransform( const Point2f src[], const Point2f dst[] )
+{
+    Mat M(6, 1, CV_64F), X(6, 1, CV_64F, M.data);
+    double a[6*6], b[6];
+    Mat A(6, 6, CV_64F, a), B(6, 1, CV_64F, b);
+
+    for( int i = 0; i < 3; i++ )
+    {
+        int j = i*12;
+        a[j] = 1;
+		a[j+7] = 1;
+
+		a[j+1] = 0;
+		a[j+2] = 0;
+		a[j+3] = 0;
+		a[j+4] = 0;
+		a[j+5] = 0;
+		a[j+6] = 0;
+		a[j+8] = 0;
+		a[j+9] = 0;
+		a[j+10] = 0;
+		a[j+11] = 0;
+
+        b[i*2] = dst[i].x;
+        b[i*2+1] = dst[i].y;
+    }
+
+	dumpMatrix(A);
+	dumpMatrix(B);
+	printf("\n\n");
+
+	Sleep(2000);
+
+    solve( A, B, X );
+    return M;
+}
+
+
+
+bool getMatSubset( const Mat& m1, const Mat& m2, Mat& ms1, Mat& ms2, int maxAttempts, CvRNG& rng )
+{
+	bool checkPartialSubsets = false;
+
+    cv::AutoBuffer<int> _idx(3);
+    int* idx = _idx;
+    int i = 0, j, k, idx_i, iters = 0;
+    int type = CV_MAT_TYPE(m1.type()), elemSize = CV_ELEM_SIZE(type);
+    const int *m1ptr = (int*) m1.data, *m2ptr = (int*) m2.data;
+    int *ms1ptr = (int*)  ms1.data, *ms2ptr = (int*) ms2.data;
+    int count = m1.cols*m1.rows;
+
+    elemSize /= sizeof(int);
+
+    for(; iters < maxAttempts; iters++)
+    {
+        for( i = 0; i < 3 && iters < maxAttempts; )
+        {
+            idx[i] = idx_i = cvRandInt(&rng) % count;
+            for( j = 0; j < i; j++ )
+                if( idx_i == idx[j] )
+                    break;
+            if( j < i )
+                continue;
+            for( k = 0; k < elemSize; k++ )
+            {
+                ms1ptr[i*elemSize + k] = m1ptr[idx_i*elemSize + k];
+                ms2ptr[i*elemSize + k] = m2ptr[idx_i*elemSize + k];
+            }
+            if( checkPartialSubsets && (!checkSubset( ms1, i+1 ) || !checkSubset( ms2, i+1 )))
+            {
+                iters++;
+                continue;
+            }
+            i++;
+        }
+        if( !checkPartialSubsets && i == 3 &&
+            (!checkSubset( ms1, i ) || !checkSubset( ms2, i )))
+            continue;
+        break;
+    }
+
+    return i == 3 && iters < maxAttempts;
+}
+
+bool checkSubset( const Mat& m, int count )
+{
+    int j, k, i, i0, i1;
+	bool checkPartialSubsets = true;
+    CvPoint2D32f* ptr = (CvPoint2D32f*) &m.data;
+
+    assert( CV_MAT_TYPE(m.type()) == CV_32FC2 );
+    
+    if( checkPartialSubsets )
+        i0 = i1 = count - 1;
+    else
+        i0 = 0, i1 = count - 1;
+    
+    for( i = i0; i <= i1; i++ )
+    {
+        // check that the i-th selected point does not belong
+        // to a line connecting some previously selected points
+        for( j = 0; j < i; j++ )
+        {
+            float dx1 = ptr[j].x - ptr[i].x;
+            float dy1 = ptr[j].y - ptr[i].y;
+            for( k = 0; k < j; k++ )
+            {
+                float dx2 = ptr[k].x - ptr[i].x;
+                float dy2 = ptr[k].y - ptr[i].y;
+                if( fabs(dx2*dy1 - dy2*dx1) <= FLT_EPSILON*(fabs(dx1) + fabs(dy1) + fabs(dx2) + fabs(dy2)))
+                    break;
+            }
+            if( k < j )
+                break;
+        }
+        if( j < i )
+            break;
+    }
+
+    return i >= i1;
+}
+
+
+
 	void PrintMat(CvMat *A)
 	{
 		int i, j;

@@ -27,9 +27,6 @@ extern "C" {
 };
 
 
-static DWORD WINAPI start_ardrone_api_thread(void* Param);
-
-
 class bot_ardrone_ardronelib : public botinterface
 {
 public:

@@ -3,6 +3,9 @@
 #include "opencv2/core/core.hpp"
 
 namespace cv {
+	Mat getTranslationTransform( const Point2f src[], const Point2f dst[] );
+	bool getMatSubset( const Mat& m1, const Mat& m2, Mat& ms1, Mat& ms2, int maxAttempts, CvRNG& rng );
+	bool checkSubset( const Mat& m, int count );
 	void PrintMat(CvMat *A);
 	void dumpMatrix(const Mat &mat);
 	double MatMax(const Mat &mat);
