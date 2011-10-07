@@ -49,7 +49,8 @@ C_RESULT video_com_stage_open(video_com_config_t *cfg)
     tv.tv_usec  = 0;
 
     cfg->socket.protocol = VP_COM_UDP;
-    cfg->socket.is_multicast = 1; // enable multicast for video
+	// NICK
+    cfg->socket.is_multicast = 0; // enable multicast for video
     cfg->socket.multicast_base_addr = MULTICAST_BASE_ADDR;
 
     res = vp_com_open(cfg->com, &cfg->socket, &cfg->read, &cfg->write);

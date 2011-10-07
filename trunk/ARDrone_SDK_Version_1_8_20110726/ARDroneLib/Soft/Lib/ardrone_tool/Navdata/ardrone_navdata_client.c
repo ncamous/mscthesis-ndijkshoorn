@@ -40,7 +40,9 @@ C_RESULT ardrone_navdata_client_init(void)
 
   COM_CONFIG_SOCKET_NAVDATA(&navdata_socket, VP_COM_CLIENT, NAVDATA_PORT, wifi_ardrone_ip);
   navdata_socket.protocol = VP_COM_UDP;
-  navdata_socket.is_multicast = 1;      // enable multicast for Navdata
+
+  // NICK
+  navdata_socket.is_multicast = 0;      // enable multicast for Navdata
   navdata_socket.multicast_base_addr = MULTICAST_BASE_ADDR;
 
   vp_os_mutex_init(&navdata_client_mutex);
@@ -95,7 +97,7 @@ DEFINE_THREAD_ROUTINE( navdata_update, nomParams )
   uint32_t cks, navdata_cks, sequence = NAVDATA_SEQUENCE_DEFAULT-1;
   struct timeval tv;
 #ifdef _WIN32
-  int timeout_for_windows=1000/*milliseconds*/;
+  int timeout_for_windows=1/*milliseconds*/;
 #endif
 
 

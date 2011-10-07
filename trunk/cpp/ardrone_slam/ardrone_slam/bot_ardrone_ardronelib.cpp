@@ -50,13 +50,14 @@ bot_ardrone_ardronelib::bot_ardrone_ardronelib(bot_ardrone *bot):
 
 
 	// start thread
-	printf("Connecting to ARDrone\n");
+	printf("Connecting to AR.Drone\n");
 	ardrone_ready = CreateEvent(NULL, false, false, NULL);
 	
 	ardronewin32();
 
 	// wait untill the Drone is completely ready (communication started)
 	WaitForSingleObject(ardrone_ready, INFINITE);
+	printf("AR.Drone is ready\n");
 }
 
 

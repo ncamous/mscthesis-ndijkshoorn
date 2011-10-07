@@ -58,7 +58,7 @@ void slam::run()
 
 void slam::init_kf()
 {
-	//KF.statePost.at<float>(1) = -1500.0f;
+	//KF.statePost.at<float>(0) = -8000.0f;
 
 
 	// F vector
@@ -108,12 +108,52 @@ bool slam::mode(unsigned char mode)
 void slam::on(unsigned char mode)
 {
 	this->_mode |= mode;
+
+	printf("# SLAM ON: ");
+
+	switch (mode)
+	{
+	case SLAM_MODE_VISUALMOTION:
+		printf("VISUALMOTION\n"); break;
+
+	case SLAM_MODE_ACCEL:
+		printf("ACCEL\n"); break;
+
+	case SLAM_MODE_VEL:
+		printf("VEL\n"); break;
+
+	case SLAM_MODE_VISUALLOC:
+		printf("VISUALLOC\n"); break;
+
+	case SLAM_MODE_MAP:
+		printf("MAP\n"); break;
+	}
 }
 
 
 void slam::off(unsigned char mode)
 {
 	this->_mode &= ~mode;
+
+	printf("# SLAM OFF: ");
+
+	switch (mode)
+	{
+	case SLAM_MODE_VISUALMOTION:
+		printf("VISUALMOTION\n"); break;
+
+	case SLAM_MODE_ACCEL:
+		printf("ACCEL\n"); break;
+
+	case SLAM_MODE_VEL:
+		printf("VEL\n"); break;
+
+	case SLAM_MODE_VISUALLOC:
+		printf("VISUALLOC\n"); break;
+
+	case SLAM_MODE_MAP:
+		printf("MAP\n"); break;
+	}
 }
 
 

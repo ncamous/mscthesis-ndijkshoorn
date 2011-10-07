@@ -171,7 +171,7 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 
 	/* lock KF */
-	WaitForSingleObject(controller->KFSemaphore, 0L);
+	WaitForSingleObject(controller->KFSemaphore, 1000);
 
 
 	/* switch KF matrices */

@@ -48,6 +48,7 @@ slam_module_frame::slam_module_frame(slam *controller):
 	image_corners.push_back(Point2f(0.0f, (float) (BOT_ARDRONE_FRAME_H - 1)));
 	image_corners.push_back(Point2f((float) (BOT_ARDRONE_FRAME_W - 1), (float) (BOT_ARDRONE_FRAME_H - 1)));
 	image_corners.push_back(Point2f((float) (BOT_ARDRONE_FRAME_W - 1), 0.0f));
+	image_corners.push_back(image_corners[2] * 0.5f); // center
 
 
 	/* world plane */
@@ -246,7 +247,7 @@ void slam_module_frame::process_visual_state()
 		{
 
 			/* lock KF */
-			WaitForSingleObject(controller->KFSemaphore, 0L);
+			WaitForSingleObject(controller->KFSemaphore, 1000);
 
 
 			/* switch KF matrices */
@@ -306,20 +307,48 @@ void slam_module_frame::process_visual_state()
 void slam_module_frame::process_visual_loc()
 {
 	double dt = ((double)clock() - last_loc) / CLOCKS_PER_SEC;
-	if (dt < 0.5)
+	if (dt < 0.4)
 		return;
 
 
-	controller->sensor_pause(f->time);
+	SLAM_LOC_START
+
+	//for (int i = 0; i < 12; i++)
+	//	printf("%f ", controller->KF.errorCovPost.at<float>(0, i));
+
+	//printf("\n\n");
 
 
-	vector<Point2f> imagepoints_wc;
+	/* get local world coordinates of the image corners */
+	vector<Point3f> image_corners_wc;
+	imagepoints_to_local3d(image_corners, image_corners_wc);
+
+	printf("frame center: %f, %f\n", image_corners_wc[4].x, image_corners_wc[4].y);
+
+
+	/* get descriptors from map */
+	Mat map_descriptors;
+	Mat map_keypoints_wc;
+	float radius = 700.0f; // 1000mm
+
+	Mat cam_pos(3, 1, CV_32F);
+	Mat cam_or(3, 1, CV_32F);
+	get_localcam(cam_pos, cam_or);
+	Point3f wc(cam_pos);
+
+	controller->visual_map.get_local_descriptors(map_descriptors, map_keypoints_wc, wc, radius);
+
+
+	/* not enough descriptors from map (unexplored area?) */
+	if (map_descriptors.rows < 3)
+	{
+		SLAM_LOC_END
+		return;
+	}
+
+
+
 	//Mat frameT;
-
-
-	// get local world coordinates of the image corners
-	//vector<Point3f> image_corners_wc;
-	//imagepoints_to_local3d(image_corners, image_corners_wc);
 
 
 	// transform frame to canvas
@@ -333,128 +362,120 @@ void slam_module_frame::process_visual_loc()
 
 		get_features(frame_gray, keypoints); // also stores image points in "imagepoints"
 		get_descriptors(frame_gray, keypoints, descriptors);
-
-		// convert frame (pixel) coordinates to world coordinates (2D)
-		imagepoints_to_local3d(imagepoints, imagepoints_wc);
 	}
 
 
-	/* map features (only neighborhood */
-	Mat map_descriptors;
-	Mat map_keypoints_wc;
-	float radius = 1000.0f; // 1000mm
+	/* convert frame (pixel) coordinates to world coordinates (2D) */
+	vector<Point2f> imagepoints_wc;
+	imagepoints_to_local3d(imagepoints, imagepoints_wc);
 
-
-	// get all
-	controller->visual_map.get_local_descriptors(map_descriptors, map_keypoints_wc, radius);
 
 
 	/* match */
 	vector<DMatch> matches;
 	get_matches(descriptors, map_descriptors, matches, true);
 
-
-	if (matches.size() >= 3)
+	if (matches.size() < 3)
 	{
-		printf("matches: %i\n", matches.size());
+		SLAM_LOC_END
+		return;
+	}
 
 
-		vector<short> mask;
-		Mat H(1, 1, CV_32FC2);
+	vector<short> inliers;
+	Mat T(1, 1, CV_32FC2);
 
-		double confidence = find_robust_affine(imagepoints_wc, map_keypoints_wc, matches, mask, 50, H, 100.0);
+	double confidence = find_robust_translation(imagepoints_wc, map_keypoints_wc, matches, inliers, T, 100.0);
+
+	/*
+	vector<DMatch> matches3;
+	for (size_t i = 0; i < mask.size(); i++)
+	{
+		matches3.push_back(matches[mask[i]]);
+	}
+
+	Mat out;
+	drawMatches( frame_gray, keypoints, first_frame, controller->visual_map.keypoints, matches3, out);
+	imshow("Image:", out);
+	cvWaitKey(4);
+	*/
 
 
-		vector<DMatch> matches3;
-		for (size_t i = 0; i < mask.size(); i++)
-		{
-			matches3.push_back(matches[mask[i]]);
-		}
+	if (confidence >= 0.7)
+	{
+		Mat cam_pos(3, 1, CV_32F);
+		Mat cam_or(3, 1, CV_32F);
+		get_localcam(cam_pos, cam_or);
 
-		Mat out;
-		drawMatches( frame_gray, keypoints, first_frame, controller->visual_map.keypoints, matches3, out);
-		imshow("Image:", out);
-		cvWaitKey(4);
+		cam_pos.at<float>(0) += T.at<Vec2f>(0)[0];
+		cam_pos.at<float>(1) += T.at<Vec2f>(0)[1];
+
+		localcam_to_world(cam_pos, cam_or);
 
 
-		if (confidence >= 0.7)
-		{
-			float translate[2];
-			translate[0]	= H.at<Vec2f>(0)[0];
-			translate[1]	= H.at<Vec2f>(0)[1];
-
-			Mat cam_pos(3, 1, CV_32F);
-			Mat cam_or(3, 1, CV_32F);
-			get_localcam(cam_pos, cam_or);
-
-			cam_pos.at<float>(0) -= translate[0];
-			cam_pos.at<float>(1) -= translate[1];
-
-			localcam_to_world(cam_pos, cam_or);
+		/* lock KF */
+		WaitForSingleObject(controller->KFSemaphore, 1000);
 
 
 #ifdef SLAM_LOC_WRITE_STATE_DIRECTLY
 
-			state->at<float>(0) = cam_pos.at<float>(0);
-			state->at<float>(1) = cam_pos.at<float>(1);
+		state->at<float>(0) = cam_pos.at<float>(0);
+		state->at<float>(1) = cam_pos.at<float>(1);
+
+		/* unlock KF */
+		ReleaseSemaphore(controller->KFSemaphore, 1, NULL);
+		last_loc = clock();
+
+		printf("SLAM LOC (%f, %f)   [%f]\n", cam_pos.at<float>(0), cam_pos.at<float>(1), confidence);
 
 #else
 
-			/* lock KF */
-			WaitForSingleObject(controller->KFSemaphore, 0L);
+		memcpy_s(measurement.data, 12, cam_pos.data, 12); // pos: this is the fastest method
+		//difftime = f->time - prev_frame_time; // time between consecutive frames
+		//calculate_measurement(); // vel & accel: calculated from new pos and previous state
 
 
-			memcpy_s(measurement.data, 12, cam_pos.data, 12); // pos: this is the fastest method
-			//difftime = f->time - prev_frame_time; // time between consecutive frames
-			//calculate_measurement(); // vel & accel: calculated from new pos and previous state
+		//if (measurementSeemsOk())
+		//{
+
+		/* switch KF matrices */
+		KF->measurementMatrix	= measurementMatrix;
+		KF->measurementNoiseCov	= measurementNoiseCov;
 
 
-			//if (measurementSeemsOk())
-			//{
-				/* lock KF */
-				WaitForSingleObject(controller->KFSemaphore, 0L);
+		/* update transition matrix */
+		difftime = f->time - controller->KF_prev_update;
+		if (difftime <= 0.0)
+			difftime = 0.0001;
+
+		controller->update_transition_matrix((float) difftime);
 
 
-				/* switch KF matrices */
-				KF->measurementMatrix	= measurementMatrix;
-				KF->measurementNoiseCov	= measurementNoiseCov;
+		/* predict */
+		KF->predict();
 
 
-				/* update transition matrix */
-				difftime = f->time - controller->KF_prev_update;
-				if (difftime <= 0.0)
-					difftime = 0.0001;
-
-				controller->update_transition_matrix((float) difftime);
-
-
-				/* predict */
-				KF->predict();
-
-
-				/* correct */
-				KF->correct(measurement);
+		/* correct */
+		KF->correct(measurement);
 
 	
-				/* save current state. This state is used to project IP and add frame to map */
-				save_cur_state();
+		/* save current state. This state is used to project IP and add frame to map */
+		save_cur_state();
 
 
-				/* unlock KF */
-				ReleaseSemaphore(controller->KFSemaphore, 1, NULL);
-				last_loc = clock();
+		/* unlock KF */
+		ReleaseSemaphore(controller->KFSemaphore, 1, NULL);
+		last_loc = clock();
 
-				printf("LOC FIX!\n");
-			//}
+		printf("SLAM LOC (%f, %f)   [%f]\n", cam_pos.at<float>(0), cam_pos.at<float>(1), confidence);
+		//}
 
 #endif
 
-		}
 	}
 
 
-	controller->sensor_resume();
-	Sleep(75); // to process all navdata from queue
+	SLAM_LOC_END
 }
 
 
@@ -514,7 +535,7 @@ void slam_module_frame::store_prev_frame()
 }
 
 
-double slam_module_frame::find_robust_affine(InputArray p1, InputArray p2, vector<DMatch>& matches, vector<short>& mask, int max, Mat& H, double maxInlierDist)
+double slam_module_frame::find_robust_translation(InputArray p1, InputArray p2, vector<DMatch>& matches, vector<short>& inliers, Mat& T, double maxInlierDist)
 {
 	bool res;
 	size_t nr_matches = matches.size();
@@ -537,30 +558,27 @@ double slam_module_frame::find_robust_affine(InputArray p1, InputArray p2, vecto
 
 	Mat p1s(3, 1, CV_32FC2);
 	Mat p2s(3, 1, CV_32FC2);
-	Point2f *pf1s = (Point2f*) p1s.data; // safe?
-	Point2f *pf2s = (Point2f*) p2s.data; // safe?
+	Point2f *pf1s = (Point2f*) p1s.data;
+	Point2f *pf2s = (Point2f*) p2s.data;
 
 
 	/** RANSAC **/
+	Mat T_temp = Mat(1, 1, CV_32FC2);
+	Scalar mean, stddev;
 	double confidence, best_confidence; //, confidence_a, confidence_b, confidence_c;
-	int inliers;
 	CvRNG rng = cvRNG(-1);
 
 	best_confidence = 0.0;
 
 	for (int i = 0; i < 800; i++)
 	{
-		inliers = 0;
-
 		res = getMatSubset(p1m, p2m, p1s, p2s, 300, rng);
 
-		Scalar mean, stddev;
+		meanStdDev(p2s - p1s, mean, stddev);
 
-		meanStdDev(p1s - p2s, mean, stddev);
+		T_temp.at<Vec2f>(0)[0] = (float) mean[0];
+		T_temp.at<Vec2f>(0)[1] = (float) mean[1];
 
-		Mat T = Mat(1, 1, CV_32FC2);
-		T.at<Vec2f>(0)[0] = (float) mean[0];
-		T.at<Vec2f>(0)[1] = (float) mean[1];
 
 		//printf("mean: %f, %f, std: %f, %f\n", mean[0], mean[1], stddev[0], stddev[1]);
 
@@ -568,22 +586,17 @@ double slam_module_frame::find_robust_affine(InputArray p1, InputArray p2, vecto
 		//Mat affine = getTranslationTransform(pf1s, pf2s);
 
 		/*
+
 		transform(p1m, p1mt, affine);
-		*/
-
-
-		p1mt = p1m + T;
 
 		for (size_t j = 0; j < nr_matches; j++)
 		{
 			if (norm(p2m.at<Point2f>(j) - p1mt.at<Point2f>(j)) <= maxInlierDist)
-				inliers++;
+				nr_inliers++;
 		}
 
-		//confidence_a = (double) inliers / nr_matches;
-		confidence = 1.0 - (stddev[0] / 200.0) - (stddev[1] / 200.0);
+		confidence_a = (double) inliers / nr_matches;
 
-		/*
 		confidence_b = abs(affine.at<double>(0, 0));
 		if (confidence_b > 1.0)
 			confidence_b = 1.0 / confidence_b;
@@ -595,32 +608,27 @@ double slam_module_frame::find_robust_affine(InputArray p1, InputArray p2, vecto
 		confidence = 0.5 * confidence_a + 0.5 * (confidence_b * confidence_c);
 		*/
 
+
+		p1mt = p1m + T_temp;
+
+		confidence = 1.0 - (stddev[0] / 200.0) - (stddev[1] / 200.0);
+
 		if (confidence > best_confidence)
 		{
 			best_confidence = confidence;
-			memcpy_s(H.data, sizeof(float) * 2, T.data, sizeof(float) * 2);
+			memcpy_s(T.data, sizeof(float) * 2, T_temp.data, sizeof(float) * 2);
 		}
 	}
 
-	/*
-	printf("confidence: %f\n", best_confidence);
-	printf("%f, %f\n", H.at<Vec2f>(0)[0], H.at<Vec2f>(0)[1]);
-	printf("\n\n");
-	*/
 	/****/
 
-	inliers = 0;
 	//transform(p1m, p1mt, H);
-	p1mt = p1m + H;
+	p1mt = p1m + T;
 
 	for (size_t i = 0; i < nr_matches; i++)
 	{
 		if (norm(p2m.at<Point2f>(i) - p1mt.at<Point2f>(i)) <= maxInlierDist)
-		{
-			mask.push_back((short) i);
-			if (++inliers >= max)
-				break;
-		}
+			inliers.push_back((short) i);
 	}
 
 	return best_confidence;
@@ -982,7 +990,7 @@ void slam_module_frame::world_to_localcam(Mat& pos, Mat& or)
 	// position
 	pos = rot * pos;
 	pos.at<float>(2) *= -1.0f;
-
+	 
 	// orientation
 	or = rot * or;
 }
@@ -999,7 +1007,7 @@ void slam_module_frame::get_features(Mat& frame, vector<cv::KeyPoint> &v)
 
 	for(size_t i = 0; i < tmp.size(); i++)
 	{
-		if (tmp[i].response > 600.0f)
+		if (tmp[i].response > 1000.0f)
 			v.push_back(tmp[i]);
 	}
 
@@ -1030,7 +1038,7 @@ void slam_module_frame::get_matches(Mat& q_descriptors, Mat& t_descriptors, vect
 
 		for (size_t i = 0; i < matches_tmp.size(); i++)
 		{
-			if (matches_tmp[i].distance > 0.15)
+			if (matches_tmp[i].distance > 0.12)
 				continue;
 
 			it = tIdx_best.find(matches_tmp[i].trainIdx);

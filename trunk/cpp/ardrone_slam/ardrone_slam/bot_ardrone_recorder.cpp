@@ -37,7 +37,7 @@ bot_ardrone_recorder::~bot_ardrone_recorder(void)
 
 void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 {
-	WaitForSingleObject(ghSemaphore, 0L);
+	WaitForSingleObject(ghSemaphore, INFINITE);
 
 	fprintf (file_out, "---\n");
 	fprintf (file_out, "e: %i\n", BOT_EVENT_MEASUREMENT);
@@ -67,9 +67,7 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 
 void bot_ardrone_recorder::record_control(bot_ardrone_control *c)
 {
-	return;
-	
-	WaitForSingleObject(ghSemaphore, 0L);
+	WaitForSingleObject(ghSemaphore, INFINITE);
 
 	fprintf (file_out, "---\n");
 	fprintf (file_out, "e: %i\n", BOT_EVENT_CONTROL);
@@ -82,7 +80,7 @@ void bot_ardrone_recorder::record_control(bot_ardrone_control *c)
 
 void bot_ardrone_recorder::record_frame(bot_ardrone_frame *f)
 {
-	WaitForSingleObject(ghSemaphore, 0L);
+	WaitForSingleObject(ghSemaphore, INFINITE);
 
 	char filename[25];
 	//printf("recorded frame %i\n", frame_counter);
@@ -96,20 +94,19 @@ void bot_ardrone_recorder::record_frame(bot_ardrone_frame *f)
 	fprintf (file_out, "s: %i\n", f->data_size);
 	fprintf (file_out, "f: %s\n", f->filename);
 
-	// RAW
-	if (BOT_ARDRONE_RECORD_EXT == "raw")
-	{
-		ofstream frame_out(filename, ios::out | ios::binary);
-		frame_out.write(f->data, f->data_size);
-		frame_out.close();
-	}
-
 	// PNG
-	else if (BOT_ARDRONE_RECORD_EXT == "png")
+	if (BOT_ARDRONE_RECORD_EXT == "png")
 	{
 		Mat frame = Mat(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC3, NULL, 0);
 		frame.data = (uchar*) &f->data[4];
 		imwrite(filename, frame);
+	}
+	// RAW
+	else
+	{
+		ofstream frame_out(filename, ios::out | ios::binary);
+		frame_out.write(f->data, f->data_size);
+		frame_out.close();
 	}
 
 	ReleaseSemaphore(ghSemaphore, 1, NULL);
@@ -142,11 +139,12 @@ void bot_ardrone_recorder::playback(char *dataset)
 		event_time = doc["t"];
 		wait = int((event_time - last_event_time) * 1000.0);
 		last_event_time = event_time;
-		//if (wait > 0)
-		//	Sleep(wait);
-		//
+		if (wait > 0)
+			Sleep(wait);
+		//else
+		//	Sleep(20);
 
-		//printf("%f\n", event_time);
+		printf("%f\n", event_time);
 
 
 		doc["e"] >> event_type;
@@ -184,21 +182,32 @@ void bot_ardrone_recorder::playback(char *dataset)
 
 			case BOT_EVENT_FRAME:
 			{
+				break;
 				char filename[30];
 				string tmpstring;
 				//bot_ardrone_frame f;
 				bot_ardrone_frame *f = new bot_ardrone_frame;
+
 				doc["t"] >> f->time;
 				doc["s"] >> f->data_size;
 				doc["f"] >> tmpstring;
-				strcpy_s(f->filename, 30, tmpstring.c_str());
+				strcpy_s(f->filename, 25, tmpstring.c_str());
 
-				sprintf_s(filename, 30, "%s/%s", dataset_dir, f->filename);
+				sprintf_s(filename, 25, "%s/%s", dataset_dir, f->filename);
 				ifstream frame_in(filename, ios::in | ios::binary);
 
 				// data buffer
-				frame_in.read(f->data, f->data_size);
+				frame_in.read(f->data + 4, f->data_size - 4);
 				frame_in.close();
+
+				Mat img_bgr(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC3, NULL, 0);
+				Mat img_bgra(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC4);
+
+				img_bgr.data		= (unsigned char*) f->data;
+
+				cvtColor(img_bgr, img_bgra, CV_BGR2BGRA, 4);
+
+				memcpy_s(f->data, BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE, img_bgra.data, img_bgra.rows * img_bgra.cols * 4);
 
 				bot->frame_received(f);
 

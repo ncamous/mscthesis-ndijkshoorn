@@ -40,8 +40,15 @@ ardrone_gen_sessionid (char sessId [9], char *sessDesc, int descLen)
       srand ((unsigned int) time (NULL));
       runOnce = 0;
     }
-  binaryId = (uint32_t)rand ();
-  binaryId = (0 != binaryId) ? binaryId : 1u;
+
+
+  binaryId = rand ();
+  binaryId <<= 15;
+  binaryId += rand ();
+  binaryId <<= 15;
+  binaryId += rand ();
+
+  //binaryId = (0 != binaryId) ? binaryId : 1u;
   sprintf_s (sessId, 9, "%08x", binaryId);
   sessId [8] = '\0';
   sprintf_s (sessDesc, descLen, "Session %s", sessId);

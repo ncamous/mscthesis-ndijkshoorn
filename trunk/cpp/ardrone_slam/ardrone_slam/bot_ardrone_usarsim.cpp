@@ -44,7 +44,7 @@ void bot_ardrone_usarsim::init(void)
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,10.0,-3.0}\r\n");
 
 	// gym
-	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,0.0,1.5}\r\n");
+	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 2.5,1.8,1.5}\r\n");
 
 	control_send("SET {Type Viewports} {Config SingleView} {Viewport1 Camera2}\r\n");
 	//control_send("SET {Type Camera} {Robot ARDrone} {Name Camera2} {Client 10.0.0.2}\r\n");

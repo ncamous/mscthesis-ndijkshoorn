@@ -117,7 +117,7 @@ void slam_visual_map::update(vector<KeyPoint>& keypoints, Mat& descriptors, vect
 		this->keypoints_wc.resize(this->keypoints_wc.rows * 2);
 	}
 
-	printf("%i\n", descriptors_count, keypoints.size());
+	//printf("%i\n", descriptors_count, keypoints.size());
 
 
 	x = new unsigned short[size]; // faster than vector
@@ -130,7 +130,7 @@ void slam_visual_map::update(vector<KeyPoint>& keypoints, Mat& descriptors, vect
 
 	for (i = 0; i < descriptors.rows; i++)
 	{
-		if (descriptors_grid.at<unsigned short>(y[i], x[i]) > 0)
+		if (!cell_inside_descriptors_grid(x[i], y[i]) || descriptors_grid.at<unsigned short>(y[i], x[i]) > 0)
 			continue;
 
 		memcpy_s(key_p, 2, &x[i], 2);
@@ -181,13 +181,87 @@ void slam_visual_map::update(vector<KeyPoint>& keypoints, Mat& descriptors, vect
 }
 
 
-void slam_visual_map::get_local_descriptors(Mat& map_descriptors, Mat& map_keypoints, float radius)
+void slam_visual_map::get_local_descriptors(Mat& map_descriptors, Mat& map_keypoints, Point3f& wc, float radius)
 {
-	// return all keypoints + descriptors
-	Range rows = Range(1, descriptors_count);
+	// return whole map
+	/*
+	if (radius <= 0.0f)
+	{
+		// return all keypoints + descriptors
+		Range rows = Range(1, descriptors_count);
 
-	map_descriptors = Mat(descriptors, rows); // efficient?
-	map_keypoints = Mat(keypoints_wc, rows);
+		map_descriptors = Mat(descriptors, rows);
+		map_keypoints = Mat(keypoints_wc, rows);
+
+		return;
+	}
+	*/
+
+	int i = 0;
+	unsigned short index;
+	unsigned short *indices;
+	unsigned short x, y;
+
+	worldpos_to_dgridpos(wc, &x, &y);
+
+	int r = (int) floor(radius * 0.01f);
+
+	/*
+	int r2 = r * r;
+
+	indices = new unsigned short[r2*r2]; // can do better
+
+	for (int y2 = -r; y2 <= r; y2++)
+	{
+		for (int x2 = -r; x2 <= r; x2++)
+		{
+			if (x2*x2*y2*y2 <= r2)
+			{	
+				index = descriptors_grid.at<unsigned short>(y + y2, x + x2);
+
+				if (cell_inside_descriptors_grid(x + x2, y + y2) && index > 0)
+					indices[i++] = index;
+			}
+		}
+	}
+	*/
+
+	int x2, y2, w, h;
+	x2 = max(0, x - r);
+	y2 = max(0, y - r);
+	w = min(descriptors_grid.cols - x2, r);
+	h = min(descriptors_grid.rows - y2, r);
+
+	indices = new unsigned short[w * h];
+
+	Mat grid(descriptors_grid, Rect(x2, y2, w, h));
+
+	for (x2 = 0; x2 < grid.cols; x2++)
+	{
+		for (y2 = 0; y2 < grid.rows; y2++)
+		{
+			index = grid.at<unsigned short>(y2, x2);
+			if (index > 0)
+				indices[i++] = index;
+		}
+	}
+
+	map_descriptors	= Mat(i, descriptors.cols, descriptors.type());
+	map_keypoints	= Mat(i, keypoints_wc.cols, keypoints_wc.type());
+
+	int descriptors_rowsize	= SLAM_DESCRIPTOR_SIZE;
+	int keypoint_rowsize	= 2 * sizeof(float);
+
+	for (int j = 0; j < i; j++)
+	{
+		memcpy_s(map_descriptors.data + j * descriptors_rowsize, descriptors_rowsize,
+			descriptors.data + indices[j] * descriptors_rowsize, descriptors_rowsize);
+
+		memcpy_s(map_keypoints.data + j * keypoint_rowsize, keypoint_rowsize,
+			keypoints_wc.data + indices[j] * keypoint_rowsize, keypoint_rowsize);
+	}
+
+	delete [] indices;
 }
 
 
@@ -272,6 +346,13 @@ void slam_visual_map::worldpos_to_dgridpos(std::vector<cv::Point3f>& src, unsign
 }
 
 
+void slam_visual_map::worldpos_to_dgridpos(cv::Point3f& src, unsigned short *x, unsigned short *y)
+{
+	*x = (unsigned short) floor(src.x * 0.01f + 0.5f) + 100;
+	*y = (unsigned short) floor(src.y * 0.01f + 0.5f) + 100;
+}
+
+
 void slam_visual_map::update_roi(Point2f& p, int *roi)
 {
 	if (roi[0] == -1 || p.x < roi[0])
@@ -312,4 +393,10 @@ bool slam_visual_map::inside(Mat& m, Rect& r)
 		return false;
 
 	return true;
+}
+
+
+inline bool slam_visual_map::cell_inside_descriptors_grid(unsigned short x, unsigned short y)
+{
+	return (x >= 0 && y >= 0 && x < 200 && y < 200);
 }
