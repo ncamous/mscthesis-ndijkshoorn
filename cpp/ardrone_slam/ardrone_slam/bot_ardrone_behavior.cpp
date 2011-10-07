@@ -21,7 +21,7 @@ bot_ardrone_behavior::~bot_ardrone_behavior()
 
 void bot_ardrone_behavior::map()
 {
-	bot->recover(true);
+	//bot->recover(true);
 	printf("Standby\n");
 	Sleep(3000);
 
@@ -34,41 +34,52 @@ void bot_ardrone_behavior::map()
 
 	Sleep(5000); // safe?
 
+	bot->flyto_vel = 7000.0f;
+
+	/*
 	if(stop_behavior || !bot->heightto(-1500.0f))
 		return;
+	*/
 
-	//1
-	if(stop_behavior || !bot->flyto(6000.0f, 1500.0f))
+
+	if(stop_behavior || !bot->heightto(-1000.0f))
 		return;
 
-	//2
-	if(stop_behavior || !bot->flyto(6000.0f, -1500.0f))
+	if(stop_behavior || !bot->flyto(800.0, 0.0f))
 		return;
 
-	if(stop_behavior || !bot->flyto(0.0f, -1500.0f))
+	if(stop_behavior || !bot->flyto(800.0f, -1600.0f))
 		return;
 
-	if(stop_behavior || !bot->flyto(0.0f, 1500.0f))
+	if(stop_behavior || !bot->flyto(-800.0f, -1600.0f))
 		return;
 
-	//3.5
-	if(stop_behavior || !bot->flyto(-6300.0f, 1500.0f))
+	if(stop_behavior || !bot->flyto(-800.0f, 0.0f))
 		return;
 
-	//4
-	if(stop_behavior || !bot->flyto(-6300.0, -1500.0f))
+	if(stop_behavior || !bot->flyto(800.0, 0.0f))
 		return;
 
-	//5
-	if(stop_behavior || !bot->flyto(0.0f, -1500.0f))
-		return;
 
-	//6
-	if(stop_behavior || !bot->flyto(0.0f, -1500.0f))
-		return;
+	bot->get_slam()->off(SLAM_MODE_MAP);
+	bot->get_slam()->on(SLAM_MODE_VISUALLOC);
 
-	if(stop_behavior || !bot->heightto(-1200.0f))
-		return;
+	bot->flyto_vel = 5000.0f;
+
+	while (1)
+	{
+		if(stop_behavior || !bot->flyto(800.0f, -1600.0f))
+			return;
+
+		if(stop_behavior || !bot->flyto(-800.0f, -1600.0f))
+			return;
+
+		if(stop_behavior || !bot->flyto(-800.0f, 0.0f))
+			return;
+
+		if(stop_behavior || !bot->flyto(800.0, 0.0f))
+			return;
+	}
 
 	bot->control_reset();
 	bot->control_update();

@@ -41,12 +41,15 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 			break;
 
 		case VK_M:
-			for(i=0; i<keyboard_nr_bots; i++)
+			if (wParam == WM_KEYDOWN)
 			{
-				keyboard_bot[i]->get_slam()->off(SLAM_MODE_MAP);
-				keyboard_bot[i]->get_slam()->off(SLAM_MODE_ACCEL);
-				keyboard_bot[i]->get_slam()->off(SLAM_MODE_VEL);
-				keyboard_bot[i]->get_slam()->on(SLAM_MODE_VISUALLOC);
+				for(i=0; i<keyboard_nr_bots; i++)
+				{
+					keyboard_bot[i]->get_slam()->off(SLAM_MODE_MAP);
+					//keyboard_bot[i]->get_slam()->off(SLAM_MODE_ACCEL);
+					//keyboard_bot[i]->get_slam()->off(SLAM_MODE_VEL);
+					keyboard_bot[i]->get_slam()->on(SLAM_MODE_VISUALLOC);
+				}
 			}
 
 		case VK_R: // R (recover)

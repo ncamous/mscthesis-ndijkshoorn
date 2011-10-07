@@ -330,8 +330,8 @@ C_RESULT vp_com_make_udp_target( vp_com_socket_t* sck )
 C_RESULT vp_com_write_udp_socket(vp_com_socket_t* sck, const int8_t* buffer, int32_t* size)
 {
 /*
-	char tmp[777];
-	int i;
+  char tmp[777];
+  int i;
 */
 
   C_RESULT res;
@@ -359,7 +359,7 @@ C_RESULT vp_com_write_udp_socket(vp_com_socket_t* sck, const int8_t* buffer, int
     //*size = sendto( s, (char*)buffer, *size, 0, (struct sockaddr*)&to, sizeof(to) );
 	*size = send( s, (char*)buffer, *size, flags);
 
-	/*
+/*
 	for (i = 0; i < *size; i++)
 	{
 		tmp[i] = buffer[i];
@@ -369,8 +369,8 @@ C_RESULT vp_com_write_udp_socket(vp_com_socket_t* sck, const int8_t* buffer, int
 
 	tmp[*size] = '\0';
 
-	printf("%s\n", tmp);
-	*/
+	printf("UDP: %s\n", tmp);
+*/
 
     if(*size < 0)
     {
@@ -457,6 +457,10 @@ C_RESULT vp_com_read_socket(vp_com_socket_t* socket, int8_t* buffer, int32_t* si
 
 C_RESULT vp_com_write_socket(vp_com_socket_t* socket, const int8_t* buffer, int32_t* size)
 {
+/*
+  char tmp[777];
+  int i;
+*/
   C_RESULT res;
   SOCKET s = (SOCKET) socket->priv;
 
@@ -473,6 +477,18 @@ C_RESULT vp_com_write_socket(vp_com_socket_t* socket, const int8_t* buffer, int3
   {
     res = VP_COM_OK;
     *size = send(s, buffer, *size, flags);
+/*
+	for (i = 0; i < *size; i++)
+	{
+		tmp[i] = buffer[i];
+		if (tmp[i] == '\r')
+			tmp[i] = '\n';
+	}
+
+	tmp[*size] = '\0';
+
+	printf("TCP: %s\n", tmp);
+*/
 
     if(*size < 0)
     {

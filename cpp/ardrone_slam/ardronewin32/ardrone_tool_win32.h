@@ -24,6 +24,12 @@ extern "C" {
 
 #endif
 
+int ardrone_demo_nr_configs = 5;
+int ardrone_nr_configs_suc = 0;
+int ardrone_demo_redirect_to_interface = 0;
+
+void ardrone_demo_config_callback(unsigned int success);
+
 extern void bot_ardrone_ardronelib_process_navdata(navdata_unpacked_t *n);
 
 extern void bot_ardrone_ardronelib_process_frame(unsigned char* rgbtexture, int w, int h);

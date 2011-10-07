@@ -118,4 +118,5 @@ public:
 	clock_t last_measurement_time;
 	bool slam_state;
 	slam *slamcontroller;
+	float flyto_vel;
 };

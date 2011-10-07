@@ -29,8 +29,8 @@ bot_ardrone_measurement::bot_ardrone_measurement()
 bot_ardrone_frame::bot_ardrone_frame()
 {
 	memset(this, 0, sizeof(bot_ardrone_frame));
-	this->data = new char[BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE];
-	data_start = this->data;
+	this->data			= new char[BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE];
+	this->data_start	= this->data;
 }
 
 
@@ -50,6 +50,8 @@ bot_ardrone::bot_ardrone(unsigned char id, unsigned char botinterface, unsigned 
 	record			= playback = false;
 	battery			= NULL;
 	slam_state		= false;
+
+	flyto_vel		= 5000.0f;
 
 	control_reset();
 
@@ -251,7 +253,7 @@ void bot_ardrone::set_slam(bool state)
 {
 	slam_state = state;
 
-	printf("SLAM state: %s\n", state ? "ENABLED" : "DISABLED");
+	printf("# SLAM STATE: %s\n", state ? "ENABLED" : "DISABLED");
 }
 
 
@@ -276,9 +278,12 @@ void bot_ardrone::get_slam_or(float *or)
 
 bool bot_ardrone::flyto(float x, float y, float z)
 {
+	float *state;
 	float pos[3];
 	float or[3];
 	float dx, dy;
+	float vx, vy;
+	float d_vx, d_vy;
 	bool reached = false;
 
 	Mat Mpos(3, 1, CV_32F);
@@ -291,45 +296,50 @@ bool bot_ardrone::flyto(float x, float y, float z)
 		get_slam_pos(pos);
 		get_slam_or(or);
 
-		//float dx = x - pos[0];
-		//float dy = y - pos[1];
+		dx = x - pos[0];
+		dy = y - pos[1];
 
-		Mpos.at<float>(0) = x - pos[0];
-		Mpos.at<float>(1) = y - pos[1];
-		Mpos.at<float>(2) = 0.0f;
+		state = slamcontroller->get_state();
+		vx = state[3];
+		vy = state[4];
 
-		//or[2] = -0.5 * PI;
-		Mor.at<float>(2) = -or[2];
-		cv::RotationMatrix3D(Mor, Mrot);
-
-		/* convert world distance to distance relative to ARDrone's orientation */
-		Mpos = Mrot * Mpos;
-		dx = Mpos.at<float>(0);
-		dy = Mpos.at<float>(1);
-
-		if (abs(dx) < 500.0f && abs(dy) < 500.0f)
-		{
+		if (abs(dx) < 200.0f && abs(dy) < 200.0f)
+		 {
 			control_reset();
 			control_update();
 			printf("reached %f, %f!\n", x, y);
 			break; 
 		}
-		else
-		{
-			//printf("pos: %f, %f dist: %f, %f OR: %f\n", pos[0], pos[1], dx, dy, or[2]);
-		}
 
-		float velX = min(0.10f, (dx*dx) / 3000000.0f);
-		float velY = min(0.10f, (dy*dy) / 3000000.0f);
+		d_vx = (dx - 0.4f * vx);
+		d_vy = (dy - 0.4f * vy);
 
-		if (dx < 0.0f)
-			velX = -velX;
+		d_vx = d_vx / flyto_vel;
+		d_vy = d_vy / flyto_vel;
 
-		if (dy < 0.0f)
-			velY = -velY;
+		/* convert world distance to distance relative to ARDrone's orientation */
+		Mpos.at<float>(0) = d_vx;
+		Mpos.at<float>(1) = d_vy;
+		Mpos.at<float>(2) = 0.0f;
 
-		control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_LinearVelocity, velX);
-		control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_LateralVelocity, velY);
+		Mor.at<float>(2) = -or[2];
+		cv::RotationMatrix3D(Mor, Mrot);
+
+		Mpos = Mrot * Mpos;
+		vx = Mpos.at<float>(0);
+		vy = Mpos.at<float>(1);
+
+		if (vx < -1.0f)
+			vx = -1.0f;
+		if (vx > 1.0f)
+			vx = 1.0f;
+		if (vy < -1.0f)
+			vy = -1.0f;
+		if (vy > 1.0f)
+			vy = 1.0f;
+
+		control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_LinearVelocity, vx);
+		control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_LateralVelocity, vy);
 		control_update();
 
 		//printf("vel: %f, %f\n", velX, velY);
@@ -337,7 +347,7 @@ bool bot_ardrone::flyto(float x, float y, float z)
 		if (stop_behavior)
 			return false;
 
-		Sleep(100);
+		Sleep(50);
 	}
 
 	return true;
@@ -370,7 +380,7 @@ bool bot_ardrone::heightto(float z)
 			//printf("pos: %f, %f dist: %f, %f OR: %f\n", pos[0], pos[1], dx, dy, or[2]);
 		}
 
-		float velZ = min(0.4f, (dz*dz) / 3000000.0f);
+		float velZ = min(0.7f, (dz*dz) / 1000000.0f);
 
 		if (dz > 0.0f)
 			velZ = -velZ;
@@ -383,7 +393,7 @@ bool bot_ardrone::heightto(float z)
 		if (stop_behavior)
 			return false;
 
-		Sleep(100);
+		Sleep(50);
 	}
 
 	return true;

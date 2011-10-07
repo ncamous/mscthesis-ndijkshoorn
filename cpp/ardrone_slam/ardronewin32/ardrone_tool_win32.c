@@ -44,75 +44,26 @@ The FTP connection process is a quick and (very)dirty one. It uses FTP passive m
 ---------------------------------------------------------------------------------------------------------------------*/
 int test_drone_connection()
 {
-	const char * passivdeModeHeader = "\r\n227 PASV ok (";
-	vp_com_socket_t ftp_client,ftp_client2;
-	char buffer[1024];
+	vp_com_socket_t ftp_client;
 	static Write ftp_write = NULL;
 	static Read  ftp_read = NULL;
-	int bytes_to_send,received_bytes;
-	int i,L,x[6],port;
 	int timeout_windows = 1000; /*milliseconds*/
-	
-	vp_os_memset(buffer,0,sizeof(buffer));
 
 	/* Connects to the FTP server */
-		wifi_config_socket(&ftp_client,VP_COM_CLIENT,FTP_PORT,WIFI_ARDRONE_IP);
-		ftp_client.protocol = VP_COM_TCP;
-		if(VP_FAILED(vp_com_init(wifi_com()))) return -1;
-		if(VP_FAILED(vp_com_open(wifi_com(), &ftp_client, &ftp_read, &ftp_write))) return -2;
-		setsockopt((int32_t)ftp_client.priv, 
+	wifi_config_socket(&ftp_client,VP_COM_CLIENT,FTP_PORT,WIFI_ARDRONE_IP);
+	ftp_client.protocol = VP_COM_TCP;
+	if(VP_FAILED(vp_com_init(wifi_com())))
+		return -1;
+	if(VP_FAILED(vp_com_open(wifi_com(), &ftp_client, &ftp_read, &ftp_write)))
+		return -2;
+	setsockopt((int32_t)ftp_client.priv, 
 								SOL_SOCKET, 
 								SO_RCVTIMEO, 
 								(const char*)&timeout_windows, sizeof(timeout_windows)
-								); 
+								);
 
-	/* Request version file */
-		bytes_to_send = _snprintf(buffer,sizeof(buffer),"%s",
-			"USER anonymous\r\nCWD /\r\nPWD\r\nTYPE A\r\nPASV\r\nRETR version.txt\r\n");
-		ftp_write(&ftp_client,buffer,&bytes_to_send);
-		/* Dirty. We should wait for data to arrive with some kind of synchronization
-		or make the socket blocking.*/
-		Sleep(1000);
-
-	/* Gets the data port */
-		received_bytes = sizeof(buffer);
-		ftp_read(&ftp_client,buffer,&received_bytes);
-		if (received_bytes<1) { vp_com_close(wifi_com(), &ftp_client); return -3; }
-		L=received_bytes-strlen(passivdeModeHeader);
-
-	/* Searches for the passive mode acknowlegment from the FTP server */
-		for (i=0;i<L;i++) {
-			if (strncmp((buffer+i),passivdeModeHeader,strlen(passivdeModeHeader))==0)  break; 
-		}
-		if (i==L) {
-			vp_com_close(wifi_com(), &ftp_client); return -4; 
-		}
-		i+=strlen(passivdeModeHeader);
-		if (sscanf(buffer+i,"%i,%i,%i,%i,%i,%i)",&x[0],&x[1],&x[2],&x[3],&x[4],&x[5])!=6)
-			{ vp_com_close(wifi_com(), &ftp_client); return -5; }
-		port=(x[4]<<8)+x[5];
-
-	/* Connects to the FTP server data port */
-		wifi_config_socket(&ftp_client2,VP_COM_CLIENT,port,"192.168.1.1");
-		ftp_client2.protocol = VP_COM_TCP;
-		if(VP_FAILED(vp_com_init(wifi_com()))) 
-				{ vp_com_close(wifi_com(), &ftp_client2); return -6; }
-		if(VP_FAILED(vp_com_open(wifi_com(), &ftp_client2, &ftp_read, &ftp_write)))
-			{ vp_com_close(wifi_com(), &ftp_client2); return -7; }
-
-	/* Gets the data */
-		received_bytes = sizeof(buffer);
-		ftp_read(&ftp_client2,buffer,&received_bytes);
-		if (received_bytes>0) {
-			buffer[min(received_bytes,sizeof(buffer)-1)]=0;
-			//printf("Drone version %s detected ... press <Enter> to start the application.\n",buffer);
-			//getchar();
-			printf("Drone version %s detected\n",buffer);
-		}
-	
 	/* Clean up */
-		vp_com_close(wifi_com(), &ftp_client);
-		vp_com_close(wifi_com(), &ftp_client2);
+	vp_com_close(wifi_com(), &ftp_client);
 
 	return 0;
 }
@@ -137,6 +88,7 @@ DEFINE_THREAD_ROUTINE(ihm, data)
 
 	WSADATA wsaData = {0};
 	int iResult = 0;
+
 
 	/* Initializes Windows socket subsystem */
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -165,12 +117,12 @@ DEFINE_THREAD_ROUTINE(ihm, data)
 		return -1;
 	}
 
-		
+
 	START_THREAD(video_stage, 0);
 
 	res = ardrone_tool_init(WIFI_ARDRONE_IP, strlen(WIFI_ARDRONE_IP), NULL, ARDRONE_CLIENT_APPNAME, ARDRONE_CLIENT_USRNAME);
 
-	//ardrone_tool_set_refresh_time(20); // 20 ms
+	ardrone_tool_set_refresh_time(20); // 20 ms
 
 	ardrone_at_reset_com_watchdog();
 
@@ -183,18 +135,23 @@ DEFINE_THREAD_ROUTINE(ihm, data)
 	ardrone_control_config.control_vz_max	= 1000.0f;
 	ardrone_control_config.outdoor			= FALSE;
 
-	ARDRONE_TOOL_CONFIGURATION_ADDEVENT(video_channel, &ardrone_control_config.video_channel, NULL);
-	ARDRONE_TOOL_CONFIGURATION_ADDEVENT(video_codec, &ardrone_control_config.video_codec, NULL);
-	ARDRONE_TOOL_CONFIGURATION_ADDEVENT (navdata_demo, &ardrone_control_config.navdata_demo, NULL);
-	ARDRONE_TOOL_CONFIGURATION_ADDEVENT (altitude_max, &ardrone_control_config.altitude_max, NULL);
-	ARDRONE_TOOL_CONFIGURATION_ADDEVENT (control_vz_max, &ardrone_control_config.control_vz_max, NULL);
-	ARDRONE_TOOL_CONFIGURATION_ADDEVENT (outdoor, &ardrone_control_config.outdoor, NULL);
+
+	ARDRONE_TOOL_CONFIGURATION_ADDEVENT(video_channel, &ardrone_control_config.video_channel, (ardrone_tool_configuration_callback) ardrone_demo_config_callback);
+	//ARDRONE_TOOL_CONFIGURATION_ADDEVENT(video_channel, &ardrone_control_config.video_channel, NULL);
+	//ARDRONE_TOOL_CONFIGURATION_ADDEVENT(video_codec, &ardrone_control_config.video_codec, NULL);
+	//ARDRONE_TOOL_CONFIGURATION_ADDEVENT (navdata_demo, &ardrone_control_config.navdata_demo, NULL);
+	//ARDRONE_TOOL_CONFIGURATION_ADDEVENT (altitude_max, &ardrone_control_config.altitude_max, NULL);
+	//ARDRONE_TOOL_CONFIGURATION_ADDEVENT (control_vz_max, &ardrone_control_config.control_vz_max, NULL);
+	//ARDRONE_TOOL_CONFIGURATION_ADDEVENT (outdoor, &ardrone_control_config.outdoor, NULL);
 
 
 	// flat trim
 	ardrone_at_set_flat_trim();
 
-	SetEvent(ardrone_ready);
+
+	//SetEvent(ardrone_ready);
+	//ardrone_demo_redirect_to_interface = 1;
+
 
 	while( VP_SUCCEEDED(res) && ardrone_tool_exit() == FALSE )
 	{
@@ -207,7 +164,6 @@ DEFINE_THREAD_ROUTINE(ihm, data)
 
 	WSACleanup();
 
-	//return VP_SUCCEEDED(res) ? 0 : -1;
 	return (THREAD_RET)res;
 }
 
@@ -216,7 +172,47 @@ void demo_video_client_process()
 {
 	video_stage_config_t *config = video_stage_get();
 
-	bot_ardrone_ardronelib_process_frame((unsigned char*) config->data, config->widthImage, config->heightImage);
+	if (ardrone_demo_redirect_to_interface)
+		bot_ardrone_ardronelib_process_frame((unsigned char*) config->data, config->widthImage, config->heightImage);
+}
+
+
+void ardrone_demo_config_callback(unsigned int success)
+{
+	ardrone_tool_configuration_callback cb = (ardrone_tool_configuration_callback) ardrone_demo_config_callback;
+
+	if (success && ++ardrone_nr_configs_suc <= ardrone_demo_nr_configs)
+	{
+		switch (ardrone_nr_configs_suc)
+		{
+		/*
+		case 1:
+			ARDRONE_TOOL_CONFIGURATION_ADDEVENT(video_codec, &ardrone_control_config.video_codec, cb);
+			break;
+		*/
+
+		case 1:
+			ARDRONE_TOOL_CONFIGURATION_ADDEVENT (navdata_demo, &ardrone_control_config.navdata_demo, cb);
+			break;
+
+		case 2:
+			ARDRONE_TOOL_CONFIGURATION_ADDEVENT (altitude_max, &ardrone_control_config.altitude_max, cb);
+			break;
+
+		case 3:
+			ARDRONE_TOOL_CONFIGURATION_ADDEVENT (control_vz_max, &ardrone_control_config.control_vz_max, cb);
+			break;
+
+		case 4:
+			ARDRONE_TOOL_CONFIGURATION_ADDEVENT (outdoor, &ardrone_control_config.outdoor, cb);
+			break;
+
+		case 5:
+			SetEvent(ardrone_ready);
+			ardrone_demo_redirect_to_interface = 1;
+			break;
+		}
+	}
 }
 
 
@@ -259,7 +255,8 @@ inline C_RESULT demo_navdata_client_process( const navdata_unpacked_t* const nav
 {
     navdata_unpacked_t *nd = (navdata_unpacked_t*)navdata;
 
-	bot_ardrone_ardronelib_process_navdata(nd);	
+	if (ardrone_demo_redirect_to_interface)
+		bot_ardrone_ardronelib_process_navdata(nd);	
 
 	return C_OK;
 }
