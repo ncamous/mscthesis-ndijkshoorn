@@ -83,6 +83,9 @@ void slam::init_kf()
 		0.3f, 0.3f, 0.3f
 	};
 	MatSetDiag(KF.errorCovPost, ECP);
+
+
+	yaw_offset = 0.0f;
 }
 
 
@@ -202,6 +205,7 @@ void slam::add_input_frame(bot_ardrone_frame *f)
 }
 
 
+/*
 void slam::add_input_framefile(char *filename)
 {
 	bot_ardrone_frame *f = new bot_ardrone_frame;
@@ -215,6 +219,7 @@ void slam::add_input_framefile(char *filename)
 
 	m_frame->process(f);
 }
+*/
 
 
 void slam::add_input_sensor(bot_ardrone_measurement *m)

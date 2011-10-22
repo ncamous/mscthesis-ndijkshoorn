@@ -5,7 +5,6 @@
 #include "opencv_helpers.h"
 #include <cv.hpp>
 #include <cxcore.hpp>
-#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 
 using namespace cv;
@@ -323,13 +322,13 @@ void slam_module_frame::process_visual_loc()
 	vector<Point3f> image_corners_wc;
 	imagepoints_to_local3d(image_corners, image_corners_wc);
 
-	printf("frame center: %f, %f\n", image_corners_wc[4].x, image_corners_wc[4].y);
+	//printf("frame center: %f, %f\n", image_corners_wc[4].x, image_corners_wc[4].y);
 
 
 	/* get descriptors from map */
 	Mat map_descriptors;
 	Mat map_keypoints_wc;
-	float radius = 700.0f; // 1000mm
+	float radius = 0.0f; // 1000mm
 
 	Mat cam_pos(3, 1, CV_32F);
 	Mat cam_or(3, 1, CV_32F);
@@ -384,8 +383,9 @@ void slam_module_frame::process_visual_loc()
 
 	vector<short> inliers;
 	Mat T(1, 1, CV_32FC2);
+	float R = 0.0f;
 
-	double confidence = find_robust_translation(imagepoints_wc, map_keypoints_wc, matches, inliers, T, 100.0);
+	double confidence = find_robust_translation_rotation(imagepoints_wc, map_keypoints_wc, matches, inliers, T, R, 100.0);
 
 	/*
 	vector<DMatch> matches3;
@@ -411,6 +411,14 @@ void slam_module_frame::process_visual_loc()
 		cam_pos.at<float>(1) += T.at<Vec2f>(0)[1];
 
 		localcam_to_world(cam_pos, cam_or);
+
+		// rotation
+		if (confidence > 0.9)
+		{
+			controller->yaw_offset -= R; // write to state here?
+			printf("ROT: %f\n", R);
+		}
+
 
 
 		/* lock KF */
@@ -490,7 +498,6 @@ void slam_module_frame::process_map()
 
 	controller->visual_map.update(frame, image_corners, image_corners_wc);
 
-
 	/* features map (not-transformed image) */
 	if (keypoints.empty())
 	{
@@ -506,7 +513,7 @@ void slam_module_frame::process_map()
 	}
 
 	first_frame2 = false;
-	first_frame = frame_gray.clone();
+	//first_frame = frame_gray.clone();
 }
 
 
@@ -535,7 +542,7 @@ void slam_module_frame::store_prev_frame()
 }
 
 
-double slam_module_frame::find_robust_translation(InputArray p1, InputArray p2, vector<DMatch>& matches, vector<short>& inliers, Mat& T, double maxInlierDist)
+double slam_module_frame::find_robust_translation_rotation(InputArray p1, InputArray p2, vector<DMatch>& matches, vector<short>& inliers, Mat& T, float& R, double maxInlierDist)
 {
 	bool res;
 	size_t nr_matches = matches.size();
@@ -561,11 +568,14 @@ double slam_module_frame::find_robust_translation(InputArray p1, InputArray p2, 
 	Point2f *pf1s = (Point2f*) p1s.data;
 	Point2f *pf2s = (Point2f*) p2s.data;
 
+	Mat p1s_best(3, 1, CV_32FC2);
+	Mat p2s_best(3, 1, CV_32FC2);
+
 
 	/** RANSAC **/
 	Mat T_temp = Mat(1, 1, CV_32FC2);
 	Scalar mean, stddev;
-	double confidence, best_confidence; //, confidence_a, confidence_b, confidence_c;
+	double confidence, best_confidence;
 	CvRNG rng = cvRNG(-1);
 
 	best_confidence = 0.0;
@@ -579,36 +589,6 @@ double slam_module_frame::find_robust_translation(InputArray p1, InputArray p2, 
 		T_temp.at<Vec2f>(0)[0] = (float) mean[0];
 		T_temp.at<Vec2f>(0)[1] = (float) mean[1];
 
-
-		//printf("mean: %f, %f, std: %f, %f\n", mean[0], mean[1], stddev[0], stddev[1]);
-
-		//Mat affine = getAffineTransform(pf1s, pf2s);
-		//Mat affine = getTranslationTransform(pf1s, pf2s);
-
-		/*
-
-		transform(p1m, p1mt, affine);
-
-		for (size_t j = 0; j < nr_matches; j++)
-		{
-			if (norm(p2m.at<Point2f>(j) - p1mt.at<Point2f>(j)) <= maxInlierDist)
-				nr_inliers++;
-		}
-
-		confidence_a = (double) inliers / nr_matches;
-
-		confidence_b = abs(affine.at<double>(0, 0));
-		if (confidence_b > 1.0)
-			confidence_b = 1.0 / confidence_b;
-
-		confidence_c = abs(affine.at<double>(1, 1));
-		if (confidence_c > 1.0)
-			confidence_c = 1.0 / confidence_c;
-
-		confidence = 0.5 * confidence_a + 0.5 * (confidence_b * confidence_c);
-		*/
-
-
 		p1mt = p1m + T_temp;
 
 		confidence = 1.0 - (stddev[0] / 200.0) - (stddev[1] / 200.0);
@@ -617,18 +597,26 @@ double slam_module_frame::find_robust_translation(InputArray p1, InputArray p2, 
 		{
 			best_confidence = confidence;
 			memcpy_s(T.data, sizeof(float) * 2, T_temp.data, sizeof(float) * 2);
+			memcpy_s(p1s_best.data, sizeof(float) * 6, p1s.data, sizeof(float) * 6);
+			memcpy_s(p2s_best.data, sizeof(float) * 6, p2s.data, sizeof(float) * 6);
 		}
 	}
 
-	/****/
 
-	//transform(p1m, p1mt, H);
+	/* Inliers mask */
 	p1mt = p1m + T;
-
 	for (size_t i = 0; i < nr_matches; i++)
 	{
 		if (norm(p2m.at<Point2f>(i) - p1mt.at<Point2f>(i)) <= maxInlierDist)
 			inliers.push_back((short) i);
+	}
+
+
+	/* Rotation */
+	if (best_confidence > 0.7)
+	{
+		p1s_best += T; // transform query points to match training points
+		R = Kabsch(p1s_best, p2s_best, Mat());
 	}
 
 	return best_confidence;

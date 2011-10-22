@@ -102,8 +102,6 @@ public:
 	void set_slam(bool state);
 	void get_slam_pos(float *pos);
 	void get_slam_or(float *or);
-	bool flyto(float x, float y, float z = NULL);
-	bool heightto(float z);
 
 	static clock_t start_clock;
 	unsigned char id;
@@ -118,5 +116,4 @@ public:
 	clock_t last_measurement_time;
 	bool slam_state;
 	slam *slamcontroller;
-	float flyto_vel;
 };

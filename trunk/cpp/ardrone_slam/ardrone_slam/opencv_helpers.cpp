@@ -4,45 +4,32 @@
 
 namespace cv {
 
-
-Mat getTranslationTransform( const Point2f src[], const Point2f dst[] )
+float Kabsch(Mat& P, Mat& Q, Mat& R)
 {
-    Mat M(6, 1, CV_64F), X(6, 1, CV_64F, M.data);
-    double a[6*6], b[6];
-    Mat A(6, 6, CV_64F, a), B(6, 1, CV_64F, b);
+	assert(P.channels() == 2);
 
-    for( int i = 0; i < 3; i++ )
-    {
-        int j = i*12;
-        a[j] = 1;
-		a[j+7] = 1;
+	P -= mean(P);
+	Q -= mean(Q);
 
-		a[j+1] = 0;
-		a[j+2] = 0;
-		a[j+3] = 0;
-		a[j+4] = 0;
-		a[j+5] = 0;
-		a[j+6] = 0;
-		a[j+8] = 0;
-		a[j+9] = 0;
-		a[j+10] = 0;
-		a[j+11] = 0;
+	P = P.reshape(1);
+	Q = Q.reshape(1);
 
-        b[i*2] = dst[i].x;
-        b[i*2+1] = dst[i].y;
-    }
+	float weight = 1.0f / P.rows;
 
-	dumpMatrix(A);
-	dumpMatrix(B);
-	printf("\n\n");
+	Mat A = (P.t() * weight) * Q;
 
-	Sleep(2000);
+	Mat D = Mat::eye(2, 2, CV_32F);
 
-    solve( A, B, X );
-    return M;
+	if (determinant(A) < 0.0)
+		D.at<float>(1,1) = -1.0;
+
+	Mat w, u, vt;
+	SVD::compute(A, w, u, vt);
+
+	R = u * D * vt;
+
+	return R.at<float>(0, 1);
 }
-
-
 
 bool getMatSubset( const Mat& m1, const Mat& m2, Mat& ms1, Mat& ms2, int maxAttempts, CvRNG& rng )
 {
