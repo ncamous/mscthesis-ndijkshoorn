@@ -3,6 +3,8 @@
 
 #define BOT_ARDRONE_BEHAVIOR_SLEEP 100
 
+enum bot_behavior { BOT_BEHAVIOR_NONE, BOT_BEHAVIOR_ACCEL, BOT_BEHAVIOR_CRUISE, BOT_BEHAVIOR_DEACCEL, BOT_BEHAVIOR_APPROACH };
+
 class bot_ardrone;
 
 static DWORD WINAPI start_behavior_thread(void* Param);
@@ -16,6 +18,9 @@ public:
 	void map();
 	void forcefield();
 	void stop();
+
+	bool flyto(float x, float y, float speed = 1500.0f);
+	bool heightto(float z);
 
 private:
 	bot_ardrone *bot;

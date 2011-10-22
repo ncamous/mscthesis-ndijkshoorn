@@ -26,7 +26,7 @@ public:
 	void process_visual_loc();
 	void process_map();
 
-	double find_robust_translation(InputArray p1, InputArray p2, vector<DMatch>& matches, vector<short>& inliers, cv::Mat& T, double maxInlierDist = 3.0);
+	double find_robust_translation_rotation(InputArray p1, InputArray p2, vector<DMatch>& matches, vector<short>& inliers, cv::Mat& T, float& R, double maxInlierDist = 3.0);
 	int find_robust_matches(InputArray p1, InputArray p2, vector<DMatch>& matches, vector<short>& mask, int max, cv::Mat& H, double maxInlierDist = 3.0);
 	int find_object_position(Mat& cam_pos, Mat& cam_or, vector<DMatch>& matches, vector<short>& mask);
 

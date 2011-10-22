@@ -67,6 +67,7 @@ public:
 
 	/* Kalman filter */
 	cv::KalmanFilter KF;
+	float yaw_offset;
 	double KF_prev_update;
 	bool KF_running;
 	HANDLE KFSemaphore; // resource sharing

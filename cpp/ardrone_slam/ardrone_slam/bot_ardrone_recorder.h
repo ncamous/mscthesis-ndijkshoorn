@@ -1,12 +1,10 @@
 #pragma once
 #include <windows.h>
 #include <fstream>
-#include "yaml.h"
 
 
 // Semaphore
 #define MAX_SEM_COUNT 10
-#define THREADCOUNT 3
 
 
 class bot_ardrone;
@@ -35,14 +33,17 @@ public:
 	void prepare_dataset();
 
 private:
+	void wait_for_event(double time);
+	double last_event_time;
+
 	bot_ardrone *bot;
 	char dataset_dir[25];
-	ifstream fin;
+	//ifstream fin;
 	int frame_counter;
 
 	// resource sharing
 	static HANDLE ghSemaphore;
 
 	/* faster */
-	FILE *file_out;
+	FILE *file;
 };

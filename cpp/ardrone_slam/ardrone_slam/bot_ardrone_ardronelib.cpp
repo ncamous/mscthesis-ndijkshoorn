@@ -138,6 +138,10 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 	//m.ins_vel[2] = n->navdata_demo.vz; // is always zero
 	m->vel[2] = n->navdata_altitude.altitude_vz;
 
+	m->gt_loc[0] = n->navdata_demo.drone_camera_trans.v[0];
+	m->gt_loc[1] = n->navdata_demo.drone_camera_trans.v[1];
+	m->gt_loc[2] = n->navdata_demo.drone_camera_trans.v[2];
+
 	m_counter++;
 
 	bot->measurement_received(m);

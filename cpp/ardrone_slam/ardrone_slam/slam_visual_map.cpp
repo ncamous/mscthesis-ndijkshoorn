@@ -184,7 +184,6 @@ void slam_visual_map::update(vector<KeyPoint>& keypoints, Mat& descriptors, vect
 void slam_visual_map::get_local_descriptors(Mat& map_descriptors, Mat& map_keypoints, Point3f& wc, float radius)
 {
 	// return whole map
-	/*
 	if (radius <= 0.0f)
 	{
 		// return all keypoints + descriptors
@@ -195,7 +194,6 @@ void slam_visual_map::get_local_descriptors(Mat& map_descriptors, Mat& map_keypo
 
 		return;
 	}
-	*/
 
 	int i = 0;
 	unsigned short index;
