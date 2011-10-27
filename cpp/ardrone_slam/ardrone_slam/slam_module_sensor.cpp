@@ -47,14 +47,18 @@ slam_module_sensor::slam_module_sensor(slam *controller):
 
 	measurementNoiseCov = 0.0f;
 	float MNC[9] = {
-		0.0f, 0.0f, 200.0f, // pos
-		30.0f, 30.0f, 30.0f, // vel (mm)
-		4.0f, 4.0f, 4.0f // accel (mg)
+		0.0f, 0.0f, 0.0f, // pos
+		50.0f, 50.0f, 50.0f, // vel (mm)
+		30.0f, 30.0f, 30.0f // accel (mm/s)
 	};
 	MatSetDiag(measurementNoiseCov, MNC);
+	//measurementNoiseCov = 0.0f;
 
 
 	prev_state = 0.0f;
+
+
+	fopen_s (&error_log, "error_log.txt" , "w");
 }
 
 
@@ -176,11 +180,12 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 	/* switch KF matrices */
 	KF->measurementMatrix	= measurementMatrix;
-	KF->measurementNoiseCov	= measurementNoiseCov;
+	KF->measurementNoiseCov	= measurementNoiseCov * difftime;
 
 
 	/* update transition matrix */
 	controller->update_transition_matrix(difftime);
+	controller->update_process_noise(difftime);
 
 
 	/* predict */
@@ -210,16 +215,37 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	/**/
 
 
-
 	/* elevation map */
 	// check is mapping mode is on
 	//if (!controller->mode(SLAM_MODE_MAP))
 		//update_elevation_map(m->altitude/* - alt_correct*/);
 
-	/*
-	if (counter++ % 30 == 0)
+	if (counter++ % 50 == 0)
 	{
-		printf("height: %f\n", state->at<float>(2));
+		
+		printf("error: %f, %f, %f\n", 
+			abs(state->at<float>(0) - m->gt_loc[0]),
+			abs(state->at<float>(1) - (m->gt_loc[1] - 1000.0f)),
+			abs(state->at<float>(2) - (m->gt_loc[2] - 2496.0f))
+			);
+
+		/*
+		fprintf(error_log, "%f,%f,%f,%f\n",
+			(float) m->time,
+			abs(state->at<float>(0) - m->gt_loc[0]),
+			abs(state->at<float>(1) - (m->gt_loc[1] - 1000.0f)),
+			abs(state->at<float>(2) - (m->gt_loc[2] - 2496.0f))
+			);
+
+		fflush(error_log);
+		*/
+
+	for (int i = 0; i < 12; i++)
+		printf("%f ", controller->KF.errorCovPost.at<float>(i, i));
+
+	//dumpMatrix(controller->KF.errorCovPost);
+
+	printf("\n\n");
 
 		//-52.0,5.68,-4.0
 
@@ -231,7 +257,6 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 		//printf("gt:    [%f, %f, %f]\n", m->gt_loc[0] * 1000.f, m->gt_loc[1] * 1000.f, m->gt_loc[2] * 1000.f);
 		//printf("gt:    [%f, %f, %f]\n", m_or.at<float>(0), m_or.at<float>(1), m_or.at<float>(2));
 	}
-	*/
 }
 
 

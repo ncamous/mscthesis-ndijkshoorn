@@ -44,7 +44,7 @@ void bot_ardrone_usarsim::init(void)
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,10.0,-3.0}\r\n");
 
 	// gym
-	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 2.5,1.8,1.5}\r\n");
+	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,1.0,1.64}\r\n");
 
 	control_send("SET {Type Viewports} {Config SingleView} {Viewport1 Camera2}\r\n");
 	//control_send("SET {Type Camera} {Robot ARDrone} {Name Camera2} {Client 10.0.0.2}\r\n");
@@ -145,6 +145,9 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 					//printf("%s\n", line.c_str());
 
 					usarsim_msgparser_float3(&line, "{Location", m->gt_loc);
+					m->gt_loc[0] *= 1000.0f;
+					m->gt_loc[1] *= 1000.0f;
+					m->gt_loc[2] *= 1000.0f;
 					break;
 				}
 

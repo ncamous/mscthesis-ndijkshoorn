@@ -11,6 +11,7 @@
 #define SLAM_ELEVATION_MAP_DEFAULT_SIZE 200 // 10m * 10m in each direction + 1 for center
 #define SLAM_DESCRIPTOR_SIZE 64 * sizeof(float)
 //#define SLAM_LOC_WRITE_STATE_DIRECTLY true // remove line if false
+#define SLAM_LOC_UPDATE_YAW false
 
 #define SLAM_MODE_VISUALMOTION 0x01
 #define SLAM_MODE_ACCEL 0x02
@@ -28,7 +29,7 @@
 /* ARDRONE */
 #define BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE 101376		// at least: 176*144*4 (RGBA) bytes
 #define USARIM_FRAME_USERAW true
-#define BOT_ARDRONE_RECORD_EXT "raw"
+#define BOT_ARDRONE_RECORD_EXT "raw" //"raw"
 #define BOT_ARDRONE_BATTERYLIFE 720 // 720s, 12 minutes
 #define BOT_ARDRONE_RECORD_FRAMES true
 #define BOT_ARDRONE_MIN_MEASUREMENT_INTERVAL 0.005 // max 100 measurement/s
@@ -45,7 +46,7 @@
 	#define BOT_ARDRONE_USARSIM_FRAME_MODE 1 // 1: request new frame when SLAM queue empty, 2: fixed framerate
 
 	/* keyboard */
-	#define BOT_ARDRONE_KEYBOARD_VEL 0.1f
+	#define BOT_ARDRONE_KEYBOARD_VEL 0.5f
 
 
 extern bool exit_application;

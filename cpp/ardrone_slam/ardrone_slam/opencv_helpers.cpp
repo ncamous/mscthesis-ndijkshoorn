@@ -4,6 +4,34 @@
 
 namespace cv {
 
+float RectRadius(const vector<Point3f>& corners)
+{
+	float minX, minY, maxX, maxY;
+	minX = minY = FLT_MAX;
+	maxX = maxY = -FLT_MAX;
+
+	for (size_t i = 0; i < corners.size(); i++)
+	{
+		if (corners[i].x < minX)
+			minX = corners[i].x;
+
+		if (corners[i].x > maxX)
+			maxX = corners[i].x;
+
+		if (corners[i].y < minY)
+			minY = corners[i].y;
+
+		if (corners[i].y > maxY)
+			maxY = corners[i].y;
+	}
+
+	float w = std::abs(maxX - minX) * 0.5f;
+	float h = std::abs(maxY - minY) * 0.5f;
+
+	return std::sqrt(w*w + h*h);
+}
+
+
 float Kabsch(Mat& P, Mat& Q, Mat& R)
 {
 	assert(P.channels() == 2);

@@ -38,6 +38,7 @@ public:
 	void add_input_sensor(bot_ardrone_measurement *m);
 	void get_world_position(float *pos);
 	void update_transition_matrix(float difftime);
+	void update_process_noise(float difftime);
 	void sensor_pause(double time);
 	void sensor_resume();
 
@@ -67,6 +68,7 @@ public:
 
 	/* Kalman filter */
 	cv::KalmanFilter KF;
+	cv::Mat processNoiseCov;
 	float yaw_offset;
 	double KF_prev_update;
 	bool KF_running;

@@ -77,7 +77,7 @@ void bot_ardrone_recorder::record_frame(bot_ardrone_frame *f)
 	// PNG
 	if (BOT_ARDRONE_RECORD_EXT == "png")
 	{
-		Mat frame = Mat(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC3, NULL, 0);
+		Mat frame = Mat(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC4, NULL, 0);
 		frame.data = (uchar*) &f->data[4];
 		imwrite(filename, frame);
 	}
