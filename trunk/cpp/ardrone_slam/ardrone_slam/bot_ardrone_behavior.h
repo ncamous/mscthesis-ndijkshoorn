@@ -19,7 +19,7 @@ public:
 	void forcefield();
 	void stop();
 
-	bool flyto(float x, float y, float speed = 1500.0f);
+	bool flyto(float x, float y, float speed = 700.0f);
 	bool heightto(float z);
 
 private:

@@ -2,6 +2,7 @@
 #include "bot_ardrone_ardronelib.h"
 #include "bot_ardrone.h"
 #include "ardrone_tool_win32.h"
+#include <opencv2/highgui/highgui.hpp>
 
 using namespace cv;
 
@@ -169,6 +170,9 @@ void bot_ardrone_ardronelib::process_frame(unsigned char* rgbtexture, int w, int
 	Mat crop(img_bgr565, Rect(0, 0, BOT_ARDRONE_FRAME_W, BOT_ARDRONE_FRAME_H));
 
 	cvtColor(crop, img_bgra, CV_BGR5652BGRA, 4);
+
+	imshow("Image:", img_bgra);
+	cvWaitKey(4);
 
 	frame->data_size = w*h*4;
 

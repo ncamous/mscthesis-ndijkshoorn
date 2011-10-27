@@ -22,7 +22,7 @@ bot_ardrone_behavior::~bot_ardrone_behavior()
 
 void bot_ardrone_behavior::map()
 {
-	//bot->recover(true);
+	bot->recover(true);
 
 	bot->get_slam()->off(SLAM_MODE_VISUALLOC);
 	bot->get_slam()->on(SLAM_MODE_MAP);
@@ -30,45 +30,74 @@ void bot_ardrone_behavior::map()
 	Sleep(500);
 
 	bot->take_off();
+	Sleep(4000);
 
-	Sleep(3500); // safe?
-
-
-	if(stop_behavior || !heightto(-1000.0f))
+	/*
+	if(stop_behavior || !flyto(3700.0, 0.0f, 5000.0f))
 		return;
 
-	if(stop_behavior || !flyto(800.0, 0.0f))
+	Sleep(1000);
+
+	bot->land();
+
+	stop_behavior = true;
+	return;
+	*/
+
+	if(stop_behavior || !heightto(-850.0f))
 		return;
 
-	if(stop_behavior || !flyto(800.0f, -1600.0f))
+	if(stop_behavior || !flyto(6100.0, 0.0f))
 		return;
 
-	if(stop_behavior || !flyto(-800.0f, -1600.0f))
+	if(stop_behavior || !flyto(6100.0f, -2100.0f))
 		return;
 
-	if(stop_behavior || !flyto(-800.0f, 0.0f))
+	if(stop_behavior || !flyto(0.0f, -2100.0f))
 		return;
 
-	if(stop_behavior || !flyto(800.0, 0.0f))
+	if(stop_behavior || !flyto(0.0f, 0.0f))
 		return;
 
+	if(stop_behavior || !flyto(-6100.0, 0.0f))
+		return;
+
+	if(stop_behavior || !flyto(-6100.0, -2100.0f))
+		return;
+
+	if(stop_behavior || !flyto(-600.0f, -2100.0f))
+		return;
 
 	bot->get_slam()->off(SLAM_MODE_MAP);
-	//bot->get_slam()->on(SLAM_MODE_VISUALLOC);
+	bot->get_slam()->on(SLAM_MODE_VISUALLOC);
 
 
-	while (1)
+	for (int i = 0; i < 10; i++)
 	{
-		if(stop_behavior || !flyto(800.0f, -1600.0f))
+		printf("ROUND: %i\n", i+1);
+
+		if(stop_behavior || !flyto(0.0f, 0.0f))
 			return;
 
-		if(stop_behavior || !flyto(-800.0f, -1600.0f))
+		if(stop_behavior || !flyto(6100.0, 0.0f))
 			return;
 
-		if(stop_behavior || !flyto(-800.0f, 0.0f))
+		if(stop_behavior || !flyto(6100.0f, -2100.0f))
 			return;
 
-		if(stop_behavior || !flyto(800.0, 0.0f))
+		if(stop_behavior || !flyto(0.0f, -2100.0f))
+			return;
+
+		if(stop_behavior || !flyto(0.0f, 0.0f))
+			return;
+
+		if(stop_behavior || !flyto(-6100.0, 0.0f))
+			return;
+
+		if(stop_behavior || !flyto(-6100.0, -2100.0f))
+			return;
+
+		if(stop_behavior || !flyto(0.0f, -2100.0f))
 			return;
 	}
 
@@ -86,7 +115,8 @@ static DWORD WINAPI start_behavior_thread(void* Param)
 		if (stop_behavior)
 		{
 			Sleep(100); // 100 ms
-			continue;
+			//continue;
+			break;
 		}
 
 		// map
@@ -111,11 +141,14 @@ void bot_ardrone_behavior::stop()
 
 bool bot_ardrone_behavior::flyto(float x, float y, float speed)
 {
+	float max_accel_speed = 1000.0f; // mm/s
+
 	bool reached = false;
 	float *state;
 
 	float d, dx, dy;
 	float v, out_vx, out_vy;
+	float a;
 	float cruise_vx, cruise_vy;
 	float *out_v;
 	float *cruise_v;
@@ -146,6 +179,7 @@ bool bot_ardrone_behavior::flyto(float x, float y, float speed)
 				mode = &mode_x;
 				d = x - state[0];
 				v = state[3];
+				a = state[6] * 9.8f;
 				out_v = &out_vx;
 				cruise_v = &cruise_vx;
 			}
@@ -154,6 +188,7 @@ bool bot_ardrone_behavior::flyto(float x, float y, float speed)
 				mode = &mode_y;
 				d = y - state[1];
 				v = state[4];
+				a = state[7] * 9.8f;
 				out_v = &out_vy;
 				cruise_v = &cruise_vy;
 			}
@@ -162,7 +197,7 @@ bool bot_ardrone_behavior::flyto(float x, float y, float speed)
 
 			if (*mode == BOT_BEHAVIOR_NONE)
 			{
-				printf("M: NONE\n");
+				//printf("M: NONE\n");
 
 				if (abs(d) < 700.0f)
 					*mode = BOT_BEHAVIOR_APPROACH;
@@ -173,26 +208,26 @@ bool bot_ardrone_behavior::flyto(float x, float y, float speed)
 
 			if (*mode == BOT_BEHAVIOR_ACCEL)
 			{
-				printf("M: ACCEL\n");
+				//printf("M: ACCEL\n");
 
 				if (abs(d) < 500.0f)
 				{
 					*mode = BOT_BEHAVIOR_CRUISE;
 				}
-				else if ((d <= 0.0f && v <= -speed) || (d > 0.0f && v <= speed))
+				else if ((d <= 0.0f && v <= -speed) || (d > 0.0f && v >= speed))
 				{
 					*mode = BOT_BEHAVIOR_CRUISE;
 				}
 				else
 				{
-					*out_v = (d < 0.0) ? -5000.0f : 5000.0f;
+					*out_v = (d < 0.0) ? -max_accel_speed : max_accel_speed;
 				}
 			}
 
 
 			if (*mode == BOT_BEHAVIOR_CRUISE)
 			{
-				printf("M: CRUISE (%f)\n", d);
+				//printf("M: CRUISE (%f, %f)\n", d);
 
 				if (abs(d) < log(speed) * 60.0f)
 				{
@@ -208,11 +243,11 @@ bool bot_ardrone_behavior::flyto(float x, float y, float speed)
 
 			if (*mode == BOT_BEHAVIOR_DEACCEL)
 			{
-				printf("M: DEACCEL (%f)\n", d);
+				//printf("M: DEACCEL (%f)\n", d);
 
-				if (abs(v) < 30.0f || (*cruise_v >= 0.0f && v < 0.0f) || (*cruise_v < 0.0f && v > 0.0f))
+				if (abs(v) < 30.0f || (*cruise_v >= 0.0f && v < 20.0f) || (*cruise_v < 0.0f && v > 20.0f))
 				{
-					printf("LOW VELOCITY (%f)!\n", v);
+					//printf("LOW VELOCITY (%f)!\n", v);
 					*mode = BOT_BEHAVIOR_APPROACH;
 				}
 				else
@@ -224,28 +259,24 @@ bool bot_ardrone_behavior::flyto(float x, float y, float speed)
 
 			if (*mode == BOT_BEHAVIOR_APPROACH)
 			{
-				printf("M: APPROACH (%f)\n", d);
+				//printf("M: APPROACH (%f)\n", d);
 
-				if (abs(dx) < 100.0f && abs(dy) < 100.0f)
+				if (abs(dx) < 150.0f && abs(dy) < 150.0f)
 				{
-					printf("REACHED\n");
+					//printf("REACHED\n");
 					bot->control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_LinearVelocity, 0.0f);
 					bot->control_set(BOT_ARDRONE_Velocity, BOT_ARDRONE_LateralVelocity, 0.0f);
 					bot->control_update();
-					
-
-					for (int k = 0; k < 30; k++)
-					{
-						dx = x - state[0];
-						dy = y - state[1];
-						printf("%f, %f\n", dx, dy);
-						Sleep(100);
-					}
 
 					return true;
 				}
 
-				*out_v = d * 3.0f;
+				if (d > 0.0)
+					*out_v = min(400.0f, pow(d * 0.3f, 1.2f));
+				else
+					*out_v = max(-400.0f, pow(d * 0.3f, 1.2f));
+
+				*out_v += *out_v - (v/* + (0.02f * a)*/);
 				//*out_v = 0.0f;
 			}
 		}

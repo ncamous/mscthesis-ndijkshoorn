@@ -65,22 +65,23 @@ void slam::init_kf()
 	setIdentity(KF.transitionMatrix); // completed (T added) when measurement received and T is known
 
 
-	//setIdentity(KF.processNoiseCov, Scalar::all(1e-5));
+	KF.processNoiseCov = 0.0f;
+	processNoiseCov = KF.processNoiseCov.clone();
 	float PNC[12] = {
-		20.0f, 20.0f, 20.0f,
-		10.0f, 10.0f, 10.0f,
-		3.0f, 3.0f, 3.0f,
-		0.3f, 0.3f, 0.3f
+		0.05f, 0.05f, 0.05f,
+		0.02f, 0.02f, 0.02f,
+		0.05f, 0.05f, 0.05f,
+		0.0f, 0.0f, 0.0f
 	};
-	MatSetDiag(KF.processNoiseCov, PNC);
+	MatSetDiag(processNoiseCov, PNC);
 
 
 	//setIdentity(KF.errorCovPost, Scalar::all(1));
 	float ECP[12] = {
-		20.0f, 20.0f, 20.0f,
-		10.0f, 10.0f, 10.0f,
-		3.0f, 3.0f, 3.0f,
-		0.3f, 0.3f, 0.3f
+		1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+		0.01f, 0.01f, 0.01f
 	};
 	MatSetDiag(KF.errorCovPost, ECP);
 
@@ -99,6 +100,12 @@ void slam::update_transition_matrix(float difftime)
 		// velocity (v)
 		KF.transitionMatrix.at<float>(3+i, 6+i) = difftime;
 	}
+}
+
+
+void slam::update_process_noise(float difftime)
+{
+	KF.processNoiseCov = processNoiseCov * difftime;
 }
 
 

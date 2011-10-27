@@ -22,12 +22,10 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 		case VK_T: // T
 			if (wParam == WM_KEYDOWN)
 			{
-				/*
 				printf("Start recording\n");
 				for(i=0; i<keyboard_nr_bots; i++)
 					keyboard_bot[i]->set_record();
-				*/
-				printf("Recording button disabled!\n");
+				//printf("Recording button disabled!\n");
 			}
 			break;
 

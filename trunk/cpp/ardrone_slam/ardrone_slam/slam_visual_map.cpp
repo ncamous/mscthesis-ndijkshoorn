@@ -227,8 +227,8 @@ void slam_visual_map::get_local_descriptors(Mat& map_descriptors, Mat& map_keypo
 	int x2, y2, w, h;
 	x2 = max(0, x - r);
 	y2 = max(0, y - r);
-	w = min(descriptors_grid.cols - x2, r);
-	h = min(descriptors_grid.rows - y2, r);
+	w = min(descriptors_grid.cols - x2, r * 2);
+	h = min(descriptors_grid.rows - y2, r * 2);
 
 	indices = new unsigned short[w * h];
 

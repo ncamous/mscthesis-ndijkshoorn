@@ -322,13 +322,11 @@ void slam_module_frame::process_visual_loc()
 	vector<Point3f> image_corners_wc;
 	imagepoints_to_local3d(image_corners, image_corners_wc);
 
-	//printf("frame center: %f, %f\n", image_corners_wc[4].x, image_corners_wc[4].y);
-
 
 	/* get descriptors from map */
 	Mat map_descriptors;
 	Mat map_keypoints_wc;
-	float radius = 0.0f; // 1000mm
+	float radius = 1000.0f + RectRadius(image_corners_wc); // should be dynamic and basic on the state cov
 
 	Mat cam_pos(3, 1, CV_32F);
 	Mat cam_or(3, 1, CV_32F);
@@ -336,7 +334,6 @@ void slam_module_frame::process_visual_loc()
 	Point3f wc(cam_pos);
 
 	controller->visual_map.get_local_descriptors(map_descriptors, map_keypoints_wc, wc, radius);
-
 
 	/* not enough descriptors from map (unexplored area?) */
 	if (map_descriptors.rows < 3)
@@ -413,7 +410,7 @@ void slam_module_frame::process_visual_loc()
 		localcam_to_world(cam_pos, cam_or);
 
 		// rotation
-		if (confidence > 0.9)
+		if (SLAM_LOC_UPDATE_YAW && confidence > 0.9)
 		{
 			controller->yaw_offset -= R; // write to state here?
 			printf("ROT: %f\n", R);
@@ -1060,14 +1057,14 @@ void slam_module_frame::set_camera()
 			camera_matrix.at<float>(1, 2) = 72.0f;
 			break;
 
-		// Oldest UvA AR.Drone
+		// UvA AR.Drone
 		case 0x01:
 			camera_matrix = 0.0f;
-			camera_matrix.at<float>(0, 0) = 197.31999258f; //1.60035f;
-			camera_matrix.at<float>(1, 1) = 215.24223662f; //1.60035f;
+			camera_matrix.at<float>(0, 0) = 198.82715938357288f;
+			camera_matrix.at<float>(1, 1) = 217.98275786747305f;
 			camera_matrix.at<float>(2, 2) = 1.f;
-			camera_matrix.at<float>(0, 2) = 85.748438497f;
-			camera_matrix.at<float>(1, 2) = 69.141653496f;
+			camera_matrix.at<float>(0, 2) = 84.829975983168126f;
+			camera_matrix.at<float>(1, 2) = 72.815544512057201f;
 			break;
 
 		default:

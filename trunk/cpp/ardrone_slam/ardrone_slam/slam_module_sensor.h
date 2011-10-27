@@ -43,6 +43,7 @@ private:
 
 	float difftime;
 	double prev_update;
-	//int alt_correct;
+	
+	FILE *error_log;
 };
 
