@@ -47,9 +47,9 @@ slam_module_sensor::slam_module_sensor(slam *controller):
 
 	measurementNoiseCov = 0.0f;
 	float MNC[9] = {
-		0.0f, 0.0f, 0.0f, // pos
-		50.0f, 50.0f, 50.0f, // vel (mm)
-		30.0f, 30.0f, 30.0f // accel (mm/s)
+		0.0f, 0.0f, 3.0f, // pos
+		10.0f, 10.0f, 10.0f, // vel (mm)
+		0.05f, 0.05f, 0.05f // accel (mm/s)
 	};
 	MatSetDiag(measurementNoiseCov, MNC);
 	//measurementNoiseCov = 0.0f;
@@ -58,7 +58,7 @@ slam_module_sensor::slam_module_sensor(slam *controller):
 	prev_state = 0.0f;
 
 
-	fopen_s (&error_log, "error_log.txt" , "w");
+	fopen_s (&error_log, "dataset/error_log.txt" , "w");
 }
 
 
@@ -175,7 +175,7 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 
 	/* lock KF */
-	WaitForSingleObject(controller->KFSemaphore, 1000);
+	WaitForSingleObject(controller->hMutex, 2000);
 
 
 	/* switch KF matrices */
@@ -207,7 +207,7 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 	/* release KF */
 	controller->KF_prev_update = m->time;
-	ReleaseSemaphore(controller->KFSemaphore, 1, NULL);
+	ReleaseMutex(controller->hMutex);
 
 
 	/* store current state (position) as previous state */
@@ -222,14 +222,13 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 	if (counter++ % 50 == 0)
 	{
-		
+		/*
 		printf("error: %f, %f, %f\n", 
 			abs(state->at<float>(0) - m->gt_loc[0]),
 			abs(state->at<float>(1) - (m->gt_loc[1] - 1000.0f)),
 			abs(state->at<float>(2) - (m->gt_loc[2] - 2496.0f))
 			);
 
-		/*
 		fprintf(error_log, "%f,%f,%f,%f\n",
 			(float) m->time,
 			abs(state->at<float>(0) - m->gt_loc[0]),
@@ -240,12 +239,12 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 		fflush(error_log);
 		*/
 
-	for (int i = 0; i < 12; i++)
-		printf("%f ", controller->KF.errorCovPost.at<float>(i, i));
+	//for (int i = 0; i < 12; i++)
+	//	printf("%f ", controller->KF.errorCovPost.at<float>(i, i));
 
 	//dumpMatrix(controller->KF.errorCovPost);
 
-	printf("\n\n");
+	//printf("\n\n");
 
 		//-52.0,5.68,-4.0
 

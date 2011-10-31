@@ -134,6 +134,7 @@ DEFINE_THREAD_ROUTINE(ihm, data)
 	ardrone_control_config.altitude_max		= 10000;
 	ardrone_control_config.control_vz_max	= 1000.0f;
 	ardrone_control_config.outdoor			= FALSE;
+	//ardrone_control_config.flight_without_shell = TRUE;
 
 
 	ARDRONE_TOOL_CONFIGURATION_ADDEVENT(video_channel, &ardrone_control_config.video_channel, (ardrone_tool_configuration_callback) ardrone_demo_config_callback);
@@ -142,7 +143,8 @@ DEFINE_THREAD_ROUTINE(ihm, data)
 	//ARDRONE_TOOL_CONFIGURATION_ADDEVENT (navdata_demo, &ardrone_control_config.navdata_demo, NULL);
 	//ARDRONE_TOOL_CONFIGURATION_ADDEVENT (altitude_max, &ardrone_control_config.altitude_max, NULL);
 	//ARDRONE_TOOL_CONFIGURATION_ADDEVENT (control_vz_max, &ardrone_control_config.control_vz_max, NULL);
-	//ARDRONE_TOOL_CONFIGURATION_ADDEVENT (outdoor, &ardrone_control_config.outdoor, NULL);
+	ARDRONE_TOOL_CONFIGURATION_ADDEVENT (outdoor, &ardrone_control_config.outdoor, NULL);
+	//ARDRONE_TOOL_CONFIGURATION_ADDEVENT (flight_without_shell, &ardrone_control_config.flight_without_shell, NULL);
 
 
 	// flat trim

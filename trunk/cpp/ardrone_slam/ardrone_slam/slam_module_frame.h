@@ -55,6 +55,8 @@ public:
 
 	// testing/experiments
 	void add_noise(IplImage *img);
+	void descriptor_map_quality();
+	void get_local_descriptors(int x, int y, Mat& map_descriptors, int radius);
 
 
 private:
@@ -102,6 +104,7 @@ private:
 	/* KF */
 	KalmanFilter *KF;
 	Mat *state;
+	Mat *cov;
 	Mat prev_state;
 	Mat cur_state;
 
@@ -116,5 +119,7 @@ private:
 	// tmp
 	bool first_frame2;
 	Mat first_frame;
+
+	FILE *loc_log;
 };
 

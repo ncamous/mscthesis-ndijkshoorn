@@ -9,7 +9,7 @@
 #include <opencv2/highgui/highgui.hpp>
 
 
-HANDLE bot_ardrone_recorder::ghSemaphore;
+HANDLE bot_ardrone_recorder::hMutex;
 
 
 bot_ardrone_recorder::bot_ardrone_recorder(bot_ardrone *bot)
@@ -28,7 +28,7 @@ bot_ardrone_recorder::~bot_ardrone_recorder(void)
 
 void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 {
-	WaitForSingleObject(ghSemaphore, INFINITE);
+	WaitForSingleObject(hMutex, INFINITE);
 
 	fprintf (file, "---\n");
 	fprintf (file, "e: %i\n", BOT_EVENT_MEASUREMENT);
@@ -41,26 +41,26 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 
 	fprintf (file, "gt_loc: [%f, %f, %f]\n", m->gt_loc[0], m->gt_loc[1], m->gt_loc[2]);
 
-	ReleaseSemaphore(ghSemaphore, 1, NULL);
+	ReleaseMutex(hMutex);
 }
 
 
 void bot_ardrone_recorder::record_control(bot_ardrone_control *c)
 {
-	WaitForSingleObject(ghSemaphore, INFINITE);
+	WaitForSingleObject(hMutex, INFINITE);
 
 	fprintf (file, "---\n");
 	fprintf (file, "e: %i\n", BOT_EVENT_CONTROL);
 	fprintf (file, "t: %f\n", c->time);
 	fprintf (file, "vel: [%f, %f, %f, %f]\n", c->velocity[0], c->velocity[1], c->velocity[2], c->velocity[3]);
 
-	ReleaseSemaphore(ghSemaphore, 1, NULL);
+	ReleaseMutex(hMutex);
 }
 
 
 void bot_ardrone_recorder::record_frame(bot_ardrone_frame *f)
 {
-	WaitForSingleObject(ghSemaphore, INFINITE);
+	WaitForSingleObject(hMutex, INFINITE);
 
 	char filename[30];
 	//printf("recorded frame %i\n", frame_counter);
@@ -90,7 +90,7 @@ void bot_ardrone_recorder::record_frame(bot_ardrone_frame *f)
 		fclose(frame_out);
 	}
 
-	ReleaseSemaphore(ghSemaphore, 1, NULL);
+	ReleaseMutex(hMutex);
 }
 
 
@@ -192,6 +192,8 @@ void bot_ardrone_recorder::playback(char *dataset)
 					{
 						m->time = atof(value_s);
 						wait_for_event(m->time);
+
+						printf("time: %f\n", m->time);
 					}
 					else if (strcmp(key_s, "alt") == 0)
 					{
@@ -236,18 +238,22 @@ void bot_ardrone_recorder::playback(char *dataset)
 						frame_in = fopen(filename, "rb");
 
 						// for old dataset only
-						fseek (frame_in, 4, SEEK_SET);
+						//fseek (frame_in, 4, SEEK_SET);
+						//fread(f->data, 1, f->data_size - 4, frame_in);
 
-						fread(f->data, 1, f->data_size - 4, frame_in);
+						fread(f->data, 1, f->data_size, frame_in);
 						fclose(frame_in);
 
-						Mat img_bgr(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC3, NULL, 0);
-						Mat img_bgra(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC4);
+						//Mat img_bgr(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC3, NULL, 0);
+						//Mat img_bgr(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC4, NULL, 0);
+						//Mat img_bgra(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC4);
 
-						img_bgr.data		= (unsigned char*) f->data;
-						cvtColor(img_bgr, img_bgra, CV_BGR2BGRA, 4);
+						//Mat img_bgra(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC4, NULL, 0);
 
-						memcpy_s(f->data, BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE, img_bgra.data, img_bgra.rows * img_bgra.cols * 4);
+						//img_bgr.data		= (unsigned char*) f->data;
+						//cvtColor(img_bgr, img_bgra, CV_BGR2BGRA, 4);
+
+						//memcpy_s(f->data, BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE, img_bgra.data, img_bgra.rows * img_bgra.cols * 4);
 
 						/*
 						imshow("Image:", img_bgra);
@@ -326,15 +332,14 @@ void bot_ardrone_recorder::prepare_dataset()
 	printf("Created dataset %03d\n", i);
 
 
-	// Semaphore
-	ghSemaphore = CreateSemaphore( 
-        NULL,           // default security attributes
-        MAX_SEM_COUNT,  // initial count
-        MAX_SEM_COUNT,  // maximum count
-        NULL);          // unnamed semaphore
+	// mutex
+	hMutex = CreateMutex( 
+        NULL,              // default security attributes
+        FALSE,             // initially not owned
+        NULL); 
 
-    if (ghSemaphore == NULL) 
-        printf("CreateSemaphore error: %d\n", GetLastError());
+    if (hMutex == NULL) 
+        printf("CreateMutex error: %d\n", GetLastError());
 }
 
 

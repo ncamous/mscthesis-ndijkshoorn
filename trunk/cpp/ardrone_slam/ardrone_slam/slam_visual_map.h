@@ -27,6 +27,7 @@ public:
 	bool corner_at_wc(cv::Point2f wc);
 	bool inside(cv::Mat& m, cv::Rect& r);
 	bool cell_inside_descriptors_grid(unsigned short x, unsigned short y);
+	void save_canvas();
 
 
 	cv::Mat canvas;

@@ -398,3 +398,10 @@ inline bool slam_visual_map::cell_inside_descriptors_grid(unsigned short x, unsi
 {
 	return (x >= 0 && y >= 0 && x < 200 && y < 200);
 }
+
+
+void slam_visual_map::save_canvas()
+{
+	imwrite("dataset/visual_map_canvas.png", canvas);
+	printf("Saved visual map canvas\n");
+}

@@ -51,8 +51,11 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 			}
 
 		case VK_R: // R (recover)
-			for(i=0; i<keyboard_nr_bots; i++)
-				keyboard_bot[i]->recover(wParam == WM_KEYDOWN);
+			if (wParam == WM_KEYDOWN)
+			{
+				for(i=0; i<keyboard_nr_bots; i++)
+					keyboard_bot[i]->recover(wParam == WM_KEYDOWN);
+			}
 			break;
 
 		case VK_NL_PLUS: // NL keyboard
