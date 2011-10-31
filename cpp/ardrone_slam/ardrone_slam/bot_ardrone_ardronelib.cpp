@@ -171,7 +171,9 @@ void bot_ardrone_ardronelib::process_frame(unsigned char* rgbtexture, int w, int
 
 	cvtColor(crop, img_bgra, CV_BGR5652BGRA, 4);
 
-	imshow("Image:", img_bgra);
+	cvNamedWindow("Bottom cam", CV_WINDOW_KEEPRATIO);
+	//cvResizeWindow("Bottom cam", 1024, 800);
+	imshow("Bottom cam", img_bgra);
 	cvWaitKey(4);
 
 	frame->data_size = w*h*4;

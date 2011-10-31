@@ -8,7 +8,7 @@ using namespace std;
 
 bot_ardrone_usarsim::bot_ardrone_usarsim(bot_ardrone *bot):
 	img_bgr(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC3, NULL, 0),
-	img_bgra(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC3, NULL, 0)
+	img_bgra(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC4, NULL, 0)
 {
 	this->bot = bot;
 
@@ -234,13 +234,14 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 	if (frame->dest_size > 0 && frame->data_size-5 >= frame->dest_size) {
 		if (USARIM_FRAME_USERAW || !frame_socket->bytes_waiting())
 		{
-			frame->data_size -= 9; //5;
+			//frame->data_size -= 9; //5;
 
 			if (check_frame())
 			{
 				img_bgr.data = (uchar*) frame_buffer + 9;
 				img_bgra.data = (uchar*) frame->data;
 				cvtColor(img_bgr, img_bgra, CV_BGR2BGRA, 4);
+				frame->data_size = BOT_ARDRONE_FRAME_W * BOT_ARDRONE_FRAME_H * 4;
 
 				bot->frame_received(frame);
 			}

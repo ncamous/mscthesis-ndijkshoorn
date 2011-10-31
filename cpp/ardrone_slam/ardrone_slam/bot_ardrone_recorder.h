@@ -3,10 +3,6 @@
 #include <fstream>
 
 
-// Semaphore
-#define MAX_SEM_COUNT 10
-
-
 class bot_ardrone;
 struct bot_ardrone_measurement;
 struct bot_ardrone_control;
@@ -42,7 +38,7 @@ private:
 	int frame_counter;
 
 	// resource sharing
-	static HANDLE ghSemaphore;
+	static HANDLE hMutex;
 
 	/* faster */
 	FILE *file;

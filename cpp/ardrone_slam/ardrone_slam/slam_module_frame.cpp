@@ -71,6 +71,7 @@ slam_module_frame::slam_module_frame(slam *controller):
 	/* KF */
 	KF = &controller->KF;
 	state = &KF->statePost;
+	cov = &KF->errorCovPost;
 
 	// H vector
 	measurementMatrix = 0.0f;
@@ -83,7 +84,7 @@ slam_module_frame::slam_module_frame(slam *controller):
 
 	measurementNoiseCov = 0.0f;
 	float MNC[9] = {
-		50.0f, 50.0f, 500.0f, // pos
+		200.0f, 200.0f, 200.0f, // pos
 		100.0f, 100.0f, 300.0f, // vel
 		5.0f, 5.0f, 15.0f // accel
 	};
@@ -94,6 +95,8 @@ slam_module_frame::slam_module_frame(slam *controller):
 	last_loc = clock();
 
 	first_frame2 = true;
+
+	fopen_s (&loc_log, "dataset/loc_log.txt" , "w");
 }
 
 
@@ -246,7 +249,7 @@ void slam_module_frame::process_visual_state()
 		{
 
 			/* lock KF */
-			WaitForSingleObject(controller->KFSemaphore, 1000);
+			WaitForSingleObject(controller->hMutex, 2000);
 
 
 			/* switch KF matrices */
@@ -276,7 +279,7 @@ void slam_module_frame::process_visual_state()
 
 			/* release KF */
 			controller->KF_prev_update = f->time;
-			ReleaseSemaphore(controller->KFSemaphore, 1, NULL);
+			ReleaseMutex(controller->hMutex);
 
 		}
 		else
@@ -312,11 +315,6 @@ void slam_module_frame::process_visual_loc()
 
 	SLAM_LOC_START
 
-	//for (int i = 0; i < 12; i++)
-	//	printf("%f ", controller->KF.errorCovPost.at<float>(0, i));
-
-	//printf("\n\n");
-
 
 	/* get local world coordinates of the image corners */
 	vector<Point3f> image_corners_wc;
@@ -326,7 +324,9 @@ void slam_module_frame::process_visual_loc()
 	/* get descriptors from map */
 	Mat map_descriptors;
 	Mat map_keypoints_wc;
-	float radius = 1000.0f + RectRadius(image_corners_wc); // should be dynamic and basic on the state cov
+	float radius = max(cov->at<float>(0, 0), cov->at<float>(1, 1));
+	radius += 2500.0f; // just in case. Needs to be removed when KF cov is working fine
+	radius += RectRadius(image_corners_wc); // should be dynamic and basic on the state cov
 
 	Mat cam_pos(3, 1, CV_32F);
 	Mat cam_or(3, 1, CV_32F);
@@ -407,6 +407,16 @@ void slam_module_frame::process_visual_loc()
 		cam_pos.at<float>(0) += T.at<Vec2f>(0)[0];
 		cam_pos.at<float>(1) += T.at<Vec2f>(0)[1];
 
+		// TMP
+		fprintf(loc_log, "%f,%f,%f\n",
+			(float) f->time,
+			cam_pos.at<float>(0),
+			cam_pos.at<float>(1)
+		);
+
+		fflush(loc_log);
+
+
 		localcam_to_world(cam_pos, cam_or);
 
 		// rotation
@@ -417,9 +427,8 @@ void slam_module_frame::process_visual_loc()
 		}
 
 
-
 		/* lock KF */
-		WaitForSingleObject(controller->KFSemaphore, 1000);
+		WaitForSingleObject(controller->hMutex, 2000);
 
 
 #ifdef SLAM_LOC_WRITE_STATE_DIRECTLY
@@ -428,7 +437,7 @@ void slam_module_frame::process_visual_loc()
 		state->at<float>(1) = cam_pos.at<float>(1);
 
 		/* unlock KF */
-		ReleaseSemaphore(controller->KFSemaphore, 1, NULL);
+		ReleaseMutex(controller->hMutex);
 		last_loc = clock();
 
 		printf("SLAM LOC (%f, %f)   [%f]\n", cam_pos.at<float>(0), cam_pos.at<float>(1), confidence);
@@ -443,17 +452,20 @@ void slam_module_frame::process_visual_loc()
 		//if (measurementSeemsOk())
 		//{
 
+		difftime = f->time - controller->KF_prev_update;
+		if (difftime <= 0.0)
+			difftime = 0.0001;
+
+
 		/* switch KF matrices */
 		KF->measurementMatrix	= measurementMatrix;
 		KF->measurementNoiseCov	= measurementNoiseCov;
 
 
 		/* update transition matrix */
-		difftime = f->time - controller->KF_prev_update;
-		if (difftime <= 0.0)
-			difftime = 0.0001;
-
 		controller->update_transition_matrix((float) difftime);
+
+		printf("DIFFTIME: %f\n", (float) difftime);
 
 
 		/* predict */
@@ -469,7 +481,7 @@ void slam_module_frame::process_visual_loc()
 
 
 		/* unlock KF */
-		ReleaseSemaphore(controller->KFSemaphore, 1, NULL);
+		ReleaseMutex(controller->hMutex);
 		last_loc = clock();
 
 		printf("SLAM LOC (%f, %f)   [%f]\n", cam_pos.at<float>(0), cam_pos.at<float>(1), confidence);
@@ -1129,5 +1141,87 @@ void slam_module_frame::add_noise(IplImage *img)
 
 
 	return;
+}
 
+
+void slam_module_frame::descriptor_map_quality()
+{
+	Mat local;
+	int nr_similar = 0;
+
+	Mat *grid = &controller->visual_map.descriptors_grid;
+
+	for (int x = 0; x < grid->cols; x++)
+	{
+		for (int y = 0; y < grid->rows; y++)
+		{
+			if (grid->at<unsigned short>(y, x) > 0)
+			{
+				int A = grid->at<unsigned short>(y, x);
+
+				get_local_descriptors(x, y, local, 5);
+
+				vector<DMatch> matches;
+
+				Mat cur = controller->visual_map.descriptors.row(A);
+
+				dm.match(local, cur, matches);
+				
+				for (int i = 0; i < (int) matches.size(); i++)
+				{
+					if (matches[i].distance < 0.15f)
+					{
+						nr_similar++;
+						printf("Found feature that has a duplicate close (%i, %i)\n", x, y);
+					}
+				}
+			}
+		}
+	}
+
+	printf("Descriptor errors: %i / %i\n", nr_similar, controller->visual_map.descriptors_count - 1);
+}
+
+
+void slam_module_frame::get_local_descriptors(int x, int y, cv::Mat& map_descriptors, int r)
+{
+	unsigned short *indices;
+	unsigned short index;
+	int i = 0;
+
+	int x2, y2, w, h;
+	x2 = max(0, x - r);
+	y2 = max(0, y - r);
+	w = min(controller->visual_map.descriptors_grid.cols - x2, r * 2);
+	h = min(controller->visual_map.descriptors_grid.rows - y2, r * 2);
+
+	indices = new unsigned short[w * h];
+
+	Mat grid(controller->visual_map.descriptors_grid, Rect(x2, y2, w, h));
+	int offsetX = x2;
+	int offsetY = y2;
+
+	for (x2 = 0; x2 < grid.cols; x2++)
+	{
+		for (y2 = 0; y2 < grid.rows; y2++)
+		{
+			index = grid.at<unsigned short>(y2, x2);
+			if (index > 0 && offsetX + x2 != x && offsetY + y2 != y)
+			{
+				indices[i++] = index;
+			}
+		}
+	}
+
+	map_descriptors	= Mat(i, controller->visual_map.descriptors.cols, controller->visual_map.descriptors.type());
+
+	int descriptors_rowsize	= SLAM_DESCRIPTOR_SIZE;
+
+	for (int j = 0; j < i; j++)
+	{
+		memcpy_s(map_descriptors.data + j * descriptors_rowsize, descriptors_rowsize,
+			controller->visual_map.descriptors.data + indices[j] * descriptors_rowsize, descriptors_rowsize);
+	}
+
+	delete [] indices;
 }

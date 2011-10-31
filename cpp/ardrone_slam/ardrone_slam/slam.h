@@ -72,7 +72,7 @@ public:
 	float yaw_offset;
 	double KF_prev_update;
 	bool KF_running;
-	HANDLE KFSemaphore; // resource sharing
+	HANDLE hMutex; // resource sharing
 	/* state vector:
      * p(3), v(3), a(3), q(3)
 	 */

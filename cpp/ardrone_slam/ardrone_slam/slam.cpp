@@ -70,13 +70,12 @@ void slam::init_kf()
 	float PNC[12] = {
 		0.05f, 0.05f, 0.05f,
 		0.02f, 0.02f, 0.02f,
-		0.05f, 0.05f, 0.05f,
+		1.0f, 1.0f, 1.0f,
 		0.0f, 0.0f, 0.0f
 	};
 	MatSetDiag(processNoiseCov, PNC);
 
 
-	//setIdentity(KF.errorCovPost, Scalar::all(1));
 	float ECP[12] = {
 		1.0f, 1.0f, 1.0f,
 		1.0f, 1.0f, 1.0f,

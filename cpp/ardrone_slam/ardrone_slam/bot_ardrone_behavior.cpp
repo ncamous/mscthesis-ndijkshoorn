@@ -69,7 +69,11 @@ void bot_ardrone_behavior::map()
 		return;
 
 	bot->get_slam()->off(SLAM_MODE_MAP);
-	bot->get_slam()->on(SLAM_MODE_VISUALLOC);
+	bot->get_slam()->m_frame->descriptor_map_quality();
+
+	Sleep(999999);
+	//bot->get_slam()->visual_map.save_canvas();
+	//bot->get_slam()->on(SLAM_MODE_VISUALLOC);
 
 
 	for (int i = 0; i < 10; i++)
@@ -103,6 +107,8 @@ void bot_ardrone_behavior::map()
 
 	bot->control_reset();
 	bot->control_update();
+
+	exit(1);
 }
 
 
