@@ -2,7 +2,7 @@
 
 #include "slam_visual_map.h"
 #include "opencv2/core/types_c.h"
-#include "opencv2/video/tracking.hpp"
+#include "opencv_ekf.h"
 #include "opencv2/features2d/features2d.hpp"
 
 #define SLAM_LOC_START controller->sensor_pause(f->time);
@@ -102,7 +102,7 @@ private:
 	Mat originH;
 
 	/* KF */
-	KalmanFilter *KF;
+	ExtendedKalmanFilter *EKF;
 	Mat *state;
 	Mat *cov;
 	Mat prev_state;

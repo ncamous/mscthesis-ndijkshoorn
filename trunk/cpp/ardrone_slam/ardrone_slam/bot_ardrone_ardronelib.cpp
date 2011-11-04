@@ -124,15 +124,15 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 	// Accelerations are received in mg
 	// They are displayed in g: conversion gain is 1/1000
 	// gravity = 1g
+	/*
 	m->accel[0] = n->navdata_phys_measures.phys_accs[0]; // x-dir
 	m->accel[1] = n->navdata_phys_measures.phys_accs[1]; // y-dir
 	m->accel[2] = n->navdata_phys_measures.phys_accs[2]; // z-dir
-
-	/*
-	m->accel[0] = (float) n->navdata_raw_measures.raw_accs[0];
-	m->accel[1] = (float) n->navdata_raw_measures.raw_accs[1];
-	m->accel[2] = (float) n->navdata_raw_measures.raw_accs[2];
 	*/
+
+	m->accel[0] = (float) n->navdata_raw_measures.raw_accs[0];
+	m->accel[1] = (float) -n->navdata_raw_measures.raw_accs[1];
+	m->accel[2] = (float) -n->navdata_raw_measures.raw_accs[2];
 
 	m->vel[0] = n->navdata_demo.vx;
 	m->vel[1] = n->navdata_demo.vy;
@@ -171,10 +171,12 @@ void bot_ardrone_ardronelib::process_frame(unsigned char* rgbtexture, int w, int
 
 	cvtColor(crop, img_bgra, CV_BGR5652BGRA, 4);
 
+#ifdef BOT_ARDRONE_DISPLAY_CAM
 	cvNamedWindow("Bottom cam", CV_WINDOW_KEEPRATIO);
 	//cvResizeWindow("Bottom cam", 1024, 800);
 	imshow("Bottom cam", img_bgra);
 	cvWaitKey(4);
+#endif
 
 	frame->data_size = w*h*4;
 

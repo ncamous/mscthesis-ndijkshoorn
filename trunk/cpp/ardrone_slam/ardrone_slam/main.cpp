@@ -34,8 +34,6 @@ int main(int argc, char *argv[])
 
 	//bot_ardrone_behavior autonomous(&ardrone);
 
-	//ardrone.recover(true);
-
 	bot_ardrone_keyboard kb(bots, nr_bots);
 
 

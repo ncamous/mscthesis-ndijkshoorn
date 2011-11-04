@@ -283,6 +283,14 @@ void bot_ardrone_recorder::playback(char *dataset)
 		switch (event_type)
 		{
 			case BOT_EVENT_MEASUREMENT:
+				m->accel[0] -= 2090.0f;
+				m->accel[1] -= 1973.6f;
+				m->accel[2] -= 2018.0f;
+
+				//m->accel[0] *= -1.0f;
+				m->accel[1] *= -1.0f;
+				m->accel[2] *= -1.0f;
+
 				bot->measurement_received(m);
 				break;
 

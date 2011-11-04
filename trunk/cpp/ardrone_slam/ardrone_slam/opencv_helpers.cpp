@@ -175,7 +175,7 @@ bool checkSubset( const Mat& m, int count )
 			for (int j = 0; j < mat.cols; j++) { 
 				switch (t) { 
 				case CV_32F: 
-					printf("%6.4f, ", mat.at<float> (i, j)); 
+					printf(/*"%6.4f, "*/"%f, ", mat.at<float> (i, j)); 
 					break; 
 				case CV_64F: 
 					printf("%6.4f, ", mat.at<double> (i, j)); 

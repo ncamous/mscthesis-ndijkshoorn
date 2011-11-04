@@ -1,7 +1,6 @@
 #include "bot_ardrone_behavior.h"
 #include "bot_ardrone.h"
 #include "global.h"
-#include "reinflearn.h"
 #include "opencv_helpers.h"
 
 using namespace std;

@@ -7,7 +7,7 @@
 #include "slam_module_sensor.h"
 #include "slam_module_ui.h"
 
-#include "opencv2/core/types_c.h"
+#include "opencv_ekf.h"
 
 
 // structs
@@ -38,7 +38,6 @@ public:
 	void add_input_sensor(bot_ardrone_measurement *m);
 	void get_world_position(float *pos);
 	void update_transition_matrix(float difftime);
-	void update_process_noise(float difftime);
 	void sensor_pause(double time);
 	void sensor_resume();
 
@@ -67,16 +66,10 @@ public:
 	double m_sensor_paused_time;
 
 	/* Kalman filter */
-	cv::KalmanFilter KF;
-	cv::Mat processNoiseCov;
-	float yaw_offset;
-	double KF_prev_update;
-	bool KF_running;
-	HANDLE hMutex; // resource sharing
+	cv::ExtendedKalmanFilter EKF;
 	/* state vector:
      * p(3), v(3), a(3), q(3)
 	 */
-
 
 	/* Elevation map */
 	slam_elevation_map elevation_map;
@@ -85,7 +78,7 @@ public:
 	slam_visual_map visual_map;
 
 private:
-	void init_kf();
+	void init_ekf();
 
 	bool running;
 };
