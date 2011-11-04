@@ -42,21 +42,15 @@
     <Filter Include="Header Files\bots\ardrone">
       <UniqueIdentifier>{2a5beda0-6e94-4625-a276-40d7622ab580}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\helpers">
-      <UniqueIdentifier>{3269fec6-0428-4003-9899-b5bce2170da0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\helpers">
-      <UniqueIdentifier>{e4fec425-0f53-4b91-8b0c-a1c7e23187d6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\helpers\opencv">
-      <UniqueIdentifier>{bd7b194c-10d2-4c69-a650-c7f6be052989}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\helpers\opencv">
+    <Filter Include="Source Files\opencv">
       <UniqueIdentifier>{8d0dcb2c-9690-455e-b0e8-ea1179136d34}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\opencv">
+      <UniqueIdentifier>{bd7b194c-10d2-4c69-a650-c7f6be052989}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -97,7 +91,7 @@
       <Filter>Source Files\slam</Filter>
     </ClCompile>
     <ClCompile Include="opencv_helpers.cpp">
-      <Filter>Source Files\helpers\opencv</Filter>
+      <Filter>Source Files\opencv</Filter>
     </ClCompile>
     <ClCompile Include="slam_elevation_map.cpp">
       <Filter>Source Files\slam</Filter>
@@ -107,6 +101,9 @@
     </ClCompile>
     <ClCompile Include="bot_ardrone_behavior.cpp">
       <Filter>Source Files\bots\ardrone</Filter>
+    </ClCompile>
+    <ClCompile Include="opencv_ekf.cpp">
+      <Filter>Source Files\opencv</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -165,7 +162,10 @@
       <Filter>Header Files\bots\ardrone</Filter>
     </ClInclude>
     <ClInclude Include="opencv_helpers.h">
-      <Filter>Header Files\helpers\opencv</Filter>
+      <Filter>Header Files\opencv</Filter>
+    </ClInclude>
+    <ClInclude Include="opencv_ekf.h">
+      <Filter>Header Files\opencv</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

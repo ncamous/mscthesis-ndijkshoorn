@@ -69,9 +69,9 @@ slam_module_frame::slam_module_frame(slam *controller):
 
 
 	/* KF */
-	KF = &controller->KF;
-	state = &KF->statePost;
-	cov = &KF->errorCovPost;
+	EKF = &controller->EKF;
+	state = &EKF->statePost;
+	cov = &EKF->errorCovPost;
 
 	// H vector
 	measurementMatrix = 0.0f;
@@ -113,7 +113,7 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 	 */
 
 	// scale not kwown: no use of processing the frame
-	if (!controller->KF_running)
+	if (!EKF->running)
 		return;
 
 
@@ -249,28 +249,28 @@ void slam_module_frame::process_visual_state()
 		{
 
 			/* lock KF */
-			WaitForSingleObject(controller->hMutex, 2000);
+			EKF->lock();
 
 
 			/* switch KF matrices */
-			KF->measurementMatrix	= measurementMatrix;
-			KF->measurementNoiseCov	= measurementNoiseCov;
+			EKF->measurementMatrix		= measurementMatrix;
+			EKF->measurementNoiseCov	= measurementNoiseCov;
 
 
 			/* update transition matrix */
-			difftime = f->time - controller->KF_prev_update;
-			if (difftime <= 0.0)
-				difftime = 0.0001;
+			//difftime = f->time - controller->KF_prev_update;
+			difftime = EKF->difftime(f->time);
+
 
 			controller->update_transition_matrix((float) difftime);
 
 
 			/* predict */
-			KF->predict();
+			EKF->predict();
 
 
 			/* correct */
-			KF->correct(measurement);
+			EKF->correct(measurement, f->time);
 
 	
 			/* save current state. This state is used to project IP and add frame to map */
@@ -278,8 +278,7 @@ void slam_module_frame::process_visual_state()
 
 
 			/* release KF */
-			controller->KF_prev_update = f->time;
-			ReleaseMutex(controller->hMutex);
+			EKF->release();
 
 		}
 		else
@@ -422,13 +421,13 @@ void slam_module_frame::process_visual_loc()
 		// rotation
 		if (SLAM_LOC_UPDATE_YAW && confidence > 0.9)
 		{
-			controller->yaw_offset -= R; // write to state here?
+			EKF->yaw_offset -= R; // write to state here?
 			printf("ROT: %f\n", R);
 		}
 
 
 		/* lock KF */
-		WaitForSingleObject(controller->hMutex, 2000);
+		EKF->lock();
 
 
 #ifdef SLAM_LOC_WRITE_STATE_DIRECTLY
@@ -452,14 +451,13 @@ void slam_module_frame::process_visual_loc()
 		//if (measurementSeemsOk())
 		//{
 
-		difftime = f->time - controller->KF_prev_update;
-		if (difftime <= 0.0)
-			difftime = 0.0001;
+		//difftime = f->time - controller->KF_prev_update;
+		difftime = EKF->difftime(f->time);
 
 
 		/* switch KF matrices */
-		KF->measurementMatrix	= measurementMatrix;
-		KF->measurementNoiseCov	= measurementNoiseCov;
+		EKF->measurementMatrix	= measurementMatrix;
+		EKF->measurementNoiseCov	= measurementNoiseCov;
 
 
 		/* update transition matrix */
@@ -469,11 +467,11 @@ void slam_module_frame::process_visual_loc()
 
 
 		/* predict */
-		KF->predict();
+		EKF->predict();
 
 
 		/* correct */
-		KF->correct(measurement);
+		EKF->correct(measurement, f->time);
 
 	
 		/* save current state. This state is used to project IP and add frame to map */
@@ -481,7 +479,7 @@ void slam_module_frame::process_visual_loc()
 
 
 		/* unlock KF */
-		ReleaseMutex(controller->hMutex);
+		EKF->release();
 		last_loc = clock();
 
 		printf("SLAM LOC (%f, %f)   [%f]\n", cam_pos.at<float>(0), cam_pos.at<float>(1), confidence);

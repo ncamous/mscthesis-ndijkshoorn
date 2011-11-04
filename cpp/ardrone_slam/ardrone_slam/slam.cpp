@@ -9,10 +9,9 @@ using namespace cv;
 
 
 slam::slam(unsigned char mode, unsigned char bot_id):
-	KF(12, 9, 0)
+	EKF(12, 9, 0)
 {
 	running = false;
-	KF_running = false;
 
 	m_frame = NULL;
 	m_sensor = NULL;
@@ -22,8 +21,6 @@ slam::slam(unsigned char mode, unsigned char bot_id):
 
 	this->_mode = mode;
 	this->bot_id = bot_id;
-
-	//run();
 }
 
 
@@ -36,7 +33,7 @@ void slam::run()
 {
 	running = true;
 
-	init_kf();
+	init_ekf();
 
 
 	/* modules */
@@ -56,55 +53,47 @@ void slam::run()
 }
 
 
-void slam::init_kf()
+void slam::init_ekf()
 {
-	//KF.statePost.at<float>(0) = -8000.0f;
+	// Initial state
+	randn(EKF.statePost, Scalar::all(0), Scalar::all(0.00001));
 
 
 	// F vector
-	setIdentity(KF.transitionMatrix); // completed (T added) when measurement received and T is known
+	setIdentity(EKF.transitionMatrix); // completed (T added) when measurement received and T is known
 
 
-	KF.processNoiseCov = 0.0f;
-	processNoiseCov = KF.processNoiseCov.clone();
+	EKF.processNoiseCov = 0.0f;
 	float PNC[12] = {
-		0.05f, 0.05f, 0.05f,
-		0.02f, 0.02f, 0.02f,
-		1.0f, 1.0f, 1.0f,
-		0.0f, 0.0f, 0.0f
+		0.0005f, 0.0005f, 0.0005f,	// p: mm
+		0.0002f, 0.0002f, 0.0002f,	// v: mm/s
+		5.0f, 5.0f, 5.0f,	// a: mm/s2
+		0.0f, 0.0f, 0.0f	// or: deg
 	};
-	MatSetDiag(processNoiseCov, PNC);
+	MatSetDiag(EKF.processNoiseCov, PNC);
 
 
 	float ECP[12] = {
-		1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,
-		0.01f, 0.01f, 0.01f
-	};
-	MatSetDiag(KF.errorCovPost, ECP);
-
-
-	yaw_offset = 0.0f;
+                1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f,
+                0.01f, 0.01f, 0.01f
+        };
+	MatSetDiag(EKF.errorCovPost, ECP);
 }
 
 
+// calculated Jocobian matrix
 void slam::update_transition_matrix(float difftime)
 {
 	for (int i = 0; i < 3; i++)
 	{
 		// position (p)
-		KF.transitionMatrix.at<float>(i, 3+i) = difftime;
-		KF.transitionMatrix.at<float>(i, 6+i) = 0.5f * difftime*difftime;
+		EKF.transitionMatrix.at<float>(i, 3+i) = difftime;
+		EKF.transitionMatrix.at<float>(i, 6+i) = 0.5f * difftime*difftime;
 		// velocity (v)
-		KF.transitionMatrix.at<float>(3+i, 6+i) = difftime;
+		EKF.transitionMatrix.at<float>(3+i, 6+i) = difftime;
 	}
-}
-
-
-void slam::update_process_noise(float difftime)
-{
-	KF.processNoiseCov = processNoiseCov * difftime;
 }
 
 
@@ -168,7 +157,7 @@ void slam::off(unsigned char mode)
 
 float* slam::get_state()
 {
-	return (float*) KF.statePost.data;
+	return (float*) EKF.statePost.data;
 }
 
 
@@ -242,12 +231,12 @@ void slam::add_input_sensor(bot_ardrone_measurement *m)
 
 void slam::get_world_position(float *pos)
 {
-	pos[0] = KF.statePost.at<float>(0);
-	pos[1] = KF.statePost.at<float>(1);
-	pos[2] = KF.statePost.at<float>(2);
-	pos[3] = KF.statePost.at<float>(9);
-	pos[4] = KF.statePost.at<float>(10);
-	pos[5] = KF.statePost.at<float>(11);
+	pos[0] = EKF.statePost.at<float>(0);
+	pos[1] = EKF.statePost.at<float>(1);
+	pos[2] = EKF.statePost.at<float>(2);
+	pos[3] = EKF.statePost.at<float>(9);
+	pos[4] = EKF.statePost.at<float>(10);
+	pos[5] = EKF.statePost.at<float>(11);
 }
 
 
@@ -350,8 +339,6 @@ static DWORD WINAPI start_ui(void* Param)
 		processor->update();
 		Sleep(35);
 	}
-
-	//processor->display_canvas();
 
 	return 1;
 }

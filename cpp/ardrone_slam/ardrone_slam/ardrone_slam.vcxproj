@@ -82,6 +82,7 @@
     <ClCompile Include="bot_ardrone.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mysocket.cpp" />
+    <ClCompile Include="opencv_ekf.cpp" />
     <ClCompile Include="opencv_helpers.cpp" />
     <ClCompile Include="slam.cpp" />
     <ClCompile Include="slam_elevation_map.cpp" />
@@ -102,6 +103,7 @@
     <ClInclude Include="bot_ardrone.h" />
     <ClInclude Include="global.h" />
     <ClInclude Include="mysocket.h" />
+    <ClInclude Include="opencv_ekf.h" />
     <ClInclude Include="opencv_helpers.h" />
     <ClInclude Include="slam.h" />
     <ClInclude Include="slam_elevation_map.h" />
