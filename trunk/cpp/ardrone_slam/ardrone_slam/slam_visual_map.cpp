@@ -17,7 +17,7 @@ slam_visual_map::slam_visual_map(void):
 	canvas(4096, 4096, CV_8UC4), // image, last channel not used
 	undoTranslate(3, 3, CV_64F), // do not forget to set identity matrix
 	descriptors(1000, 64, CV_32F),
-	keypoints_wc(1000, 1, CV_32FC2),
+	keypoints_wc(1000, 1, CV_32FC3),
 	descriptors_grid(200, 200, CV_16U),
 
 	termcrit(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS,20,0.03)
@@ -165,8 +165,11 @@ void slam_visual_map::update(vector<KeyPoint>& keypoints, Mat& descriptors, vect
 		);
 
 		// keypoint
-		keypoints_wc.at<Vec2f>(descriptors_count)[0] = wc[i].x;
-		keypoints_wc.at<Vec2f>(descriptors_count)[1] = wc[i].y;
+		/*
+		keypoints_wc.at<Vec3f>(descriptors_count)[0] = wc[i].x;
+		keypoints_wc.at<Vec3f>(descriptors_count)[1] = wc[i].y;
+		*/
+		keypoints_wc.at<Vec3f>(descriptors_count) = wc[i];
 
 		this->keypoints.push_back(keypoints[i]);
 

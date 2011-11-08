@@ -7,7 +7,6 @@ namespace cv {
 	float Kabsch(Mat& P, Mat& Q, Mat& R);
 	bool getMatSubset( const Mat& m1, const Mat& m2, Mat& ms1, Mat& ms2, int maxAttempts, CvRNG& rng );
 	bool checkSubset( const Mat& m, int count );
-	void PrintMat(CvMat *A);
 	void dumpMatrix(const Mat &mat);
 	double MatMax(const Mat &mat);
 	double MatMin(const Mat &mat);

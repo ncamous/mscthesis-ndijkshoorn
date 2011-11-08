@@ -5,8 +5,11 @@
 #include "opencv_ekf.h"
 #include "opencv2/features2d/features2d.hpp"
 
-#define SLAM_LOC_START controller->sensor_pause(f->time);
-#define SLAM_LOC_END controller->sensor_resume(); Sleep(75);
+#define SLAM_LOC_START 
+#define SLAM_LOC_END 
+
+#define SLAM_VISUALMOTION_START 
+#define SLAM_VISUALMOTION_END 
 
 struct bot_ardrone_frame;
 
@@ -22,9 +25,10 @@ public:
 	void set_camera();
 
 	void process(bot_ardrone_frame *f);
-	void process_visual_state();
+	void process_visual_motion();
+	void process_visual_motion_pnp(); // depricated
 	void process_visual_loc();
-	void process_map();
+	void process_map(Mat& frame_state);
 
 	double find_robust_translation_rotation(InputArray p1, InputArray p2, vector<DMatch>& matches, vector<short>& inliers, cv::Mat& T, float& R, double maxInlierDist = 3.0);
 	int find_robust_matches(InputArray p1, InputArray p2, vector<DMatch>& matches, vector<short>& mask, int max, cv::Mat& H, double maxInlierDist = 3.0);
@@ -32,26 +36,26 @@ public:
 
 	void get_features(Mat& frame, vector<KeyPoint> &v);
 	void get_descriptors(Mat& frame, vector<KeyPoint> &v, Mat& descriptors);
-	void get_matches(Mat& q_descriptors, Mat& t_descriptors, vector<DMatch>& matches, bool use_unique = false);
+	void get_matches(Mat& q_descriptors, Mat& t_descriptors, vector<DMatch>& matches, bool use_unique = false, double max_distance = 0.12);
 
 	void store_prev_frame();
 	void calculate_measurement();
-	void save_cur_state();
 	bool measurementSeemsOk();
 
-	void imagepoints_to_local3d(vector<Point2f>& src, vector<Point3f>& dst);
-	void imagepoints_to_local3d(vector<Point2f>& src, vector<Point2f>& dst);
+	void imagepoints_to_local3d(vector<Point2f>& src, vector<Point3f>& dst, Mat* state = NULL);
 
-	void get_state(Mat& pos, Mat& or);
-	void get_localcam(Mat& pos, Mat& or);
-	void object_to_worldpos(Mat& obj_pos, Mat& obj_or, Mat& pos, Mat& or); // in: double!
-	void get_objectpos(Mat& pos, Mat& or); // out: double!
+	void get_state(Mat& pos, Mat& or, Mat* state = NULL);
+	void get_localcam(Mat& pos, Mat& or, Mat* state = NULL);
 
 	// coordinate system helpers
-	void object_to_localcam(Mat& pos, Mat& or);
-	void localcam_to_object(Mat& pos, Mat& or);
 	void localcam_to_world(Mat& pos, Mat& or);
 	void world_to_localcam(Mat& pos, Mat& or);
+
+	// depricated
+	void object_to_worldpos(Mat& obj_pos, Mat& obj_or, Mat& pos, Mat& or); // in: double!
+	void get_objectpos(Mat& pos, Mat& or); // out: double!
+	void localcam_to_object(Mat& pos, Mat& or);
+	void object_to_localcam(Mat& pos, Mat& or);
 
 	// testing/experiments
 	void add_noise(IplImage *img);
@@ -66,7 +70,6 @@ private:
 
 	Mat frame;
 	Mat frame_gray;
-	//Mat frame_rgba;
 
 	Mat obj_pos;
 	Mat obj_or;
@@ -79,6 +82,7 @@ private:
 	// current frame data
 	vector<KeyPoint> keypoints;
 	vector<Point2f> imagepoints;
+	vector<Point3f> imagepoints_wc;
 	Mat descriptors;
 
 	// previous frame data
@@ -106,7 +110,6 @@ private:
 	Mat *state;
 	Mat *cov;
 	Mat prev_state;
-	Mat cur_state;
 
 	Mat measurement;
 	Mat measurementMatrix;
@@ -117,9 +120,6 @@ private:
 	clock_t last_loc;
 
 	// tmp
-	bool first_frame2;
-	Mat first_frame;
-
 	FILE *loc_log;
 };
 

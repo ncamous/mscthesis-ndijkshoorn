@@ -22,6 +22,7 @@ private:
 	void update_elevation_map(int sonar_height);
 	void get_sonar_state(cv::Mat& pos, cv::Mat& or);
 	void calibrate(bot_ardrone_measurement *m);
+	float sqrt_s(float f);
 
 	slam *controller;
 
