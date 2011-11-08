@@ -121,6 +121,12 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 	m->or[1] = n->navdata_demo.theta;
 	m->or[2] = n->navdata_demo.psi;
 
+	/*
+	m->or[0] = n->navdata_phys_measures.phys_gyros[0];
+	m->or[1] = n->navdata_phys_measures.phys_gyros[1];
+	m->or[2] = n->navdata_phys_measures.phys_gyros[2];
+	*/
+
 	// Accelerations are received in mg
 	// They are displayed in g: conversion gain is 1/1000
 	// gravity = 1g

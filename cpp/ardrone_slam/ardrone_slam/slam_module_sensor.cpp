@@ -31,19 +31,6 @@ slam_module_sensor::slam_module_sensor(slam *controller):
 
 	// H vector
 	measurementMatrix = 0.0f;
-	measurementMatrix.at<float>(2, 2) = 1.0f; // measured altitude
-
-	if (controller->mode(SLAM_MODE_VEL))
-	{
-		for(int i = 3; i < 9; i++)
-			measurementMatrix.at<float>(i, i) = 1.0f; // measured v+a
-	}
-
-	if (controller->mode(SLAM_MODE_ACCEL))
-	{
-		for(int i = 6; i < 9; i++)
-			measurementMatrix.at<float>(i, i) = 1.0f; // measured a
-	}
 
 
 	measurementNoiseCov = 0.0f;
@@ -78,7 +65,7 @@ slam_module_sensor::~slam_module_sensor(void)
 
 void slam_module_sensor::calibrate(bot_ardrone_measurement *m)
 {
-	if (++calib_measurements > 600)
+	if (++calib_measurements > 200)
 	{
 		printf("Calibration complete: %f, %f, %f\n", accel_avg[0], accel_avg[1], accel_avg[2]);
 		calibrated = true;
@@ -98,7 +85,7 @@ void slam_module_sensor::calibrate(bot_ardrone_measurement *m)
 	measurement_accel	= Rw * measurement_accel;
 	measurement_accel.at<float>(2) += 1000.0f;
 
-	if (calib_measurements <= 600)
+	if (calib_measurements <= 200)
 	{
 		accel_sum[0] += measurement_accel.at<float>(0);
 		accel_sum[1] += measurement_accel.at<float>(1);
@@ -109,9 +96,9 @@ void slam_module_sensor::calibrate(bot_ardrone_measurement *m)
 
 	if (calib_measurements == 600)
 	{
-		accel_avg[0] = (float) (accel_sum[0] / 600.0);
-		accel_avg[1] = (float) (accel_sum[1] / 600.0);
-		accel_avg[2] = (float) (accel_sum[2] / 600.0);
+		accel_avg[0] = (float) (accel_sum[0] / 200.0);
+		accel_avg[1] = (float) (accel_sum[1] / 200.0);
+		accel_avg[2] = (float) (accel_sum[2] / 200.0);
 
 		EKF->yaw_offset = (float) (yaw_sum / 600.0); // AR.Drone's start Z orientation is always 0.0
 	}
@@ -120,16 +107,22 @@ void slam_module_sensor::calibrate(bot_ardrone_measurement *m)
 
 void slam_module_sensor::process(bot_ardrone_measurement *m)
 {
+	bool use_accel	= controller->mode(SLAM_MODE_ACCEL);
+	bool use_vel	= controller->mode(SLAM_MODE_VEL);
+
+
+
 	/* Time different between current measurement and previous measurement.
 	 * Used to calculate the transition matrix.
 	 * I assume the vehicle is hovering when starting SLAM. So the first couple measurements have a small impact.
 	 */
-	if (!calibrated)
+	/*
+	if (use_accel && !calibrated)
 	{
 		calibrate(m);
 		return;
 	}
-
+	*/
 
 
 	/* set initial position: module_frame is not used before position is known */
@@ -138,17 +131,25 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 		state->at<float>(2) = (float) -m->altitude; // write initial height directly into state vector
 		EKF->last_measurement_time = m->time - 0.0001;
 		EKF->running = true; // KF is initialized. Now that the initial height of the vehicle is known, the frame module can start working
+		EKF->yaw_offset = m->or[2]; // TMP
 	}
 	else if (m->time <= EKF->last_measurement_time)
 	{
 		return;
 	}
 
+
+
 	//printf("sonar: %i\n", m->altitude);
 
 
-	bool use_accel	= controller->mode(SLAM_MODE_ACCEL);
-	bool use_vel	= controller->mode(SLAM_MODE_VEL);
+	measurementMatrix = 0.0f;
+
+
+
+	/* altitude measurement */
+	measurementMatrix.at<float>(2, 2) = 1.0f; // measured altitude
+	measurement.at<float>(2) = (float) -m->altitude;
 
 
 
@@ -159,15 +160,6 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 
 
-	/* only use orientation sensor */
-	if (!use_accel && !use_vel)
-	{
-		memcpy_s(&state->data[9 * 4], 12, measurement_or.data, 12);
-		return;
-	}
-
-
-
 	difftime = (float) EKF->difftime(m->time);
 
 
@@ -175,7 +167,18 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	/* velocity measurement */
 	if (use_vel)
 	{
-		memcpy_s(measurement_vel.data, 12, m->vel, 12);
+		for(int i = 3; i < 6; i++)
+			measurementMatrix.at<float>(i, i) = 1.0f; // measured v
+
+		measurement_vel.at<float>(0) = -(18163.0f * (measurement_or.at<float>(1) * measurement_or.at<float>(1)) - 86.0f * measurement_or.at<float>(1));
+		measurement_vel.at<float>(1) = (18163.0f * (measurement_or.at<float>(0) * measurement_or.at<float>(0)) - 86.0f * measurement_or.at<float>(0));
+		measurement_vel.at<float>(2) = 0.0f;
+
+		if (measurement_or.at<float>(1) < 0.0f)
+			measurement_vel.at<float>(0) = -measurement_vel.at<float>(0);
+
+		if (measurement_or.at<float>(0) < 0.0f)
+			measurement_vel.at<float>(1) = -measurement_vel.at<float>(1);
 
 		Mat Rw(3, 3, CV_32F);
 		Mat measurement_or_yaw = measurement_or.clone();
@@ -186,16 +189,18 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 		memcpy_s(&measurement.data[3 * 4], 12, measurement_vel.data, 12); // vel: this is the fastest method
 
-		// compute virtual acceleration measurement
-		measurement.at<float>(6) = (measurement.at<float>(3) - prev_state.at<float>(3)) / difftime;
-		measurement.at<float>(7) = (measurement.at<float>(4) - prev_state.at<float>(4)) / difftime;
-		measurement.at<float>(8) = (measurement.at<float>(5) - prev_state.at<float>(5)) / difftime;
+		measurement_accel = 0.0f;
+		memcpy_s(&measurement.data[6 * 4], 12, measurement_accel.data, 12); // accel: this is the fastest method
 	}
+
 
 
 	/* acceleration measurement */
 	if (use_accel)
 	{
+		for(int i = 6; i < 9; i++)
+			measurementMatrix.at<float>(i, i) = 1.0f; // measured va
+
 		measurement_accel.at<float>(0) = (m->accel[0] - accel_avg[0]) * MG_TO_MM2;
 		measurement_accel.at<float>(1) = (m->accel[1] - accel_avg[1]) * MG_TO_MM2;
 		measurement_accel.at<float>(2) = (m->accel[2] - accel_avg[2]) * MG_TO_MM2;
@@ -211,18 +216,13 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	}
 
 
-	/* altitude measurement */
-	measurement.at<float>(2) = (float) -m->altitude;
-
-
-
 
 	/* lock KF */
 	EKF->lock();
 
 
 	/* switch KF matrices */
-	update_measurement_matrix();
+	//update_measurement_matrix();
 	EKF->measurementMatrix		= measurementMatrix;
 	EKF->measurementNoiseCov	= measurementNoiseCov;
 
@@ -360,4 +360,13 @@ void slam_module_sensor::get_sonar_state(Mat& pos, Mat& or)
 	or.at<float>(0) = state->at<float>(9);
 	or.at<float>(1) = state->at<float>(10);
 	or.at<float>(2) = state->at<float>(11);
+}
+
+
+float slam_module_sensor::sqrt_s(float f)
+{
+	if (f < 0.0f)
+		return sqrt(-f);
+	else
+		return sqrt(f);
 }
