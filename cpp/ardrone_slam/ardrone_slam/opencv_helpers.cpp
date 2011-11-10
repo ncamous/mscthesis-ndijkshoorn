@@ -36,8 +36,6 @@ float Kabsch(Mat& P, Mat& Q, Mat& R)
 {
 	if (P.channels() > 2)
 	{
-		printf("%i, %i\n", P.rows, P.cols);
-
 		Mat _P = P.clone();
 		Mat _Q = Q.clone();
 

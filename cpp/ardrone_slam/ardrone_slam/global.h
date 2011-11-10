@@ -11,6 +11,7 @@
 #define SLAM_ELEVATION_MAP_DEFAULT_SIZE 200 // 10m * 10m in each direction + 1 for center
 #define SLAM_DESCRIPTOR_SIZE 64 * sizeof(float)
 //#define SLAM_LOC_WRITE_STATE_DIRECTLY true // remove line if false
+//#define SLAM_VISUALMOTION_WRITE_STATE_DIRECTLY true // remove line if false
 #define SLAM_LOC_UPDATE_YAW false
 
 #define SLAM_MODE_VISUALMOTION 0x01

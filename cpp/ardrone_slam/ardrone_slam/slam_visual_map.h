@@ -3,14 +3,6 @@
 #include <cv.hpp>
 
 
-struct CornerHist
-{
-	cv::Mat hist;
-	cv::Point2f cc; // canvas coordinate
-	cv::Point2f wc; // local world coordinate
-};
-
-
 class slam_visual_map
 {
 public:
@@ -23,7 +15,6 @@ public:
 
 	void frame_to_canvas(cv::Mat& frame, cv::Mat& frameT, std::vector<cv::Point2f>& lc, std::vector<cv::Point3f>& wc);
 	bool is_updated(int* dst, bool reset_roi = false);
-	void find_corners(cv::Mat& img, std::vector<CornerHist>& list, std::vector<cv::Point2f>& list_p, bool unique = false);
 	bool corner_at_wc(cv::Point2f wc);
 	bool inside(cv::Mat& m, cv::Rect& r);
 	bool cell_inside_descriptors_grid(unsigned short x, unsigned short y);

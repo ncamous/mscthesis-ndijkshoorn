@@ -56,7 +56,7 @@ void slam::run()
 void slam::init_ekf()
 {
 	// Initial state
-	//randn(EKF.statePost, Scalar::all(0), Scalar::all(0.00001));
+	//randn(EKF.statePost, Scalar::all(0), Scalar::all(0.001));
 
 
 	// F vector
@@ -65,21 +65,24 @@ void slam::init_ekf()
 
 	EKF.processNoiseCov = 0.0f;
 	float PNC[12] = {
-		0.0005f, 0.0005f, 0.0005f,	// p: mm
-		0.0002f, 0.0002f, 0.0002f,	// v: mm/s
-		5.0f, 5.0f, 5.0f,	// a: mm/s2
-		0.0f, 0.0f, 0.0f	// or: deg
+		30.0f, 30.0f, 30.0f,	// p: mm
+		20.0f, 20.0f, 20.0f,	// v: mm/s
+		10.0f, 10.0f, 10.0f,	// a: mm/s2
+		0.0f, 0.0f, 0.0f		// or: deg
 	};
 	MatSetDiag(EKF.processNoiseCov, PNC);
 
 
 	float ECP[12] = {
-                1.0f, 1.0f, 1.0f,
-                1.0f, 1.0f, 1.0f,
-                1.0f, 1.0f, 1.0f,
-                0.01f, 0.01f, 0.01f
-        };
+		30.0f, 30.0f, 30.0f,
+		20.0f, 20.0f, 20.0f,
+		10.0f, 10.0f, 10.0f,
+		0.0f, 0.0f, 0.0f
+	};
 	MatSetDiag(EKF.errorCovPost, ECP);
+
+
+	setIdentity(EKF.measurementMatrix);
 }
 
 
@@ -172,49 +175,16 @@ void slam::add_input_frame(bot_ardrone_frame *f)
 
 	// drop frame is queue enabled but not empty
 	if (SLAM_USE_QUEUE && queue_frame.empty())
+	{
+		queue_frame.lock();
 		queue_frame.push(f);
+		queue_frame.release();
+	}
 	else if(!SLAM_USE_QUEUE)
 		m_frame->process(f);
 	else
 		delete f;
-
-
-	/*
-	if (m_frame->frame_counter == 0)
-	{
-		char tmp[30];
-
-		for (int i = 1; i < 60; i++)
-		{
-			if (i >= 10)
-				sprintf_s(tmp, 30, "dataset/001/0000%i.raw\0", i);
-			else
-				sprintf_s(tmp, 30, "dataset/001/00000%i.raw\0", i);
-
-			printf("%s\n", tmp);
-
-			add_input_framefile(tmp);
-		}
-	}
-	*/
 }
-
-
-/*
-void slam::add_input_framefile(char *filename)
-{
-	bot_ardrone_frame *f = new bot_ardrone_frame;
-	f->data_size = 101376;
-
-	ifstream frame_in(filename, ios::in | ios::binary);
-
-	// data buffer
-	frame_in.read(f->data, f->data_size);
-	frame_in.close();
-
-	m_frame->process(f);
-}
-*/
 
 
 void slam::add_input_sensor(bot_ardrone_measurement *m)
@@ -223,7 +193,11 @@ void slam::add_input_sensor(bot_ardrone_measurement *m)
 		run();
 
 	if (SLAM_USE_QUEUE)
+	{
+		queue_sensor.lock();
 		queue_sensor.push(m);
+		queue_sensor.release();
+	}
 	else if(!SLAM_USE_QUEUE)
 		m_sensor->process(m);
 }
@@ -278,7 +252,9 @@ static DWORD WINAPI start_process_frame(void* Param)
 		if (q->empty())
 			continue;
 
+		q->lock();
 		item = q->front();
+		q->release();
 
 		processor->process(item);
 
@@ -311,7 +287,9 @@ static DWORD WINAPI start_process_sensor(void* Param)
 		if (q->empty())
 			continue;
 
+		q->lock();
 		item = q->front();
+		q->release();
 
 		// paused
 		if (*paused && item->time >= *paused_time)

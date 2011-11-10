@@ -192,11 +192,7 @@ void bot_ardrone_recorder::playback(char *dataset)
 					{
 						m->time = atof(value_s);
 						wait_for_event(m->time);
-
-						if (m->time > 22.0 && !bot->get_slam()->mode(SLAM_MODE_VISUALMOTION))
-							bot->get_slam()->on(SLAM_MODE_VISUALMOTION);
-
-						printf("time: %f\n", m->time);
+						//printf("time: %f\n", m->time);
 					}
 					else if (strcmp(key_s, "alt") == 0)
 					{
@@ -299,11 +295,13 @@ void bot_ardrone_recorder::playback(char *dataset)
 
 			case BOT_EVENT_FRAME:
 				bot->frame_received(f);
-				if (f->time > 22.0f)
+				/*
+				if (f->time > 8.5f)
 				{
 					printf("FRAME DONE!\n");
-					Sleep(4000);
+					Sleep(500);
 				}
+				*/
 				break;
 
 			case BOT_EVENT_CONTROL:
@@ -317,6 +315,8 @@ void bot_ardrone_recorder::playback(char *dataset)
     }
 
     yaml_parser_delete(&parser);
+
+	Sleep(999999); // keep UI open
 }
 
 
