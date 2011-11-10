@@ -25,24 +25,20 @@ public:
 	void set_camera();
 
 	void process(bot_ardrone_frame *f);
-	void process_visual_motion();
-	void process_visual_motion_pnp(); // depricated
-	void process_visual_loc();
-	void process_map(Mat& frame_state);
+	bool process_visual_motion();
+	bool process_visual_loc();
+	bool process_map(Mat& frame_state);
 
 	double find_robust_translation_rotation(InputArray p1, InputArray p2, vector<DMatch>& matches, vector<short>& inliers, cv::Mat& T, float& R, double maxInlierDist = 3.0);
-	int find_robust_matches(InputArray p1, InputArray p2, vector<DMatch>& matches, vector<short>& mask, int max, cv::Mat& H, double maxInlierDist = 3.0);
-	int find_object_position(Mat& cam_pos, Mat& cam_or, vector<DMatch>& matches, vector<short>& mask);
 
 	void get_features(Mat& frame, vector<KeyPoint> &v);
 	void get_descriptors(Mat& frame, vector<KeyPoint> &v, Mat& descriptors);
 	void get_matches(Mat& q_descriptors, Mat& t_descriptors, vector<DMatch>& matches, bool use_unique = false, double max_distance = 0.12);
 
 	void store_prev_frame();
-	void calculate_measurement();
 	bool measurementSeemsOk();
 
-	void imagepoints_to_local3d(vector<Point2f>& src, vector<Point3f>& dst, Mat* state = NULL);
+	void imagepoints_to_local3d(vector<Point2f>& src, vector<Point3f>& dst, Mat* state = NULL, bool fixed_xy = false);
 
 	void get_state(Mat& pos, Mat& or, Mat* state = NULL);
 	void get_localcam(Mat& pos, Mat& or, Mat* state = NULL);
@@ -51,11 +47,7 @@ public:
 	void localcam_to_world(Mat& pos, Mat& or);
 	void world_to_localcam(Mat& pos, Mat& or);
 
-	// depricated
-	void object_to_worldpos(Mat& obj_pos, Mat& obj_or, Mat& pos, Mat& or); // in: double!
-	void get_objectpos(Mat& pos, Mat& or); // out: double!
-	void localcam_to_object(Mat& pos, Mat& or);
-	void object_to_localcam(Mat& pos, Mat& or);
+	void localvelocity_to_world(Mat& v);
 
 	// testing/experiments
 	void add_noise(IplImage *img);
@@ -71,6 +63,9 @@ private:
 	Mat frame;
 	Mat frame_gray;
 
+	Mat prev_frame_gray;
+	vector<KeyPoint> prev_keypoints;
+
 	Mat obj_pos;
 	Mat obj_or;
 	Mat new_pos;
@@ -82,14 +77,14 @@ private:
 	// current frame data
 	vector<KeyPoint> keypoints;
 	vector<Point2f> imagepoints;
-	vector<Point3f> imagepoints_wc;
 	Mat descriptors;
+	bool features_extracted;
 
 	// previous frame data
 	bool prev_frame_exists;
 	double prev_frame_time;
 	Mat prev_frame_descriptors;
-	vector<Point2f> prev_frame_ip;
+	//vector<Point2f> prev_frame_ip;
 	vector<Point3f> prev_frame_wc;
 
 	//SurfFeatureDetector *fd;

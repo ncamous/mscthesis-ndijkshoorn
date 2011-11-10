@@ -43,10 +43,10 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 			{
 				for(i=0; i<keyboard_nr_bots; i++)
 				{
-					//keyboard_bot[i]->get_slam()->off(SLAM_MODE_MAP);
+					keyboard_bot[i]->get_slam()->off(SLAM_MODE_MAP);
 					//keyboard_bot[i]->get_slam()->off(SLAM_MODE_ACCEL);
-					//keyboard_bot[i]->get_slam()->off(SLAM_MODE_VEL);
-					keyboard_bot[i]->get_slam()->on(SLAM_MODE_VISUALMOTION);
+					keyboard_bot[i]->get_slam()->on(SLAM_MODE_VISUALLOC);
+					keyboard_bot[i]->get_slam()->off(SLAM_MODE_VISUALMOTION);
 				}
 			}
 

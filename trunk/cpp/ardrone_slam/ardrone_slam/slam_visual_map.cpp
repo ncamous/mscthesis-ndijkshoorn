@@ -233,6 +233,12 @@ void slam_visual_map::get_local_descriptors(Mat& map_descriptors, Mat& map_keypo
 	w = min(descriptors_grid.cols - x2, r * 2);
 	h = min(descriptors_grid.rows - y2, r * 2);
 
+	if (x2 >= descriptors_grid.cols || y2 >= descriptors_grid.rows)
+		return;
+
+	if (w <= 0 || h <= 0)
+		return;
+
 	indices = new unsigned short[w * h];
 
 	Mat grid(descriptors_grid, Rect(x2, y2, w, h));
@@ -251,7 +257,7 @@ void slam_visual_map::get_local_descriptors(Mat& map_descriptors, Mat& map_keypo
 	map_keypoints	= Mat(i, keypoints_wc.cols, keypoints_wc.type());
 
 	int descriptors_rowsize	= SLAM_DESCRIPTOR_SIZE;
-	int keypoint_rowsize	= 2 * sizeof(float);
+	int keypoint_rowsize	= 3 * sizeof(float);
 
 	for (int j = 0; j < i; j++)
 	{

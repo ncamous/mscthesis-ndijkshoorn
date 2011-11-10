@@ -14,6 +14,7 @@ ExtendedKalmanFilter::ExtendedKalmanFilter(int dynamParams, int measureParams, i
 	yaw_offset				= 0.0f;
 	running					= false;
 	last_measurement_time	= 0.0;
+	hMutex = CreateMutex(NULL, FALSE, NULL);
 }
 
 void ExtendedKalmanFilter::init(int DP, int MP, int CP, int type)
@@ -108,7 +109,15 @@ void ExtendedKalmanFilter::release()
 
 double ExtendedKalmanFilter::difftime(double time)
 {
-	return max(0.0001, time - last_measurement_time);
+	return max(0.00001, time - last_measurement_time);
+
+	/*
+	double dt =  max(0.0001, time - last_measurement_time);
+	if (dt > 2.0)
+		dt = 0.00001;
+
+	return dt;
+	*/
 }
 
 }

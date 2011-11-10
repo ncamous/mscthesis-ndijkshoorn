@@ -78,8 +78,8 @@ slam_module_frame::slam_module_frame(slam *controller):
 
 	measurementNoiseCov = 0.0f;
 	float MNC[9] = {
-		0.0f, 0.0f, 0.0f, // pos
-		0.0f, 0.0f, 0.0f, // vel
+		50.0f, 50.0f, 50.0f, // pos
+		30.0f, 30.0f, 30.0f, // vel
 		0.0f, 0.0f, 0.0f // accel
 	};
 	MatSetDiag(measurementNoiseCov, MNC);
@@ -114,22 +114,25 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 	this->f = f;
 	frame.data = (unsigned char*) f->data;
+	cvtColor(frame, frame_gray, CV_BGRA2GRAY);
 
 
 
-	// reset
+	/* reset */
+	bool loc = false;
+	features_extracted = false;
 	keypoints.clear();
 	imagepoints.clear();
-	imagepoints_wc.clear();
 
 
 
-	if (controller->mode(SLAM_MODE_VISUALMOTION))
-		process_visual_motion();
-
-
+	/* process */
 	if (controller->mode(SLAM_MODE_VISUALLOC))
-		process_visual_loc();
+		loc = process_visual_loc();
+
+
+	if (controller->mode(SLAM_MODE_VISUALMOTION) && !loc)
+		process_visual_motion();
 
 
 	Mat frame_state = state->clone (); // store updated state
@@ -143,36 +146,34 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 }
 
 
-void slam_module_frame::process_visual_motion()
+bool slam_module_frame::process_visual_motion()
 {
 	SLAM_VISUALMOTION_START
 
+	if (state->at<float>(2) > -400.0f)
+		return false;
+
 
 	/* find features */
-	if (keypoints.empty())
+	if (!features_extracted)
 	{
-		// convert to gray
-		cvtColor(frame, frame_gray, CV_BGRA2GRAY);
-
 		get_features(frame_gray, keypoints);
+		get_descriptors(frame_gray, keypoints, descriptors);
 	}
 
 
 	if (keypoints.size() < 4)
 	{
-		printf("Not enough features found: dropping frame\n");
+		//printf("Not enough features found: dropping frame\n");
 		//prev_frame_exists = false; // do not use this frame for visual motion
 		SLAM_VISUALMOTION_END
-		return;
+		return false;
 	}
 
 
-	/* get descriptors */
-	get_descriptors(frame_gray, keypoints, descriptors);
-
-
 	/* convert frame (pixel) coordinates to world coordinates (2D) */
-	imagepoints_to_local3d(imagepoints, imagepoints_wc);
+	vector<Point3f> imagepoints_wc;
+	imagepoints_to_local3d(imagepoints, imagepoints_wc, NULL, true);
 
 
 	/* match with previous frame */
@@ -181,25 +182,45 @@ void slam_module_frame::process_visual_motion()
 
 		/* match */
 		vector<DMatch> matches;
-		get_matches(descriptors, prev_frame_descriptors, matches, true, 0.25);
+		get_matches(descriptors, prev_frame_descriptors, matches, true, 0.18);
 
 		if (matches.size() < 3)
 		{
 			prev_frame_exists = false; // do not use this frame for visual motion
 			SLAM_VISUALMOTION_END
-			return;
+			return false;
 		}
 
 
 		vector<short> inliers;
 		Mat T(1, 1, CV_32FC3);
-		float R = 0.0f;
+		float R = -1.0f;
 
-		double confidence = find_robust_translation_rotation(imagepoints_wc, prev_frame_wc, matches, inliers, T, R, 40.0);
+		double confidence = find_robust_translation_rotation(imagepoints_wc, prev_frame_wc, matches, inliers, T, R, 50.0);
 
 
 		if (confidence >= 0.7)
 		{
+			vector<DMatch> matches_f;
+
+			for (size_t i = 0; i < inliers.size(); i++)
+			{
+				matches_f.push_back(matches[inliers[i]]);
+			}
+
+			 Mat tmp;
+             //printf("%i %i %i\n", keypoints.size(), prev_keypoints.size(), matches_f.size());
+             drawMatches(frame_gray, keypoints, prev_frame_gray, prev_keypoints, matches_f, tmp);
+             imshow("Image:", tmp);
+             cvWaitKey(6);
+
+
+			/* lock KF */
+			EKF->lock();
+
+
+#ifdef SLAM_VISUALMOTION_WRITE_STATE_DIRECTLY
+
 			Mat cam_pos(3, 1, CV_32F);
 			Mat cam_or(3, 1, CV_32F);
 			get_localcam(cam_pos, cam_or, &prev_state);
@@ -209,141 +230,50 @@ void slam_module_frame::process_visual_motion()
 
 			localcam_to_world(cam_pos, cam_or);
 
-
 			state->at<float>(0) = cam_pos.at<float>(0);
 			state->at<float>(1) = cam_pos.at<float>(1);
-		}
-	}
 
+			/* unlock KF */
+			EKF->release();
 
-	/* store current frame as previous frame */
-	store_prev_frame();
-}
+			//printf("SLAM VISUALMOTION (%f, %f)   [%f]\n", cam_pos.at<float>(0), cam_pos.at<float>(1), confidence);
 
-// depricated
-void slam_module_frame::process_visual_motion_pnp()
-{
-	// pause sensor module
-	controller->sensor_pause(f->time);
+#else
 
+			/* generate measurement (velocity) */
+			float dt = (float) (f->time - prev_frame_time);
 
-	get_objectpos(obj_pos, obj_or);
+			Mat measurement_vel(3, 1, CV_32F);
+			measurement_vel = 0.0f;
+			memcpy_s(measurement_vel.data, 8, T.data, 8);
+			measurement_vel /= dt;
+			localvelocity_to_world(measurement_vel);
 
+			memcpy_s(measurement.data + 12, 8, measurement_vel.data, 8);
 
-	/* find features */
-	if (keypoints.empty())
-	{
-		// convert to gray
-		cvtColor(frame, frame_gray, CV_BGRA2GRAY);
-
-		get_features(frame_gray, keypoints);
-	}
-
-
-	if (keypoints.size() < 4)
-	{
-		printf("Not enough features found: dropping frame\n");
-
-		controller->sensor_resume();
-		return;
-	}
-
-
-	/* calculate descriptors (on greyscale image) */
-	get_descriptors(frame_gray, keypoints, descriptors);
-
-
-	/* match with previous frame */
-	if (prev_frame_exists)
-	{
-		vector<DMatch> matches2;
-		dm.match(descriptors, prev_frame_descriptors, matches2);
-
-		vector<DMatch> matches;
-		for (int i = 0; i < (int) matches2.size(); i++)
-		{
-			if (matches2[i].distance < 0.15f)
-				matches.push_back(matches2[i]);
-		}
-
-		if (matches.size() < 4)
-		{
-			printf("Not enough features matched (%i): dropping frame\n", matches.size());
-			prev_frame_exists = false;
-			controller->sensor_resume();
-			store_prev_frame();
-			return;
-		}
-
-
-		/* find robust matched descriptors (RANSAC) */
-		vector<short> mask;
-		Mat H;
-		int nr_inliers = find_robust_matches(imagepoints, prev_frame_ip, matches, mask, 20, H, 3.0);
-		if (nr_inliers < 6)
-		{
-			printf("Not enough inliers found (%i): dropping frame\n", nr_inliers);
-			controller->sensor_resume();
-			store_prev_frame();
-			return;
-		}
-
-		vector<DMatch> matches_f;
-		for (size_t i = 0; i < mask.size(); i++)
-			matches_f.push_back(matches[ mask[i] ]);
-
-
-		/*
-		Mat tmp;
-		//printf("%i %i %i\n", keypoints.size(), prev_keypoints.size(), matches_f.size());
-		drawMatches(frame_gray, keypoints, prev_frame_gray, prev_keypoints, matches_f, tmp);
-		imshow("Image:", tmp);
-		cvWaitKey(6);
-		*/
-
-		/* retrieve camera motion from two frames */
-		find_object_position(obj_pos, obj_or, matches, mask);
-
-		/*
-		int nr_inliers = find_object_position(obj_pos, obj_or, matches, mask);
-		if (nr_inliers < 6)
-		{
-			printf("Not enough inliers found (%i): dropping frame\n", nr_inliers);
-			return;
-		}
-		*/
-
-
-		object_to_worldpos(obj_pos, obj_or, new_pos, new_or);
-
-
-		/* KF measurement */
-		measurement = 0.0f;
-		memcpy_s(measurement.data, 12, new_pos.data, 12); // pos: this is the fastest method
-		//measurement.at<float>(0) = EKF->statePost.at<float>(0) + 1.0f;
-		difftime = f->time - prev_frame_time; // time between consecutive frames
-		calculate_measurement(); // vel: calculated from new pos and previous state
-
-
-		if (measurementSeemsOk())
-		{
-
-			/* lock KF */
-			EKF->lock();
+			//printf("T: %f, %f (dt: %f)\n", T.at<Vec3f>(0)[0], T.at<Vec3f>(0)[1], dt);
+			dumpMatrix(measurement_vel);
+			printf("\n\n");
 
 
 			/* switch KF matrices */
 			measurementMatrix	= 0.0f;
-			for (int i = 0; i < 2; i++) // p + v
+			for (int i = 3; i < 5; i++) // p
 				measurementMatrix.at<float>(i, i) = 1.0f;
 
 			EKF->measurementMatrix		= measurementMatrix;
 			EKF->measurementNoiseCov	= measurementNoiseCov;
 
 
+
 			/* update transition matrix */
 			difftime = EKF->difftime(f->time);
 
+			//for(int i = 0; i < 6; i++)
+			//	EKF->errorCovPost.at<float>(i, i) = 0.0f;
+			//EKF->errorCovPost = 0.0f;
+			
+			//dumpMatrix(EKF->errorCovPost);
 
 			controller->update_transition_matrix((float) difftime);
 
@@ -356,37 +286,37 @@ void slam_module_frame::process_visual_motion_pnp()
 			EKF->correct(measurement, f->time);
 
 
-			/* release KF */
+			/* unlock KF */
+			//dumpMatrix(*state);
+			//printf("\n\n\n");
 			EKF->release();
 
+#endif
 		}
-		else
-		{
-			printf("Incorrect measurement filtered!\n");
-			// current state is not updated, drop frame ?
-		}
-
 	}
 
 
+#ifdef SLAM_VISUALMOTION_WRITE_STATE_DIRECTLY
 	/* store current state (position) as previous state. Used to calculate vel/accel */
 	memcpy_s(prev_state.data, 48, state->data, 48); // this is the fastest method
-
-
-	/* process queued sensor data, before new frame is received */
-	controller->sensor_resume();
+	// do this after localization is done?
+#endif
 
 
 	/* store current frame as previous frame */
 	store_prev_frame();
+
+	return true;
 }
 
 
-void slam_module_frame::process_visual_loc()
+bool slam_module_frame::process_visual_loc()
 {
+	/*
 	double dt = ((double)clock() - last_loc) / CLOCKS_PER_SEC;
-	if (dt < 0.4)
-		return;
+	if (dt < 1.0)
+		return false;
+	*/
 
 
 	SLAM_LOC_START
@@ -400,8 +330,9 @@ void slam_module_frame::process_visual_loc()
 	/* get descriptors from map */
 	Mat map_descriptors;
 	Mat map_keypoints_wc;
-	float radius = max(cov->at<float>(0, 0), cov->at<float>(1, 1));
-	radius += 2500.0f; // just in case. Needs to be removed when KF cov is working fine
+	//float radius = max(cov->at<float>(0, 0), cov->at<float>(1, 1));
+	float radius = 0.0f;
+	radius += 1500.0f; // just in case. Needs to be removed when KF cov is working fine
 	radius += RectRadius(image_corners_wc); // should be dynamic and basic on the state cov
 
 	Mat cam_pos(3, 1, CV_32F);
@@ -411,33 +342,30 @@ void slam_module_frame::process_visual_loc()
 
 	controller->visual_map.get_local_descriptors(map_descriptors, map_keypoints_wc, wc, radius);
 
+
 	/* not enough descriptors from map (unexplored area?) */
 	if (map_descriptors.rows < 3)
 	{
 		SLAM_LOC_END
-		return;
+		return false;
 	}
 
-
-
-	//Mat frameT;
-
-
+	
 	// transform frame to canvas
+	//Mat frameT;
 	//controller->visual_map.frame_to_canvas(frame, frameT, image_corners, image_corners_wc);
 
 
 	/* frame features */
-	if (keypoints.empty())
+	if (!features_extracted)
 	{
-		cvtColor(frame, frame_gray, CV_BGRA2GRAY); // only once!!
-
 		get_features(frame_gray, keypoints); // also stores image points in "imagepoints"
 		get_descriptors(frame_gray, keypoints, descriptors);
 	}
 
 
 	/* convert frame (pixel) coordinates to world coordinates (2D) */
+	vector<Point3f> imagepoints_wc;
 	imagepoints_to_local3d(imagepoints, imagepoints_wc);
 
 
@@ -449,7 +377,7 @@ void slam_module_frame::process_visual_loc()
 	if (matches.size() < 3)
 	{
 		SLAM_LOC_END
-		return;
+		return false;
 	}
 
 
@@ -479,8 +407,8 @@ void slam_module_frame::process_visual_loc()
 		Mat cam_or(3, 1, CV_32F);
 		get_localcam(cam_pos, cam_or);
 
-		cam_pos.at<float>(0) += T.at<Vec2f>(0)[0];
-		cam_pos.at<float>(1) += T.at<Vec2f>(0)[1];
+		cam_pos.at<float>(0) += T.at<Vec3f>(0)[0];
+		cam_pos.at<float>(1) += T.at<Vec3f>(0)[1];
 
 		// TMP
 		fprintf(loc_log, "%f,%f,%f\n",
@@ -512,37 +440,36 @@ void slam_module_frame::process_visual_loc()
 		state->at<float>(1) = cam_pos.at<float>(1);
 
 		/* unlock KF */
-		ReleaseMutex(controller->hMutex);
+		EKF->release();
 		last_loc = clock();
 
 		printf("SLAM LOC (%f, %f)   [%f]\n", cam_pos.at<float>(0), cam_pos.at<float>(1), confidence);
 
 #else
 
-		memcpy_s(measurement.data, 12, cam_pos.data, 12); // pos: this is the fastest method
-		//difftime = f->time - prev_frame_time; // time between consecutive frames
-		//calculate_measurement(); // vel & accel: calculated from new pos and previous state
+
+		/* generate measurement (velocity) */
+		measurement = 0.0f;
+		memcpy_s(measurement.data, 8, cam_pos.data, 8); // pos: this is the fastest method
 
 
 		//if (measurementSeemsOk())
 		//{
 
-		difftime = EKF->difftime(f->time);
-
 
 		/* switch KF matrices */
-		EKF->measurementMatrix	= measurementMatrix;
-		EKF->measurementMatrix	= 0.0f;
-		for (int i = 0; i < 3; i++) // p
-			EKF->measurementMatrix.at<float>(i, i) = 1.0f;
+		measurementMatrix	= 0.0f;
+		for (int i = 0; i < 2; i++) // p
+			measurementMatrix.at<float>(i, i) = 1.0f;
 
+		EKF->measurementMatrix		= measurementMatrix;
 		EKF->measurementNoiseCov	= measurementNoiseCov;
 
 
 		/* update transition matrix */
+		difftime = EKF->difftime(f->time);
 		controller->update_transition_matrix((float) difftime);
 
-		printf("DIFFTIME: %f\n", (float) difftime);
 
 
 		/* predict */
@@ -566,33 +493,37 @@ void slam_module_frame::process_visual_loc()
 
 
 	SLAM_LOC_END
+
+	return true;
 }
 
 
-void slam_module_frame::process_map(Mat& frame_state)
+bool slam_module_frame::process_map(Mat& frame_state)
 {
 	// flying too low, dont add to map (dark image)
 	if (state->at<float>(2) > -200.0f)
-		return;
+		return false;
+
 
 	vector<Point3f> image_corners_wc;
 	imagepoints_to_local3d(image_corners, image_corners_wc, &frame_state);
 
+
 	controller->visual_map.update(frame, image_corners, image_corners_wc);
 
 	/* features map (not-transformed image) */
-	if (keypoints.empty())
+	if (!features_extracted)
 	{
-		cvtColor(frame, frame_gray, CV_BGRA2GRAY); // only once!!
-
 		get_features(frame_gray, keypoints);
 		get_descriptors(frame_gray, keypoints, descriptors);
-
-		vector<Point3f> imagepoints_wc;
-		imagepoints_to_local3d(imagepoints, imagepoints_wc, &frame_state);
-
-		controller->visual_map.update(keypoints, descriptors, imagepoints_wc);
 	}
+
+	vector<Point3f> imagepoints_wc;
+	imagepoints_to_local3d(imagepoints, imagepoints_wc, &frame_state);
+
+	controller->visual_map.update(keypoints, descriptors, imagepoints_wc);
+
+	return true;
 }
 
 
@@ -616,9 +547,11 @@ void slam_module_frame::store_prev_frame()
 	prev_frame_exists		= true;
 	prev_frame_time			= f->time;
 	prev_frame_descriptors	= descriptors.clone();
-	prev_frame_ip			= imagepoints;
-	prev_frame_wc			= imagepoints_wc;
-	//imagepoints_to_local3d(imagepoints, prev_frame_wc);
+	//prev_frame_ip			= imagepoints;
+	imagepoints_to_local3d(imagepoints, prev_frame_wc, NULL, true);
+
+	prev_keypoints = keypoints;
+	prev_frame_gray = frame_gray.clone();
 }
 
 
@@ -633,11 +566,11 @@ double slam_module_frame::find_robust_translation_rotation(InputArray p1, InputA
 	Mat p2m(nr_matches, 1, CV_32FC3);
 	Mat p1mt(nr_matches, 1, CV_32FC3);
 
-    for (size_t i = 0; i < matches.size(); i++)
-    {
+	for (size_t i = 0; i < matches.size(); i++)
+	{
 		p1m.at<Vec3f>(i) = _p1.at<Vec3f>(matches[i].queryIdx);
 		p2m.at<Vec3f>(i) = _p2.at<Vec3f>(matches[i].trainIdx);
-    }
+	}
 
 	Mat p1s(3, 1, CV_32FC3);
 	Mat p2s(3, 1, CV_32FC3);
@@ -691,7 +624,7 @@ double slam_module_frame::find_robust_translation_rotation(InputArray p1, InputA
 
 
 	/* Rotation */
-	if (best_confidence > 0.7)
+	if (best_confidence > 0.7 && R >= 0.0)
 	{
 		p1s_best += Ts; // transform query points to match training points
 		R = Kabsch(p1s_best, p2s_best, Mat());
@@ -701,95 +634,7 @@ double slam_module_frame::find_robust_translation_rotation(InputArray p1, InputA
 }
 
 
-int slam_module_frame::find_robust_matches(InputArray p1, InputArray p2, vector<DMatch>& matches, vector<short>& mask, int max, Mat& H, double maxInlierDist)
-{
-	size_t nr_matches = matches.size();
-
-	Mat _p1 = p1.getMat();
-	Mat _p2 = p2.getMat();
-
-	Mat p1m(nr_matches, 1, CV_32FC2);
-	Mat p2m(nr_matches, 1, CV_32FC2);
-
-    for (size_t i = 0; i < matches.size(); i++)
-    {
-		p1m.at<Vec2f>(i)[0] = _p1.at<Vec2f>( matches[i].queryIdx )[0]; //p1[matches[i].queryIdx].x;
-		p1m.at<Vec2f>(i)[1] = _p1.at<Vec2f>( matches[i].queryIdx )[1]; //p1[matches[i].queryIdx].y;
-
-		p2m.at<Vec2f>(i)[0] = _p2.at<Vec2f>( matches[i].trainIdx )[0]; //p2[matches[i].trainIdx].x;
-		p2m.at<Vec2f>(i)[1] = _p2.at<Vec2f>( matches[i].trainIdx )[1]; //p2[matches[i].trainIdx].y;
-    }
-
-	H = findHomography(p1m, p2m, CV_RANSAC, maxInlierDist);
-	//memcpy_s(H.data, sizeof(double) * 9, homography.data, sizeof(double) * 9);
-
-	Mat p1mt;
-	perspectiveTransform(p1m, p1mt, H);
-
-	int nr_inliers = 0;
-	for (size_t i = 0; i < nr_matches; i++)
-	{
-		if (norm(p2m.at<Point2f>(i) - p1mt.at<Point2f>(i)) <= maxInlierDist)
-		{
-			mask.push_back((short) i);
-			if (++nr_inliers >= max)
-				break;
-		}
-	}
-
-	return nr_inliers;
-}
-
-
-
-int slam_module_frame::find_object_position(Mat& cam_pos, Mat& cam_or, vector<DMatch>& matches, vector<short>& mask)
-{
-	Mat points3d(mask.size(), 1, CV_32FC3);
-	Mat imagePoints(mask.size(), 1, CV_32FC2);
-
-	//Mat points3d(matches.size(), 1, CV_32FC3);
-	//Mat imagePoints(matches.size(), 1, CV_32FC2);
-
-	int src_i;
-	for (size_t i = 0; i < mask.size(); i++)
-	//for (size_t i = 0; i < matches.size(); i++)
-	{
-		src_i = matches[mask[i]].queryIdx;
-		//src_i = matches[i].queryIdx;
-		imagePoints.at<Vec2f>(i)[0] = imagepoints[src_i].x;
-		imagePoints.at<Vec2f>(i)[1] = imagepoints[src_i].y;
-
-		src_i = matches[mask[i]].trainIdx;
-		//src_i = matches[i].trainIdx;
-		points3d.at<Vec3f>(i)[0] = prev_frame_wc[src_i].x;
-		points3d.at<Vec3f>(i)[1] = prev_frame_wc[src_i].y;
-		points3d.at<Vec3f>(i)[2] = prev_frame_wc[src_i].z;
-	}
-
-	Mat dist_coef(5, 1, CV_32F);
-	dist_coef = 0.0f;
-	vector<int> inliers;
-
-	solvePnP(points3d, imagePoints, camera_matrix, dist_coef, cam_or, cam_pos, true);
-
-	//solvePnPRansac(points3d, imagePoints, camera_matrix, dist_coef, cam_or, cam_pos, true, 150, 3.0, 20 /* TODO */, inliers);
-
-	return inliers.size();
-}
-
-
-void slam_module_frame::calculate_measurement()
-{
-	float dt = (float) difftime;
-
-	// vel
-	measurement.at<float>(3) = (measurement.at<float>(0) - prev_state.at<float>(0)) / dt;
-	measurement.at<float>(4) = (measurement.at<float>(1) - prev_state.at<float>(1)) / dt;
-	measurement.at<float>(5) = (measurement.at<float>(2) - prev_state.at<float>(2)) / dt;
-}
-
-
-void slam_module_frame::imagepoints_to_local3d(vector<Point2f>& src, vector<Point3f>& dst, Mat* state)
+void slam_module_frame::imagepoints_to_local3d(vector<Point2f>& src, vector<Point3f>& dst, Mat* state, bool fixed_xy)
 {
 	Mat cam_pos(3, 1, CV_32F);
 	Mat cam_or(3, 1, CV_32F);
@@ -797,6 +642,9 @@ void slam_module_frame::imagepoints_to_local3d(vector<Point2f>& src, vector<Poin
 
 	get_localcam(cam_pos, cam_or, state);
 	cam_pos.at<float>(2) *= -1.0f;
+
+	if (fixed_xy)
+		cam_pos.at<float>(0) = cam_pos.at<float>(1) = 0.0f;
 
 	cv::RotationMatrix3D(cam_or, cam_rot);
 
@@ -821,14 +669,15 @@ void slam_module_frame::imagepoints_to_local3d(vector<Point2f>& src, vector<Poin
 
 		point3d.x = intersection.at<float>(0);
 		point3d.y = intersection.at<float>(1);
-		point3d.z = intersection.at<float>(2);
+		//point3d.z = intersection.at<float>(2);
+		point3d.z = 0.0f;
 
 		dst.push_back(point3d);
 	}
 }
 
 
-void slam_module_frame::get_state(Mat& pos, Mat& or, Mat* state)
+void slam_module_frame::get_state(Mat& pos, Mat& or, Mat* statestate_or)
 {
 	if (state == NULL)
 		state = this->state;
@@ -881,137 +730,14 @@ void slam_module_frame::world_to_localcam(Mat& pos, Mat& or)
 }
 
 
-/* START DEPRICATED */
-void slam_module_frame::object_to_worldpos(Mat& obj_pos, Mat& obj_or, Mat& pos, Mat& or)
+void slam_module_frame::localvelocity_to_world(Mat& v)
 {
+	Mat tmp = (Mat_<float>(3,1) << M_PI, M_PI, -0.5f * M_PI);
 	Mat rot(3, 3, CV_32F);
+	cv::RotationMatrix3D(tmp, rot, false);
 
-	MatDoubleToFloat(obj_pos, pos);
-	MatDoubleToFloat(obj_or, or);
-
-	object_to_localcam(pos, or);
-	localcam_to_world(pos, or);
+	v = rot * v;
 }
-
-
-void slam_module_frame::get_objectpos(Mat& pos, Mat& or)
-{
-	Mat tmp_pos(3, 1, CV_32F);
-	Mat tmp_or(3, 1, CV_32F);
-
-	get_state(tmp_pos, tmp_or);
-
-	world_to_localcam(tmp_pos, tmp_or);
-	localcam_to_object(tmp_pos, tmp_or);
-
-	MatFloatToDouble(tmp_pos, pos);
-	MatFloatToDouble(tmp_or, or);
-}
-
-void slam_module_frame::object_to_localcam(Mat& pos, Mat& or)
-{
-	//dumpMatrix(or);
-
-	/*
-	or.at<float>(0) = 0.0f;
-	or.at<float>(1) = 0.0f;
-	or.at<float>(2) = 0.0f;
-	*/
-
-	/*
-	or.at<float>(0) = cur_state.at<float>(9);
-	or.at<float>(1) = cur_state.at<float>(10);
-	or.at<float>(2) = cur_state.at<float>(11);
-
-	Mat tmp = (Mat_<float>(3,1) << M_PI, M_PI, 0.5f * M_PI);
-	Mat rot2(3, 3, CV_32F);
-	cv::RotationMatrix3D(tmp, rot2);
-
-	or = rot2 * or;
-	*/
-
-	//pos.at<float>(2) = -cur_state.at<float>(2);
-
-	//printf("solvePNP POS: %f, %f, %f\n", pos.at<float>(0), pos.at<float>(1), pos.at<float>(2));
-	//printf("OR: %f, %f, %f\n", cur_state.at<float>(9), cur_state.at<float>(10));
-
-	TransformationMatrix(pos, or, T);
-	Mat T_inv = T.inv();
-
-	//
-	//Mat rot(T_inv, Rect(0, 0, 3, 3));
-	//cv::RotationMatrix3D(or, rot);
-	//
-
-	Mat posH = T_inv * originH;
-
-	pos.at<float>(0) = posH.at<float>(0);
-	pos.at<float>(1) = posH.at<float>(1);
-	pos.at<float>(2) = -posH.at<float>(2);
-
-	//float tmp = pos.at<float>(0);
-
-	/*
-	pos.at<float>(0) = -pos.at<float>(0);
-	pos.at<float>(1) = -pos.at<float>(1);
-	*/
-
-
-	/* calculate position shift caused by cam orientation */
-	/*
-	Mat cam_pos(3, 1, CV_32F);
-	Mat cam_or(3, 1, CV_32F);
-	Mat cam_rot(3, 3, CV_32F);
-
-	get_localcam(cam_pos, cam_or);
-	cam_pos.at<float>(0) = 0.0f;
-	cam_pos.at<float>(1) = 0.0f;
-	cam_pos.at<float>(2) *= -1.0f;
-
-	cv::RotationMatrix3D(cam_or, cam_rot);
-
-	Mat point(3, 1, CV_32F);
-	Mat intersection(3, 1, CV_32F);
-
-	point.at<float>(0) = 0.0f;
-	point.at<float>(1) = 0.0f;
-	point.at<float>(2) = 1.0f;
-
-	point = cam_rot * point;
-
-	cv::normalize(point, point);
-
-	CalcLinePlaneIntersection(world_plane, world_plane_normal, cam_pos, point, intersection);
-
-	//dumpMatrix(intersection);
-
-	cam_pos.at<float>(0) -= intersection.at<float>(0);
-	cam_pos.at<float>(1) -= intersection.at<float>(1);
-	*/
-
-	//printf("pos: %f, %f\n", pos.at<float>(0), pos.at<float>(1));
-	//printf("shift: %f, %f\n", intersection.at<float>(0), intersection.at<float>(1));
-
-	//Mat rot(T_inv, Rect(0, 0, 3, 3));
-	//Rodrigues(rot, or); // rotation matrix to rotation vector
-}
-
-
-void slam_module_frame::localcam_to_object(Mat& pos, Mat& or)
-{
-	TransformationMatrix(pos, or, T);
-	Mat T_inv = T.inv();
-
-	Mat posH = T_inv * originH;
-
-	pos.at<float>(0) = posH.at<float>(0);
-	pos.at<float>(1) = posH.at<float>(1);
-	pos.at<float>(2) = -posH.at<float>(2);
-
-	Mat rot(T_inv, Rect(0, 0, 3, 3));
-	Rodrigues(rot, or); // rotation matrix to rotation vector
-}
-/* END DEPRICATED */
 
 
 void slam_module_frame::get_features(Mat& frame, vector<cv::KeyPoint> &v)
@@ -1029,12 +755,16 @@ void slam_module_frame::get_features(Mat& frame, vector<cv::KeyPoint> &v)
 
 	// auto convert to imagepoints. Used for other algorithms
 	KeyPoint::convert(v, imagepoints);
+
+	features_extracted = true;
 }
 
 
 void slam_module_frame::get_descriptors(Mat& frame, vector<KeyPoint> &v, Mat& descriptors)
 {
 	de->compute(frame, v, descriptors);
+
+	features_extracted = true;
 }
 
 
