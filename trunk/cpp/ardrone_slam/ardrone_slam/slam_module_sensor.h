@@ -17,7 +17,6 @@ public:
 	void process(bot_ardrone_measurement *m);
 
 private:
-	void update_measurement_matrix();
 	void accel_compensate_gravity(cv::Mat& accel, cv::Mat& m_or);
 	void update_elevation_map(int sonar_height);
 	void get_sonar_state(cv::Mat& pos, cv::Mat& or);
@@ -35,8 +34,6 @@ private:
 	cv::Mat prev_state;
 
 	cv::Mat measurement;
-	cv::Mat measurementMatrix;
-	cv::Mat measurementNoiseCov;
 
 	cv::Mat measurement_or;
 	cv::Mat measurement_accel;

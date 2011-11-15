@@ -117,15 +117,10 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 
 	m->altitude = n->navdata_demo.altitude;
 
+
 	m->or[0] = n->navdata_demo.phi;
 	m->or[1] = n->navdata_demo.theta;
 	m->or[2] = n->navdata_demo.psi;
-
-	/*
-	m->or[0] = n->navdata_phys_measures.phys_gyros[0];
-	m->or[1] = n->navdata_phys_measures.phys_gyros[1];
-	m->or[2] = n->navdata_phys_measures.phys_gyros[2];
-	*/
 
 	// Accelerations are received in mg
 	// They are displayed in g: conversion gain is 1/1000
@@ -148,6 +143,34 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 	m->gt_loc[0] = n->navdata_demo.drone_camera_trans.v[0];
 	m->gt_loc[1] = n->navdata_demo.drone_camera_trans.v[1];
 	m->gt_loc[2] = n->navdata_demo.drone_camera_trans.v[2];
+
+
+
+	/* temp */
+	m->navdata_euler_angles[0] = n->navdata_euler_angles.phi_a;
+	m->navdata_euler_angles[1] = n->navdata_euler_angles.theta_a;
+	m->navdata_euler_angles[2] = 0.0f;
+
+	m->gyros_offsets[0] = n->navdata_gyros_offsets.offset_g[0];
+	m->gyros_offsets[1] = n->navdata_gyros_offsets.offset_g[1];
+	m->gyros_offsets[2] = n->navdata_gyros_offsets.offset_g[2];
+
+	m->phys_gyro_temp[0] = (float) n->navdata_phys_measures.gyro_temp;
+	m->phys_gyro_temp[1] = 0.0f;
+	m->phys_gyro_temp[2] = 0.0f;
+
+	m->phys_gyros[0] = n->navdata_phys_measures.phys_gyros[0];
+	m->phys_gyros[1] = n->navdata_phys_measures.phys_gyros[1];
+	m->phys_gyros[2] = n->navdata_phys_measures.phys_gyros[2];
+
+	m->raw_gyros[0] = n->navdata_raw_measures.raw_gyros[0];
+	m->raw_gyros[1] = n->navdata_raw_measures.raw_gyros[1];
+	m->raw_gyros[2] = n->navdata_raw_measures.raw_gyros[2];
+
+	m->raw_gyros_110[0] = n->navdata_raw_measures.raw_gyros_110[0];
+	m->raw_gyros_110[1] = n->navdata_raw_measures.raw_gyros_110[1];
+	m->raw_gyros_110[2] = 0.0f;
+
 
 	m_counter++;
 

@@ -58,10 +58,17 @@ struct bot_ardrone_measurement {
 
 	/* USARSim only */
 	bool usarsim;
-	int type;			// usarsim message type: SEN, NFO, etc
-	int sensor;			// temp, i prefer to receive all sensors in one socket message
 	float gt_loc[3];
 	float gt_or[3];
+
+
+	/* temp */
+	float navdata_euler_angles[3];
+	float gyros_offsets[3];
+	float phys_gyro_temp[3];
+	float phys_gyros[3];
+	float raw_gyros[3];
+	float raw_gyros_110[3];
 
 	bot_ardrone_measurement();
 };

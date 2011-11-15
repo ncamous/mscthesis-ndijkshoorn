@@ -65,9 +65,9 @@ void slam::init_ekf()
 
 	EKF.processNoiseCov = 0.0f;
 	float PNC[12] = {
-		30.0f, 30.0f, 30.0f,	// p: mm
-		20.0f, 20.0f, 20.0f,	// v: mm/s
-		10.0f, 10.0f, 10.0f,	// a: mm/s2
+		2.0f, 2.0f, 2.0f,		// p: mm
+		2.0f, 2.0f, 2.0f,		// v: mm/s
+		2.0f, 2.0f, 2.0f,		// a: mm/s2
 		0.0f, 0.0f, 0.0f		// or: deg
 	};
 	MatSetDiag(EKF.processNoiseCov, PNC);

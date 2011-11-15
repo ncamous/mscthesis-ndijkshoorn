@@ -9,8 +9,6 @@ using namespace cv;
 
 slam_module_sensor::slam_module_sensor(slam *controller):
 	measurement(9, 1, CV_32F),
-	measurementMatrix(9, 12, CV_32F),
-	measurementNoiseCov(9, 9, CV_32F),
 
 	measurement_or(3, 1, CV_32F),
 	measurement_accel(3, 1, CV_32F),
@@ -27,20 +25,6 @@ slam_module_sensor::slam_module_sensor(slam *controller):
 	/* KF */
 	EKF = &controller->EKF;
 	state = &EKF->statePost;
-
-
-	// H vector
-	measurementMatrix = 0.0f;
-
-
-	measurementNoiseCov = 0.0f;
-	float MNC[9] = {
-		100.0f, 100.0f, 100.0f,		// p: mm
-		50.0f, 50.0f, 50.0f,	// v (mm/s)
-		50.0f, 50.0f, 50.0f		// a (mm/s2)
-	};
-	MatSetDiag(measurementNoiseCov, MNC);
-
 
 	prev_state = 0.0f;
 
@@ -64,7 +48,7 @@ slam_module_sensor::~slam_module_sensor(void)
 
 void slam_module_sensor::calibrate(bot_ardrone_measurement *m)
 {
-	if (++calib_measurements > 200)
+	if (++calib_measurements > BOT_ARDRONE_CALIB_MEASUREMENTS)
 	{
 		printf("Calibration complete: %f, %f, %f\n", accel_avg[0], accel_avg[1], accel_avg[2]);
 		calibrated = true;
@@ -73,6 +57,7 @@ void slam_module_sensor::calibrate(bot_ardrone_measurement *m)
 
 	measurement_or.at<float>(0) = m->or[0] * MD_TO_RAD;
 	measurement_or.at<float>(1) = m->or[1] * MD_TO_RAD;
+	measurement_or.at<float>(2) = m->or[2] * MD_TO_RAD;
 	measurement_or.at<float>(2) = 0.0f;
 
 	measurement_accel.at<float>(0) = m->accel[0];
@@ -84,7 +69,7 @@ void slam_module_sensor::calibrate(bot_ardrone_measurement *m)
 	measurement_accel	= Rw * measurement_accel;
 	measurement_accel.at<float>(2) += 1000.0f;
 
-	if (calib_measurements <= 200)
+	if (calib_measurements <= BOT_ARDRONE_CALIB_MEASUREMENTS)
 	{
 		accel_sum[0] += measurement_accel.at<float>(0);
 		accel_sum[1] += measurement_accel.at<float>(1);
@@ -93,13 +78,13 @@ void slam_module_sensor::calibrate(bot_ardrone_measurement *m)
 		yaw_sum += m->or[2];
 	}
 
-	if (calib_measurements == 200)
+	if (calib_measurements == BOT_ARDRONE_CALIB_MEASUREMENTS)
 	{
-		accel_avg[0] = (float) (accel_sum[0] / 200.0);
-		accel_avg[1] = (float) (accel_sum[1] / 200.0);
-		accel_avg[2] = (float) (accel_sum[2] / 200.0);
+		accel_avg[0] = (float) (accel_sum[0] / (double) BOT_ARDRONE_CALIB_MEASUREMENTS);
+		accel_avg[1] = (float) (accel_sum[1] / (double) BOT_ARDRONE_CALIB_MEASUREMENTS);
+		accel_avg[2] = (float) (accel_sum[2] / (double) BOT_ARDRONE_CALIB_MEASUREMENTS);
 
-		EKF->yaw_offset = (float) (yaw_sum / 200.0); // AR.Drone's start Z orientation is always 0.0
+		EKF->yaw_offset = (float) (yaw_sum / (double) BOT_ARDRONE_CALIB_MEASUREMENTS); // AR.Drone's start Z orientation is always 0.0
 	}
 }
 
@@ -111,15 +96,13 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 
 
-	/* Time different between current measurement and previous measurement.
-	 * Used to calculate the transition matrix.
-	 * I assume the vehicle is hovering when starting SLAM. So the first couple measurements have a small impact.
-	 */
+	/* calibrate accel sensor */
 	if (use_accel && !calibrated)
 	{
 		calibrate(m);
 		return;
 	}
+
 
 
 	/* set initial position: module_frame is not used before position is known */
@@ -136,16 +119,53 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	}
 
 
-	//state->at<float>(2) = (float) -m->altitude;
-	//return;
+
+	/* lock KF */
+	EKF->lock();
 
 
-	measurementMatrix = 0.0f;
+
+	/* update transition matrix */
+	difftime = (float) EKF->difftime(m->time);
+	controller->update_transition_matrix(difftime);
+
+
+
+	/* predict */
+	EKF->predict();
+
+
+
+	// H vector
+	//EKF->measurementMatrix = 0.0f;
+	/*
+	float MM[9] = {
+		1.0f, 1.0f, 1.0f,		// p
+		1.0f, 1.0f, 1.0f,		// v
+		1.0f, 1.0f, 1.0f		// a
+	};
+	MatSetDiag(EKF->measurementMatrix, MM);
+	*/
+	setIdentity(EKF->measurementMatrix);
+
+	// Rk vector
+	float MNC[9] = {
+		300.0f, 300.0f, 300.0f,	// p: mm
+		50.0f, 50.0f, 50.0f,	// v (mm/s)
+		50.0f, 50.0f, 50.0f		// a (mm/s2)
+	};
+	MatSetDiag(EKF->measurementNoiseCov, MNC);
+
+
+
+
+	/* default measurements */
+	memcpy_s(measurement.data, 36, EKF->statePre.data, 36);
 
 
 
 	/* altitude measurement */
-	//measurementMatrix.at<float>(2, 2) = 1.0f; // measured altitude
+	EKF->measurementNoiseCov.at<float>(2, 2) = 100.0f;
 	measurement.at<float>(2) = (float) -m->altitude;
 
 
@@ -157,15 +177,11 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 
 
-	difftime = (float) EKF->difftime(m->time);
-
-
-
 	/* velocity measurement */
 	if (use_vel)
 	{
-		for(int i = 3; i < 6; i++)
-			measurementMatrix.at<float>(i, i) = 1.0f; // measured v
+		//for(int i = 3; i < 6; i++)
+		//	measurementMatrix.at<float>(i, i) = 1.0f; // measured v
 
 		measurement_vel.at<float>(0) = -(18163.0f * (measurement_or.at<float>(1) * measurement_or.at<float>(1)) - 86.0f * measurement_or.at<float>(1));
 		measurement_vel.at<float>(1) = (18163.0f * (measurement_or.at<float>(0) * measurement_or.at<float>(0)) - 86.0f * measurement_or.at<float>(0));
@@ -195,8 +211,9 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	/* acceleration measurement */
 	if (use_accel)
 	{
-		for(int i = 6; i < 9; i++)
-			measurementMatrix.at<float>(i, i) = 1.0f; // measured a
+		EKF->measurementNoiseCov.at<float>(6, 6) = 30.0f;
+		EKF->measurementNoiseCov.at<float>(7, 7) = 30.0f;
+		EKF->measurementNoiseCov.at<float>(8, 8) = 30.0f;
 
 		measurement_accel.at<float>(0) = (m->accel[0] - accel_avg[0]) * MG_TO_MM2;
 		measurement_accel.at<float>(1) = (m->accel[1] - accel_avg[1]) * MG_TO_MM2;
@@ -208,59 +225,17 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 		measurement_accel.at<float>(2) += 9806.65f;
 
+		dumpMatrix(measurement_accel);
+
+
 		// be aware: measurement.data is uchar, so index 12 is float matrix index 12/4 = 3
 		memcpy_s(&measurement.data[6 * 4], 12, measurement_accel.data, 12); // accel: this is the fastest method
+		EKF->measurementNoiseCov.at<float>(6, 6) = 10.0f;
+		EKF->measurementNoiseCov.at<float>(7, 7) = 10.0f;
+		EKF->measurementNoiseCov.at<float>(8, 8) = 10.0f;
 	}
 
 
-
-	/* lock KF */
-	EKF->lock();
-
-
-	/* switch KF matrices */
-	//EKF->measurementMatrix		= measurementMatrix;
-	EKF->measurementNoiseCov	= measurementNoiseCov;
-
-
-	/* update transition matrix */
-	controller->update_transition_matrix(difftime);
-
-
-	/* predict */
-	EKF->predict();
-
-		for (int i = 0; i < 9; i++)
-			measurement.at<float>(i) = EKF->statePre.at<float>(i);
-
-
-		//randn( measurement, Scalar::all(0), Scalar::all(1));
-		//measurement *= measurementNoiseCov;
-		//for (int i = 0; i < 9; i++)
-		//	measurement.at<float>(i) = EKF->statePre.at<float>(i) + (measurement.at<float>(i) * measurementNoiseCov.at<float>(i, i));
-
-		//add(measurement, EKF->statePre, measurement);
-		//measurement += EKF->statePre;
-		//dumpMatrix(EKF->statePre);
-		//dumpMatrix(measurement);
-
-
-		/* position */
-		memcpy_s(&measurement.data, 8, &EKF->statePre.data, 8);
-
-
-		/* velocity */
-		memcpy_s(&measurement.data[12], 12, &EKF->statePre.data[12], 12);
-
-
-		/* acceleration */
-		memcpy_s(&measurement.data[21], 12, &EKF->statePre.data[21], 12);
-
-
-		//EKF->measurementNoiseCov = measurementNoiseCov;
-		EKF->measurementNoiseCov = EKF->processNoiseCov.clone();
-		EKF->measurementNoiseCov.at<float>(2, 2) = 100.0f;
-		measurement.at<float>(2) = (float) -m->altitude;
 
 
 	/* correct */
@@ -286,8 +261,22 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 		//update_elevation_map(m->altitude/* - alt_correct*/);
 
 
-	if (counter++ % 50 == 0)
+	if (counter++ % 500 == 0)
 	{
+		/*
+		printf("reset state\n");
+
+		state->at<float>(0) = 0.0f;
+		state->at<float>(1) = 0.0f;
+		state->at<float>(0) = 0.0f;
+		state->at<float>(3) = 0.0f;
+		state->at<float>(4) = 0.0f;
+		state->at<float>(5) = 0.0f;
+		state->at<float>(6) = 0.0f;
+		state->at<float>(7) = 0.0f;
+		state->at<float>(8) = 0.0f;
+		*/
+
 		/*
 		printf("error: %f, %f, %f\n", 
 			abs(state->at<float>(0) - m->gt_loc[0]),
@@ -306,7 +295,7 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 		fflush(error_log);
 		*/
 
-		dumpMatrix(controller->EKF.errorCovPost);
+		//dumpMatrix(controller->EKF.errorCovPost);
 		//Sleep(1500);
 		//printf("\n\n");
 	}

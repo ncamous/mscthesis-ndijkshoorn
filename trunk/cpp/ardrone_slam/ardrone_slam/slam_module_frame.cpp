@@ -73,16 +73,6 @@ slam_module_frame::slam_module_frame(slam *controller):
 	state = &EKF->statePost;
 	cov = &EKF->errorCovPost;
 
-	// H vector
-	measurementMatrix = 0.0f;
-
-	measurementNoiseCov = 0.0f;
-	float MNC[9] = {
-		50.0f, 50.0f, 50.0f, // pos
-		30.0f, 30.0f, 30.0f, // vel
-		0.0f, 0.0f, 0.0f // accel
-	};
-	MatSetDiag(measurementNoiseCov, MNC);
 
 
 	// tmp
@@ -240,7 +230,35 @@ bool slam_module_frame::process_visual_motion()
 
 #else
 
-			/* generate measurement (velocity) */
+			/* update transition matrix */
+			difftime = EKF->difftime(f->time);
+			controller->update_transition_matrix((float) difftime);
+
+
+
+			/* predict */
+			EKF->predict();
+
+
+
+			setIdentity(EKF->measurementMatrix);
+
+			// Rk vector
+			float MNC[9] = {
+				300.0f, 300.0f, 300.0f,	// p: mm
+				10.0f, 10.0f, 10.0f,	// v (mm/s)
+				50.0f, 50.0f, 50.0f		// a (mm/s2)
+			};
+			MatSetDiag(EKF->measurementNoiseCov, MNC);
+
+
+
+			/* default measurements */
+			memcpy_s(measurement.data, 36, EKF->statePre.data, 36);
+
+
+
+			/* velocity measurement */
 			float dt = (float) (f->time - prev_frame_time);
 
 			Mat measurement_vel(3, 1, CV_32F);
@@ -251,46 +269,17 @@ bool slam_module_frame::process_visual_motion()
 
 			memcpy_s(measurement.data + 12, 8, measurement_vel.data, 8);
 
-			//printf("T: %f, %f (dt: %f)\n", T.at<Vec3f>(0)[0], T.at<Vec3f>(0)[1], dt);
-			dumpMatrix(measurement_vel);
-			printf("\n\n");
-
-
-			/* switch KF matrices */
-			measurementMatrix	= 0.0f;
-			for (int i = 3; i < 5; i++) // p
-				measurementMatrix.at<float>(i, i) = 1.0f;
-
-			EKF->measurementMatrix		= measurementMatrix;
-			EKF->measurementNoiseCov	= measurementNoiseCov;
-
-
-
-			/* update transition matrix */
-			difftime = EKF->difftime(f->time);
-
-			//for(int i = 0; i < 6; i++)
-			//	EKF->errorCovPost.at<float>(i, i) = 0.0f;
-			//EKF->errorCovPost = 0.0f;
-			
-			//dumpMatrix(EKF->errorCovPost);
-
-			controller->update_transition_matrix((float) difftime);
-
-
-			/* predict */
-			EKF->predict();
 
 
 			/* correct */
 			EKF->correct(measurement, f->time);
 
 
+
 			/* unlock KF */
-			//dumpMatrix(*state);
-			//printf("\n\n\n");
 			EKF->release();
 
+			printf("VISUAL VEL (%f, %f) [%f]\n", measurement_vel.at<float>(0), measurement_vel.at<float>(1), confidence);
 #endif
 		}
 	}
@@ -317,7 +306,6 @@ bool slam_module_frame::process_visual_loc()
 	if (dt < 1.0)
 		return false;
 	*/
-
 
 	SLAM_LOC_START
 
@@ -443,28 +431,9 @@ bool slam_module_frame::process_visual_loc()
 		EKF->release();
 		last_loc = clock();
 
-		printf("SLAM LOC (%f, %f)   [%f]\n", cam_pos.at<float>(0), cam_pos.at<float>(1), confidence);
+		printf("SLAM LOC (%f, %f) [%f]\n", cam_pos.at<float>(0), cam_pos.at<float>(1), confidence);
 
 #else
-
-
-		/* generate measurement (velocity) */
-		measurement = 0.0f;
-		memcpy_s(measurement.data, 8, cam_pos.data, 8); // pos: this is the fastest method
-
-
-		//if (measurementSeemsOk())
-		//{
-
-
-		/* switch KF matrices */
-		measurementMatrix	= 0.0f;
-		for (int i = 0; i < 2; i++) // p
-			measurementMatrix.at<float>(i, i) = 1.0f;
-
-		EKF->measurementMatrix		= measurementMatrix;
-		EKF->measurementNoiseCov	= measurementNoiseCov;
-
 
 		/* update transition matrix */
 		difftime = EKF->difftime(f->time);
@@ -476,6 +445,30 @@ bool slam_module_frame::process_visual_loc()
 		EKF->predict();
 
 
+
+		setIdentity(EKF->measurementMatrix);
+
+		// Rk vector
+		float MNC[9] = {
+			20.0f, 20.0f, 300.0f,	// p: mm
+			50.0f, 50.0f, 50.0f,	// v (mm/s)
+			50.0f, 50.0f, 50.0f		// a (mm/s2)
+		};
+		MatSetDiag(EKF->measurementNoiseCov, MNC);
+
+
+
+		/* default measurements */
+		memcpy_s(measurement.data, 36, EKF->statePre.data, 36);
+
+
+
+		/* position measurement */
+		measurement = 0.0f;
+		memcpy_s(measurement.data, 8, cam_pos.data, 8); // pos: this is the fastest method
+
+
+
 		/* correct */
 		EKF->correct(measurement, f->time);
 
@@ -484,8 +477,7 @@ bool slam_module_frame::process_visual_loc()
 		EKF->release();
 		last_loc = clock();
 
-		printf("SLAM LOC (%f, %f)   [%f]\n", cam_pos.at<float>(0), cam_pos.at<float>(1), confidence);
-		//}
+		printf("VISUAL LOC (%f, %f) [%f]\n", cam_pos.at<float>(0), cam_pos.at<float>(1), confidence);
 
 #endif
 

@@ -41,6 +41,16 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 
 	fprintf (file, "gt_loc: [%f, %f, %f]\n", m->gt_loc[0], m->gt_loc[1], m->gt_loc[2]);
 
+
+
+	fprintf (file, "navdata_euler_angles: [%f, %f, %f]\n", m->navdata_euler_angles[0], m->navdata_euler_angles[1], m->navdata_euler_angles[2]);
+	fprintf (file, "gyros_offsets: [%f, %f, %f]\n", m->gyros_offsets[0], m->gyros_offsets[1], m->gyros_offsets[2]);
+	fprintf (file, "phys_gyro_temp: [%f, %f, %f]\n", m->phys_gyro_temp[0], m->phys_gyro_temp[1], m->phys_gyro_temp[2]);
+	fprintf (file, "phys_gyros: [%f, %f, %f]\n", m->phys_gyros[0], m->phys_gyros[1], m->phys_gyros[2]);
+	fprintf (file, "raw_gyros: [%f, %f, %f]\n", m->raw_gyros[0], m->raw_gyros[1], m->raw_gyros[2]);
+	fprintf (file, "raw_gyros_110: [%f, %f, %f]\n", m->raw_gyros_110[0], m->raw_gyros_110[1], m->raw_gyros_110[2]);
+
+
 	ReleaseMutex(hMutex);
 }
 
@@ -282,14 +292,6 @@ void bot_ardrone_recorder::playback(char *dataset)
 		switch (event_type)
 		{
 			case BOT_EVENT_MEASUREMENT:
-				m->accel[0] -= 2090.0f;
-				m->accel[1] -= 1973.6f;
-				m->accel[2] -= 2018.0f;
-
-				//m->accel[0] *= -1.0f;
-				m->accel[1] *= -1.0f;
-				m->accel[2] *= -1.0f;
-
 				bot->measurement_received(m);
 				break;
 
