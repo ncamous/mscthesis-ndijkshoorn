@@ -98,6 +98,7 @@ void bot_ardrone_usarsim::socket_callback(int id, char *message, int bytes)
 
 void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 {
+	int sensor;
 	int pos;
 	int lineoffset = 0;
 	bot_ardrone_measurement *m = NULL;
@@ -133,12 +134,12 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 			{
 				m = new bot_ardrone_measurement;
 				m->usarsim = true;
-				m->type = BOT_ARDRONBOT_EVENT_MEASUREMENT_SEN;
+				//m->type = BOT_ARDRONBOT_EVENT_MEASUREMENT_SEN;
 			}
 
-			m->sensor = usarsim_msgparser_type(&line);
+			sensor = usarsim_msgparser_type(&line);
 
-			switch (m->sensor)
+			switch (sensor)
 			{
 				case BOT_ARDRONE_SENSOR_GT:
 				{

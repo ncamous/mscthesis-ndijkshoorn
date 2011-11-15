@@ -1,6 +1,6 @@
-filename = 'C:/Users/Nick/Documents/Thesis/code/cpp/ardrone_slam/ardrone_slam/dataset/031/output.yaml';
+filename = 'C:/Users/Nick/Documents/Thesis/code/cpp/ardrone_slam/ardrone_slam/dataset/038/output.yaml';
 
-[data_alt, data_or, data_accel, data_vel] = loadDataset(filename);
+[data_alt, data_or, data_accel, data_vel, navdata_euler_angles, gyros_offsets, phys_gyro_temp, phys_gyros, raw_gyros, raw_gyros_110] = loadDataset(filename);
 
 data2_alt = zeros(1,2);
 data2_or  = zeros(1,4);
@@ -10,6 +10,54 @@ data2_vel = zeros(1,4);
 %filename = 'C:/Users/Nick/Documents/Thesis/code/cpp/dataset_collector/dataset_collector/dataset/005/output.yaml';
 
 %[data2_alt, data2_or, data2_accel, data2_vel] = loadDataset(filename);
+
+
+%%
+% ORIENTATIONS
+
+figure('Name','X orientation (milli-deg)');
+subplot(3,1,1), plot(data_or(:,1), data_or(:,2));
+subplot(3,1,2), plot(data_or(:,1), data_or(:,3));
+subplot(3,1,3), plot(data_or(:,1), data_or(:,4));
+%suplabel('X orientation (milli-deg)'  ,'t');
+
+
+
+figure('Name','navdata_euler_angles');
+subplot(3,1,1), plot(navdata_euler_angles(:,1), navdata_euler_angles(:,2));
+subplot(3,1,2), plot(navdata_euler_angles(:,1), navdata_euler_angles(:,3));
+subplot(3,1,3), plot(navdata_euler_angles(:,1), navdata_euler_angles(:,4));
+%suplabel('navdata_euler_angles'  ,'t');
+
+figure('Name','gyros_offsets');
+subplot(3,1,1), plot(gyros_offsets(:,1), gyros_offsets(:,2));
+subplot(3,1,2), plot(gyros_offsets(:,1), gyros_offsets(:,3));
+subplot(3,1,3), plot(gyros_offsets(:,1), gyros_offsets(:,4));
+%suplabel('gyros_offsets'  ,'t');
+
+figure('Name','phys_gyro_temp');
+subplot(3,1,1), plot(phys_gyro_temp(:,1), phys_gyro_temp(:,2));
+subplot(3,1,2), plot(phys_gyro_temp(:,1), phys_gyro_temp(:,3));
+subplot(3,1,3), plot(phys_gyro_temp(:,1), phys_gyro_temp(:,4));
+%suplabel('phys_gyro_temp'  ,'t');
+
+figure('Name','phys_gyros');
+subplot(3,1,1), plot(phys_gyros(:,1), phys_gyros(:,2));
+subplot(3,1,2), plot(phys_gyros(:,1), phys_gyros(:,3));
+subplot(3,1,3), plot(phys_gyros(:,1), phys_gyros(:,4));
+%suplabel('phys_gyros'  ,'t');
+
+figure('Name','raw_gyros');
+subplot(3,1,1), plot(raw_gyros(:,1), raw_gyros(:,2));
+subplot(3,1,2), plot(raw_gyros(:,1), raw_gyros(:,3));
+subplot(3,1,3), plot(raw_gyros(:,1), raw_gyros(:,4));
+%suplabel('raw_gyros'  ,'t');
+
+figure('Name','raw_gyros_110');
+subplot(3,1,1), plot(raw_gyros_110(:,1), raw_gyros_110(:,2));
+subplot(3,1,2), plot(raw_gyros_110(:,1), raw_gyros_110(:,3));
+subplot(3,1,3), plot(raw_gyros_110(:,1), raw_gyros_110(:,4));
+%suplabel('raw_gyros_110'  ,'t');
 
 
 %%
@@ -24,17 +72,20 @@ title('Altitude (mm)');
 
 
 
+%%
+
+
 % OR
 yrange = [-300, 300];
 figure();
 subplot(3,1,1), plot(data_or(:,1), data_or(:,2)), hold on, plot(data2_or(:,1), data2_or(:,2), 'Color', 'red');
-ylim(yrange);
+%ylim(yrange);
 title('X orientation (milli-deg)');
 
 
 % y
 subplot(3,1,2), plot(data_or(:,1), data_or(:,3)), hold on, plot(data2_or(:,1), data2_or(:,3), 'Color', 'red');
-ylim(yrange);
+%ylim(yrange);
 title('Y orientation (milli-deg)');
 
 % z
@@ -57,13 +108,13 @@ data_accel(1:300,1)
 mean(data_accel(1:300,4))
 
 subplot(3,1,1), plot(data_accel(:,1), data_accel(:,2)), hold on, plot(data2_accel(:,1), data2_accel(:,2), 'Color', 'red');
-%ylim([2100 2120]);
+%ylim([2000 2120]);
 %xlim([0 20]);
 title('X acceleration (mg)');
 
 % y
 subplot(3,1,2), plot(data_accel(:,1), data_accel(:,3)), hold on, plot(data2_accel(:,1), data2_accel(:,3), 'Color', 'red');
-%ylim(yrange);
+%ylim([-2000 2120]);
 %xlim([0 60]);
 title('Y acceleration (mg)');
 
@@ -75,11 +126,11 @@ title('Z acceleration (mg)');
 %%
 
 % VEL
-yrange = [-5000, 5000];
+yrange = [1650, 1800];
 figure();
 
 subplot(3,1,1), plot(data_vel(:,1), data_vel(:,2)), hold on, plot(data2_vel(:,1), data2_vel(:,2), 'Color', 'red');
-%ylim(yrange);
+ylim(yrange);
 title('X velocity (mm/s)');
 
 % y
@@ -89,5 +140,5 @@ title('Y velocity (mm/s)');
 
 % z
 subplot(3,1,3), plot(data_vel(:,1), data_vel(:,4)), hold on, plot(data2_vel(:,1), data2_vel(:,4), 'Color', 'red');
-ylim(yrange);
+%ylim(yrange);
 title('Z velocity (mm/s)');
