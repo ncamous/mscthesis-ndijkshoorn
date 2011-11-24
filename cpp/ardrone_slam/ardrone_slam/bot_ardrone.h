@@ -37,7 +37,9 @@ struct bot_ardrone_control {
 };
 
 struct bot_ardrone_measurement {
+	bool usarsim;
 	double time;
+	unsigned char state;
 	int altitude;		// mm
 
 	/* Acceleration: x, y, z in mili-g (x direction = F/B, y direction is L/R, z direction is U/D
@@ -57,7 +59,6 @@ struct bot_ardrone_measurement {
 	float vel[3];
 
 	/* USARSim only */
-	bool usarsim;
 	float gt_loc[3];
 	float gt_or[3];
 

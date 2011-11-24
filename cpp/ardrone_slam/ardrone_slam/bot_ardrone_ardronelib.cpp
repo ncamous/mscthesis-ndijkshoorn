@@ -108,6 +108,11 @@ void bot_ardrone_ardronelib::recover(bool send)
 void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 {
 	bot_ardrone_measurement *m = new bot_ardrone_measurement;
+	m->time = (double) (n->navdata_time.time >> 21);
+	m->time += (n->navdata_time.time & 0x001FFFFF) * 0.000001; // microseconds to decimals
+
+	last_measurement = m->time;
+
 
 	// battery
 	bot->battery = n->navdata_demo.vbat_flying_percentage;
@@ -115,7 +120,11 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 	if (m_counter % 1500 == 0)
 		printf("Battery: %i%%\n", bot->battery);
 
+	m->state = n->navdata_demo.ctrl_state >> 16;
+
 	m->altitude = n->navdata_demo.altitude;
+
+	m->navdata_euler_angles[0] = (float) n->navdata_altitude.altitude_raw;
 
 
 	m->or[0] = n->navdata_demo.phi;
@@ -159,9 +168,9 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 	m->phys_gyro_temp[1] = 0.0f;
 	m->phys_gyro_temp[2] = 0.0f;
 
-	m->phys_gyros[0] = n->navdata_phys_measures.phys_gyros[0];
-	m->phys_gyros[1] = n->navdata_phys_measures.phys_gyros[1];
-	m->phys_gyros[2] = n->navdata_phys_measures.phys_gyros[2];
+	m->phys_gyros[0] = n->navdata_phys_measures.phys_gyros[0] * DEG_TO_RAD;
+	m->phys_gyros[1] = n->navdata_phys_measures.phys_gyros[1] * DEG_TO_RAD;
+	m->phys_gyros[2] = n->navdata_phys_measures.phys_gyros[2] * DEG_TO_RAD;
 
 	m->raw_gyros[0] = n->navdata_raw_measures.raw_gyros[0];
 	m->raw_gyros[1] = n->navdata_raw_measures.raw_gyros[1];
@@ -188,7 +197,7 @@ void bot_ardrone_ardronelib::process_frame(unsigned char* rgbtexture, int w, int
 	}
 
 	frame = new bot_ardrone_frame;
-	frame->time = bot->get_clock(); // get clock time now
+	frame->time = last_measurement; // OK?
 	frame->w = (short) BOT_ARDRONE_FRAME_W;
 	frame->h = (short) BOT_ARDRONE_FRAME_H;
 	frame->data_start = frame->data;

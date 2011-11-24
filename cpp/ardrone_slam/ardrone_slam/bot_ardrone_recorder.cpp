@@ -277,7 +277,7 @@ void bot_ardrone_recorder::playback(char *dataset)
 					if (strcmp(key_s, "t") == 0)
 					{
 						c->time = atof(value_s);
-						wait_for_event(c->time);
+						//wait_for_event(c->time);
 					}
 					else if (strcmp(key_s, "vel") == 0)
 					{

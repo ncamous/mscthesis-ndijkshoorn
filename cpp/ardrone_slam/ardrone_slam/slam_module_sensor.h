@@ -51,5 +51,8 @@ private:
 
 	double yaw_sum;
 	bool calibrated;
+	unsigned char elevation_mode;
+	float elevation;
+	float elevation_start;
 };
 

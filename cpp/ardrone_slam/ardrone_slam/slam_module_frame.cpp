@@ -1,4 +1,4 @@
-#include "global.h"
+﻿#include "global.h"
 #include "slam_module_frame.h"
 #include "bot_ardrone.h"
 
@@ -27,18 +27,15 @@ slam_module_frame::slam_module_frame(slam *controller):
 	new_pos(3, 1, CV_32F),
 	new_or(3, 1, CV_32F),
 
-	measurement(9, 1, CV_32F),
-	measurementMatrix(9, 12, CV_32F),
-	measurementNoiseCov(9, 9, CV_32F),
+	measurement(15, 1, CV_32F),
 
-	prev_state(12, 1, CV_32F)
+	prev_state(15, 1, CV_32F)
 {
 	this->controller = controller;
 	prev_frame_exists = false;
 
 	set_camera();
 
-	//fd = new SurfFeatureDetector(SLAM_SURF_HESSIANTHRESHOLD, 3, 4);
 	de = new SurfDescriptorExtractor();
 
 
@@ -109,8 +106,8 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 
 	/* reset */
-	bool loc = false;
-	features_extracted = false;
+	bool loc			= false;
+	features_extracted	= false;
 	keypoints.clear();
 	imagepoints.clear();
 
@@ -140,7 +137,7 @@ bool slam_module_frame::process_visual_motion()
 {
 	SLAM_VISUALMOTION_START
 
-	if (state->at<float>(2) > -400.0f)
+	if (state->at<float>(2) > -300.0f)
 		return false;
 
 
@@ -241,20 +238,26 @@ bool slam_module_frame::process_visual_motion()
 
 
 
+			// H vector
+			//EKF->measurementMatrix = 0.0f;
 			setIdentity(EKF->measurementMatrix);
 
+
+
 			// Rk vector
-			float MNC[9] = {
+			float MNC[15] = {
 				300.0f, 300.0f, 300.0f,	// p: mm
-				10.0f, 10.0f, 10.0f,	// v (mm/s)
-				50.0f, 50.0f, 50.0f		// a (mm/s2)
+				50.0f, 50.0f, 50.0f,	// v (mm/s)
+				50.0f, 50.0f, 50.0f,	// a (mm/s2)
+				0.02f, 0.02f, 0.02f,	// or (rad)
+				0.01f, 0.01f, 0.01f		// ω (rad/s)
 			};
 			MatSetDiag(EKF->measurementNoiseCov, MNC);
 
 
 
 			/* default measurements */
-			memcpy_s(measurement.data, 36, EKF->statePre.data, 36);
+			memcpy_s(measurement.data, 60, EKF->statePre.data, 60);
 
 
 
@@ -268,17 +271,19 @@ bool slam_module_frame::process_visual_motion()
 			localvelocity_to_world(measurement_vel);
 
 			memcpy_s(measurement.data + 12, 8, measurement_vel.data, 8);
+			EKF->measurementNoiseCov.at<float>(3, 3) = 1.0f;
+			EKF->measurementNoiseCov.at<float>(4, 4) = 1.0f;
+			EKF->measurementNoiseCov.at<float>(5, 5) = 1.0f;
 
 
 
 			/* correct */
-			EKF->correct(measurement, f->time);
+			EKF->correct(measurement);
 
 
 
 			/* unlock KF */
 			EKF->release();
-
 			printf("VISUAL VEL (%f, %f) [%f]\n", measurement_vel.at<float>(0), measurement_vel.at<float>(1), confidence);
 #endif
 		}
@@ -301,11 +306,9 @@ bool slam_module_frame::process_visual_motion()
 
 bool slam_module_frame::process_visual_loc()
 {
-	/*
 	double dt = ((double)clock() - last_loc) / CLOCKS_PER_SEC;
-	if (dt < 1.0)
+	if (dt < 0.5)
 		return false;
-	*/
 
 	SLAM_LOC_START
 
@@ -320,8 +323,8 @@ bool slam_module_frame::process_visual_loc()
 	Mat map_keypoints_wc;
 	//float radius = max(cov->at<float>(0, 0), cov->at<float>(1, 1));
 	float radius = 0.0f;
-	radius += 1500.0f; // just in case. Needs to be removed when KF cov is working fine
-	radius += RectRadius(image_corners_wc); // should be dynamic and basic on the state cov
+	//radius += 1500.0f; // just in case. Needs to be removed when KF cov is working fine
+	//radius += RectRadius(image_corners_wc); // should be dynamic and basic on the state cov
 
 	Mat cam_pos(3, 1, CV_32F);
 	Mat cam_or(3, 1, CV_32F);
@@ -398,7 +401,8 @@ bool slam_module_frame::process_visual_loc()
 		cam_pos.at<float>(0) += T.at<Vec3f>(0)[0];
 		cam_pos.at<float>(1) += T.at<Vec3f>(0)[1];
 
-		// TMP
+
+		/*
 		fprintf(loc_log, "%f,%f,%f\n",
 			(float) f->time,
 			cam_pos.at<float>(0),
@@ -406,6 +410,7 @@ bool slam_module_frame::process_visual_loc()
 		);
 
 		fflush(loc_log);
+		*/
 
 
 		localcam_to_world(cam_pos, cam_or);
@@ -446,31 +451,44 @@ bool slam_module_frame::process_visual_loc()
 
 
 
+		// H vector
+		//EKF->measurementMatrix = 0.0f;
 		setIdentity(EKF->measurementMatrix);
 
+
+
 		// Rk vector
-		float MNC[9] = {
-			20.0f, 20.0f, 300.0f,	// p: mm
+		float MNC[15] = {
+			300.0f, 300.0f, 300.0f,	// p: mm
 			50.0f, 50.0f, 50.0f,	// v (mm/s)
-			50.0f, 50.0f, 50.0f		// a (mm/s2)
+			50.0f, 50.0f, 50.0f,	// a (mm/s2)
+			0.02f, 0.02f, 0.02f,	// or (rad)
+			0.01f, 0.01f, 0.01f		// ω (rad/s)
 		};
 		MatSetDiag(EKF->measurementNoiseCov, MNC);
 
 
-
 		/* default measurements */
-		memcpy_s(measurement.data, 36, EKF->statePre.data, 36);
+		memcpy_s(measurement.data, 60, EKF->statePre.data, 60);
+		//memset(measurement.data + 12, 0, 12); // zero velocity
 
 
 
 		/* position measurement */
-		measurement = 0.0f;
-		memcpy_s(measurement.data, 8, cam_pos.data, 8); // pos: this is the fastest method
+		memcpy_s(measurement.data, 8, cam_pos.data, 8);
+		EKF->measurementNoiseCov.at<float>(0, 0) = 10.0f;
+		EKF->measurementNoiseCov.at<float>(1, 1) = 10.0f;
+
+		for (int i = 3; i < 9; i++)
+		{
+			measurement.at<float>(i) = 0.0;
+			EKF->measurementNoiseCov.at<float>(0, 0) = 0.0001f;
+		}
 
 
 
 		/* correct */
-		EKF->correct(measurement, f->time);
+		EKF->correct(measurement);
 
 
 		/* unlock KF */
@@ -478,7 +496,6 @@ bool slam_module_frame::process_visual_loc()
 		last_loc = clock();
 
 		printf("VISUAL LOC (%f, %f) [%f]\n", cam_pos.at<float>(0), cam_pos.at<float>(1), confidence);
-
 #endif
 
 	}

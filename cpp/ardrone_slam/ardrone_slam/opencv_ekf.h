@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include "opencv2/core/core.hpp"
 
+
 namespace cv {
 
 class ExtendedKalmanFilter
@@ -18,12 +19,13 @@ public:
     //! computes predicted state
     const Mat& predict(const Mat& control=Mat());
     //! updates the predicted state from the measurement
-    const Mat& correct(const Mat& measurement /*NICK */, double time);
+    const Mat& correct(const Mat& measurement);
 
 	// NICK
 	void lock();
 	void release();
 
+	void start(double time, float yaw);
 	double difftime(double time);
 
     Mat statePre;           //!< predicted state (x'(k)): x(k)=A*x(k-1)+B*u(k)
@@ -47,7 +49,7 @@ public:
 	// NICK
 	HANDLE hMutex; // resource sharing
 	float yaw_offset;
-	double last_measurement_time;
+	double last_update;
 	bool running;
 };
 

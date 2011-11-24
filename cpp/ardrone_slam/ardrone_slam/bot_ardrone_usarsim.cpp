@@ -14,11 +14,17 @@ bot_ardrone_usarsim::bot_ardrone_usarsim(bot_ardrone *bot):
 
 	frame = new bot_ardrone_frame;
 
+
+	/* timer */
+	QueryPerformanceCounter((LARGE_INTEGER *)&time_start);
+	QueryPerformanceFrequency((LARGE_INTEGER *)&time_freq);
+
+
 	/* sockets */
 	printf("Connecting to USARSim\n");
 	control_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CONTROL, USARSIM_PORT, USARSIM_IP, NULL, BOT_ARDRONE_USARSIM_CONTROL_BUFSIZE, (botinterface*) this);
 	printf("Connecting to UPIS\n");
-	frame_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_FRAME, UPIS_PORT, USARSIM_IP, /*frame->data,*/frame_buffer, BOT_ARDRONE_USARSIM_FRAME_BLOCKSIZE, (botinterface*) this);
+	frame_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_FRAME, UPIS_PORT, USARSIM_IP, frame_buffer, BOT_ARDRONE_USARSIM_FRAME_BLOCKSIZE, (botinterface*) this);
 }
 
 
@@ -35,7 +41,7 @@ void bot_ardrone_usarsim::init(void)
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -51.7,5.9,-4.4}\r\n");
 
 	// doolhof: 8-experiment
-	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -54.2,-6.05,-6.6}\r\n");
+	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -54.2,-6.05,-6.6}\r\n");
 
 	// zebrapad
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -19.3,57.1,-1.1}\r\n");
@@ -44,7 +50,7 @@ void bot_ardrone_usarsim::init(void)
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,10.0,-3.0}\r\n");
 
 	// gym
-	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,1.0,1.64}\r\n");
+	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,1.0,1.64}\r\n");
 
 	control_send("SET {Type Viewports} {Config SingleView} {Viewport1 Camera2}\r\n");
 	//control_send("SET {Type Camera} {Robot ARDrone} {Name Camera2} {Client 10.0.0.2}\r\n");
@@ -133,7 +139,7 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 			if (m == NULL)
 			{
 				m = new bot_ardrone_measurement;
-				m->usarsim = true;
+				m->time = get_time();
 				//m->type = BOT_ARDRONBOT_EVENT_MEASUREMENT_SEN;
 			}
 
@@ -249,6 +255,7 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 
 
 			frame = new bot_ardrone_frame;
+			frame->time = get_time();
 			frame_socket->buffer = frame_buffer;
 
 
@@ -285,9 +292,10 @@ bool bot_ardrone_usarsim::check_frame()
 }
 
 
-void bot_ardrone_usarsim::reset_frame(bot_ardrone_frame *f)
+double bot_ardrone_usarsim::get_time()
 {
-	f->data = f->data_start;
-	f->data_size = f->dest_size = 0;
-	f->filename[0] = '\0';
+	__int64 cur_time;
+	QueryPerformanceCounter((LARGE_INTEGER *)&cur_time);
+
+	return (cur_time - time_start) * 1.0 / time_freq;
 }
