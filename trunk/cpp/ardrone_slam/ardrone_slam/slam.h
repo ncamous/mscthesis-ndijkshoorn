@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "slam_queue.h"
 #include "slam_elevation_map.h"
@@ -68,7 +68,7 @@ public:
 	/* Kalman filter */
 	cv::ExtendedKalmanFilter EKF;
 	/* state vector:
-     * p(3), v(3), a(3), q(3)
+     * p(3), v(3), a(3), q(3), ω(3)
 	 */
 
 	/* Elevation map */

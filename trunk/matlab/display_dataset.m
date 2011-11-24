@@ -1,4 +1,4 @@
-filename = 'C:/Users/Nick/Documents/Thesis/code/cpp/ardrone_slam/ardrone_slam/dataset/038/output.yaml';
+filename = 'C:/Users/Nick/Documents/Thesis/code/cpp/ardrone_slam/ardrone_slam/dataset/052/output.yaml';
 
 [data_alt, data_or, data_accel, data_vel, navdata_euler_angles, gyros_offsets, phys_gyro_temp, phys_gyros, raw_gyros, raw_gyros_110] = loadDataset(filename);
 
@@ -42,13 +42,29 @@ subplot(3,1,3), plot(phys_gyro_temp(:,1), phys_gyro_temp(:,4));
 %suplabel('phys_gyro_temp'  ,'t');
 
 figure('Name','phys_gyros');
-subplot(3,1,1), plot(phys_gyros(:,1), phys_gyros(:,2));
+
+%tmp = raw_gyros_110(:,2) - 1686.9
+%tmp = tmp .* 0.5;
+
+
+tmp = raw_gyros_110(:,2) - 1702.8;
+tmp = tmp .* 0.10989011;
+
+subplot(3,1,1), plot(phys_gyros(:,1), phys_gyros(:,2), raw_gyros_110(:,1), tmp, ':');
+ylim([-50, 50]);
 subplot(3,1,2), plot(phys_gyros(:,1), phys_gyros(:,3));
 subplot(3,1,3), plot(phys_gyros(:,1), phys_gyros(:,4));
 %suplabel('phys_gyros'  ,'t');
 
+
+
 figure('Name','raw_gyros');
-subplot(3,1,1), plot(raw_gyros(:,1), raw_gyros(:,2));
+%Sensitivity (mV/º/s)
+tmp = raw_gyros(:,2) - 1686.9
+tmp = tmp .* 0.5;
+
+subplot(3,1,1), plot(raw_gyros(:,1), tmp);
+%subplot(3,1,1), plot(raw_gyros(:,1), raw_gyros(:,2));
 subplot(3,1,2), plot(raw_gyros(:,1), raw_gyros(:,3));
 subplot(3,1,3), plot(raw_gyros(:,1), raw_gyros(:,4));
 %suplabel('raw_gyros'  ,'t');
@@ -66,8 +82,16 @@ subplot(3,1,3), plot(raw_gyros_110(:,1), raw_gyros_110(:,4));
 % ALT
 figure();
 plot(data_alt(:,1), data_alt(:,2));
+
 hold on
-plot(data2_alt(:,1), data2_alt(:,2), 'Color', 'red');
+
+%plot(data_accel(:,1), data_accel(:,4) + 3650, 'Color', 'r');
+
+%figure();
+%plot(navdata_euler_angles(:,1), navdata_euler_angles(:,2));
+%ylim([-2500 2500]);
+%hold on
+%plot(data2_alt(:,1), data2_alt(:,2), 'Color', 'red');
 title('Altitude (mm)');
 
 
@@ -101,25 +125,25 @@ std(data_or(:,3))
 
 
 % ACCEL
-yrange = [-500, 500];
+%yrange = [-500, 500];
 figure();
 
-data_accel(1:300,1)
-mean(data_accel(1:300,4))
+%data_accel(1:300,1)
+%mean(data_accel(1:300,4))
 
-subplot(3,1,1), plot(data_accel(:,1), data_accel(:,2)), hold on, plot(data2_accel(:,1), data2_accel(:,2), 'Color', 'red');
+subplot(3,1,1), plot(data_accel(:,1), data_accel(:,2));
 %ylim([2000 2120]);
 %xlim([0 20]);
 title('X acceleration (mg)');
 
 % y
-subplot(3,1,2), plot(data_accel(:,1), data_accel(:,3)), hold on, plot(data2_accel(:,1), data2_accel(:,3), 'Color', 'red');
+subplot(3,1,2), plot(data_accel(:,1), data_accel(:,3));
 %ylim([-2000 2120]);
 %xlim([0 60]);
 title('Y acceleration (mg)');
 
 % z
-subplot(3,1,3), plot(data_accel(:,1), data_accel(:,4)), hold on, plot(data2_accel(:,1), data2_accel(:,4), 'Color', 'red');
+subplot(3,1,3), plot(data_accel(:,1), data_accel(:,4));
 %ylim(yrange);
 title('Z acceleration (mg)');
 
@@ -129,16 +153,27 @@ title('Z acceleration (mg)');
 yrange = [1650, 1800];
 figure();
 
-subplot(3,1,1), plot(data_vel(:,1), data_vel(:,2)), hold on, plot(data2_vel(:,1), data2_vel(:,2), 'Color', 'red');
-ylim(yrange);
-title('X velocity (mm/s)');
+%subplot(3,1,1), plot(data_vel(:,1), data_vel(:,2), 'Color', 'red');
+%ylim(yrange);
+%title('X velocity (mm/s)');
 
 % y
-subplot(3,1,2), plot(data_vel(:,1), data_vel(:,3)), hold on, plot(data2_vel(:,1), data2_vel(:,3), 'Color', 'red');
-ylim(yrange);
-title('Y velocity (mm/s)');
+%subplot(3,1,2), plot(data_vel(:,1), data_vel(:,3), 'Color', 'red');
+%ylim(yrange);
+%title('Y velocity (mm/s)');
 
 % z
-subplot(3,1,3), plot(data_vel(:,1), data_vel(:,4)), hold on, plot(data2_vel(:,1), data2_vel(:,4), 'Color', 'red');
+plot(data_alt(:,1), data_alt(:,2), 'Color', 'r');
+hold on;
+plot(data_vel(:,1), data_accel(:,4) + 3000);
+%plot(data_vel(:,1), 650, 'Color', 'y');
+%plot(data_vel(:,1), 550, 'Color', 'y');
+%plot(data_vel(:,1), 600, 'Color', 'y');
 %ylim(yrange);
 title('Z velocity (mm/s)');
+
+%figure();
+%A = diff(data_vel(:,1));
+
+%B = cumsum(data_vel(1:4918,4) .* A);
+%plot(data_vel(1:4918,1), B);

@@ -13,7 +13,7 @@ ExtendedKalmanFilter::ExtendedKalmanFilter(int dynamParams, int measureParams, i
 	/* Nick */
 	yaw_offset				= 0.0f;
 	running					= false;
-	last_measurement_time	= 0.0;
+	last_update				= 0.0;
 	hMutex = CreateMutex(NULL, FALSE, NULL);
 }
 
@@ -65,7 +65,7 @@ const Mat& ExtendedKalmanFilter::predict(const Mat& control)
     return statePre;
 }
 
-const Mat& ExtendedKalmanFilter::correct(const Mat& measurement /*NICK */, double time)
+const Mat& ExtendedKalmanFilter::correct(const Mat& measurement /*NICK */)
 {
     // temp2 = H*P'(k)
     temp2 = measurementMatrix * errorCovPre;
@@ -88,9 +88,6 @@ const Mat& ExtendedKalmanFilter::correct(const Mat& measurement /*NICK */, doubl
     // P(k) = P'(k) - K(k)*temp2
     errorCovPost = errorCovPre - gain*temp2;
 
-	/* NICK */
-	last_measurement_time = time;
-
     return statePost;
 }
 
@@ -107,17 +104,19 @@ void ExtendedKalmanFilter::release()
 }
 
 
+void ExtendedKalmanFilter::start(double time, float yaw)
+{
+	last_update		= time;
+	yaw_offset		= yaw;
+	running			= true;
+}
+
+
 double ExtendedKalmanFilter::difftime(double time)
 {
-	return max(0.00001, time - last_measurement_time);
-
-	/*
-	double dt =  max(0.0001, time - last_measurement_time);
-	if (dt > 2.0)
-		dt = 0.00001;
-
-	return dt;
-	*/
+	double tmp = last_update;
+	last_update = time;
+	return max(0.000001, time - tmp);
 }
 
 }

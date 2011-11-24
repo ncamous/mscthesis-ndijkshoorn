@@ -59,4 +59,5 @@ private:
 
 	// temp
 	unsigned int m_counter;
+	double last_measurement;
 };

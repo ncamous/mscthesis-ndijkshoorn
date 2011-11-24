@@ -61,8 +61,8 @@ C_RESULT video_stage_transform(vlib_stage_decoding_config_t *cfg, vp_api_io_data
 			video_stage_config.num_frame = cfg->controller.num_frames;
 			video_stage_config.bytesPerPixel	= 2;
 			video_stage_config.widthImage		= cfg->controller.width;
-			video_stage_config.heightImage		= cfg->controller.height;		
-			
+			video_stage_config.heightImage		= cfg->controller.height;	
+
 			if (video_stage_config.data != NULL)
 			{   
 				vp_os_memcpy(video_stage_config.data, cfg->picture->y_buf, cfg->picture->width * cfg->picture->height );

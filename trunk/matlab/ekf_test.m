@@ -105,8 +105,8 @@ for k=1:length(data_alt)
 
  
   s = f(s, dt);                           % update process
-  %z = h(s, 1);                           % measurments from predicated state
-  z = h(s, 1) + diag(R .* randn(12));     % measurments from predicated state
+  z = h(s, 1);                           % measurments from predicated state
+  %z = h(s, 1) + diag(R .* randn(12));     % measurments from predicated state
   z(3) = data_alt(k, 2);                  % measured altitude from dataset
 
   sV(:,k)= z;                             % save measurement for plot

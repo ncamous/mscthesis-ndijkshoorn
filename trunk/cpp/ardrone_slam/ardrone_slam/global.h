@@ -33,14 +33,15 @@
 #define BOT_ARDRONE_RECORD_EXT "raw" //"raw"
 #define BOT_ARDRONE_BATTERYLIFE 720 // 720s, 12 minutes
 #define BOT_ARDRONE_RECORD_FRAMES false
-#define BOT_ARDRONE_MIN_MEASUREMENT_INTERVAL 0.005 // max 100 measurement/s
 #define BOT_ARDRONE_FRAME_W 176
 #define BOT_ARDRONE_FRAME_H 144
 #define BOT_ARDRONE_CAM_FOV 32.0f // camera FOV / 2
 #define BOT_ARDRONE_SONAR_FOV 10.0f // sonar angle FOV
 #define BOT_ARDRONE_CONTROL_VZ_MAX 1000.0f // mm/s
 //#define BOT_ARDRONE_DISPLAY_CAM
-#define BOT_ARDRONE_CALIB_MEASUREMENTS 600
+#define BOT_ARDRONE_CALIB_MEASUREMENTS 200
+#define BOT_ARDRONE_USE_ONBOARD_OR 
+//#define BOT_ARDRONE_USE_HOVER_MODE // active onboard deacceleration
 
 	/* USARSim */
 	#define BOT_ARDRONE_USARSIM_FRAME_BLOCKSIZE 4096
@@ -59,6 +60,12 @@ extern bool stop_behavior;
 /* conversion */
 #define MG_TO_MM2 9.80665003f
 #define MD_TO_RAD 1.745329252e-05f
+
+/*
+#ifndef DEG_TO_RAD
+	#define DEG_TO_RAD 0.0174532925f
+#endif
+*/
 
 #ifndef M_PI
 	#define M_PI 3.14159265358979323846f

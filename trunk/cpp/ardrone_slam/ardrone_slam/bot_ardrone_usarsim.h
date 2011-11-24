@@ -38,8 +38,6 @@ public:
 	void process_frame(char *message, int bytes);
 	bool check_frame();
 
-	void bot_ardrone_usarsim::reset_frame(bot_ardrone_frame *f);
-
 	bot_ardrone_frame *frame;
 
 private:
@@ -49,4 +47,8 @@ private:
 	char frame_buffer[BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE];
 	cv::Mat img_bgr;
 	cv::Mat img_bgra;
+
+	double get_time();
+
+	__int64 time_start, time_freq;
 };

@@ -21,8 +21,7 @@ bot_ardrone_control::bot_ardrone_control()
 bot_ardrone_measurement::bot_ardrone_measurement()
 {
 	memset(this, 0, sizeof(bot_ardrone_measurement));
-	time = bot_ardrone::get_clock();
-	usarsim = false;
+	//time = bot_ardrone::get_clock();
 }
 
 
@@ -89,7 +88,9 @@ void bot_ardrone::control_set(int type, int opt, float val)
 	{
 		case BOT_ARDRONE_Velocity:
 			control.velocity[opt] = val;
-			control.state = BOT_STATE_FLY;
+#ifndef BOT_ARDRONE_USE_HOVER_MODE
+			control.state = BOT_STATE_FLY; // keep AR.Drone in flight mode. No active deacceleration
+#endif
 			break;
 
 		default:
@@ -115,6 +116,25 @@ void bot_ardrone::control_update()
 {
 	control.time = get_clock();
 
+
+#ifdef BOT_ARDRONE_USE_HOVER_MODE
+	bool velocity = false;
+	for (int i = 0; i < 3; i++)
+	{
+		if (control.velocity[i] != 0.0f) // OK?
+		{
+			velocity = true;
+			break;
+		}
+	}
+
+
+	if (control.state == BOT_STATE_FLY && !velocity)
+		control.state = BOT_STATE_HOVER;
+	else if (control.state == BOT_STATE_HOVER && velocity)
+		control.state = BOT_STATE_FLY;
+#endif
+
 	control_update(&control);
 }
 
@@ -134,10 +154,10 @@ void bot_ardrone::control_update(bot_ardrone_control *c)
 
 void bot_ardrone::control_reset()
 {
-	control.velocity[BOT_ARDRONE_AltitudeVelocity] = 0.0;
-	control.velocity[BOT_ARDRONE_LinearVelocity] = 0.0;
-	control.velocity[BOT_ARDRONE_LateralVelocity] = 0.0;
-	control.velocity[BOT_ARDRONE_RotationalVelocity] = 0.0;
+	control.velocity[BOT_ARDRONE_AltitudeVelocity]		= 0.0;
+	control.velocity[BOT_ARDRONE_LinearVelocity]		= 0.0;
+	control.velocity[BOT_ARDRONE_LateralVelocity]		= 0.0;
+	control.velocity[BOT_ARDRONE_RotationalVelocity]	= 0.0;
 
 	if (control.state == BOT_STATE_FLY)
 		control.state = BOT_STATE_HOVER;
@@ -172,16 +192,6 @@ void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 
 	if (PRINT_DEBUG)
 		printf("%f - ARDRONE: measurement received!\n", m->time);
-
-	// time since last frame
-	double diffticks = ((double)clock() - last_measurement_time) / CLOCKS_PER_SEC;
-	if (diffticks < BOT_ARDRONE_MIN_MEASUREMENT_INTERVAL)
-	{
-		delete m;
-		return;
-	}
-
-	last_measurement_time = clock();
 
 
 	if (record)

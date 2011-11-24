@@ -1,32 +1,79 @@
-filename = 'C:/Users/Nick/Documents/Thesis/code/cpp/ardrone_slam/ardrone_slam/dataset/exp6/error_log.txt';
-filename2 = 'C:/Users/Nick/Documents/Thesis/code/cpp/ardrone_slam/ardrone_slam/dataset/exp5/error_log.txt';
+filename = 'C:/Users/Nick/Documents/Thesis/code/cpp/ardrone_slam/ardrone_slam/dataset/error_log.txt';
 
 yrange = [0, 3500];
 xrange = [0, 742];
 
 M = csvread(filename)';
-M2 = csvread(filename2)';
 
 
-% x
-plot(M(1,:), M(2,:),'-.b');
+figure();
 hold on
-plot(M(1,:), M(3,:),'-.r');
+plot(M(1,:), M(3,:),':g');
+ylim([-2000 2000]);
 %plot(M(1,:), M(4,:),':b');
 
-plot(M2(1,:), M2(2,:),'-b');
-plot(M2(1,:), M2(3,:),'-r');
+%plot(M(1,:), abs(M(3,:)),':r');
+
+%plot(M(1,:), abs(M(3,:)),':r');
+
+%y = decimate(abs(M(3,:)),50);
+%plot(M(1,1:50:2154), y, ':r');
+%plot(M(1,:), 200, ':y');
+
+%plot(data_alt(:,1), data_alt(:,2), 'Color', 'b');
+plot(M(1,:), M(5,:), 'Color', 'b');
+
+
+
+% velocity
+Xrange = 2800:3300;
+
+X = diff(M(1,Xrange));
+X = [X 0];
+Y = cumsum(M(3,Xrange) .* X);
+plot(M(1,Xrange), Y,':b');
+
+% distance
+Y2 = cumsum(Y(1,:) .* -X);
+plot(M(1,Xrange), Y2,'r');
+
+Y2(1, length(Y2) - 1)
+
+
+
+% velocity
+Xrange = 3400:3900;
+
+X = diff(M(1,Xrange));
+X = [X 0];
+Y = cumsum(M(3,Xrange) .* X);
+plot(M(1,Xrange), Y,':b');
+
+% distance
+Y3 = cumsum(Y(1,:) .* -X);
+plot(M(1,Xrange), Y3,'r');
+
+Y3(1, length(Y3) - 1)
+
+
+
+%plot(M(1,:), M(5,:),'-r');
+%plot(M(1,:), M(6,:),'-g');
+%plot(M(1,:), M(7,:),'-b');
+
+%plot(M2(1,:), M2(2,:),'-b');
+%plot(M2(1,:), M2(3,:),'-r');
 %plot(M2(1,:), M2(4,:),'b');
 hold off;
 
 
-ylim(yrange);
-xlim(xrange);
-h = legend('X error (without localization)','Y error (without localization)', 'X error (with localization)','Y error (with localization)')
-rect = [0.25, 0.65, .1, .1];
-set(h, 'Position', rect);
-xlabel('Time (s)');
-ylabel('Error (mm)');
+%ylim(yrange);
+%xlim(xrange);
+%h = legend('X error (without localization)','Y error (without localization)', 'X error (with localization)','Y error (with localization)')
+%rect = [0.25, 0.65, .1, .1];
+%set(h, 'Position', rect);
+%xlabel('Time (s)');
+%ylabel('Error (mm)');
 
 
 

@@ -87,7 +87,6 @@ private:
 	//vector<Point2f> prev_frame_ip;
 	vector<Point3f> prev_frame_wc;
 
-	//SurfFeatureDetector *fd;
 	DescriptorExtractor *de;
 	BruteForceMatcher<L2<float>> dm;
 
@@ -107,8 +106,6 @@ private:
 	Mat prev_state;
 
 	Mat measurement;
-	Mat measurementMatrix;
-	Mat measurementNoiseCov;
 
 	double difftime;
 

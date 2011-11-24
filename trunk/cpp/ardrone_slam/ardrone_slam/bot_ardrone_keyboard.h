@@ -1,5 +1,8 @@
 #pragma once
 
+#include <Windows.h>
+
+// http://delphi.about.com/od/objectpascalide/l/blvkc.htm
 #define VK_L 76
 #define VK_J 74
 #define VK_K 75
@@ -17,15 +20,16 @@
 
 class bot_ardrone;
 
-static bot_ardrone **keyboard_bot;
-static int keyboard_nr_bots = 0;
-static float keyboard_vel;
-
-static void keyboard_set(int action, int type, bool increment);
-
 class bot_ardrone_keyboard
 {
 public:
 	bot_ardrone_keyboard(bot_ardrone **b, int nr_bots);
 	~bot_ardrone_keyboard();
+	static void set(int action, int type, bool increment);
+
+	static HHOOK hHook;
+	static bot_ardrone **bots;
+	static int nr_bots;
+	static float vel;
+	static bool keypressed[255];
 };

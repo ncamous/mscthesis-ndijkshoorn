@@ -9,7 +9,7 @@ using namespace cv;
 
 
 slam::slam(unsigned char mode, unsigned char bot_id):
-	EKF(12, 9, 0)
+	EKF(15, 15, 0)
 {
 	running = false;
 
@@ -64,20 +64,22 @@ void slam::init_ekf()
 
 
 	EKF.processNoiseCov = 0.0f;
-	float PNC[12] = {
+	float PNC[15] = {
 		2.0f, 2.0f, 2.0f,		// p: mm
 		2.0f, 2.0f, 2.0f,		// v: mm/s
-		2.0f, 2.0f, 2.0f,		// a: mm/s2
-		0.0f, 0.0f, 0.0f		// or: deg
+		0.2f, 0.2f, 0.2f,		// a: mm/s2
+		0.002f, 0.002f, 0.002f,	// or: rad
+		0.001f, 0.001f, 0.001f	// omega (angular velocity): rad/sec
 	};
 	MatSetDiag(EKF.processNoiseCov, PNC);
 
 
-	float ECP[12] = {
+	float ECP[15] = {
 		30.0f, 30.0f, 30.0f,
 		20.0f, 20.0f, 20.0f,
-		10.0f, 10.0f, 10.0f,
-		0.0f, 0.0f, 0.0f
+		0.0f, 0.0f, 0.0f,
+		0.01f, 0.01f, 0.01f,
+		0.01f, 0.01f, 0.01f,
 	};
 	MatSetDiag(EKF.errorCovPost, ECP);
 
@@ -93,9 +95,14 @@ void slam::update_transition_matrix(float difftime)
 	{
 		// position (p)
 		EKF.transitionMatrix.at<float>(i, 3+i) = difftime;
-		EKF.transitionMatrix.at<float>(i, 6+i) = 0.5f * difftime*difftime;
+		//# EKF.transitionMatrix.at<float>(i, 6+i) = 0.5f * difftime*difftime;
 		// velocity (v)
-		EKF.transitionMatrix.at<float>(3+i, 6+i) = difftime;
+		//# EKF.transitionMatrix.at<float>(3+i, 6+i) = difftime;
+
+#ifndef BOT_ARDRONE_USE_ONBOARD_OR
+		// attitude (q)
+		EKF.transitionMatrix.at<float>(9+i, 12+i) = difftime;
+#endif
 	}
 }
 
@@ -205,12 +212,8 @@ void slam::add_input_sensor(bot_ardrone_measurement *m)
 
 void slam::get_world_position(float *pos)
 {
-	pos[0] = EKF.statePost.at<float>(0);
-	pos[1] = EKF.statePost.at<float>(1);
-	pos[2] = EKF.statePost.at<float>(2);
-	pos[3] = EKF.statePost.at<float>(9);
-	pos[4] = EKF.statePost.at<float>(10);
-	pos[5] = EKF.statePost.at<float>(11);
+	memcpy_s(pos, 12, EKF.statePost.data, 12);
+	memcpy_s(pos + 3, 12, EKF.statePost.data + 36, 12);
 }
 
 
