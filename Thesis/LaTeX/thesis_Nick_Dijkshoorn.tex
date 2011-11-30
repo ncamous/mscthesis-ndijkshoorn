@@ -1,88 +1,99 @@
 \documentclass[twoside]{uva-bachelor-thesis}
-%\documentclass{uva-bachelor-thesis}
-%\documentclass{report}
 
-\usepackage{verbatim} 
-%\usepackage{hyperref}
+
+
+
+%\usepackage{fancyhdr}
+ %\pagestyle{fancy}
+
 
 \makeindex
 
 
-\title{Simultaneous localization and mapping with the AR.Drone}
-\author{Nick Dijkshoorn (ndijksho@science.uva.nl)}
+\title{Simultaneous localization and mapping \\ \vspace{0.5cm} with the AR.Drone}
+\author{Nick Dijkshoorn}
+\email{ndijksho@science.uva.nl}
 \supervisors{Dr. Arnoud Visser}
 \signedby{}
 
-\makenomenclature
 
 
 
 \begin{document}
+
+\pagenumbering{roman}
 \maketitle
 
 
 
-\begin{abstract}
 
-\end{abstract}
+
+\chapter*{Abstract}
+%\addcontentsline{toc}{chapter}{\numberline{}Abstract}
+\input{chapters/abstract.tex}
+
+
+
+\chapter*{Acknowledgements}
+\input{chapters/acknowledgements.tex}
+
+
 
 \tableofcontents
-
-\setlength{\parindent}{0.0in}
-\addtolength{\parskip}{\baselineskip}
-
-
+\pagenumbering{arabic}
 
 
 
 \chapter{Introduction}
-	\section{Motivation}
-	\section{Hypothesis}
-	\section{Contributions}
-	\section{Outline}
+\input{chapters/introduction.tex}
 
-\chapter{Previous work}
-	\section{Simultaneous localization and mapping}
-	\section{Visual simultaneous localization and mapping}
-	\section{International Micro Air Vehicle Competition}
+
 
 \chapter{Background theory}
-	\section{Probabilistic filters/robotics}
-	\section{Image formation}
+\input{chapters/background-theory.tex}
+
+
+\chapter{Previous work}
+\input{chapters/previous-work.tex}
+
+
 
 \chapter{Platform: Parrot AR.Drone}
-	\section{Hardware}
-	\section{AR.Drone open API platform}
-	\section{Simulation}
+\input{chapters/platform.tex}
 
-\chapter{Framework}
-	\section{USARSim simulation environment}
+
+
+\chapter{Development environment}
+\input{chapters/development-invironment.tex}
+
 
 
 \chapter{Visual SLAM with the AR.Drone}
-	\section{Information filter}
-	\section{Mapping}
-	\section{Localization}
-	\section{Elevation mapping using an ultrasound sensor}
+\input{chapters/visual-slam.tex}
 
-\chapter{Evaluation}
-	\section{Simulation model?}
-	\section{Mapping}
-	\section{Localization}
-	\section{Elevation mapping}
+
+
+\chapter{Results}
+\input{chapters/results.tex}
+
+
 
 \chapter{Discussion}
-
-\chapter{Conclusion}
-
-\chapter{Future work}
+\input{chapters/discussion.tex}
 
 
 
+\chapter{Conclusions}
+\input{chapters/conclusions.tex}
 
 
-%\bibliographystyle{unsrt}
+
+%\appendix
+
+
+\linespread{1.0}
 \bibliographystyle{mystyle}
+%\vspace{0.3in}
 \bibliography{references}
 
 \end{document}
