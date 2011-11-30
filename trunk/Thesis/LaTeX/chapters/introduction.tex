@@ -1,0 +1,25 @@
+Nowadays, small quadrotors with on-board stabilization like the Parrot AR.Drone can be bought off-the-shelf.
+These quadrotors make it possible to shift the research from basic control of the platform towards applications that make use of their versatile scouting capabilities. Possible applications are surveillance, inspection and search \& rescue. Still, the limited sensor suite and the fast movements make it quite a challenge to fully automate the navigation for such platforms. One of the prerequisites for autonomous navigation is the capability to make a map of the environment. 
+
+The paper proceeds as follows. 
+In Section 2 we give a short overview of related work.
+Section 3 describes our methods.
+First the simulation model of the AR.Drone is outlined in Section \ref{sec:simulation_model}.
+Section \ref{sec:EKF} describes how the AR.Drone's pose can be estimated.
+%The inertia measurements give mainly velocity information.
+%An Extended Kalman Filter is used to integrate other sources of information to give a reasonable estimate of the pose.
+This pose is used to build two visual maps: a texture map (Section \ref{sec:texture_map}) and a feature map (Section \ref{sec:feature_map}).
+The texture map is used for human navigation and the feature map can be used to localize the AR.Drone (Section \ref{sec:localization}).
+%In the results section (\ref{sec:results}) is demonstrated how well the localization works for circumstances encountered during the IMAV competition. 
+We present experiments and results in Section 4.
+This section demonstrates how well the localization works for circumstances encountered during the IMAV competition. 
+%The paper concludes in Section 5.
+Conclusions and future work are covered in Section 5 and 6.
+% reference to future work?
+
+	\section{Versatile scouting capabilities of a quadrotor helicopter}
+	\section{International Micro Air Vehicle Competition}
+	\section{Robocup Rescue}
+	\section{Objectives}
+	\section{Contributions}
+	\section{Outline}

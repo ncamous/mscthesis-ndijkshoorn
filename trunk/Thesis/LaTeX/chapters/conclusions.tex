@@ -1,0 +1,17 @@
+The validation effort of the hovering and the forward movement shows that the dynamic behavior of the simulated AR.Drone closely resembles the dynamic behavior of the real AR.Drone.
+Further improvement would require more system identifications (e.g., rotational movements, wind-conditions) and include the characteristics of the Parrot's proprietary controller into the simulation model. 
+Our research would benefit from a realistic modeling of the noise aggregation
+in the inertia sensor.
+
+The mapping method is able to map areas visually with sufficient quality for both human and artificial navigation purposes.
+Both the AR.Drone and USARSim simulator can be used as source for the mapping algorithm.
+The visual map created by the simulated AR.Drone contains fewer errors than the map of the real AR.Drone.
+The difference can be explained by the measurement noise produced by the real AR.Drone.
+%In addition to inertia measurements. 
+The optical flow algorithm in the AR.Drone's firmware should improve the accuracy, but is probably having difficulties with the gym floor.
+
+The localization method is able to significantly reduce the error of the estimated position when places are revisited.
+The lines on the gym floor provide sufficient information for robust localization. It was demonstrated that autonomous navigation is possible by visual localization and mapping, with the natural texture of the IMAV indoor competition. This removes the reliance on the detection of the artificial landmarks in the IMAV Pylon challenge.
+	\section{Contributions}
+	\section{Limitations}
+	\section{Future research}

@@ -1,64 +1,107 @@
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{uva-bachelor-thesis}[2005/06/10 Version 0.1 Rein van den Boomgaard]
-\RequirePackage{graphicx}
 
-\usepackage[intoc]{nomencl}
+%\usepackage[a4paper,twoside]{geometry}
+\LoadClass[10t]{book}
+
+
 \def\supervisors#1{\gdef\@supervisors{#1}}
 \def\signedby#1{\gdef\@signedby{#1}}
+\def\email#1{\def\@email{\url{#1}}}
 
 
-\DeclareOption*{\PassOptionsToClass{\CurrentOption}{report}}
-\ProcessOptions
-\LoadClass[10t]{report}
-
-%\usepackage[dutch]{babel}
+%\usepackage[intoc]{nomencl}
+\usepackage[absolute]{textpos}
 \usepackage{graphicx}
 \usepackage{url}
 \usepackage{makeidx}
-%\usepackage{hyperref}
+\usepackage{verbatim} 
+\usepackage{palatino}
+\usepackage{amsmath}
+\usepackage{ifthen}
+\usepackage[rm]{titlesec}
+\usepackage{caption}
+\usepackage{listings}
+\usepackage{courier}
+\usepackage{caption}
+\usepackage{color}
 
-\linespread{1.1}
+
+%\usepackage[T1]{fontenc}
+%\usepackage{textcomp}
+%\usepackage[default,lf,semibold]{MyriadPro}% Adobe Myriad Pro
+%\usepackage[light,math]{iwona}
+
+
+\linespread{1.5}
 
 \setcounter{tocdepth}{2}
 \setcounter{secnumdepth}{2}
 
-\usepackage[a4paper,scale={0.7,0.8},twoside]{geometry}
+
+\setlength{\oddsidemargin}{0.0in}
+\setlength{\evensidemargin}{0.0in}
+\setlength{\marginparwidth}{0.0in}
+\setlength{\footskip}{0.6in}
+\setlength{\parskip}{0pt}
+\setlength{\parsep}{0pt}
+\setlength{\headsep}{0.7in}
+\setlength{\topskip}{0pt}
+\setlength{\topmargin}{-1.2cm}
+\setlength{\topsep}{0pt}
+\setlength{\partopsep}{0pt}
+\setlength{\headheight}{0in}
+\textwidth 6.5in
+\textheight 8.7in
 
 
-\oddsidemargin 0.0in 
-\evensidemargin 0.0in 
-\textwidth 6.0in 
-\headheight 0.0in 
-\topmargin 0.0in 
-%\textheight 9.0in 
-%\footheight 1.0in 
 
-\usepackage[sf]{titlesec}
-\titleformat{\chapter}[display]
-{\ifodd\c@page \clearpage \else \fi \sffamily}
-{\vskip-9em \Huge \thechapter}
-{0mm}
-{\Huge}
-[\vspace{-1em}]
-
-\usepackage{float}
+% COLORS
+\definecolor{darkgray}{rgb}{0.1,0.1,0.1}
+\definecolor{titlenumber}{rgb}{0.6,0.6,0.6}
 
 
-\usepackage[absolute,overlay]{textpos}
+\usepackage[
+linkcolor=darkgray,
+pdfborder=0 0 0,
+colorlinks=true,
+urlcolor=darkgray,
+citecolor=darkgray,
+]{hyperref}
+
+
+
+% TITLE FORMAT
+\titleformat{\chapter}[block]
+{ \rmfamily
+\ifthenelse{\equal{\thechapter}{0}}
+{  \begin{textblock}{4}(11,1) \hfill \chapterNumber \color{titlenumber}  \end{textblock}  }
+{  \begin{textblock}{4}(11,1) \hfill \chapterNumber \color{titlenumber} \thechapter \end{textblock}   }}
+{}
+{0cm}
+{\Huge \emph}
+[\vspace{0.5cm}]
+
+\titlespacing*{\chapter}{0pt}{-0.35in}{0.1in}
+
+
+
+% TITLE PAGE
 \renewcommand{\maketitle}{%
-	\thispagestyle{empty}
-	\hspace*{1em} 
-	
+	\thispagestyle{empty}	
+
 	\begin{textblock*}{21cm}(0cm,10cm)
 	
 	\begin{center}
-	{\LARGE \sffamily \@title}
+	{\LARGE \@title}
 	
-	\vspace{1.3cm}
-	\sffamily \@author\\
+	\vspace{1.0cm}
+	 \@author\\
+	 %\@email\\
+	\vspace{1.0cm}
 	\@date
 	
-	\vspace{1.3cm}
+	\vspace{6.5cm}
 
 	\includegraphics[scale=1.0]{images/UVALOGO.pdf}
 	\end{center}
@@ -67,24 +110,23 @@
 	
 	
 	\begin{textblock*}{12cm}(3cm,25cm)
-		\noindent\sffamily
+		\noindent
 		\begin{description}
-		\item[\sffamily Bachelor Thesis:] Bachelor of Computer Science
-		%\item[\sffamily Faculteit:] Faculteit der Natuurwetenschappen, Wiskunde en Informatica
-		\item[\sffamily Supervisors:] \@supervisors
-		\item[\sffamily Signed:] \@signedby
+		\item[Master Thesis:] Artificial Intelligence
+		%\item[Faculteit:] Faculteit der Natuurwetenschappen, Wiskunde en Informatica
+		\item[Supervisors:] \@supervisors
+		\item[Signed:] \@signedby
 		\end{description}
 	\end{textblock*}
-	%\cleardoublepage
+	\hspace{0.1cm} % prevents page from being empty
+	\cleardoublepage
 
 	
 }
 
-\usepackage{caption}
+
 \renewcommand\captionfont{\itshape\small}
 
-\usepackage{listings}
-  \usepackage{courier}
  \lstset{
          basicstyle=\scriptsize\ttfamily, % Standardschrift
          numbers=left,               % Ort der Zeilennummern
@@ -112,13 +154,13 @@
  \lstloadlanguages{Java}
     %\DeclareCaptionFont{blue}{\color{blue}} 
 
-  %\captionsetup[lstlisting]{singlelinecheck=false, labelfont={blue}, textfont={blue}}
-\usepackage{caption}
-\usepackage{color}
+ %\captionsetup[lstlisting]{singlelinecheck=false, labelfont={blue}, textfont={blue}}
 \DeclareCaptionFont{white}{\color{white}}
 \DeclareCaptionFormat{listing}{\colorbox[cmyk]{0.43, 0.35, 0.35,0.01}{\parbox{\textwidth}{\hspace{15pt}#1#2#3}}}
 \captionsetup[lstlisting]{format=listing,labelfont=white,textfont=white, singlelinecheck=false, margin=0pt, font={bf,footnotesize}}
 
-\renewcommand{\nomname}{Lijst met afkortingen}
+% FONTS
+\newfont{\chapterNumber}{eurb10 scaled 7000}
+
 
 \endinput
