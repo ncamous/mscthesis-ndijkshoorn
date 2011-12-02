@@ -8,6 +8,8 @@ struct bot_ardrone_measurement;
 
 class slam;
 
+enum elevation_state { ELEVATION_STATE_NONE, ELEVATION_STATE_UP, ELEVATION_STATE_DOWN, ELEVATION_STATE_DISABLE };
+
 
 class slam_module_sensor
 {
@@ -17,8 +19,8 @@ public:
 	void process(bot_ardrone_measurement *m);
 
 private:
-	void accel_compensate_gravity(cv::Mat& accel, cv::Mat& m_or);
-	void update_elevation_map(int sonar_height);
+	float process_altitude_elevation(float sonar_raw, float vel, float accel);
+	void update_elevation_map(float elevation, float sonar_distance);
 	void get_sonar_state(cv::Mat& pos, cv::Mat& or);
 	void calibrate(bot_ardrone_measurement *m);
 	float sqrt_s(float f);
@@ -51,8 +53,10 @@ private:
 
 	double yaw_sum;
 	bool calibrated;
-	unsigned char elevation_mode;
+	elevation_state elevation_mode;
 	float elevation;
 	float elevation_start;
+	float prev_altitude;
+	float stable_altitude;
 };
 

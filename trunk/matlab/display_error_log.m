@@ -1,15 +1,19 @@
-filename = 'C:/Users/Nick/Documents/Thesis/code/cpp/ardrone_slam/ardrone_slam/dataset/error_log.txt';
-
-yrange = [0, 3500];
-xrange = [0, 742];
+filename = 'C:/Users/Nick/Documents/Thesis/code/cpp/ardrone_slam/ardrone_slam/dataset/067/error_log.txt';
 
 M = csvread(filename)';
 
-
 figure();
+plot(M(1,:), M(5,:),':b');
+%ylim([-2000 2000]);
 hold on
+plot(M(1,:), M(4,:),':r');
 plot(M(1,:), M(3,:),':g');
-ylim([-2000 2000]);
+plot(M(1,:), M(2,:)*0.1,'-c');
+legend('alt', 'vel', 'accel', 'vel (KF)');
+hold off;
+
+
+
 %plot(M(1,:), M(4,:),':b');
 
 %plot(M(1,:), abs(M(3,:)),':r');
@@ -21,9 +25,9 @@ ylim([-2000 2000]);
 %plot(M(1,:), 200, ':y');
 
 %plot(data_alt(:,1), data_alt(:,2), 'Color', 'b');
-plot(M(1,:), M(5,:), 'Color', 'b');
+%plot(M(1,:), M(5,:), 'Color', 'b');
 
-
+%%
 
 % velocity
 Xrange = 2800:3300;

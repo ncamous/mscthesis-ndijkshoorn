@@ -91,7 +91,6 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 			break;
 
 		case VK_UP:
-			printf("up\n");
 			bot_ardrone_keyboard::set(wParam, BOT_ARDRONE_LinearVelocity, true);
 			break;
 
