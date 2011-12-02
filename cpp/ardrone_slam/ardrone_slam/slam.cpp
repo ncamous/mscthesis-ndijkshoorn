@@ -95,9 +95,9 @@ void slam::update_transition_matrix(float difftime)
 	{
 		// position (p)
 		EKF.transitionMatrix.at<float>(i, 3+i) = difftime;
-		//# EKF.transitionMatrix.at<float>(i, 6+i) = 0.5f * difftime*difftime;
+		//#EKF.transitionMatrix.at<float>(i, 6+i) = 0.5f * difftime*difftime;
 		// velocity (v)
-		//# EKF.transitionMatrix.at<float>(3+i, 6+i) = difftime;
+		//#EKF.transitionMatrix.at<float>(3+i, 6+i) = difftime;
 
 #ifndef BOT_ARDRONE_USE_ONBOARD_OR
 		// attitude (q)

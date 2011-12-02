@@ -122,7 +122,8 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 
 	m->state = n->navdata_demo.ctrl_state >> 16;
 
-	m->altitude = n->navdata_demo.altitude;
+	//m->altitude = n->navdata_demo.altitude;
+	m->altitude = n->navdata_altitude.altitude_raw;
 
 	m->navdata_euler_angles[0] = (float) n->navdata_altitude.altitude_raw;
 
@@ -156,6 +157,7 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 
 
 	/* temp */
+	/*
 	m->navdata_euler_angles[0] = n->navdata_euler_angles.phi_a;
 	m->navdata_euler_angles[1] = n->navdata_euler_angles.theta_a;
 	m->navdata_euler_angles[2] = 0.0f;
@@ -179,6 +181,7 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 	m->raw_gyros_110[0] = n->navdata_raw_measures.raw_gyros_110[0];
 	m->raw_gyros_110[1] = n->navdata_raw_measures.raw_gyros_110[1];
 	m->raw_gyros_110[2] = 0.0f;
+	*/
 
 
 	m_counter++;

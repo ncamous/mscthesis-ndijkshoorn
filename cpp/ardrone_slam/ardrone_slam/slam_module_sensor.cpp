@@ -39,8 +39,10 @@ slam_module_sensor::slam_module_sensor(slam *controller):
 
 	yaw_sum = 0.0;
 
-	elevation_mode	= 0;
+	elevation_mode	= ELEVATION_STATE_NONE;
 	elevation		= 0.0f;
+	stable_altitude = 0.0f;
+	prev_altitude	= 0.0f;
 }
 
 
@@ -155,7 +157,7 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 		50.0f, 50.0f, 50.0f,	// v (mm/s)
 		50.0f, 50.0f, 50.0f,	// a (mm/s2)
 		0.02f, 0.02f, 0.02f,	// or (rad)
-		0.01f, 0.01f, 0.01f		// ω (rad/s)
+		1.0f, 1.0f, 0.3f		// ω (rad/s)
 	};
 	MatSetDiag(EKF->measurementNoiseCov, MNC);
 
@@ -168,46 +170,30 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 
 	/* altitude measurement */
-	/*
-	if (m->state == 3)
+	if (prev_altitude == 0.0f)
 	{
-		if (elevation_mode == 0)
-		{
-			if (m->vel[2] > 50.0f)
-			{
-				elevation_mode		= 1;
-				elevation_start		= (float) -m->altitude;
-				//printf("going in elevation mode 1\n");
-			}
-			else if (elevation_mode == 0 && m->vel[2] < -50.0f)
-			{
-				elevation_mode		= 2;
-				elevation_start		= (float) -m->altitude;
-				//printf("going in elevation mode 1\n");
-			}
-		} else {
-
-			if (elevation_mode == 1 && m->vel[2] < 0.0f)
-			{
-				elevation_mode		= 0;
-				elevation			= elevation_start + (float) m->altitude;
-				//printf("ending elevation 1!\n");
-			}
-			else if (elevation_mode == 2 && m->vel[2] > 0.0f)
-			{
-				elevation_mode		= 0;
-				elevation			= elevation_start + (float) m->altitude;
-				//printf("ending elevation 2!\n");
-			}
-		}
+		prev_altitude			= (float) m->altitude;
+		stable_altitude			= prev_altitude;
+		state->at<float>(14)	= prev_altitude;
 	}
-	*/
-		
+
+	measurement.at<float>(14) = (float) m->altitude;
+	measurement.at<float>(13) = (measurement.at<float>(14) - state->at<float>(14)) / difftime;
+	measurement.at<float>(12) = (measurement.at<float>(13) - state->at<float>(13)) / difftime; // accel
 
 
-	EKF->measurementNoiseCov.at<float>(2, 2) = 100.0f;
-	measurement.at<float>(2) = (float) -m->altitude + elevation;
-	//printf("alt: %f (%f)\n", (float) -m->altitude, elevation);
+
+	if (m->state == 3 /*|| m->time > 414.0f*/)
+	{
+		EKF->measurementNoiseCov.at<float>(2, 2) = 100.0f;
+		// use filtered sonar distance
+		measurement.at<float>(2) = process_altitude_elevation(state->at<float>(14), state->at<float>(13), state->at<float>(12));
+	}
+	else
+	{
+		EKF->measurementNoiseCov.at<float>(2, 2) = 100.0f;
+		measurement.at<float>(2) = (float) -m->altitude + elevation;
+	}
 
 
 
@@ -264,17 +250,7 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 		// gravity
 		measurement_accel.at<float>(2) += 1000.0f;
 
-		/*
-		if (abs(measurement_accel.at<float>(2)) > 50.0f)
-			printf("Large accel\n");
-		else
-			printf("No accel\n");
-		*/
-
 		measurement_accel *= MG_TO_MM2;
-
-		//printf("Z-accel: %f\n", m->accel[2]);
-
 
 
 		// be aware: measurement.data is uchar, so index 12 is float matrix index 12/4 = 3
@@ -314,7 +290,7 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 	/* directly inject attitude into state vector */
 #ifdef BOT_ARDRONE_USE_ONBOARD_OR
-	memcpy_s(&state->data[36], 12, measurement_or.data, 12);
+	memcpy_s(&state ->data[36], 12, measurement_or.data, 12);
 #endif
 
 
@@ -330,25 +306,11 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 	// check is mapping mode is on
 	if (controller->mode(SLAM_MODE_MAP))
-		update_elevation_map((int) elevation);
+		update_elevation_map(elevation, state->at<float>(14)); // return sonar measured distance
 
 
 	//if (counter++ % 2 == 0)
 	//{
-		/*
-		printf("reset state\n");
-
-		state->at<float>(0) = 0.0f;
-		state->at<float>(1) = 0.0f;
-		//state->at<float>(2) = 0.0f;
-		state->at<float>(3) = 0.0f;
-		state->at<float>(4) = 0.0f;
-		state->at<float>(5) = 0.0f;
-		state->at<float>(6) = 0.0f;
-		state->at<float>(7) = 0.0f;
-		state->at<float>(8) = 0.0f;
-		*/
-
 		/*
 		printf("error: %f, %f, %f\n", 
 			abs(state->at<float>(0) - m->gt_loc[0]),
@@ -359,9 +321,10 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 		fprintf(error_log, "%f,%f,%f,%f,%f\n",
 			(float) m->time,
-			measurement_accel.at<float>(2),
+			//state->at<float>(2),
+			state->at<float>(13),
 			state->at<float>(8),
-			EKF->errorCovPost.at<float>(8, 8),
+			measurement_vel.at<float>(2),
 			(float) m->altitude
 		);
 
@@ -370,25 +333,86 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 }
 
 
-void slam_module_sensor::accel_compensate_gravity(Mat& accel, cv::Mat& m_or)
+float slam_module_sensor::process_altitude_elevation(float sonar_raw, float vel, float accel)
 {
-	Mat Rg(3, 3, CV_32F);
-	cv::RotationMatrix3D(m_or, Rg);
-	Mat gravity = (Mat_<float>(3,1) << 0.0f, 0.0f, 1000.0f); // 1000mg in z-direction
-	gravity = Rg * gravity;
+	float delta = sonar_raw - prev_altitude;
 
-	//dumpMatrix(gravity);
-	//printf("\n");
+	prev_altitude = sonar_raw;
 
-	accel -= gravity;
+
+
+	switch (elevation_mode)
+	{
+	case ELEVATION_STATE_NONE:
+		if (abs(accel) < 5000.0f)
+		{
+			stable_altitude = sonar_raw;
+		}
+
+		if (accel < -500000.0f)
+		{
+			printf("ELEVATION MODE: UP (%f)\n", delta);
+			elevation_mode	= ELEVATION_STATE_UP;
+			elevation_start	= stable_altitude;
+			return state->at<float>(2);
+		}
+		else if (accel > 500000.0f)
+		{
+			printf("ELEVATION MODE: DOWN (%f)\n", delta);
+			elevation_mode	= ELEVATION_STATE_DOWN;
+			elevation_start	= stable_altitude;
+			return state->at<float>(2);
+		}
+		else
+		{
+			return -sonar_raw + elevation;
+		}
+		break;
+
+	case ELEVATION_STATE_UP:
+		if (accel > 0.0f)
+		{
+			elevation_mode	= ELEVATION_STATE_NONE;
+			printf("elevation = %f - %f\n", elevation_start - prev_altitude);
+			elevation		-= elevation_start - prev_altitude;
+			if (elevation > 0.0f)
+				elevation = 0.0f;
+			stable_altitude	= sonar_raw;
+			printf("ELEVATION MODE: NONE (%f, %f, %f)\n", -sonar_raw, elevation, -sonar_raw + elevation);
+			return -sonar_raw + elevation;
+		}
+		else
+		{
+			return state->at<float>(2);
+		}
+		break;
+
+	case ELEVATION_STATE_DOWN:
+		if (accel < 0.0f)
+		{
+			elevation_mode	= ELEVATION_STATE_NONE;
+			elevation		-= elevation_start - prev_altitude;
+			if (elevation > 0.0f)
+				elevation = 0.0f;
+			stable_altitude	= sonar_raw;
+			printf("ELEVATION MODE: NONE (%f, %f, %f)\n", -sonar_raw, elevation, -sonar_raw + elevation);
+			return -sonar_raw + elevation;
+		}
+		else
+		{
+			return state->at<float>(2);
+		}
+		break;
+
+	}
+
+	return state->at<float>(2);
 }
 
 
-void slam_module_sensor::update_elevation_map(int sonar_height)
+void slam_module_sensor::update_elevation_map(float elevation, float sonar_distance)
 {
 	/* cast sonar beam on the 'world/object' based on the current position & attitude */
-	float h;
-
 	Mat sonar_pos(3, 1, CV_32F);
 	Mat sonar_or(3, 1, CV_32F);
 
@@ -411,19 +435,20 @@ void slam_module_sensor::update_elevation_map(int sonar_height)
 	sonar_normal = sonar_rot * sonar_normal;
 	cv::normalize(sonar_normal, sonar_normal); // to normal vector
 
-	CalcLinePositionAtDistance(sonar_pos, sonar_normal, (double) sonar_height, hit);
-	hit.at<float>(2) =  (float) sonar_height;
-	h = hit.at<float>(2);
+	CalcLinePositionAtDistance(sonar_pos, sonar_normal, (double) sonar_distance, hit);
+	
+	//hit.at<float>(0) = sonar_pos.at<float>(0);
+	//hit.at<float>(1) = sonar_pos.at<float>(1);
 
-	if (abs(h) >= 50.0f)
+	if (abs(elevation) >= 50.0f)
 	{
-		controller->elevation_map.update(hit.at<float>(0), hit.at<float>(1), hit.at<float>(2), 10, 200);
+		controller->elevation_map.update(hit.at<float>(0), hit.at<float>(1), elevation, 10, 200);
 	}
 	else
 	{
-		float r_mm = (float) (tan((BOT_ARDRONE_SONAR_FOV / 180.0f) * M_PI) * sonar_height);
+		float r_mm = (float) (tan((BOT_ARDRONE_SONAR_FOV / 180.0f) * M_PI) * sonar_distance);
 
-		controller->elevation_map.update(hit.at<float>(0), hit.at<float>(1), hit.at<float>(2), 20, r_mm);
+		controller->elevation_map.update(hit.at<float>(0), hit.at<float>(1), 0.0, 20, r_mm);
 	}
 }
 

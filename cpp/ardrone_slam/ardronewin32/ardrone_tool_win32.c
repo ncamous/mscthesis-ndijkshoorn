@@ -128,6 +128,7 @@ DEFINE_THREAD_ROUTINE(ihm, data)
 
 
 	// config
+	ardrone_control_config.euler_angle_max = 0.20943951f; // 12 degrees
 	ardrone_control_config.video_channel	= ZAP_CHANNEL_VERT;
 	ardrone_control_config.video_codec		= UVLC_CODEC; //P264_CODEC;
 	ardrone_control_config.navdata_demo		= FALSE;
@@ -145,6 +146,7 @@ DEFINE_THREAD_ROUTINE(ihm, data)
 	ARDRONE_TOOL_CONFIGURATION_ADDEVENT (control_vz_max, &ardrone_control_config.control_vz_max, NULL);
 	//ARDRONE_TOOL_CONFIGURATION_ADDEVENT (outdoor, &ardrone_control_config.outdoor, NULL);
 	//ARDRONE_TOOL_CONFIGURATION_ADDEVENT (flight_without_shell, &ardrone_control_config.flight_without_shell, NULL);
+	ARDRONE_TOOL_CONFIGURATION_ADDEVENT (euler_angle_max, &ardrone_control_config.euler_angle_max, NULL);
 
 
 	// flat trim

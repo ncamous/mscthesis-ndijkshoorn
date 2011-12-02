@@ -19,6 +19,7 @@
 #define SLAM_MODE_VEL 0x04
 #define SLAM_MODE_VISUALLOC 0x08
 #define SLAM_MODE_MAP 0x10
+//#define SLAM_MODE_ELEVATION
 
 
 /* USARSIM */
@@ -32,7 +33,7 @@
 #define USARIM_FRAME_USERAW true
 #define BOT_ARDRONE_RECORD_EXT "raw" //"raw"
 #define BOT_ARDRONE_BATTERYLIFE 720 // 720s, 12 minutes
-#define BOT_ARDRONE_RECORD_FRAMES false
+#define BOT_ARDRONE_RECORD_FRAMES true
 #define BOT_ARDRONE_FRAME_W 176
 #define BOT_ARDRONE_FRAME_H 144
 #define BOT_ARDRONE_CAM_FOV 32.0f // camera FOV / 2

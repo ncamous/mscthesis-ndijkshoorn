@@ -21,13 +21,13 @@ int main(int argc, char *argv[])
 	/* bot 1: USARSim ARDRONE  */
 	// deployment location set in bot_ardrone_usarsim.cpp (top)
 	//bot_ardrone ardrone(0x00, BOT_ARDRONE_INTERFACE_USARSIM, SLAM_MODE_MAP | SLAM_MODE_ACCEL);
-	bot_ardrone ardrone(0x01, BOT_ARDRONE_INTERFACE_ARDRONELIB, SLAM_MODE_MAP | SLAM_MODE_VEL /*| SLAM_MODE_ACCEL*/);
-	//bot_ardrone ardrone(0x01, BOT_ARDRONE_INTERFACE_NONE, SLAM_MODE_MAP | SLAM_MODE_ACCEL);
+	bot_ardrone ardrone(0x01, BOT_ARDRONE_INTERFACE_ARDRONELIB, SLAM_MODE_MAP | SLAM_MODE_VEL);
+	//bot_ardrone ardrone(0x01, BOT_ARDRONE_INTERFACE_NONE, SLAM_MODE_MAP | SLAM_MODE_VEL);
 	bots[nr_bots++] = &ardrone;
 
 	//ardrone.set_record();
 	//ardrone.set_slam(true);
-	//ardrone.set_playback("052");
+	//ardrone.set_playback("067");
 	//ardrone.get_slam()->visual_map.save_canvas();
 	//ardrone.get_slam()->m_frame->descriptor_map_quality();
 
