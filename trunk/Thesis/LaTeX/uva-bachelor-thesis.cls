@@ -25,6 +25,7 @@
 \usepackage{courier}
 \usepackage{caption}
 \usepackage{color}
+\usepackage{xcolor}
 
 
 %\usepackage[T1]{fontenc}
@@ -58,6 +59,8 @@
 
 % COLORS
 \definecolor{darkgray}{rgb}{0.1,0.1,0.1}
+\definecolor{lightgray}{rgb}{0.85,0.85,0.85}
+\definecolor{mediumgray}{rgb}{0.2,0.2,0.2}
 \definecolor{titlenumber}{rgb}{0.6,0.6,0.6}
 
 
@@ -81,6 +84,8 @@ citecolor=darkgray,
 {0cm}
 {\Huge \emph}
 [\vspace{0.5cm}]
+
+\titleformat{\subsubsection}{\bf\normalsize}{\thesubsubsection}{1em}{}
 
 \titlespacing*{\chapter}{0pt}{-0.35in}{0.1in}
 
@@ -161,6 +166,15 @@ citecolor=darkgray,
 
 % FONTS
 \newfont{\chapterNumber}{eurb10 scaled 7000}
+
+
+\newcommand{\cfbox}[2]{%
+	\vspace{0.5cm}
+    \colorlet{currentcolor}{.}%
+    {\color{lightgray}%
+    \fbox{\color{mediumgray}#2}}%
+   	\vspace{0.5cm}
+}
 
 
 \endinput
