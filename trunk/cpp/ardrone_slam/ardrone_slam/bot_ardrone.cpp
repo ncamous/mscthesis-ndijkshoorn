@@ -193,6 +193,8 @@ void bot_ardrone::measurement_received(bot_ardrone_measurement *m)
 	if (PRINT_DEBUG)
 		printf("%f - ARDRONE: measurement received!\n", m->time);
 
+	m->bot_id = id;
+
 
 	if (record)
 		recorder->record_measurement(m);

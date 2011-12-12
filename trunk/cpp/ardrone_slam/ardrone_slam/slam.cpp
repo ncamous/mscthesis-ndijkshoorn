@@ -69,7 +69,7 @@ void slam::init_ekf()
 		2.0f, 2.0f, 2.0f,		// v: mm/s
 		0.2f, 0.2f, 0.2f,		// a: mm/s2
 		0.002f, 0.002f, 0.002f,	// or: rad
-		0.001f, 0.001f, 0.001f	// omega (angular velocity): rad/sec
+		0.001f, 0.001f, 0.001f	// sonar: raw, vel, accel
 	};
 	MatSetDiag(EKF.processNoiseCov, PNC);
 
@@ -95,9 +95,9 @@ void slam::update_transition_matrix(float difftime)
 	{
 		// position (p)
 		EKF.transitionMatrix.at<float>(i, 3+i) = difftime;
-		//#EKF.transitionMatrix.at<float>(i, 6+i) = 0.5f * difftime*difftime;
+		EKF.transitionMatrix.at<float>(i, 6+i) = 0.5f * difftime*difftime;
 		// velocity (v)
-		//#EKF.transitionMatrix.at<float>(3+i, 6+i) = difftime;
+		EKF.transitionMatrix.at<float>(3+i, 6+i) = difftime;
 
 #ifndef BOT_ARDRONE_USE_ONBOARD_OR
 		// attitude (q)

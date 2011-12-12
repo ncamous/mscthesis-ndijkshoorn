@@ -33,6 +33,7 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 	fprintf (file, "---\n");
 	fprintf (file, "e: %i\n", BOT_EVENT_MEASUREMENT);
 	fprintf (file, "t: %f\n", m->time);
+	fprintf (file, "s: %i\n", m->state);
 	fprintf (file, "alt: %i\n", m->altitude);
 
 	fprintf (file, "or: [%f, %f, %f]\n", m->or[0], m->or[1], m->or[2]);
@@ -74,7 +75,6 @@ void bot_ardrone_recorder::record_frame(bot_ardrone_frame *f)
 	WaitForSingleObject(hMutex, INFINITE);
 
 	char filename[30];
-	//printf("recorded frame %i\n", frame_counter);
 
 	sprintf_s(f->filename, 20, "%06d.%s", frame_counter++, BOT_ARDRONE_RECORD_EXT);
 	sprintf_s(filename, 30, "%s/%s", dataset_dir, f->filename);
@@ -204,6 +204,10 @@ void bot_ardrone_recorder::playback(char *dataset)
 						m->time = atof(value_s);
 						wait_for_event(m->time);
 						//printf("time: %f\n", m->time);
+					}
+					else if (strcmp(key_s, "s") == 0)
+					{
+						m->state = atoi(value_s);
 					}
 					else if (strcmp(key_s, "alt") == 0)
 					{
@@ -366,10 +370,7 @@ void bot_ardrone_recorder::wait_for_event(double time)
 {
 	int wait = int((time - last_event_time) * 1000.0);
 	last_event_time = time;
-	if (wait > 0)
-	{
-		Sleep(wait);
-	}
 
-	//printf("Time: %f\n", time);
+	if (wait > 0)
+		Sleep(wait);
 }
