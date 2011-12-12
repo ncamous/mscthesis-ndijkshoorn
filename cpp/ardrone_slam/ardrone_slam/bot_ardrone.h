@@ -37,7 +37,7 @@ struct bot_ardrone_control {
 };
 
 struct bot_ardrone_measurement {
-	bool usarsim;
+	unsigned char bot_id;
 	double time;
 	unsigned char state;
 	int altitude;		// mm

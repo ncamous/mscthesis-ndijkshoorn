@@ -113,20 +113,18 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 
 	last_measurement = m->time;
 
-
 	// battery
 	bot->battery = n->navdata_demo.vbat_flying_percentage;
 	
 	if (m_counter % 1500 == 0)
 		printf("Battery: %i%%\n", bot->battery);
 
+	// state (3 = fly)
 	m->state = n->navdata_demo.ctrl_state >> 16;
 
-	//m->altitude = n->navdata_demo.altitude;
 	m->altitude = n->navdata_altitude.altitude_raw;
 
 	m->navdata_euler_angles[0] = (float) n->navdata_altitude.altitude_raw;
-
 
 	m->or[0] = n->navdata_demo.phi;
 	m->or[1] = n->navdata_demo.theta;
@@ -147,7 +145,6 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 
 	m->vel[0] = n->navdata_demo.vx;
 	m->vel[1] = n->navdata_demo.vy;
-	//m.ins_vel[2] = n->navdata_demo.vz; // is always zero
 	m->vel[2] = n->navdata_altitude.altitude_vz;
 
 	m->gt_loc[0] = n->navdata_demo.drone_camera_trans.v[0];

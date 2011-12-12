@@ -51,6 +51,9 @@ private:
 	double accel_sum[3];
 	float accel_avg[3];
 
+	cv::Mat world_plane;
+	cv::Mat world_plane_normal;
+
 	double yaw_sum;
 	bool calibrated;
 	elevation_state elevation_mode;

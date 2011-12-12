@@ -19,7 +19,8 @@
 #define SLAM_MODE_VEL 0x04
 #define SLAM_MODE_VISUALLOC 0x08
 #define SLAM_MODE_MAP 0x10
-//#define SLAM_MODE_ELEVATION
+#define SLAM_MODE_ELEVMAP 0x20
+#define SLAM_MODE_VEL_OR 0x40
 
 
 /* USARSIM */
@@ -37,7 +38,7 @@
 #define BOT_ARDRONE_FRAME_W 176
 #define BOT_ARDRONE_FRAME_H 144
 #define BOT_ARDRONE_CAM_FOV 32.0f // camera FOV / 2
-#define BOT_ARDRONE_SONAR_FOV 10.0f // sonar angle FOV
+#define BOT_ARDRONE_SONAR_FOV 25.0f // sonar angle FOV
 #define BOT_ARDRONE_CONTROL_VZ_MAX 1000.0f // mm/s
 //#define BOT_ARDRONE_DISPLAY_CAM
 #define BOT_ARDRONE_CALIB_MEASUREMENTS 200
@@ -51,7 +52,7 @@
 	#define BOT_ARDRONE_USARSIM_FRAME_MODE 1 // 1: request new frame when SLAM queue empty, 2: fixed framerate
 
 	/* keyboard */
-	#define BOT_ARDRONE_KEYBOARD_VEL 0.11f
+	#define BOT_ARDRONE_KEYBOARD_VEL 0.08f
 
 
 extern bool exit_application;
