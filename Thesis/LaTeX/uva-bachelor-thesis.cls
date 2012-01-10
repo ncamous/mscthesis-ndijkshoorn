@@ -26,6 +26,7 @@
 \usepackage{caption}
 \usepackage{color}
 \usepackage{xcolor}
+\usepackage{subfigure}
 
 
 %\usepackage[T1]{fontenc}
@@ -78,8 +79,8 @@ citecolor=darkgray,
 \titleformat{\chapter}[block]
 { \rmfamily
 \ifthenelse{\equal{\thechapter}{0}}
-{  \begin{textblock}{4}(11,1) \hfill \chapterNumber \color{titlenumber}  \end{textblock}  }
-{  \begin{textblock}{4}(11,1) \hfill \chapterNumber \color{titlenumber} \thechapter \end{textblock}   }}
+{  \begin{textblock}{4}(10.70,1) \hfill \chapterNumber \color{titlenumber}  \end{textblock}  }
+{  \begin{textblock}{4}(10.70,1) \hfill \chapterNumber \color{titlenumber} \thechapter \end{textblock}   }}
 {}
 {0cm}
 {\Huge \emph}
@@ -175,6 +176,16 @@ citecolor=darkgray,
     \fbox{\color{mediumgray}#2}}%
    	\vspace{0.5cm}
 }
+
+
+
+\DeclareSymbolFont{AMSb}{U}{msb}{m}{n}
+\DeclareMathSymbol{\N}{\mathbin}{AMSb}{"4E}
+\DeclareMathSymbol{\Z}{\mathbin}{AMSb}{"5A}
+\DeclareMathSymbol{\R}{\mathbin}{AMSb}{"52}
+\DeclareMathSymbol{\Q}{\mathbin}{AMSb}{"51}
+\DeclareMathSymbol{\I}{\mathbin}{AMSb}{"49}
+\DeclareMathSymbol{\C}{\mathbin}{AMSb}{"43}
 
 
 \endinput
