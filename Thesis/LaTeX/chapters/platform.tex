@@ -39,8 +39,7 @@ Together the motors should generate sufficient vertical thrust to stay airborne,
 \centering
 \includegraphics[width=7cm]{images/QuadRotorBody.png}
 \caption{Free body diagram of a quadrotor helicopter 
-%(Courtesy Hoffman \textit{et al.}
-\cite{Hoffmann2007}. Note that a right-handed orthogonal coordinate system is used with the $z$-axis pointing down. Each of the 4 motors has a thrust $T_i$ and momentum $M_i$. Together the motors should generate sufficient vertical thrust to stay airborne, which is indicated by the gravity force $mg$ in the direction $e_D$. Differential thrust between the motors can provide roll $\phi$ and pitch $\theta$ torques, which lead to an angle of attack $\alpha$. This can result in fast movements of the helicopter (e.g. in the horizontal plane) in the direction $e_V$ which a resulting drag force $D_b$. }
+(Courtesy Hoffman \textit{et al.} \cite{Hoffmann2007}). Note that a right-handed orthogonal coordinate system is used with the $z$-axis pointing down. Each of the 4 motors has a thrust $T_i$ and momentum $M_i$. Together the motors should generate sufficient vertical thrust to stay airborne, which is indicated by the gravity force $mg$ in the direction $e_D$. Differential thrust between the motors can provide roll $\phi$ and pitch $\theta$ torques, which lead to an angle of attack $\alpha$. This can result in fast movements of the helicopter (e.g. in the horizontal plane) in the direction $e_V$ which a resulting drag force $D_b$. }
 \label{fig:QuadRotorBody}
 \end{figure}
 
@@ -361,7 +360,8 @@ The engines are stopped automatically stopped.
 
 % Open application programming interface
 \section{Open Application Programming Interface}
-The AR Drone API\footnote{\url{https://projects.ardrone.org}} (Application Programming Interface) is the reference project for developing application for the AR.Drone.
+\label{sec:API}
+The AR.Drone API\footnote{\url{https://projects.ardrone.org}} (Application Programming Interface) is the reference project for developing applications for the AR.Drone.
 It includes SDK source code (written in C), multiplatform examples and documentation.
 The API does not include software that is embedded on the AR.Drone.
 
