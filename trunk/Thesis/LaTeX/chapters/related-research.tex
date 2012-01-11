@@ -38,7 +38,7 @@ The graph is optimized if the computed poses are contradictory.
     \subfigure[Map constucted by a stereo camera platform. A sensor platform was mounted on a rod to simulate a freely floating vehicle.]{\label{steder_outdoor}\includegraphics[height=3.5cm]{images/steder_outdoor.png}}
    
   \end{center}
-  \caption{Visual maps obtained with the visual SLAM system presented in \cite{steder2008visual}.}
+  \caption{Visual maps obtained with the visual SLAM system presented in \cite{steder2008visual} (Courtesy Steder \textit{et al.} \cite{steder2008visual}).}
   \label{featureImg}
 \end{figure}
 
@@ -94,7 +94,7 @@ A set of matches between two views can be used to estimate a homographic model f
 \begin{figure}[htb]
 \centering
 \includegraphics[width=6cm]{images/Caballero_map.png}
-\caption{Mosaic constructed with a KARMA autonomous airship flying at $22\small{m}$.}
+\caption{Mosaic constructed with a KARMA autonomous airship flying at $22\small{m}$ (Courtesy Caballero \textit{et al.} \cite{caballero}).}
 \label{fig:Caballero_map}
 \end{figure}
 
@@ -190,22 +190,21 @@ Staircases can be nagivated by finding the center of the staircase, so the AR.Dr
 Lines that represent the staircase are found by classifying the line segments as horizontal or vertical and looking for the largest horizontal-line cluster in the Hough transform space.
 Once the cluster of horizontal lines is detected, the mean of the lines' endpoints is calculated to retrieve the desired direction.
 
-\subsubsection{Map \& replay bearing-only navigation}
-Krajn{\'\i}k et al \cite{krajník2010simple,faiglsurveillance} present a simple monocular navigation system based on the map-and-replay technique.
-A robot is manually navigated through an environment and creates a map of its environment.
-After that, the map is used for autonomous navigation.
+\subsubsection{Map\&replay bearing-only navigation}
+Krajn{\'\i}k et al \cite{krajník2010simple,faiglsurveillance,krajník2011ar} present a simple monocular navigation system based on the map\&replay technique.
+For this technique, a robot is navigated by a human through an environment and creates a map of its environment.
+After the map is created, the robot starts at the start position and repeats the learned path.
 The method can navigate a robot along a given path while observing only one landmark at a time, making it more robust than other monocular approaches.
 
-At first, the robot is tele-operated in the environment along straight line segments in the mapping phase.
-For each segment a set of visual landmarks is remembered, consisting of salient features detected in images captured by the robot’s forward- looking camera.
-SURF features were used to detect and represent salient features.
-
-After the mapping phase is completed, the AR.Drone is able to repeat the learned path.
+The authors simplify the problem by splitting the route in straight line segments (i.e., the robot travels in straight lines and rotates between segments).
+%At first, the robot is tele-operated in the environment along straight line segments in the mapping phase.
+For each segment a set of visual landmarks is remembered, consisting of salient features extracted from the frontal camera image.
+Similar to Steder, the authors use Speeded-Up Robust Features (SURF) to detect and represent salient features.
+When entering a segment, the robot is rotated to match the rotation during the mapping phase.
 During the navigation along a segment, the robot establishes correspondences of the currently seen and previously mapped landmarks and computes differences in the expected and recognized positions for each such correspondence.
 The robot steers in a direction that reduces those differences while moving straight at a constant speed until its odometry indicates that the current segment has been traversed.
-
-[how is the position estimated? IMU?]
-
-The distance traveled along the segment is estimated purely by dead reckoning
-Due to the low precision of the IMU based distance estimation, the localization error is high.
-However, the localization error does not diverge and is kept within sufficient limits allowing the drone to autonomously navigate along the learned path.
+The heading is determined by a simple histogram voting procedure.
+This navigation method is provably stable for nondegenerate polygonal paths, since the heading corrections can suppress the position uncertainty originating from the dead reckoning.
+%The distance traveled along a segment is estimated purely by dead reckoning.
+%Due to the low precision of the IMU based distance estimation, the localization error is high.
+%However, the localization error does not diverge and is kept within sufficient limits allowing the drone to autonomously navigate along the learned path.
