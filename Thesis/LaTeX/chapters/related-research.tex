@@ -164,7 +164,19 @@ Due to its large footprint, a radar sensor cannot be mounted on small UAVs.
 Unlike a radar sensor, an ultrasound sensor can be carried by a small UAV.
 This sensor provides feedback for altitude stabilization and obstacle detection.
 According to my knowledge, no publication addresses the problem of elevation mapping using a single airborne ultrasound sensor.
-[seabed using side-scan sonar]
+However, the problem is addressed using advanced (e.g., multibeam) ultrasound sensor.
+
+\subsubsection{Seafloor mapping}
+Seafloor mapping is a research area for which ultrasound sensors have been used for building elevation maps. Some examples are \cite{johnson1996seafloor,strauss1999multibeam,zerr1996three,evans2002three}.
+Elevation mapping is essential for an autonomous underwater vehicle designed to navigate close to the seafloor.
+The map is being used for obstacle avoidance, path planning and self-localization.
+
+Given the limited range and applicability of visual imaging systems in the underwater environment,
+sonar has been the preferred solution \cite{blondel1997handbook} for the observation of the seabed.
+Most approaches use a side scan sonar system, that returns an image instead of a single distance measurements.
+Side scan uses a sonar device that emits conical or fan-shaped pulses down toward the seafloor.
+The intensity of the acoustic reflections from the seafloor of this beam is recorded in a series of cross-track slices.
+When stitched together along the direction of motion, these slices form an image of the sea bottom within the coverage of the beam.
 
 
 \section{Research using the AR.Drone}
