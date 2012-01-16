@@ -1,4 +1,25 @@
-	\section{Probabilistic robotics}
+In this chapter, an introduction to required background theory for this thesis is given.
+The work presented relies on \textbf{probabilistic robotics} and \textbf{computer vision} techniques.
+A clear vocabulary and corresponding mathematical nomenclature will be established that will be used consistently in the remainder of this thesis.
+
+\section{Probabilistic robotics}
+Sensor are limited in what they can percieve (e.g., the range and resolution is subject to physical limitations).
+Sensor are also subject to noise, which deviates sensor measurements in unpredictable ways.
+This noise limits the information that can be extraced from the sensor measurements.
+Robot actuators (e.g., motors) are also subject to noise, which introduces uncertainty.
+Another source of uncertainty is caused by the robot's software, which uses approximate models of the world.
+Model errors are a source of uncertainty that has often been ignored in robots.
+Robots are real-time systems, limiting the amount of computation that can be done.
+This requires the use of algorithmic approximations, but increases the amount of uncertainty even more.
+
+For some robotic applications (e.g., assembly lines with controlled environment), uncertainty is a marginal factor.
+However, robots operating in uncontrolled environments (e.g., homes, other planets) will have to cope with significant uncertainty.
+Since robots are increasingly deployed in the open world, the issue of uncertainty has become a major challenge for designing capable robots.
+\textit{Probabilistic robots} is a relatively new apprach to robotics that pays attentation to the uncertainty in perception and action.
+Uncertainty is represented explicitly using the calculus of probability theory.
+This means that probabilistic algorithms represent information by probability distributions over a whole space of guesses.
+This allows to represent ambiguity and degree of belief in a mathematically sound way.
+
 		\subsection{Motion}
 		\subsection{Vision}
 		\subsection{Localization}
@@ -7,14 +28,14 @@
 		%\subsection{Extended Kalman filter}
 		%\subsection{Particle filter}
 		%\subsection{Information filter}
-	\section{Camera geometry}
+	\section{Computer vision}
 		\subsection{Camera models}
 			\subsubsection{Camera matrix}
 		\subsection{Projective transformations}
-	\section{Image stitching}
-		\subsection{Feature detection}
-			\subsubsection{SIFT}
-			\subsubsection{SURF}
-		\subsection{Feature matching}
-		\subsection{Transformations}
-			\subsubsection{Outlier detection}
+			\subsubsection{Feature detection}
+				%\subsubsection{SIFT}
+				%\subsubsection{SURF}
+		\subsection{Image stitching}
+			%\subsubsection{Feature matching}
+			%\subsubsection{Transformations}
+			%	\subsubsection{Outlier detection}
