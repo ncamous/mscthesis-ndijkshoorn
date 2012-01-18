@@ -27,7 +27,10 @@
 \usepackage{color}
 \usepackage{xcolor}
 \usepackage{subfigure}
+\usepackage{amsthm}
 
+\newtheorem{name}{Printed output}
+\newtheorem{mydef}{Definition}
 
 %\usepackage[T1]{fontenc}
 %\usepackage{textcomp}
