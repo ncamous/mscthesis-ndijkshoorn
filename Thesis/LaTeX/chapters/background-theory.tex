@@ -19,10 +19,172 @@ Since robots are increasingly deployed in the open world, the issue of uncertain
 Uncertainty is represented explicitly using the calculus of probability theory.
 This means that probabilistic algorithms represent information by probability distributions over a whole space of guesses.
 This allows to represent ambiguity and degree of belief in a mathematically sound way.
+Now, robots can make choices (plan) relative to the uncertainty that remains, or chose to reduce the uncertainty (e.g., explore) if that is the best choice.
 
-		\subsection{Motion}
-		\subsection{Vision}
+\subsection{Recursive state estimation}
+Environments are characterized by \textit{state}.
+A state can be seen as a collection of all aspects of the robots and the environment that can impact the future.
+The state also includes variables regarding the robot itself (e.g., pose, velocity, acceleration).
+\begin{mydef}
+Environments are characterized by \textbf{state}, which describes all aspects of a robot and the environment that can impact the future.
+A state can be either \textbf{static state} (non-changing) or \textbf{dynamic state} when certain state variables tend to change over time.
+A state is denoted $x$.
+The state at time $t$ is denoted $x_t$.
+\end{mydef}
+Common state variables are:
+\begin{itemize}
+\item The robot \textit{pose}, which is its location and orientation (pitch, roll, yaw) relative to a global coodinate frame.
+\item The \textit{robot velocity}, consisting of a velocity for each pose variable. A change in attitude is called \textit{angular velocity}.
+\item The \textit{location and features of surrounding objects in the environment}. The objects can be either \textit{static} or \textit{dynamic}. For some problems, the objects are modelled as \textit{landmarks}, which are distinct, stationary features that provide reliable recognition.
+\end{itemize}
+
+A core idea of probabilistic robotics is the estimation of the state from sensor data.
+Sensors observe only partial information about those quantities and their measurements are affected by noise. 
+State estimation tries to recover state variables from the data.
+Instead of computing a single state, a belief distribution is computed over possible world states.
+\begin{mydef}
+\textbf{State estimation} addresses the problem of estimating quantities form sensor data that are not directly observable, but can be inferred.
+A belief distribution is computed over possible world states.
+\end{mydef}
+
+A robot can \textbf{interact} with its environment by influencing the state of its environment through its actuators (\textit{control actions}), or it can gather information about the state through its sensors (\textit{environment sensor measurements}).
+\begin{mydef}
+$z_{t_1:t_2} = z_{t_1}, z_{t_1 + 1}, z_{t_1 + 2}, \hdots, z_{t_2}$ denotes the set of all \textbf{measurements} acquired from time $t_1$ to time $t_2$, for $t_1 \leq t_2$.
+\end{mydef}
+\begin{mydef}
+$u_{t_1:t_2} = u_{t_1}, u_{t_1 + 1}, u_{t_1 + 2}, \hdots, u_{t_2}$ denotes the sequence of all \textbf{control data} from time $t_1$ to time $t_2$, for $t_1 \leq t_2$.
+\end{mydef}
+The control data conveys information regarding the change of state.
+For example, setting a robot's velocity at 1 m/s, suggests that the robot's new position after 2 {seconds is 2 m ahead of its position before the command was executed.
+Generally, measurements provide information about the environment's state, increasing the robot's knowledge.
+Motion tends to induce a loss of knowledge due to the inherent noise in robot actuation and the stochasticity of the environment.
+
+The evolution of state and measurements is performed by \textbf{probabilistic laws}.
+State $x_t$ is generated stochastically from the state $x_{t-1}$.
+If state $x$ is complete (i.e., best predictor of the future), it is a sufficient summary of all that happened in previous time steps.
+Only the control $u_t$ matters, expressed by the following equality:
+\begin{equation}
+p(x_t | x_{0:t - 1}, z_{1:t - 1}, u_{1:t}) = p(x_t | x_{t-1}, u_t)
+\end{equation}
+$p(x_t | x_{t-1}, u_t)$ is called \textit{state transition probability} and specifies how environmental state evolves over time as a function of robot control $u_t$.
+The process by which measurements are modelled is expressed by:
+\begin{equation}
+p(z_t | x_{0:t}, z_{1:t-1}, u_{1:t}) = p(z_t | x_t)
+\end{equation}
+$p(z_t | x_t)$ is called \textit{measurement probability} and specified how measurements are generated from the environment state $x$.
+
+Another core idea of probabilistic robotics is \textbf{belief}, which reflects the robot's knowledge about the environment's state.
+Belief is represented through conditional probability distributions (posterior probabilities over state variables conditioned on the available data).
+\begin{mydef}
+\textbf{Belief} reflects the robot's knowledge about the environment's state, through conditional probability distributions.
+Belief over state variable $x_t$ is denoted by $bel(x_t)$.
+\end{mydef}
+$bel(x_t)$ Is an abbrevation for the posterior
+\begin{equation}
+bel(x_t) = p(x_t | z_{1:t}, u_{1:t})
+\end{equation}
+A \textit{prediction} before a measurement is denoted as follows:
+\begin{equation}
+\overline{bel}(x_t) = p(x_t | z_{1:t-1}, u_{1:t})
+\end{equation}
+This equation predicts the state at time $t$ based on the previous state posterior, before incorporating the measurement at time $t$.
+%A \textit{correction} or \textit{measurement update} is obtained by calculating $bel(x_t)$ from $\overline{bel}(x_t)$.
+
+The most simple algorithm for calculcating beliefs is the \textbf{Bayes filter}.
+The input of the algorithm is the (initial) belief $bel$ at time $t-1$, the most recent control $u_t$ and measurement $z_t$.
+First, a \textit{prediction} for the new belief is computed based on control $u_t$ (the measurement is ignored):
+\begin{equation}
+\overline{bel}(x_t) = \int p(x_t | u_t, x_{t-1}) bel(x_{t-1}) dx_{t-1}
+\end{equation}
+The second step of the Bayes filter is the \textit{measurement update}:
+\begin{equation}
+bel(x_t) = \eta p(z_t | x_t) \overline{bel}(x_t)
+\end{equation}
+Where $\eta$ is a normalization constant to ensure a probability.
+Now, $bel(x_t)$ is the robot's belief about the state after the measurement and control data are used to improve the robot's knowledge.
+Both steps of the algorithm are performed recursively for all measurements and controls.
+
+The most popular family of recursive state estimators are the \textbf{Gaussian filters}.
+Gaussian filters represent belief by multivariate normal distributions (approximated by a Gaussian function).
+The density (probability) over the state space $x$ is characterized by two parameters: the mean $\mu$ and the covariance $\Sigma$.
+The dimension of the covariance matrix is is the dimensionality of the state $x$ squared.
+Representing the posterior by a Gaussian has some important consequences.
+First, Gaussians are unimodel and have a single maximum.
+However, this is characterisic for many tracking problems, where the posterior is focussed around the true state with a certain margin of uncertainty.
+
+In order to implement the filter described above, two additional components are required.
+In Section \ref{sec:motion_model}, the \textit{motion model} is described.
+In Section \ref{sec:measurement_model}, the \textit{measurement model} is described.
+
+		\subsection{Motion model}
+		\label{sec:motion_model}
+Probabilistic motion models describe the relationship between the previous and current pose and the issued controls (commands) by a probability distribution. This is called the \textit{state transition probability}.
+The state transition probability plays an essential role in the prediction step of the Bayes filter.
+\begin{mydef}
+A probabilistic motion \textbf{model defines} the state transition between two consecutive time steps $t-1$ and $t$ after a control action $u_{t}$ has been carried out. It is expressed by the posterior distribution $p (x_t | x_{t-1}, u_{t})$.
+\end{mydef}
+%In order to derive $p (x_t | x_{t-1}, u_{t})$, it is necessary to derive the kinematics from its mechanics and its %possible sources of noise and deviation.
+Two popular probabilistic motion models are the \textit{Velocity Motion Model} and the \textit{Odometry Motion Model}.
+The Velocity Motion Model assumes that a robot is controlled through two velocities: a rotational velocity $\omega_t$ and translational velocity ($v_t$).
+\begin{equation}
+u_t = 
+\left( \begin{array}{c}
+v_t \\
+\omega_t \end{array} \right)
+\end{equation}
+Algorithms for computing the probability $p (x_t | x_{t-1}, u_{t})$ can be found in \cite{fox2005probabilistic}.
+The Odometry Motion Model assumes that one has only access to odometry information.
+In practice, odometry models tend to be more accurate, because most robots do not execute velocity command with the level of accuracy that is obtained by measuring odometry.
+Technically, odometry reading are not controls because they are received after executing a command.
+However, using odometry readings as controls results in a simpler formulation of the estimation problem.
+
+		\subsection{Measurement model}
+		\label{sec:measurement_model}
+Probabilistic measurement models describe the relationship between the world state $x_t$ and how a sensor reading (observation) $z_t$ is formed.
+Based on the estimated world state $x_t$, a belief over possible measurements is generated.
+Noise in the sensor measurements is modelled explicitly, inherent to the the uncertainty of the robot's sensors.
+To express the process of generating measurements, a specification of the environment is required.
+A map $m$ of the environment is a list of objects and their locations:
+\begin{equation}
+m = \{m_1, m_2, \hdots, m_N\}
+\end{equation}
+Where $N$ is the total number of objects in the environment.
+Maps are often \textit{Features-based Maps} or \textit{Location-based maps}.
+Location-based maps are volumetric and offer a label for any location.
+Features-based Maps only describe the shape of the environment at specific locations, which are commonly objects.
+Features-based maps are more popular because the representation makes it easy to adjust (refine) the position of objects.
+\begin{mydef}
+A probabilistic \textbf{sensor model} describes the relation between a world state $x_t$ and a sensor reading $z_t$ given an environmental model $m$ in form of a posterior distribution $p (z_t | x_t, m)$.
+\end{mydef}
+
+
 		\subsection{Localization}
+\textit{Robot localization} is the problem of estimating the robot pose (state) relative to a map of the environment.
+Localization is an important building block for successful navigation of a robot, together with \textit{perception}, \textit{cognition} and \textit{motion control}.
+
+When a robot is moving in a known enviroment and starting at a known location, it can keep track of its position using odometry.
+Due to odometry uncertainty, the uncertainty of its location increases over time.
+In order to reduce the growing uncertainty, the robot must localize itself in relation to its environment map.
+To localize itself, the robot uses its sensors to make observations of its environment.
+The information provided by the observations enables to localize with respect to its map.
+
+A probabilistic approach to localization uses belief to represent the estimated location.
+Again, updating the robot's position involves two steps.
+The first step is called the \textit{prediction update}. The robot uses its sensors to estimate its state (e.g., velocity). The uncertainty about the robot's state increases due to integration of the odometric error over time.
+The second step is called the \textit{perception update}.  
+In this step, the robot uses the information from its sensors to correct the position estimated during the prediction phase, reducing the uncertainty about the robot's state.
+
+A more difficult subclass of localization occurs when a map of the environment is not available.
+In this case, the robot's sensor information is used to both recover the robot path and build a map of the environment.
+In the robotics community, this problem is called \textbf{Simultaneous Localization and Mapping (SLAM)}.
+A solution to this problem would make a robot truly autonomous.
+SLAM is a difficult problem because both the estimated path and extraced map features are affected by noise.
+Both of them become increasingly inaccurate during travel.
+However, when a place that has been mapped is revisited, the uncertainty can be reduced.
+This processes is called \textit{loop-closing}.
+Additionally, the map can be optimized after a loop-closure event is detected.
+
+
 		\subsection{Solution techniques}
 
 		%\subsection{Extended Kalman filter}
