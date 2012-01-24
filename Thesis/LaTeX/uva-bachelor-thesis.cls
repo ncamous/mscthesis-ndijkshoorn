@@ -181,6 +181,11 @@ citecolor=darkgray,
 }
 
 
+\renewcommand{\paragraph}{\@startsection{paragraph}{4}{0ex}%
+   {-3.25ex plus -1ex minus -0.2ex}%
+   {1.5ex plus 0.2ex}%
+   {\normalfont\normalsize\bfseries}}
+
 
 \DeclareSymbolFont{AMSb}{U}{msb}{m}{n}
 \DeclareMathSymbol{\N}{\mathbin}{AMSb}{"4E}

@@ -64,11 +64,13 @@ State $x_t$ is generated stochastically from the state $x_{t-1}$.
 If state $x$ is complete (i.e., best predictor of the future), it is a sufficient summary of all that happened in previous time steps.
 Only the control $u_t$ matters, expressed by the following equality:
 \begin{equation}
+\label{eq:background_state_trans_prob}
 p(x_t | x_{0:t - 1}, z_{1:t - 1}, u_{1:t}) = p(x_t | x_{t-1}, u_t)
 \end{equation}
 $p(x_t | x_{t-1}, u_t)$ is called \textit{state transition probability} and specifies how environmental state evolves over time as a function of robot control $u_t$.
 The process by which measurements are modelled is expressed by:
 \begin{equation}
+\label{eq:background_measurement_prob}
 p(z_t | x_{0:t}, z_{1:t-1}, u_{1:t}) = p(z_t | x_t)
 \end{equation}
 $p(z_t | x_t)$ is called \textit{measurement probability} and specified how measurements are generated from the environment state $x$.
@@ -185,14 +187,294 @@ This processes is called \textit{loop-closing}.
 Additionally, the map can be optimized after a loop-closure event is detected.
 
 
-		\subsection{Solution techniques}
+\subsection{Solution techniques}
+In practice, it is not possible to compute the posterior analytically.
+Therefore, a number of approximation techniques exist. 
+This section describes the most popular solutions techniques for SLAM problems.
 
-		%\subsection{Extended Kalman filter}
-		%\subsection{Particle filter}
-		%\subsection{Information filter}
-	\section{Computer vision}
-		\subsection{Camera models}
-			\subsubsection{Camera matrix}
+Solution techniques can be divided in two major branches of belief representation: \textit{Single-hypothesis belief} and \textit{Multi-hypothesis belief}.
+
+
+\subsubsection{Single-hypothesis trackers}
+Single-hypothesis trackers represent belief by a single world state.
+This estimate is associated by a measure of certainty (or variance), allowing the tracker to broaden or narrow the estimated region in the state space.
+The main advantage of the single-hypothesis representation is the absence of ambiguity, simplifying decision-making at the robot's cognitive level (e.g., pathplanning).
+Updating the robot's belief is also simplified, because a single state must be updated to a new single state.
+However, the main disadvantage of a single-hypothesis representation is that a update process always has to generate a \textit{single} hypothesis, which is challenging and sometimes impossible.
+
+\paragraph{Kalman Filter (KF)}
+The most popular technique for implementing a Bayes filter is probably the Kalman Filter (1960) \cite{kalman1960new}, often used for improving vehicle navigation.
+The Kalman Filter is based on the assumption that the system is linear and both the motion model and measurement model are affected by white Gaussian noise.
+Belief at time $t$ is represented by a multivariate Gaussian distribution defined by its mean $\mu_t$ and covariance $\Sigma_t$.
+This representation limits the filter to continuous states.
+
+The Kalman Filter assumes the system is linear: the state transition $A$ (Equation \ref{eq:background_state_trans_prob}), the motion model $B$ and the sensor model $C$ (Equation \ref{eq:background_measurement_prob}) are linear functions solely depending on the state $x$ or control command $u$, plus a Gaussian noise model $Q$:
+\begin{equation}
+\label{eq:KF}
+\begin{array}{rclr}
+\text{\textbf{Predict}} \\
+\overline{\mu}_t & = & A_t \mu_{t-1} + B_t u_t  & \text{a-priori mean estimate} \\
+\overline{\Sigma}_t & = & A_t \Sigma_{t-1} A_t^T + R_t  & \text{a-priori covariance estimate} \\
+\text{\textbf{Update}} \\
+K_t & = & \overline{\Sigma}_t C_t^T (C_t \overline{\Sigma}_t C_t^T + Q_t)^{-1} & \text{Kalman gain} \\
+\mu_t & = & \overline{\mu}_t + K_t(z_t - C_t \overline{\mu}_t) & \text{updated (a posteriori) state estimate} \\
+\Sigma_t & = & (I - K_t C_t) \overline{\Sigma}_t & \text{updated (a posteriori) estimate covariance}
+\end{array}
+\end{equation}
+
+The Kalman Filter presesents the belief $bel(x_t)$ at time $t$ by the mean $\mu_t$ and covariance $\Sigma_t$.
+When a measurement is received, a new belief $bel(x_t)$ is predicted based on the previous belief bel($x_{t-1}$), the control data $u_t$ and both the state transition model and motion model.
+This predicted belief describes the most likely state $\overline{\mu}_t$ at time $t$ and the covariance $\overline{\Sigma}_t$.
+The measurement is not yet included, because its a predicted belief.
+The update step transforms the predicted belief ($\overline{\mu}_t$, $\overline{\Sigma}_t$) into the desired belief ($\mu_t$, $\Sigma_t$), by incorporating the measurement $z_t$.
+The Kalman gain $K_t$ specifies the degree to which the measurement is incorporated into the new state estimate.
+The key concept used for Kalman Filtering is the \textit{innovation}, which is the difference between the actual measurement $z_t$ and the expected measurement $C_t \overline{\mu}_t$, which is derived from the predicted state.
+A measurement $z_t$ which is far off the predicted measurement, is less reliable, thus less incorporated in the new state estimate.
+
+The standard Kalman Filter requires a linear system (.i.e, a linear combination of Gaussians results in another Gaussian), which is insufficient to describe many real-life problems.
+Therefore, variations of the original algorithm have been proposed that can cope with different levels of non-linearity.
+These variations approximate the motion and sensor models in a way to make them linear again.
+
+\paragraph{Extended Kalman Filter (EKF)}
+The Extended Kalman Filter is a variant on the Kalman Filter that can be used for non-linear systems.
+It tries to approximate \textit{non-linear} motion and sensor models to make them linear.
+The state transition probability and the measurement probabilities are governed by the non-linear functions $g$ and $h$:
+\begin{equation}
+\begin{array}{rcl}
+x_t & = & g(u_t, x_{t-1}) \\
+z_t & = & h(x_t) + \delta_t
+\end{array}
+\end{equation}
+These functions replace $A$, $B$ and $C$ of the regular Kalman Filter (Equation \ref{eq:KF}).
+
+They key idea of the EKF approximation is called \textit{linearization}.
+A first-order linear Taylor approximation is calculated at the mean of the current belief (Gaussian), resulting in a linear function.
+Projecting the Gaussian belief through the linear approximation results in a Gaussian density.
+\begin{equation}
+\begin{array}{rclr}
+\text{\textbf{Predict}} \\
+\overline{\mu}_t & = & \boldsymbol{g(u_t, \mu_{t-1})} & \text{a-priori mean estimate} \\
+\overline{\Sigma}_t & = & \boldsymbol{G_t} \Sigma_{t-1} \boldsymbol{G_t^T} + R_t  & \text{a-priori covariance estimate} \\
+\text{\textbf{Update}} \\
+K_t & = & \overline{\Sigma}_t \boldsymbol{H_t^T} (\boldsymbol{H_t} \overline{\Sigma}_t \boldsymbol{H_t^T} + Q_t)^{-1} & \text{Kalman gain} \\
+\mu_t & = & \overline{\mu}_t + K_t(z_t - \boldsymbol{h(\overline{\mu}_t)}) & \text{updated (a posteriori) state estimate} \\
+\Sigma_t & = & (I - K_t \boldsymbol{H_t}) \overline{\Sigma}_t & \text{updated (a posteriori) estimate covariance}
+\end{array}
+\end{equation}
+
+\paragraph{Unscented Kalman Filter (UKF)}
+A drawback of the Extended Kalman Filter is that the true mean and covariance of the posterior distribution is not preserved.
+Another variant on the Kalman Filter has been found to yield superior results.
+The \textit{Unscented Kalman Filter (UKF)} performs a stochastic linearization using a weighted statistical linear regression process.
+The \textit{unscented transform} sampling technique is used to pick a minimal set of sigma points around the mean.
+These sigma points are propagated through the non-linear function $g$, from which the mean and covariance of the estimate are then recovered.
+Each sigma point has two weights associated with it. One weight is for recovering the mean, the other weight is used for recovering the covariance.
+
+In practice, the EKF is sightly faster than the UKF.
+The UKF produces better results than the EKF, depending on the non-linearities and spread of the prior state uncertainty.
+However, in many practical applications, the different is very small.
+
+
+\paragraph{Information Filter (IF)}
+The dual of the Kalman Filter is the \textit{Information Filter}.
+The key different between both filters lies in the way the Gaussian belief is represented.
+Kalman Filters respresent Gaussians by their moments (mean and covariance).
+Information Filters present Gaussians by their canonical parameterization (information matrix and information vector).
+\begin{equation}
+\label{eq:KF}
+\begin{array}{rclr}
+\text{\textbf{Predict}} \\
+\overline{\Omega}_t & = & (A_t \Omega_{t-1}^{-1} A_t^T + R_t)^{-1}  & \text{a-priori information matrix} \\
+\overline{\xi}_t & = & \overline{\Omega}_t ( A_t \Omega_{t-1}^{-1} \xi_{t-1} + B_t u_t )  & \text{a-priori information vector} \\
+\text{\textbf{Update}} \\
+\Omega_t & = & \C_t^T Q_t^{-1} \C_t + \overline{\Omega}_t & \text{updated information matrix} \\
+\xi_t & = & C_t^T Q_t^{-1} z_t + \overline{\xi}_t & \text{updated information vector}
+\end{array}
+\end{equation}
+
+The difference in parameterization leads to different computational complexities.
+The prediction step of the Kalman Filter is additive, which makes is computationally inexpensive.
+However, the measurement update in Kalman Filter is computationally complex, due to the requirement of matrix inversion.
+For the Information Filter, the complexities are exactly opposite.
+The prediction step of the Information Filter involves the inversion of two matrices, which can be complex.
+On the other hand, the measurement update of the Information Filter is additive, which makes it inexpensive.
+The main advantage of the Information Filter is that $N$ measurements can be filtered at each timestep simply by summing their information matrices and vectors.
+This makes Information Filters particularly interesting for scenarios where multiple robots have to merge their local information with the information collected by other robots.
+
+
+\subsubsection{Multi-hypothesis trackers}
+Single-hypothesis trackers fail to model ambiguities adequately.
+An example is a soccer field, which is a symmetrical environment.
+Multi-hypothesis trackers represent belief not just as a single world state, but as a possibly infinite set of states.
+
+The main advantage of the multi-hypothesis representation is that the robot can explicitly maintain uncertainty regarding its state.
+This allows a robot to believe in multiple poses simultaneously, allowing the robot to track and reject different hypotheses independently.
+One of the main disadvantages of a multi-hypothesis representation involves decision making.
+If the robot represents its position as a set of points, it becomes less obvious to compute a next move.
+
+\paragraph{Particle Filter}
+The key idea of the \textit{Particle Filter}  is to represent the posterior $bel(x_t)$ by a set of random state particles (samples) drawn from this posterior.
+This representation is approximate, but can represent a much broader space of discributions than the single-hypothesis trackers.
+Another advantage is that the transformations are not limited to linear functions anymore.
+
+The particles (samples) are denoted
+\begin{equation}
+\chi = x_t^{[1]}, x_t^{[2]}, \hdots, x_t^{[M]}
+\end{equation}
+Each particle $x_t^{[m]}$ is a state hypothesis at time $t$.
+Ideally, the likelihood for a state hypothesis $x_t$ to be in $\chi$, should be proportional to $bel(x_t)$.
+The denser a subregion of the the space is populated with particles, the more likely it is that the true state falls into this region.
+In the prediction step, the motion model is applied to each particle $x_{t-1}^{[m]}$ to generate a prediction $x_t^{[m]}$.
+When observation $z_t$ is made, the \textit{importance factor} $w_t^{[m]}$ is computed.
+\begin{equation}
+w_t^{[m]} = p ( z_t | x_t^{[m]}, z_{0 \to t-1})
+\end{equation}
+The final step of the particle filter is {resampling}, in which the current set of particles re-sampled based on the computed likelihoods.
+The algorithm draws with replacement $M$ particles from the temporary set $\overline{\chi}_t$.
+The probability of each particle is given by its importance weights.
+This changes the distribution of the particle from $\overline{bel}(x_t)$ to $bel(x_t)$.
+
+Particle filters overcome the limitations of using a Gaussian to represent a probability distribution.
+With sufficient samples, they approach the Bayesian optimal estimate, so they can be made more accurate than either the EKF or UKF.
+The increased representational power of particle filters comes at the cost of higher computational complexity.
+And, when the number of particles is unsufficient, the particle filter might suffer from sample impoverishment.
+
+
+
+\section{Computer vision}
+Laser range scanners are often used for robot localization.
+However, this sensor has a number of problems (e.g., limited range, deal with dynamic environments).
+Vision has long been advertised as a solution.
+A camera can make a robot perceive the world in a way similar to humans.
+
+\textbf{Computer vision} is a field that includes methods for acquiring, processing, analysing, and understanding images.
+Since a camera is the AR.Drone's only sensor that is capable of retrieving detailed information of the environment, computer vision techniques are essential when performing robot localization with the AR.Drone.
+In addition, vision techniques can be used to calibrate other sensors of a robot.
+
+\subsection{Projective geometry}
+Projective geometry describes the relation between a scene and how a picture of it is formed.
+A projective transformation is used to map objects onto a picture.
+This transformation preserves straightness.
+Multiple geometrical systems can be used to describe geometry.
+
+\textbf{Euclidean geometry} is a popular mathematical system.
+A point in Euclidean 3-space is represented by an unordered pair of real numbers, $(x, y, z)$.
+However, this coordinate system is unable to represent points at infinity.
+The \textit{Homogeneous coordinates} coordinate system is able to represent points at infinity.
+Homogeneous coordinates have an additional coordinate.
+Now, points are represented by \textit{equivalance classes}, where points are equivalant when they differ by a common multiple.
+For example, $(x, y, z, 1)$ and $(2x, 2y, 2z, 2)$ represent the same point.
+Points at infinity are respresented using $(x, y, z, 0)$, because $(x/0, y/0, z/0)$ is infinite.
+In Euclidean geometry, one point is picked out as the \textit{origin}.
+A coordinate can be transformed to another coordinate by translating and rotating to a diffent position.
+This operation is know as a \textbf{Euclidian transformation}.
+A more general type of transformation is an \textbf{affine transformation}, which is linear transformation (linear stretching), followed by a Euclidian transformation.
+The resulting transformation performs moving, rotating and finally stretching linearly possibly by different ratios in different directions.
+
+In computer vision problems, projective space is used as a convenient way of representing the real 3D world.
+A \textbf{projective transformation} of projective space $P^n$?? is represented by a linear transformation of homogeneous coordinates:
+\begin{equation}
+X' = H_(n+1) \times _(n+1)X
+\end{equation}
+where $X$ is a coordinate vector and $H$ is a non-singular matrix.
+
+In order to analyze and manipulate images, understanding about the image formation process is required.
+Light from a scene reaches the camera and passes through a lens before it reached the sensor.
+The relationship between the distance to an object $z$ and the distance behind the lens $e$ at which a focuses image is formed, can be expresses as:
+\begin{equation}
+\label{eq:optics}
+\frac{1}{f} = \frac{1}{z} + \frac{1}{e}
+\end{equation}
+where $f$ is the focal length.
+
+The \textbf{pinhole camera} has been the first example of camera in the history.
+It is a lightproof box with a very small aperture instead of a lens.
+Light from the scene passes through the aperture and projects an \textit{inverted image} on the opposit side of the box.
+This principle has been adopted as a standard model for perspective cameras.
+In this model, \textit{optical center} $C$ (apeture) corresponds to the center of the lens.
+The intersection $O$ between the the optical axis and the image plane is called \textit{principal point}.
+The pinhole model is commonly described with the image plane between $C$ and the scene in order to preserve the same orientation as the object.
+
+The operation performed by the camera is called the \textbf{perspective transformation}.
+It transforms the 3D coordinate of scene point $P$ to coordinate $p$ on the image plane.
+A simplified version of the perspective transformation can be expressed as:
+\begin{equation}
+\frac{f}{P_z} = \frac{p_x}{P_x} = \frac{p_y}{P_y}
+\end{equation}
+from which $p_x$ and $p_y$ can be recovered:
+\begin{equation}
+p_x = \frac{f}{P_z} \cdot P_x
+\end{equation}
+\begin{equation}
+p_y = \frac{f}{P_z} \cdot P_y
+\end{equation}
+When using homogeneous coordinates, a linear transformation is obtained:
+\begin{equation}
+\left[ \begin{array}{c}
+\lambda p_x \\
+\delta p_y \\
+\delta
+\end{array} \right]
+=
+\left[ \begin{array}{c}
+f P_x \\
+f P_y \\
+P_z
+\end{array} \right]
+=
+\left[ \begin{array}{c c c c}
+f & 0 & 0 & 0  \\
+0 & f & 0 & 0 \\
+0 & 0 & 1 & 0
+\end{array} \right]
+=
+\left[ \begin{array}{c}
+P_x \\
+P_y \\
+P_z \\
+1
+\end{array} \right]
+\end{equation}
+From this equation can be seen that it is not possible to estimate the distance to a point (i.e., all points on a line project to a single point on the image plane).
+
+A more realistic camera model is called the \textbf{general camera model}.
+It takes into account the rigid body transformation between the camera and the scene, and \textit{pixelization} (i.e.e, shapes and position of the CCD sensor).
+Pixelization is addressed by replacing the focal length matrix with a \textit{camera intrinsic parameter matrix} $A$.
+The rigid body transformation is adressed by adding a combined rotation and translation matrix $[R|t]$, which are called the \textit{camera extrinsic parameters}.
+\begin{equation}
+\lambda p = A [ R | t] P
+\end{equation}
+or
+\begin{equation}
+\left[ \begin{array}{c}
+\lambda p_x \\
+\delta p_y \\
+\delta
+\end{array} \right]
+=
+\left[ \begin{array}{c c c}
+\alpha_u & 0 & u_0 \\
+0 & \alpha_v & v_0 \\
+0 & 0 & 1
+\end{array} \right]
+=
+\left[ \begin{array}{c c c c}
+r_{11} & r_{12} & r_{13} & t_1 \\
+r_{21} & r_{22} & r_{23} & t_2 \\
+r_{31} & r_{32} & r_{33} & t_3
+\end{array} \right]
+=
+\left[ \begin{array}{c}
+P_x \\
+P_y \\
+P_z \\
+1
+\end{array} \right]
+\end{equation}
+
+\textbf{Camera calibration} ..
+
+			%\subsubsection{Camera matrix}
 		\subsection{Projective transformations}
 			\subsubsection{Feature detection}
 				%\subsubsection{SIFT}
@@ -201,3 +483,4 @@ Additionally, the map can be optimized after a loop-closure event is detected.
 			%\subsubsection{Feature matching}
 			%\subsubsection{Transformations}
 			%	\subsubsection{Outlier detection}
+		\subsection{Visual Odometry}
