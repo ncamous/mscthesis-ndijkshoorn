@@ -472,15 +472,78 @@ P_z \\
 \end{array} \right]
 \end{equation}
 
-\textbf{Camera calibration} ..
+\textbf{Camera calibration} is the process of measuring the intrinsic and extrinsic parameters of the camera.
+As explained in the previous paragraph, these parameters are required to calculcate the mapping between 3D scene points to 2D points on the image plane.
+When scene points $P$ and image points $p$ are known, it is possible to compute $A$, $R$, $t$ by solving the perspective projection equation.
+Newer camera calibration techniques use a planar grid (e.g., chessboard-like pattern) instead of 3D points, to ease the extraction of corners.
+The method requires serveral pictures of the pattern shown at different positions and orientations.
+Because the 2D positions of the corners are known and matched between all images, the instrinsic and extrinsic parameters are determined simultaneously by solving a least-square minimization.
 
-			%\subsubsection{Camera matrix}
-		\subsection{Projective transformations}
-			\subsubsection{Feature detection}
-				%\subsubsection{SIFT}
-				%\subsubsection{SURF}
-		\subsection{Image stitching}
-			%\subsubsection{Feature matching}
-			%\subsubsection{Transformations}
-			%	\subsubsection{Outlier detection}
-		\subsection{Visual Odometry}
+\subsection{Feature extraction and matching}
+In order to perform robot localization using vision sensors, the robot must be able to relate recent camera frames to previously received camera frames (map).
+However, all measurents have an error, which complicates the matching.
+A strategy to deal with uncertainty is by generating a higher-level description of the sensor data instead of using the raw sensor data.
+This process is called \textit{feature extraction}.
+
+\begin{mydef}
+\textbf{Features} are recognizable structures of elements in the environment.
+They are extracted from measurements and described in a mathematical way.
+\textit{Low-level features} are geometric primitives (e.g., lines, points, corners) and \textit{high-level features} are objexts (e.g., doors, tables).
+\end{mydef}
+
+Features play an essential role in mobile robots.
+They enable more compact and robust descriptions of the environment.
+Choosing the approriate features is a critical task when designing a mobile robot.
+
+\subsubsection{Feature extraction}
+A local feature is small image patch that differs that is different than its immediate neighborhood.
+Difference can be in terms on intensity, color and texture.
+Commonly, feature are edges, corners or junctions.
+The most important aspect of a feature detector is \textit{repeatability}, which means the detector is able to detect the same features, when multiple images (with different viewing and illumuniation conditions) of the same scene are used.
+Another important aspect of a feature detector is \textit{distinctiveness}, which means the information carried by a patch is distinctive as possible.
+This is important for robust feature matching.
+Good feature are \textit{invariant}, meaning that changes in camera viewpoint, illumination, rotation and scale do not affect a feature and its high-level description.
+
+\paragraph{SIFT}
+Scale-invariant feature transform (SIFT) \cite{lowe1999object} is the most popular feature extractor.
+It is invariant to scale, rotation, illumination and viewpoint.
+
+The algorithm can be outlined as follows.
+First, an internal representation is computed to ensure scale invariance.
+Secondly, an approximation of the Laplacian of Gaussian is used to find interesting keypoints.
+Third, keypoints are found at maxima and minima in the Difference of Gaussian from the previous step.
+Fourth, bad keypoints (e.g., edges and low contrast regions are eliminated.
+Fifth, an orientation is calculated for each keypoint.
+Any further calculations are done relative to this orientation, making it rotation invariant.
+FInally, a high-level representation is calculated to uniquely identify features.
+This \textit{feature descriptors} is a vector of 128 elements, containing orientation histograms.
+
+\paragraph{SURF}
+For some applications or mobile platforms, the SIFT extractor is too slow.
+Therefor, some faster variants are proposed, like Speeded Up Robust Feature (SURF) \cite{Bay2008cviu}.
+%SURF is partly inspired by the SIFT descriptor.
+The standard version of SURF is several times faster than SIFT and claimed by its authors to be more robust against different image transformations than SIFT.
+The important speed gain is achieved by using integral images, which drastically reduce the number of operations for simple box convolutions, independent of the chosen scale.
+
+The algorithm can be outlined as follows.
+Initially, an integral image and  Hessian matrix are computed.
+Blob-like structures are detected at locations where the determinant is maximum.
+The images are repeatedly smoothed with a Gaussian and then sub-sampled in order to create pyramid of different resolutions.
+In order to localise interest points in the image and over scales, a non-maximum suppression in a $3 \times 3 \times 3$ neigh bourhood is applied. 
+The maxima of the determinant of the Hessian matrix are then interpolated in scale and image space.
+A descriptor is construced that describess the distribution of the intensity content within the interest point neighbourhood.
+First-order Haar wavelet responses in $x$ and $y$ direction are used rather than the gradient, exploit integral images for speed. The size of the descriptor is reduced to $64$ dimensions.
+
+\subsubsection{Feature matching}
+To perform robot localization, extracted feature descriptors need to matched against the feature descriptors that are part of the map.
+Ideally, each feature extracted from the current frame is correlated against the corresponding feature inside the map.
+
+A \textit{matching function} is used to compute the correspondance between two feature descriptors.
+The matching function usually depends on the type of feature descriptor.
+In general, a feature descriptor is a high-dimensional vector, and matching features can be found by computing the distance using the $L_2$ norm.
+
+
+		\subsubsection{Transformations}
+		\subsubsection{Outlier detection}
+	
+\subsection{Visual Odometry}
