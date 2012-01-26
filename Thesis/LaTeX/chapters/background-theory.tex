@@ -504,8 +504,7 @@ Another important aspect of a feature detector is \textit{distinctiveness}, whic
 This is important for robust feature matching.
 Good feature are \textit{invariant}, meaning that changes in camera viewpoint, illumination, rotation and scale do not affect a feature and its high-level description.
 
-\paragraph{SIFT}
-Scale-invariant feature transform (SIFT) \cite{lowe1999object} is the most popular feature extractor.
+\textbf{Scale-invariant feature transform (SIFT)} \cite{lowe1999object} is the most popular feature extractor.
 It is invariant to scale, rotation, illumination and viewpoint.
 
 The algorithm can be outlined as follows.
@@ -518,9 +517,8 @@ Any further calculations are done relative to this orientation, making it rotati
 FInally, a high-level representation is calculated to uniquely identify features.
 This \textit{feature descriptors} is a vector of 128 elements, containing orientation histograms.
 
-\paragraph{SURF}
 For some applications or mobile platforms, the SIFT extractor is too slow.
-Therefor, some faster variants are proposed, like Speeded Up Robust Feature (SURF) \cite{Bay2008cviu}.
+Therefore, some faster variants are proposed, like \textbf{Speeded Up Robust Feature (SURF)} \cite{Bay2008cviu}.
 %SURF is partly inspired by the SIFT descriptor.
 The standard version of SURF is several times faster than SIFT and claimed by its authors to be more robust against different image transformations than SIFT.
 The important speed gain is achieved by using integral images, which drastically reduce the number of operations for simple box convolutions, independent of the chosen scale.
@@ -540,10 +538,43 @@ Ideally, each feature extracted from the current frame is correlated against the
 
 A \textit{matching function} is used to compute the correspondance between two feature descriptors.
 The matching function usually depends on the type of feature descriptor.
-In general, a feature descriptor is a high-dimensional vector, and matching features can be found by computing the distance using the $L_2$ norm.
+In general, a feature descriptor is a high-dimensional vector, and matching features can be found by computing the distance using the $L_2$ norm, which is defined as follows:
+\begin{equation}
+L2(a,b) =\sqrt { \sum_{i=1}^{N} \left| a_i - b_i \right| ^2 }
+\end{equation}
+where $N$ is the dimensionality of the descriptor vector.
+
+The matching function is used to find matches between two sets of descriptors.
+A popular matcher is the \textit{Brute-force descriptor matcher}. For each descriptor in the first set, this matcher finds the closest descriptor in the second set by trying each one.
+However, the brute-force matcher becomes very slow for large descriptors sets, due to the complexity of $O(n^2)$.
+For large descriptor sets, the \textit{Fast Library for Approximate Nearest Neighbors (FLANN)} \cite{muja2009flann} matcher performs more efficient matching.
+It uses an Approximate Nearest Neighbors algorithm to find similar descriptors efficiently.
+The authors state that the approximation has proven to be a good-enough in most practical applications and in most cases, orders of magnitude faster that the algorithms performing the exact searches.
+
+\subsubsection{Popular application: image stitching}
+A popular computer vision application that heavily relies on features is \textit{image stiching}, which is the process of combining multiple photos with overlapping fields of view.
+The result is a segmented panorama or high-resolution image. 
+
+The first step involves extracting features for all images.
+Since most features are invariant under rotation and scale changes, images with varying orientation and zoom can be used for stitching.
+%These features are matched to search for image alignments that minimize the sum of absolute differences between overlapping pixels.
+Images that have a large number of matches between them are identified.
+These image are likely to have some degree of overlap.
+A homography $\boldsymbol{H}$ (projective transformation) is computed between matching image pairs.
+This homography described how the second image needs to be transformed in order to correctly overlap the first image.
+Different types of homographies can be used to describe the transformation between image pairs, depending on the level of displacement between images.
+
+$\boldsymbol{H}$ cannot be computed from all feature matches directly.
+False matches would reduce the accuracy of the estimated homography.
+Instead, a robust estimation procedure is applied.
+
+\textbf{RANSAC (Random Sample Consensus)} \cite{fischler1981random} is a simple robust estimation procedure that uses a minimal set of randomly sampled correspondences to estimate image transformation parameters, and finds a solution that has the best consensus with the data.
+Commonly, 4 random feature correspondences are used to compute the homography $\boldsymbol{H}$ of an image pair.
+This step is repeated $N$ trials and the solution that has the maximum number of inliers (whose projections are consistent with $\boldsymbol{H}$ within a tolerance $\epsilon$ pixels) is selected.
+
+When the homographies of all image pairs are estimated, a global optimization method can be applied to reduce drift or other sources of error.
+Finally, the images are transformed according to the corresponding homographies, resulting in a seamless panorama or high-resolution image. 
 
 
-		\subsubsection{Transformations}
-		\subsubsection{Outlier detection}
-	
+
 \subsection{Visual Odometry}
