@@ -533,6 +533,7 @@ A descriptor is construced that describess the distribution of the intensity con
 First-order Haar wavelet responses in $x$ and $y$ direction are used rather than the gradient, exploit integral images for speed. The size of the descriptor is reduced to $64$ dimensions.
 
 \subsubsection{Feature matching}
+\label{sec:theory_feature_matching}
 To perform robot localization, extracted feature descriptors need to matched against the feature descriptors that are part of the map.
 Ideally, each feature extracted from the current frame is correlated against the corresponding feature inside the map.
 
@@ -576,5 +577,87 @@ When the homographies of all image pairs are estimated, a global optimization me
 Finally, the images are transformed according to the corresponding homographies, resulting in a seamless panorama or high-resolution image. 
 
 
-
 \subsection{Visual Odometry}
+An interesting combination of computer vision and mobile robotics is \textit{Visual Odometry (VO)}, which is the process of estimating the egomotion of a mobile robot using one or more onboard cameras.
+Below, only the case of a single camera and 2-D feature coordinates is described.
+There are two main approaches two compute the relative motion from video images: \textit{appearance-based} methods and \textit{feature-based} methods.
+Appearance-based methods use intensity information, while feature-based methods use higher-level features.
+Feature-based methods are more popular, because they are faster and more accurate than appearance-based methods.
+
+The set of images taken at time $t$ is denoted by $I_{0:n} = \{I_0, \hdots, I_n\}$.
+Two camera positions at consecutive time instants $k-1$ and $k$ are related by a rigid body transformation:
+\begin{equation}
+T_t = T_{t,t-1} = 
+\left[ \begin{array}{c c}
+R_{t,t-1} & t_{t,t-1} \\
+0 & 1
+\end{array} \right]
+\end{equation}
+where $R_{t,t-1}$ is the rotation matrix and $t_{t,t-1}$ is the translation vector.
+The set $T_{1:n} = \{T_1, \hdots, T_n\}$ contains all subsequent motions.
+The set of camera poses $C_{0:n} = \{C_0, \hdots, C_n\}$ contains the transformation of the camera with respect to the initial coordinate frame at time $t = 0$.
+
+The objective of Visual Odometry is to recover the full trajectory of the camera $C_{0:n}$ (i.e., egomotion).
+This is achieved by computing the relative transformation $T_t$ from images $I_t$ and $I_{t-1}$.
+When all relative transformation are concatenated, the full trajectory of the camera $C_{0:n}$ is recovered.
+An iterative refinement procedure like \textit{windowed-bundle adjustment} can be performed to obtain a more accurate estimate of the local trajectory.
+
+The first step of VO is the extraction of image features $f_t$ from a new image $I_t$.
+These features are matched with features $f_{t-1}$ from the previous image (multiple images can be used to recover 3-D motion).
+The third step consists of computing the relative motion $T_t$ between time $t-1$ and $t$.
+For an accurate motion estimation, feature correspondences should not contain outliers, as described in Section \ref{sec:theory_feature_matching}.
+
+The geometric relations between two images $I_t$ and $I_{t-1}$ are described by the \textit{essential matrix} $E$:
+\begin{equation}
+E_t \simeq \hat{t}_t R_t
+\end{equation}
+where $t_k = [t_x, t_y, t_z]^T$ and 
+\begin{equation}
+\hat{t}_t = 
+\left[ \begin{array}{c c c}
+0 & -t_z & t_y \\
+t_z & 0 & -t_x \\
+-t_y & t_x & 0
+\end{array} \right]
+\end{equation}
+The rotation and translation of the camera can be extracted from $E$.
+%At least five feature correspondences are required.
+%An efficient implementation is proposed Nister \cite{nistér2004efficient}, which has become the standard for 2-D to 2-D motion estimation.
+A simple solution when at least eight feature correspondences are available, is the Longuet-Higgins's eight-point algorithm \cite{longuet1987computer}.
+Each feature correspondence gives a constraint of the following form:
+\begin{equation}
+\left[ \begin{array}{c c c c c c c c c}
+\tilde{u}\tilde{u}' & \tilde{u}'\tilde{v} & \tilde{u}' & \tilde{u}\tilde{v}' & \tilde{v}\tilde{v}' & \tilde{v}' & \tilde{u}' & \tilde{v}' & 1
+\end{array} \right]
+E = 0
+\end{equation}
+where $E = [e_1  e_2  e_3  e_4  e_5  e_6  e_7  e_8  e_9]^T$.
+Stacking these constraints gives the linear equation $A E = 0$, where $A$ is the camera instrinsic matrix.
+This equation can be solved by using singular value decomposition (SVD), which has the form $A = USV^T$.
+Now, the projected essential matrix $\overline{E}$ can be found as the last column of $V$:
+\begin{equation}
+\overline{E} = U diag\{1, 1, 0\} V_T
+\end{equation}
+The rotation and translation can be extraced from $\overline{E}$:
+\begin{equation}
+R = U (\pm W^T) V^T
+\end{equation}
+\begin{equation}
+\hat{t} = U (\pm W^T) S U^T
+\end{equation}
+where
+\begin{equation}
+W^T =
+\left[ \begin{array}{c c c}
+0 & \pm 1 & 0 \\
+\mp 1 & 0 & 0 \\
+0 & 0 & 1
+\end{array} \right]
+\end{equation}
+Now, the camera position at time $t$ can be recovered by concatenating the relative transformations:
+\begin{equation}
+C_t = \prod_{k=t}^1T_{k}
+\end{equation}
+
+Additional computations can be performed in order to retrieve the absolute scale of the translations.
+
