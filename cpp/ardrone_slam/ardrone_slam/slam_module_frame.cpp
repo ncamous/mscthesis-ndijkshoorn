@@ -32,6 +32,7 @@ slam_module_frame::slam_module_frame(slam *controller):
 	prev_state(15, 1, CV_32F)
 {
 	this->controller = controller;
+	this->map = &controller->map;
 	prev_frame_exists = false;
 
 	set_camera();
@@ -322,7 +323,7 @@ bool slam_module_frame::process_visual_loc()
 	Mat map_descriptors;
 	Mat map_keypoints_wc;
 	//float radius = max(cov->at<float>(0, 0), cov->at<float>(1, 1));
-	float radius = 0.0f;
+	float radius = 3000.0f;
 	//radius += 1500.0f; // just in case. Needs to be removed when KF cov is working fine
 	//radius += RectRadius(image_corners_wc); // should be dynamic and basic on the state cov
 
@@ -331,7 +332,7 @@ bool slam_module_frame::process_visual_loc()
 	get_localcam(cam_pos, cam_or);
 	Point3f wc(cam_pos);
 
-	controller->visual_map.get_local_descriptors(map_descriptors, map_keypoints_wc, wc, radius);
+	map->get_local_descriptors(map_descriptors, map_keypoints_wc, wc, radius);
 
 
 	/* not enough descriptors from map (unexplored area?) */
@@ -459,7 +460,7 @@ bool slam_module_frame::process_visual_loc()
 
 		// Rk vector
 		float MNC[15] = {
-			300.0f, 300.0f, 300.0f,	// p: mm
+			30000.0f, 30000.0f, 30000.0f,	// p: mm
 			50.0f, 50.0f, 50.0f,	// v (mm/s)
 			50.0f, 50.0f, 50.0f,	// a (mm/s2)
 			0.02f, 0.02f, 0.02f,	// or (rad)
@@ -518,7 +519,7 @@ bool slam_module_frame::process_map(Mat& frame_state)
 	imagepoints_to_local3d(image_corners, image_corners_wc, &frame_state);
 
 
-	controller->visual_map.update(frame, image_corners, image_corners_wc);
+	map->visual_map.update(frame, image_corners, image_corners_wc);
 
 	/* features map (not-transformed image) */
 	if (!features_extracted)
@@ -530,7 +531,7 @@ bool slam_module_frame::process_map(Mat& frame_state)
 	vector<Point3f> imagepoints_wc;
 	imagepoints_to_local3d(imagepoints, imagepoints_wc, &frame_state);
 
-	controller->visual_map.update(keypoints, descriptors, imagepoints_wc);
+	map->update(keypoints, descriptors, imagepoints_wc);
 
 	return true;
 }
@@ -846,6 +847,7 @@ void slam_module_frame::set_camera()
 }
 
 
+/*
 void slam_module_frame::add_noise(IplImage *img)
 {
 
@@ -900,8 +902,9 @@ void slam_module_frame::add_noise(IplImage *img)
 
 	return;
 }
+*/
 
-
+/*
 void slam_module_frame::descriptor_map_quality()
 {
 	Mat local;
@@ -983,3 +986,4 @@ void slam_module_frame::get_local_descriptors(int x, int y, cv::Mat& map_descrip
 
 	delete [] indices;
 }
+*/

@@ -39,10 +39,10 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\Program Files\Microsoft DirectX SDK %28June 2010%29\Include;$(IncludePath)</IncludePath>
+    <IncludePath>$(VCInstallDir)include;C:\Program Files\Microsoft DirectX SDK %28June 2010%29\Include;C:\WinDDK\7600.16385.1\inc\api;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\WinDDK\7600.16385.1\lib\win7\i386;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -54,7 +54,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>yaml.lib;ws2_32.lib;ardronewin32.lib;terrain3d.lib;opencv_core230d.lib;opencv_highgui230d.lib;opencv_features2d230d.lib;opencv_imgproc230d.lib;opencv_calib3d230d.lib;opencv_video230d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>yaml.lib;ws2_32.lib;ardronewin32.lib;terrain3d.lib;opencv_core230d.lib;opencv_highgui230d.lib;opencv_features2d230d.lib;opencv_imgproc230d.lib;opencv_calib3d230d.lib;opencv_video230d.lib;hid.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <StackReserveSize>10000000</StackReserveSize>
       <AdditionalLibraryDirectories>$(OutDir);$(SDLDir)\lib;$(OpenCVDir)\lib;$(MatlabDir)\lib\win32\microsoft</AdditionalLibraryDirectories>
       <TargetMachine>MachineX86</TargetMachine>
@@ -74,6 +74,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bot_ardrone_3dmouse.cpp" />
     <ClCompile Include="bot_ardrone_ardronelib.cpp" />
     <ClCompile Include="bot_ardrone_behavior.cpp" />
     <ClCompile Include="bot_ardrone_keyboard.cpp" />
@@ -86,6 +87,8 @@
     <ClCompile Include="opencv_helpers.cpp" />
     <ClCompile Include="slam.cpp" />
     <ClCompile Include="slam_elevation_map.cpp" />
+    <ClCompile Include="slam_feature_map.cpp" />
+    <ClCompile Include="slam_map.cpp" />
     <ClCompile Include="slam_module_frame.cpp" />
     <ClCompile Include="slam_module_sensor.cpp" />
     <ClCompile Include="slam_module_ui.cpp" />
@@ -95,6 +98,7 @@
   <ItemGroup>
     <ClInclude Include="bot.h" />
     <ClInclude Include="botinterface.h" />
+    <ClInclude Include="bot_ardrone_3dmouse.h" />
     <ClInclude Include="bot_ardrone_ardronelib.h" />
     <ClInclude Include="bot_ardrone_behavior.h" />
     <ClInclude Include="bot_ardrone_keyboard.h" />
@@ -107,6 +111,8 @@
     <ClInclude Include="opencv_helpers.h" />
     <ClInclude Include="slam.h" />
     <ClInclude Include="slam_elevation_map.h" />
+    <ClInclude Include="slam_feature_map.h" />
+    <ClInclude Include="slam_map.h" />
     <ClInclude Include="slam_module_frame.h" />
     <ClInclude Include="slam_module_sensor.h" />
     <ClInclude Include="slam_module_ui.h" />

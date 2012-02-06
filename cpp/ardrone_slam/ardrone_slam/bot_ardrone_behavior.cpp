@@ -19,6 +19,20 @@ bot_ardrone_behavior::~bot_ardrone_behavior()
 }
 
 
+void bot_ardrone_behavior::waypoint()
+{
+	float *waypoint = slam_module_ui::waypoint;
+
+	if (waypoint[0] == 0.0f && waypoint[1] == 0.0f)
+		return;
+
+	printf("Flying to waypoint: (%f, %f)\n", waypoint[0], waypoint[1]);
+	flyto(waypoint[0], waypoint[1]);
+	printf("Reached waypoint\n");
+	waypoint[0] = waypoint[1] = 0.0f;
+}
+
+
 void bot_ardrone_behavior::map()
 {
 	bot->recover(true);
@@ -68,7 +82,7 @@ void bot_ardrone_behavior::map()
 		return;
 
 	bot->get_slam()->off(SLAM_MODE_MAP);
-	bot->get_slam()->m_frame->descriptor_map_quality();
+	//bot->get_slam()->m_frame->descriptor_map_quality();
 
 	Sleep(999999);
 	//bot->get_slam()->visual_map.save_canvas();
@@ -125,10 +139,13 @@ static DWORD WINAPI start_behavior_thread(void* Param)
 		}
 
 		// map
-		instance->map();
+		//instance->map();
+		instance->waypoint();
 
-		if (stop_behavior)
-			instance->stop();
+		//if (stop_behavior)
+		//	instance->stop();
+
+		Sleep(100); // 100 ms
 	}
 
 	return 1;

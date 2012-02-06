@@ -54,9 +54,12 @@ public:
     float GetYaw()                     { return m_yaw; }
     float GetMaxPitch()                { return m_maxPitch; }
 
+	D3DXMATRIX  m_view;      
+	D3DXMATRIX  m_projection;
+
 private:
-    D3DXMATRIX  m_view;      
-    D3DXMATRIX  m_projection;
+    //D3DXMATRIX  m_view;      
+    //D3DXMATRIX  m_projection;
     D3DXVECTOR3 m_right;     
     D3DXVECTOR3 m_up;        
     D3DXVECTOR3 m_look;      

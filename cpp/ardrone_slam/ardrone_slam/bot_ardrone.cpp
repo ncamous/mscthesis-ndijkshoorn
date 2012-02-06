@@ -42,7 +42,7 @@ bot_ardrone_frame::~bot_ardrone_frame()
 bot_ardrone::bot_ardrone(unsigned char id, unsigned char botinterface, unsigned char slam_mode)
 {
 	start_clock		= clock();
-	id				= id;
+	this->id		= id;
 	i				= NULL;
 	i_id			= botinterface;
 	recorder		= NULL;

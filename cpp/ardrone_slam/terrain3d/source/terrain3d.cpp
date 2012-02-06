@@ -19,7 +19,7 @@ Modified : 12/06/2005
 Summary: Default constructor
 Parameters:
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-terrain3d::terrain3d(short* map, UINT w, UINT h, byte* texture, float* arrow)
+terrain3d::terrain3d(short* map, UINT w, UINT h, byte* texture, float* arrow, float* waypoint)
 {
     m_pFramework = NULL;
 
@@ -30,6 +30,7 @@ terrain3d::terrain3d(short* map, UINT w, UINT h, byte* texture, float* arrow)
 	elevation_map_h		= h;
 	this->texture		= texture;
 	this->arrow			= arrow;
+	this->waypoint		= waypoint;
 	/**/
 
 	HINSTANCE hInstance = GetModuleHandle(NULL);
@@ -213,6 +214,39 @@ Parameters:
 void terrain3d::ProcessInput( long xDelta, long yDelta, long zDelta, BOOL* pMouseButtons, BOOL* pPressedKeys, float elapsedTime )
 {
     float cameraSpeed = 30.0f;
+
+	if ( pMouseButtons[1] )
+	{
+			D3DVIEWPORT9 viewport;
+
+			m_pFramework->m_pGraphics->GetDevice()->GetViewport(&viewport);
+
+			D3DXVECTOR3 inP1( (float) m_pFramework->m_mouse.GetX(), (float) m_pFramework->m_mouse.GetY(), 0.1f);
+			D3DXVECTOR3 outP1;
+			D3DXVECTOR3 outP2;
+
+			D3DXMATRIX viewMatrix;
+			m_pFramework->m_pGraphics->GetDevice()->GetTransform( D3DTS_VIEW, &viewMatrix);
+			D3DXMATRIX projMatrix;
+			m_pFramework->m_pGraphics->GetDevice()->GetTransform( D3DTS_PROJECTION, &projMatrix);
+			D3DXMATRIX worldMatrix;
+			m_pFramework->m_pGraphics->GetDevice()->GetTransform( D3DTS_WORLD, &worldMatrix);
+
+			outP1 = *m_camera.GetPosition();
+
+			inP1.z = viewport.MaxZ;
+
+			D3DXVec3Unproject(&outP2, &inP1, &viewport, /*&m_camera.m_projection*/ /*m_camera.GetProjectionMatrix()*/ &projMatrix, /*&m_camera.m_view*//*m_camera.GetViewMatrix()*/&viewMatrix, /*&worldMatrix*/ /*m_terrain.GetTransform()*/&worldMatrix);
+			//printf("DEBUG: %f, %f, %f\n", outP2.x, outP2.y, outP2.z);
+
+			D3DXVECTOR3 intersection;
+			D3DXPLANE p(0.0f, 1.0f, 0.0f, 0.0f);
+			D3DXPlaneIntersectLine(&intersection, &p, &outP1, &outP2);
+
+			//printf("DEBUG: %f, %f\n", intersection.x * 100.0f, intersection.z * 100.0f);
+			waypoint[0] = intersection.z * 100.0f;
+			waypoint[1] = intersection.x * 100.0f;
+	}
 
     if ( pMouseButtons[0] )
     {

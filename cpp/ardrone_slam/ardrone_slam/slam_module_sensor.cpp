@@ -20,7 +20,7 @@ slam_module_sensor::slam_module_sensor(slam *controller):
 	world_plane_normal(3, 1, CV_32F)
 {
 	this->controller = controller;
-
+	this->map = &controller->map;
 
 	counter	= 0;
 
@@ -70,11 +70,13 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 
 
 	/* calibrate accel sensor */
+	/*
 	if (use_accel && !calibrated)
 	{
 		calibrate(m);
 		return;
 	}
+	*/
 
 
 
@@ -218,9 +220,9 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 		measurement_vel		= Rw * measurement_vel;
 
 		memcpy_s(&measurement.data[12], 12, measurement_vel.data, 12);
-		EKF->measurementNoiseCov.at<float>(3, 3) = 100.0f;
-		EKF->measurementNoiseCov.at<float>(4, 4) = 100.0f;
-		EKF->measurementNoiseCov.at<float>(5, 5) = 100.0f;
+		EKF->measurementNoiseCov.at<float>(3, 3) = 10.0f;
+		EKF->measurementNoiseCov.at<float>(4, 4) = 10.0f;
+		EKF->measurementNoiseCov.at<float>(5, 5) = 10.0f;
 	}
 
 
@@ -241,12 +243,13 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 			measurement_accel.at<float>(2) += 1000.0f;
 
 		measurement_accel *= MG_TO_MM2;
+		//dumpMatrix(measurement_accel);
 
 		// be aware: measurement.data is uchar, so index 12 is float matrix index 12/4 = 3
 		memcpy_s(&measurement.data[6 * 4], 12, measurement_accel.data, 12); // accel: this is the fastest method
-		EKF->measurementNoiseCov.at<float>(6, 6) = 100.0f;
-		EKF->measurementNoiseCov.at<float>(7, 7) = 100.0f;
-		EKF->measurementNoiseCov.at<float>(8, 8) = 100.0f;
+		EKF->measurementNoiseCov.at<float>(6, 6) = 1.0f;
+		EKF->measurementNoiseCov.at<float>(7, 7) = 1.0f;
+		EKF->measurementNoiseCov.at<float>(8, 8) = 1.0f;
 	}
 
 
@@ -397,13 +400,13 @@ void slam_module_sensor::update_elevation_map(float elevation, float sonar_dista
 
 	if (abs(elevation) >= 50.0f)
 	{
-		controller->elevation_map.update(hit.at<float>(0), hit.at<float>(1), elevation, 1, 100);
+		map->elevation_map.update(hit.at<float>(0), hit.at<float>(1), elevation, 1, 100);
 	}
 	else
 	{
 		float r_mm = (float) (tan((BOT_ARDRONE_SONAR_FOV / 180.0f) * M_PI) * sonar_distance);
 
-		controller->elevation_map.update(hit.at<float>(0), hit.at<float>(1), 0.0, 2, r_mm);
+		map->elevation_map.update(hit.at<float>(0), hit.at<float>(1), 0.0, 2, r_mm);
 	}
 }
 

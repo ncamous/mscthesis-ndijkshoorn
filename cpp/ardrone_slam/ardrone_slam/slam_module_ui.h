@@ -3,6 +3,7 @@
 #include <time.h>
 
 class slam;
+class slam_map;
 
 class terrain3d;
 
@@ -15,10 +16,13 @@ public:
 	void update();
 	void display_canvas();
 
+	static float slam_module_ui::waypoint[2];
+
 private:
 	void init();
 
 	slam *controller;
+	slam_map *map;
 
 	bool initialized;
 
