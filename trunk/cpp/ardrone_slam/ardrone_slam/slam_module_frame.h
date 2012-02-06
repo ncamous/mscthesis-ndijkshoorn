@@ -14,6 +14,7 @@
 struct bot_ardrone_frame;
 
 class slam;
+class slam_map;
 
 using namespace cv;
 
@@ -50,13 +51,16 @@ public:
 	void localvelocity_to_world(Mat& v);
 
 	// testing/experiments
+	/*
 	void add_noise(IplImage *img);
 	void descriptor_map_quality();
 	void get_local_descriptors(int x, int y, Mat& map_descriptors, int radius);
+	*/
 
 
 private:
 	slam *controller;
+	slam_map *map;
 
 	bot_ardrone_frame *f;
 

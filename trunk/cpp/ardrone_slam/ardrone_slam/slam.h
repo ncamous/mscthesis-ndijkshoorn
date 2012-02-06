@@ -1,8 +1,7 @@
 ﻿#pragma once
 
 #include "slam_queue.h"
-#include "slam_elevation_map.h"
-#include "slam_visual_map.h"
+#include "slam_map.h"
 #include "slam_module_frame.h"
 #include "slam_module_sensor.h"
 #include "slam_module_ui.h"
@@ -71,11 +70,8 @@ public:
      * p(3), v(3), a(3), q(3), ω(3)
 	 */
 
-	/* Elevation map */
-	slam_elevation_map elevation_map;
-
-	/* Visual map */
-	slam_visual_map visual_map;
+	/* map */
+	slam_map map;
 
 private:
 	void init_ekf();

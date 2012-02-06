@@ -16,6 +16,7 @@ public:
 	bot_ardrone_behavior(bot_ardrone *b);
 	~bot_ardrone_behavior();
 	void map();
+	void waypoint();
 	void forcefield();
 	void stop();
 

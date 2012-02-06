@@ -1,6 +1,7 @@
 #include "global.h"
 #include "slam_module_ui.h"
 #include "slam.h"
+#include "slam_map.h"
 
 #include "terrain3d.h"
 
@@ -8,12 +9,17 @@
 
 using namespace cv;
 
+float slam_module_ui::waypoint[2];
+
 
 slam_module_ui::slam_module_ui(slam *controller)
 {
 	this->controller = controller;
+	this->map = &controller->map;
 
 	initialized = false;
+
+	memset(slam_module_ui::waypoint, 0, 2 * sizeof(float));
 }
 
 
@@ -27,19 +33,18 @@ void slam_module_ui::update()
 	if (!initialized)
 		init();
 
-
 	if (clock() - prev_update > 0.5f * CLOCKS_PER_SEC)
 	{
 		int roi[4];
 
-		if (controller->elevation_map.is_updated(roi, true))
+		if (map->elevation_map.is_updated(roi, true))
 			terrain->update_elevation_map(roi);
 
-		if (controller->visual_map.is_updated(roi, true))
+		if (map->visual_map.is_updated(roi, true))
 			terrain->update_texture(roi);
 
 		controller->get_world_position(pos);
-		controller->elevation_map.worldpos_to_cell(pos);
+		map->elevation_map.worldpos_to_cell(pos);
 
 		prev_update = clock();
 
@@ -55,7 +60,7 @@ void slam_module_ui::update()
 
 void slam_module_ui::display_canvas()
 {
-	Mat subCanvas(controller->visual_map.canvas, Rect(700, 1200, 2300, 2800));
+	Mat subCanvas(map->visual_map.canvas, Rect(700, 1200, 2300, 2800));
 	Mat resized(800, 800, CV_8UC4);
 	resize(subCanvas, resized, Size(800, 800));
 
@@ -76,11 +81,12 @@ void slam_module_ui::init()
 
 	/* 3D Terrain */
 	terrain = new terrain3d(
-		controller->elevation_map.get_array(),
-		controller->elevation_map.w,
-		controller->elevation_map.h,
-		controller->visual_map.get_array(),
-		pos
+		map->elevation_map.get_array(),
+		map->elevation_map.w,
+		map->elevation_map.h,
+		map->visual_map.get_array(),
+		pos,
+		waypoint
 	);
 
 

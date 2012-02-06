@@ -105,6 +105,15 @@
     <ClCompile Include="opencv_ekf.cpp">
       <Filter>Source Files\opencv</Filter>
     </ClCompile>
+    <ClCompile Include="bot_ardrone_3dmouse.cpp">
+      <Filter>Source Files\bots\ardrone</Filter>
+    </ClCompile>
+    <ClCompile Include="slam_feature_map.cpp">
+      <Filter>Source Files\slam</Filter>
+    </ClCompile>
+    <ClCompile Include="slam_map.cpp">
+      <Filter>Source Files\slam</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="slam.h">
@@ -166,6 +175,15 @@
     </ClInclude>
     <ClInclude Include="opencv_ekf.h">
       <Filter>Header Files\opencv</Filter>
+    </ClInclude>
+    <ClInclude Include="bot_ardrone_3dmouse.h">
+      <Filter>Header Files\bots\ardrone</Filter>
+    </ClInclude>
+    <ClInclude Include="slam_feature_map.h">
+      <Filter>Header Files\slam</Filter>
+    </ClInclude>
+    <ClInclude Include="slam_map.h">
+      <Filter>Header Files\slam</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

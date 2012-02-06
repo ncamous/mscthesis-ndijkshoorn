@@ -7,6 +7,7 @@
 struct bot_ardrone_measurement;
 
 class slam;
+class slam_map;
 
 enum elevation_state { ELEVATION_STATE_NONE, ELEVATION_STATE_UP, ELEVATION_STATE_DOWN, ELEVATION_STATE_DISABLE };
 
@@ -26,6 +27,7 @@ private:
 	float sqrt_s(float f);
 
 	slam *controller;
+	slam_map *map;
 
 	int counter;
 

@@ -61,6 +61,7 @@ public:
     void OnRenderFrame();
 
 	CGraphics*      m_pGraphics;
+	CInputDevice    m_mouse;
 
 private:
     LRESULT CALLBACK WndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
@@ -88,7 +89,8 @@ private:
     //CGraphics*      m_pGraphics;
     CBaseApp*       m_pGameApp;
     CTimer*         m_pTimer;
-    CInputDevice    m_mouse;
+    //CInputDevice    m_mouse;
+	//BOOL			m_mouseRightButtonPressed;
     CInputDevice    m_keyboard;
     LPDIRECTINPUT8  m_pDI;
 

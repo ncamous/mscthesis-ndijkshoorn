@@ -16,7 +16,7 @@
 class terrain3d : public CBaseApp
 {
 public:
-	terrain3d(short* map, UINT w, UINT h, byte* texture, float* arrow);
+	terrain3d(short* map, UINT w, UINT h, byte* texture, float* arrow, float* waypoint);
 	~terrain3d();
 	void SetFramework( CFramework* pFramework );
 	BOOL Initialize();
@@ -47,4 +47,5 @@ private:
 	UINT				elevation_map_h;
 	byte*				texture;
 	float*				arrow;
+	float*				waypoint;
 };
