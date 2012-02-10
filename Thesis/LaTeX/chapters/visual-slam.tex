@@ -1,7 +1,14 @@
-Furthermore, we describe how a visual map of the indoor environment can be made and how this map can be used by the AR.Drone to localize itself.
+This chapter presents methods to build a visual map and how to use this map to make the AR.Drone localize itself.
+In order to initialize a visual localization and mapping algorithm, a good estimate of the position based on the internal sensors of the AR.Drone is essential.
+Section \ref{sec:pose_estimation} describes multiple methods to estimate the pose.
+When an estimate of the pose is available, a map can be constructed using the method described in Section \ref{sec:mapping}.
+Section \ref{sec:localization} described how this map is used by the AR.Drone to localize itself and reduce the errors pose estimates.
+Finally, Section \ref{sec:elevation_map} describes an experimental method to build an elevation map using a single ultrasound sensor.
 
 	\section{Pose estimation}
-In order to initialize a visual localization and mapping algorithm, a good estimate of the position based on the internal sensors of the AR.Drone is essential. The AR.Drone has several sources of information available about its movements and the majority of its computing power is dedicated to combine these sources into combined estimates. Here this information is combined into a state vector, with all information needed to initialize visual localization and mapping.
+	\label{sec:pose_estimation}
+%In order to initialize a visual localization and mapping algorithm, a good estimate of the position based on the internal sensors of the AR.Drone is essential.
+The AR.Drone has several sources of information available about its movements and the majority of its computing power is dedicated to combine these sources into combined estimates. Here this information is combined into a state vector, with all information needed to initialize visual localization and mapping.
 
 The AR.Drone is equipped with a number of sensors, which give frequent updates about the motion. 
 The inertial sensor measures the body accelerations and angular velocities.
@@ -48,9 +55,12 @@ Relying only on the sonar sensor is not optimal since the measurements depend he
 		\subsection{Inertia measurements}
 		\subsection{Onboard filtered measurements}
 		\subsection{Vision-based velocity}
-	\section{Mapping}
-		\subsection{Visual map}
 
+	\section{Mapping}
+	\label{sec:mapping}
+This visual map consists of a texture map and a feature map. The texture map is used for human navigation and the feature map is used by the AR.Drone to localize itself.
+
+	\subsection{Visual map}
 Now that we have an estimate of the AR.Drone's position and attitude in the world, we can use this information to build a visual map of the environment.
 The AR.Drone is equipped with a down-looking camera that has a resolution of $176 \times 144$ pixels.
 The frames captured by this camera can be warped on a flat canvas to create a visual map.
@@ -178,11 +188,15 @@ We used OpenCV's \textit{warpPerspective}\footnote{\url{http://opencv.itseez.com
 
 In this way a texture map can be built. This map consists of a set overlapping textures. The placement and discontinuities of the overlapping textures could be further optimized by map stitching, as described in \cite{Visser2011imav}. Here the texture map is used for human navigation. For automatic navigation a feature map is used, as described in the next section.
 
+[REFER TO PAPER - map stitching]
 
-			\subsubsection{Map stitching}
+			%\subsubsection{Map stitching}
 			\subsubsection{Pose-based mapping}
 			\subsubsection{Optimizing the map}
+
+
 		\subsection{Feature map}
+\label{sec:feature_map}
 In addition to the visual map described above, a grid of image features (feature map) is created using a method we have developed.
 This feature map will be used for localization purposes, as described in Section~\ref{sec:localization}.
 The inertia measurements provide frequent position estimates.
@@ -264,6 +278,7 @@ $9.55\small{m/s}$, which is significantly faster than the AR.Drone's default max
 
 
 	\section{Localization}
+\label{sec:localization}
 
 The feature map created in the previous section can be used for absolute position estimates, at the moment of loop-closure (when the AR.Drone is above a location where it has been before).
 This allows to correct the drift that originates from the internal sensors of the AR.Drone.
@@ -415,5 +430,126 @@ This localization method allows us to exploit the feature map created in Section
 		\subsection{Pose recovery approaches}
 			\subsubsection{Correcting for translation}
 			\subsubsection{Correcting for rotation}
+
 	\section{Elevation mapping using an ultrasound sensor}
-		\subsection{Detecting elevations}
+	\label{sec:elevation_map}
+An elevation map can be used to improve navigation capabilities of both aerial and ground robots.
+For example, ground robots can use elevation information to plan routes that avoid obstacles.
+As stated in Section \ref{sec:related-research-elevation-mapping}, no publications were found that address the problem of elevation mapping using a single airborne ultrasound sensor.
+%At first glance this seems unlikely, because a significant percentage of MAVs is equipped with an ultrasound sensor, commonly used for altitude stabilization.
+%However, 
+The fundamental limitations of an ultrasound sensor make it hard to build an elevation map.
+Two issues are described below.
+
+%\subsection{Fundamental issues}
+The first issue is the unknow true altitude $z_{true}$ of the vehicle.
+When a MAV is flying above a perfectly flat floor, the measured altitude $z_{sensor}$ is equal to the true altitude $z_{true}$.
+However, when an obstacle comes in range of the ultrasound sensor, the measured distance $z_{sensor}$ decreases and is not equal to the true altitude $z_{true}$, meaning that $z_{true}$ cannot be derived from the ultrasound sensor directly.
+When the true altitude is unknown, it is impossible to determine the floor's elevation from the distance measurements using the following equation:
+\begin{equation}
+elevation = z_{true} - z_{sensor}
+\end{equation}
+%When the MAV is flying above a flat floor without obstacles, the vehicle will remain at a fixed altitude $z$.
+%However, when obstacles come in range of the ultrasound sensor, the measured distance $z_{sensor}$ decreases and the vehicle will increase its true %altitude $z_{true}$ by stabilizing the measured altitude $z_{sensor}$.
+%Because $z_{sensor} \neq z_{true}$, the true altitude of the vehicle cannot be derived directly from the sensors.
+%When the true altitude of the vehicle is unknown, it is hard to use distance measurements to determine the height of obstacles.
+
+Another limitation of using an ultrasound sensor for elevation mapping is the resolution of the sensor.
+As described in Section \ref{sec:ultrasound_altimeter}, an ultrasound sensor is unable to obtain precise directional information about objects.
+Sound progragates in a cone-like manner.
+Due to this property, the sensor acquires entire regions of constant depth instead of discrete depth points.
+So, the ultrasound sensor can only tell there is an elevation at the measured distance somewhere within the measured cone.
+This makes it hard to accurately determine the contours/borders of obstacles.
+
+A third difficulty is related to the altitude stabilization of the AR.Drone (Section \ref{sec:platform-controls}).
+The AR.Drone will change its absolute altitude when an altitude difference is detected.
+This complicates the detection of elevations, since it cannot be assumed the absolute altitude will remain roughly the same when flying above an object.
+
+The remaining part of this section describes a method to extract elevation information from an airborne ultrasound sensor.
+The true altitude of the AR.Drone is modeled as the combination of the measured altitude $z_{sensor}$ and the elevation of the floor $\delta$ below the vehicle:
+\begin{equation}
+z_{true} = \delta + z_{sensor}
+\end{equation}
+where the elevation $\delta$ is unknown and needs to be recovered from the ultrasound measurements.
+A key part of recovering $\delta$ is a finite-state machine that describes \textit{elevation events}.
+A schematic overview of the finite-state machine is given in Figure \ref{fig:elevation_map_fsm}.
+This finite-state machine has three different states: $\{ \text{NONE}, \text{UP}, \text{DOWN} \}$.
+State NONE indicates no significant elevation changes are occuring, state UP indicates a significant increase of elevation is detected and state DOWN indicates a significant decrease of elevation is detected.
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=10cm]{images/elevation_map_fsm.pdf}
+\caption{Schematic overview of the finite-state machine used for elevation mapping. $z''$ is the second order derivative of the ultrasound distance measurement.}
+\label{fig:elevation_map_fsm}
+\end{figure}
+
+Elevation changes are detected using a filtered second order derivative (acceleration) of the sonar measurement $z_{sensor}$.
+Obstacles that enter or leave the range of the ultrasound sensor result in sudden changes in ultrasound distance measurements.
+These changes are detected when the second order derivative exceeds a certain threshold $\gamma_{elevationEvent}$ and an elevation event is triggered.
+The threshold $\gamma_{elevationEvent}$ was carefully chosen such that altitude corrections performed by the AR.Drone altitude stabilization are not detected as being elevation events.
+In addition, the second order derivative is filtered by adding to the EKF state vector.
+An elevation event ends when the sign of the second order derivative switches.
+This happens when the AR.Drone altitude stabilization starts to change the absolute altitude to compensate for the change in measured altitude.
+Now, the elevation change can be recovered by substracting the measured distance at the end of the elevation event from the measured distance before the elevation event was triggered:
+\begin{equation}
+\Delta\delta_{t} = z_{sensor, t-\Delta t-1} - z_{sensor, t-1}
+\end{equation}
+where $\Delta\delta_{t}$ is the elevation change during an elevation event, $\Delta t$ is the duration of an event, $z_{sensor, t-\Delta t-1}$ is the distance measurement before the event started and $z_{sensor, t-1}$ is the distance measurement when the event ended.
+The total elevation is given by:
+\begin{equation}
+\delta_{t} = \delta_{t-1} + \Delta\delta_{t}
+\end{equation}
+
+\begin{figure}[htb!]
+  \begin{center}
+    \subfigure[Response]{\label{fig:elevation_method}\includegraphics[width=\linewidth]{images/elevation_map.eps}}
+    \subfigure[Corresponding elevation]{\label{fig:elevation_method_area}\includegraphics[width=\linewidth]{images/elevation_map_area.eps}}
+ \end{center}
+\caption{a) Response of the ultrasound sensor when flying over an object of approximately $(60,60,40)\small{mm}$. The lightgray lines indicate the threshold $\gamma_{elevationEvent}$ and null-line. When the second order derivative (magenta line) exceeds the threshold, an event is started (lightgrey rectangle). An event ends when the derivative swaps sign. Each arrow indicates the change in elevation caused by the event. The first event increases the elevation when entering an object and the second event decreases the elevation when leaving the object.
+Between both events, the AR.Drone performs an altitude correction, as can be seen by the relatively slow increasement of distance. This increasement is not infomative about the elevation and is ingnored by the elevation mapping method.\\ b) Elevation $\delta$ below the AR.Drone over time. The elevation increases to approximately $40\small{cm}$ when flying above an obstacle. The elevation is decreased when the obstacle is out of the ultrasound sensor's range. There is a small error between both elevation events, resulting in a small false elevation ($\pm 50\small{mm}$) after the AR.Drone flew over the obstacle and is flying above the floor again.}
+  \label{visual-slam-elevation-method}
+\end{figure}
+
+\begin{comment}
+\begin{figure}[htb]
+\centering
+\includegraphics[width=\linewidth]{images/elevation_map.eps}
+\caption{Response of the ultrasound sensor when flying over an object of approximately $(60,60,40)\small{mm}$. The lightgray lines indicate the threshold $\gamma_{elevationEvent}$ and null-line. When the second order derivative (magenta line) exceeds the threshold, an event is started (lightgrey rectangle). An event ends when the derivative swaps sign. Each arrow indicates the change in elevation caused by the event. The first event increases the elevation when entering an object and the second event decreases the elevation when leaving the object.
+Between both events, the AR.Drone performs an altitude correction, as can be seen by the relatively slow increasement of distance. This increasement is not infomative about the elevation and is ingnored by the elevation mapping method.}
+\label{fig:elevation_method}
+\end{figure}
+\begin{figure}[htb]
+\centering
+\includegraphics[width=\linewidth]{images/elevation_map_area.eps}
+\caption{Elevation $\delta$ below the AR.Drone over time. The elevation increases to approximately $40\small{cm}$ when flying above an obstacle. The elevation is decreased when the obstacle is out of the ultrasound sensor's range. There is a small error between both elevation events, resulting in a small false elevation ($\pm 50\small{mm}$) after the AR.Drone flew over the obstacle and is flying above the floor again.}
+\label{fig:elevation_method_area}
+\end{figure}
+\end{comment}
+
+The elevation information is stored in a grid that is similar to the feature map described in Section \ref{sec:feature_map}.
+For each ultrasound distance measurement, elevation $\delta_t$ is computed and stored in the grid cells that corresponds to the world coordinates where a line perpendicular to the AR.Drone body intersects the world plane.
+These world coordinates are the position where the center of the ultrasound sensor's cone hits the floor.
+Because the exact size of an object is unkown, the elevation is written to all grid cells within a radius $\gamma_{elevationRadius}$ around the intersection point.
+
+This approach may lead to cases where the size of an obstacle is overestimated in the elevation map.
+Therefore, an additional refinement step was added to the elevation mapping methods.
+If no elevation is measured ($\delta_t \approx 0$), it can be assumed there is no obstacle inside the cone of the ultrasound sensor.
+Using this assuption, all grid cells within the cone can resetted to zero elevation and locked to prevent future changes.
+The radius of the cone is computed using the following equation:
+\begin{equation}
+r = tan (\alpha_{ultrasound} \times z_{sensor})
+\end{equation}
+where $r$ is the radius of a cone of height $z_{sensor}$ and $\alpha_{ultrasound}$ is the opening angle of the ultrasound sensor.
+
+\begin{figure}[htb!]
+  \begin{center}
+	%\hspace*{-1.5cm}
+\advance\leftskip-2.5cm\rightskip-2.5cm
+    \subfigure[Blup]{\label{visual-slam-elevation-map1}\includegraphics[width=0.4\linewidth]{images/elevation_map1.png}}
+    %\hspace{1cm}
+    \subfigure[Blup]{\label{visual-slam-elevation-map2}\includegraphics[width=0.4\linewidth]{images/elevation_map2.png}}
+    \subfigure[Blup]{\label{visual-slam-elevation-map3}\includegraphics[width=0.4\linewidth]{images/elevation_map3.png}}
+ \end{center}
+  \caption{Blup.}
+  \label{visual-slam-elevation-map}
+\end{figure}

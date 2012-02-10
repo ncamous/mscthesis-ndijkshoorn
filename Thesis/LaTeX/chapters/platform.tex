@@ -131,6 +131,7 @@ The yaw orientation is measured using a high precision gyrometer: Epson Toyocom 
 
 
 \subsubsection{Ultrasound altimeter}
+\label{sec:ultrasound_altimeter}
 An ultrasound sensor provides altitude measures for automatic altitude stabilization and assisted vertical speed control.
 The ultrasound sensor is attached on the bottom of the AR.Drone and points downwards in order to measure the distance to the floor.
 A packet of ultrasonic soundwaves is transmitted towards the floor, which reflects the sound back to the sensor.
@@ -320,6 +321,7 @@ The induced forces are directly measured by the accelerometers, and through the 
 
 
 \subsection{Controls}
+\label{sec:platform-controls}
 The AR.Drone performs actions based on the estimated state and the input from the pilot.
 A pilot controls the linear and lateral velocity with an input signal $s$ that specifies the pitch of the drone as a factor (between 0 and 1) of the maximum absolute tilt $\theta_{max}$.
 The altitude is controlled with an input signal that specifies the derised vertical speed as a factor (between 0 and 1) of the maximum vertical velocity $v_{max}$.
