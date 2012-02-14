@@ -61,6 +61,7 @@ Relying only on the sonar sensor is not optimal since the measurements depend he
 This visual map consists of a texture map and a feature map. The texture map is used for human navigation and the feature map is used by the AR.Drone to localize itself.
 
 	\subsection{Visual map}
+\label{sec:texture_map}
 Now that we have an estimate of the AR.Drone's position and attitude in the world, we can use this information to build a visual map of the environment.
 The AR.Drone is equipped with a down-looking camera that has a resolution of $176 \times 144$ pixels.
 The frames captured by this camera can be warped on a flat canvas to create a visual map.
@@ -322,7 +323,7 @@ Please note it is possible that multiple descriptors from the frame are matched 
 
 For each match $C(d_q, d_t)$ the 2D world coordinates $(x_{w, d_q}, y_{w, d_q})$ and $(x_{w, d_t}, y_{w, d_t})$ of both descriptors are already computed.
 These point pairs can be used to calculate a transformation between the query points (frame) and training (map) points.
-This transformation describes the relation between the EKF estimated vehicle position (described in Section~\ref{sec:EKF}) and the position according to the feature map.
+This transformation describes the relation between the EKF estimated vehicle position (described in Section~\ref{sec:pose_estimation}) and the position according to the feature map.
 
 \begin{figure}[htb]
 \centering
@@ -331,6 +332,15 @@ This transformation describes the relation between the EKF estimated vehicle pos
 \label{fig:localization1}
 \end{figure}
 
+%This localization method allows us to exploit the feature map created in Section~\ref{sec:feature_map} and get absolute position estimates which can be used to %autonomously navigate the AR.Drone, as demonstrated in the next section.
+
+
+
+
+
+
+\subsection{Pose recovery approaches}
+\label{sec:pose-recovery}
 Different types of transformations can be used to describe the relation between the point pairs (e.g., perspective transformation or affine transformation).
 However, if not all of the point pairs fit the transformation (due to outliers), the initial transformation estimate will be poor.
 We use Random Sample Consensus (RANSAC) \cite{fischler1981random} to filter the set of matches in order to detect and eliminate erroneous matches (point pairs).
@@ -347,7 +357,9 @@ For example, this may happen when multiple query descriptors (frame) are matched
 In that case, a perspective or affine transformation is found that scales all points to a single position.
 This transformation does not correspond with the actual translation and rotation, but is a valid transformation according to the RANSAC algorithm.
 
-Instead of computing a full perspective, affine or Euclidean transformation, here only the translation in $x$ and $y$ direction is estimated. The rotation is estimated independently, as described at the end of this section.
+Instead of computing a full perspective, affine or Euclidean transformation, a more pragmatic approach is used.
+Here, only the translation in $x$ and $y$ direction is estimated.
+The rotation is estimated independently, as described at the end of this section.
 The translation is estimated by taking a subset of 3 random point pairs.
 The translation for those points is computed as follows:
 
@@ -424,12 +436,70 @@ The rotation is computed using Kabsch algorithm \cite{Kabsch:a12999}.
 This method computes the optimal rotation matrix that minimizes the RMSD (root mean squared deviation) between two paired sets of points.
 Like the translation, the rotation is added to the estimated rotation to calculate the correct rotation. This rotation is directly written to the EKF state.
 
-This localization method allows us to exploit the feature map created in Section~\ref{sec:feature_map} and get absolute position estimates which can be used to autonomously navigate the AR.Drone, as demonstrated in the next section.
+In Section \ref{sec:results-pose-recovery}, an experiment is performed to validate that the proposed pose recovery method outperforms other popular appraches.
 
 
-		\subsection{Pose recovery approaches}
-			\subsubsection{Correcting for translation}
-			\subsubsection{Correcting for rotation}
+
+\section{Visual odometry}
+\label{sec:visual-slam-visual-odemetry}
+The AR.Drone's onboard intelligence estimates the velocity using two complementary visual odometry algorithm and an aerodynamic model of the AR.Drone.
+However, its limited processing power requires the use of lightweight features and algorithms, which may affect the accuracy of the estimated velocities.
+Running a visual odometry algorithm offboard eases the computational limitations, allowing more complex (better) features and algorithms.
+In this section, the localization method presented in the previous section is modified to operate as a visual odometry algorithm.
+Instead of matching the last frame against the feature map, now the last frame is matched against the previous frame.
+The resulting velocity estimates can be fused with the onboard velocity estimates to improve the accuracy of estimated velocity.
+
+When a camera frame $f_t$ is received, SURF features are extracted.
+Each feature consists of a center position in pixel coordinates ($x_f, y_f$) and a feature descriptor.
+A feature's center point ($x_f, y_f$) is transformed to its corresponding position in 2D world coordinates ($x_w, y_w$).
+This is done using ray-casting, as described in Section \ref{sec:texture_map}.
+Opposed to the previous sections, the origin of the ray is set to $(0, 0, z)$, such that the estimated position of the AR.Drone doesn't influence the visual odometry.
+% where the position of the AR.Drone is set to $(0, 0)$.
+
+The next step is matching the feature descriptors from the last frame $f_t$ against the feature descriptors from the previous frame $f_{t-1}$.
+The set of descriptors $D_{t}$ from the current frame $f_t$ is matched against the descriptors $D_{t-1}$ from the previous frame $f_{t-1}$.
+Matching is done using a brute force matcher that uses the $L^2$ norm as similarity measure.
+For each descriptor $d_{t}$ from frame $f_t$, function $C(d_{t})$ selects the descriptor $d_{t-1}$ from the previous frame $f_{t-1}$ that minimizes the $L^2$ norm:
+
+\begin{equation}
+C(d_{t}) = \arg\min_{d_{t-1} \in D_{t-1}} L2(d_t, d_{t-1})
+\end{equation}
+The $L2$ distance between two descriptors $a$ and $b$ is defined as:
+
+\begin{equation}
+L2(a,b) =\sqrt { \sum_{i=1}^{N} \left| a_i - b_i \right| ^2 }
+\end{equation}
+where $N = 64$ is the length of the SURF descriptor vector.
+
+\begin{figure}[htb!]
+  \begin{center}
+	%\hspace*{-1.5cm}
+\advance\leftskip-2.5cm\rightskip-2.5cm
+    \subfigure[Frame $f_{t-1}$]{\label{visual-slam-visual-odometry1}\includegraphics[width=0.4\linewidth]{images/visual_odometry1.png}}
+    %\hspace{1cm}
+    \subfigure[Frame $f_t$]{\label{visual-slam-visual-odometry2}\includegraphics[width=0.4\linewidth]{images/visual_odometry2.png}}
+    \subfigure[Feature coordinates of frame $f_{t-1}$ and $f_t$]{\label{visual-slam-visual-odometry3}\includegraphics[width=0.4\linewidth]{images/visual_odometry3.png}}
+ \end{center}
+  \caption{Overview of the visual odometry algorithm. In \ref{visual-slam-visual-odometry1} features from the previous frame $f_{t-1}$ are transformed to corresponding 2D world coordinates using ray-casting. In \ref{visual-slam-visual-odometry2} this step is repeated for the newest frame $f_t$. In both frames the same three features are found, at different locations in the frame. These differences indicate the AR.Drone has moved. Features from this new frame $f_t$ (red circles) are matched against the features from the previous frame (black circles). In \ref{visual-slam-visual-odometry3} a transformation is computed between the world coordinates of both feature sets. This transformation describes the movement $T$ of the AR.Drone between both frames.}
+  \label{visual-slam-visual-odometry}
+\end{figure}
+
+
+Each descriptor from frame $f_t$ is matched against the descriptor from the previous frame $f_{t-1}$ that is most similar.
+For each match $C(d_t, d_{t-1})$ the 2D world coordinates $(x_{w, d_t}, y_{w, d_t})$ and $(x_{w, d_{t-1}}, y_{w, d_{t-1}})$ of both descriptors are already computed.
+These point pairs can be used to calculate a transformation between the points from the last frame and the previous frame.
+This transformation describes the movement (e.g., translation) of the AR.Drone between the last two frames.
+The transformation is computed using the method described in Section \ref{sec:pose-recovery}.
+Now, the velocity is computed using:
+\begin{equation}
+V_x = Tx / \Delta t
+\end{equation}
+\begin{equation}
+V_y = Ty / \Delta t
+\end{equation}
+where $V$ is the velocity and $\Delta t$ is the time between the last two frames.
+
+
 
 	\section{Elevation mapping using an ultrasound sensor}
 	\label{sec:elevation_map}
@@ -530,11 +600,13 @@ The elevation information is stored in a grid that is similar to the feature map
 For each ultrasound distance measurement, elevation $\delta_t$ is computed and stored in the grid cells that corresponds to the world coordinates where a line perpendicular to the AR.Drone body intersects the world plane.
 These world coordinates are the position where the center of the ultrasound sensor's cone hits the floor.
 Because the exact size of an object is unkown, the elevation is written to all grid cells within a radius $\gamma_{elevationRadius}$ around the intersection point.
+This process is visualized in Figure \ref{visual-slam-elevation-map1} and \ref{visual-slam-elevation-map2}.
 
-This approach may lead to cases where the size of an obstacle is overestimated in the elevation map.
+This approach may lead to cases where the size of an obstacle is overestimated in the elevation map, as can be seen in Figure \ref{visual-slam-elevation-map2}.
 Therefore, an additional refinement step was added to the elevation mapping methods.
 If no elevation is measured ($\delta_t \approx 0$), it can be assumed there is no obstacle inside the cone of the ultrasound sensor.
 Using this assuption, all grid cells within the cone can resetted to zero elevation and locked to prevent future changes.
+This refinement step is visualized Figure \ref{visual-slam-elevation-map3}.
 The radius of the cone is computed using the following equation:
 \begin{equation}
 r = tan (\alpha_{ultrasound} \times z_{sensor})
@@ -545,11 +617,11 @@ where $r$ is the radius of a cone of height $z_{sensor}$ and $\alpha_{ultrasound
   \begin{center}
 	%\hspace*{-1.5cm}
 \advance\leftskip-2.5cm\rightskip-2.5cm
-    \subfigure[Blup]{\label{visual-slam-elevation-map1}\includegraphics[width=0.4\linewidth]{images/elevation_map1.png}}
+    \subfigure[Obstacle enters range]{\label{visual-slam-elevation-map1}\includegraphics[width=0.4\linewidth]{images/elevation_map1.png}}
     %\hspace{1cm}
-    \subfigure[Blup]{\label{visual-slam-elevation-map2}\includegraphics[width=0.4\linewidth]{images/elevation_map2.png}}
-    \subfigure[Blup]{\label{visual-slam-elevation-map3}\includegraphics[width=0.4\linewidth]{images/elevation_map3.png}}
+    \subfigure[Obstacle in range]{\label{visual-slam-elevation-map2}\includegraphics[width=0.4\linewidth]{images/elevation_map2.png}}
+    \subfigure[Obstacle out of range]{\label{visual-slam-elevation-map3}\includegraphics[width=0.4\linewidth]{images/elevation_map3.png}}
  \end{center}
-  \caption{Blup.}
+  \caption{Overview of the elevation map updates. The green cone indicates the range of the ultrasound sensor. The red line inside the cone respresents the center of the cone, perpendicular to the AR.Drone body. In \ref{visual-slam-elevation-map1} and \ref{visual-slam-elevation-map2} an elevation is measured. All grid cells within a radius $\gamma_{elevationRadius}$ around the center of the cone (red line) are updated to store the measured elevation. \ref{visual-slam-elevation-map3} Describes the refinement step. When no elevation is measured, all grid cells within the cone (red cubes) are resetted to zero elevation.}
   \label{visual-slam-elevation-map}
 \end{figure}
