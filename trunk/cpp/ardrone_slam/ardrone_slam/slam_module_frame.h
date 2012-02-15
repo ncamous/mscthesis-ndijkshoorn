@@ -30,7 +30,7 @@ public:
 	bool process_visual_loc();
 	bool process_map(Mat& frame_state);
 
-	double find_robust_translation_rotation(InputArray p1, InputArray p2, vector<DMatch>& matches, vector<short>& inliers, cv::Mat& T, float& R, double maxInlierDist = 3.0);
+	double find_robust_translation_rotation(InputArray p1, InputArray p2, InputArray t, vector<DMatch>& matches, vector<short>& inliers, cv::Mat& T, float& R, double maxInlierDist = 3.0);
 
 	void get_features(Mat& frame, vector<KeyPoint> &v);
 	void get_descriptors(Mat& frame, vector<KeyPoint> &v, Mat& descriptors);

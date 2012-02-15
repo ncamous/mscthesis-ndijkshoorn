@@ -75,7 +75,7 @@ float Kabsch(Mat& P, Mat& Q, Mat& R)
 	return R.at<float>(0, 1);
 }
 
-bool getMatSubset( const Mat& m1, const Mat& m2, Mat& ms1, Mat& ms2, int maxAttempts, CvRNG& rng )
+bool getMatSubset( const Mat& m1, const Mat& m2, Mat& ms1, Mat& ms2, int maxAttempts, CvRNG& rng, int *subset_idx )
 {
 	bool checkPartialSubsets = false;
 
@@ -99,6 +99,10 @@ bool getMatSubset( const Mat& m1, const Mat& m2, Mat& ms1, Mat& ms2, int maxAtte
                     break;
             if( j < i )
                 continue;
+
+			// NICK
+			subset_idx[i] = idx_i;
+
             for( k = 0; k < elemSize; k++ )
             {
                 ms1ptr[i*elemSize + k] = m1ptr[idx_i*elemSize + k];
