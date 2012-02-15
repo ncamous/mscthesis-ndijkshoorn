@@ -184,13 +184,14 @@ bool slam_module_frame::process_visual_motion()
 		Mat T(1, 1, CV_32FC3);
 		float R = -1.0f;
 
-		double confidence = find_robust_translation_rotation(imagepoints_wc, prev_frame_wc, matches, inliers, T, R, 50.0);
+		double confidence = find_robust_translation_rotation(imagepoints_wc, prev_frame_wc, Mat(), matches, inliers, T, R, 50.0);
 
 
 		if (confidence >= 0.7)
 		{
 			vector<DMatch> matches_f;
 
+			/*
 			for (size_t i = 0; i < inliers.size(); i++)
 			{
 				matches_f.push_back(matches[inliers[i]]);
@@ -201,6 +202,7 @@ bool slam_module_frame::process_visual_motion()
              drawMatches(frame_gray, keypoints, prev_frame_gray, prev_keypoints, matches_f, tmp);
              imshow("Image:", tmp);
              cvWaitKey(6);
+			 */
 
 
 			/* lock KF */
@@ -322,9 +324,10 @@ bool slam_module_frame::process_visual_loc()
 	/* get descriptors from map */
 	Mat map_descriptors;
 	Mat map_keypoints_wc;
-	//float radius = max(cov->at<float>(0, 0), cov->at<float>(1, 1));
+	Mat map_keypoints_t;
+
 	float radius = 3000.0f;
-	//radius += 1500.0f; // just in case. Needs to be removed when KF cov is working fine
+	//float radius = max(cov->at<float>(0, 0), cov->at<float>(1, 1));
 	//radius += RectRadius(image_corners_wc); // should be dynamic and basic on the state cov
 
 	Mat cam_pos(3, 1, CV_32F);
@@ -332,7 +335,7 @@ bool slam_module_frame::process_visual_loc()
 	get_localcam(cam_pos, cam_or);
 	Point3f wc(cam_pos);
 
-	map->get_local_descriptors(map_descriptors, map_keypoints_wc, wc, radius);
+	map->get_local_descriptors(map_descriptors, map_keypoints_wc, map_keypoints_t, wc, radius);
 
 
 	/* not enough descriptors from map (unexplored area?) */
@@ -377,7 +380,7 @@ bool slam_module_frame::process_visual_loc()
 	Mat T(1, 1, CV_32FC3);
 	float R = 0.0f;
 
-	double confidence = find_robust_translation_rotation(imagepoints_wc, map_keypoints_wc, matches, inliers, T, R, 100.0);
+	double confidence = find_robust_translation_rotation(imagepoints_wc, map_keypoints_wc, map_keypoints_t, matches, inliers, T, R, 100.0);
 
 	/*
 	vector<DMatch> matches3;
@@ -565,21 +568,27 @@ void slam_module_frame::store_prev_frame()
 }
 
 
-double slam_module_frame::find_robust_translation_rotation(InputArray p1, InputArray p2, vector<DMatch>& matches, vector<short>& inliers, Mat& T, float& R, double maxInlierDist)
+double slam_module_frame::find_robust_translation_rotation(InputArray p1, InputArray p2 /*map*/, InputArray t, vector<DMatch>& matches, vector<short>& inliers, Mat& T, float& R, double maxInlierDist)
 {
 	size_t nr_matches = matches.size();
 
+	bool use_time = !t.empty();
+
 	Mat _p1 = p1.getMat();
 	Mat _p2 = p2.getMat();
+	Mat _p2time = t.getMat();
 
 	Mat p1m(nr_matches, 1, CV_32FC3);
 	Mat p2m(nr_matches, 1, CV_32FC3);
-	Mat p1mt(nr_matches, 1, CV_32FC3);
+	Mat p2time(nr_matches, 1, CV_32S); // time
 
 	for (size_t i = 0; i < matches.size(); i++)
 	{
 		p1m.at<Vec3f>(i) = _p1.at<Vec3f>(matches[i].queryIdx);
 		p2m.at<Vec3f>(i) = _p2.at<Vec3f>(matches[i].trainIdx);
+
+		if (use_time)
+			p2time.at<int>(i) = _p2time.at<int>(matches[i].trainIdx);
 	}
 
 	Mat p1s(3, 1, CV_32FC3);
@@ -593,31 +602,55 @@ double slam_module_frame::find_robust_translation_rotation(InputArray p1, InputA
 	Mat T_temp = Mat(1, 1, CV_32FC3);
 	Scalar mean, stddev;
 	double confidence, best_confidence;
+	double time, best_time;
 	CvRNG rng = cvRNG(-1); // not very nice place here
 
 	best_confidence = 0.0;
+	best_time = FLT_MAX;
+	int subset_idx[3];
 
 	for (int i = 0; i < 800; i++)
 	{
-		if (!getMatSubset(p1m, p2m, p1s, p2s, 300, rng))
+		if (!getMatSubset(p1m, p2m, p1s, p2s, 300, rng, subset_idx))
 			continue;
 
 		meanStdDev(p2s - p1s, mean, stddev);
 
-		// get 2D translation (currently)
+		// get 2D translation
 		T_temp.at<Vec3f>(0)[0] = (float) mean[0];
 		T_temp.at<Vec3f>(0)[1] = (float) mean[1];
 
 		confidence = 1.0 - (stddev[0] / 200.0) - (stddev[1] / 200.0);
 
-		if (confidence > best_confidence)
+		if (use_time)
 		{
-			best_confidence = confidence;
-			memcpy_s(T.data, sizeof(float) * 2, T_temp.data, sizeof(float) * 2); // currently, only x and y used
-			memcpy_s(p1s_best.data, sizeof(float) * 9, p1s.data, sizeof(float) * 9); // 3 points * 3 floats
-			memcpy_s(p2s_best.data, sizeof(float) * 9, p2s.data, sizeof(float) * 9); // 3 points * 3 floats
+			// average time of 3 features -> better: use covariance between the three times to determine quality
+			time = p2time.at<int>(subset_idx[0]) + p2time.at<int>(subset_idx[1]) + p2time.at<int>(subset_idx[2]);
+
+			if (confidence >= 0.7 && time < best_time)
+			{
+				best_confidence = confidence;
+				best_time = time;
+				memcpy_s(T.data, sizeof(float) * 2, T_temp.data, sizeof(float) * 2); // currently, only x and y used
+				memcpy_s(p1s_best.data, sizeof(float) * 9, p1s.data, sizeof(float) * 9); // 3 points * 3 floats
+				memcpy_s(p2s_best.data, sizeof(float) * 9, p2s.data, sizeof(float) * 9); // 3 points * 3 floats
+			}
+
+		}
+		else
+		{
+			if (confidence > best_confidence)
+			{
+				best_confidence = confidence;
+				memcpy_s(T.data, sizeof(float) * 2, T_temp.data, sizeof(float) * 2); // currently, only x and y used
+				memcpy_s(p1s_best.data, sizeof(float) * 9, p1s.data, sizeof(float) * 9); // 3 points * 3 floats
+				memcpy_s(p2s_best.data, sizeof(float) * 9, p2s.data, sizeof(float) * 9); // 3 points * 3 floats
+			}
 		}
 	}
+
+
+
 
 
 	// Use Scalar for to translate points. Using a Mat results in 1 point, when there are 3 points to translate
@@ -625,12 +658,15 @@ double slam_module_frame::find_robust_translation_rotation(InputArray p1, InputA
 
 
 	/* Inliers mask */
+	//Mat p1mt(nr_matches, 1, CV_32FC3);
+	/*
 	p1mt = p1m + Ts;
 	for (size_t i = 0; i < nr_matches; i++)
 	{
 		if (norm(p2m.at<Point3f>(i) - p1mt.at<Point3f>(i)) <= maxInlierDist)
 			inliers.push_back((short) i);
 	}
+	*/
 
 
 	/* Rotation */

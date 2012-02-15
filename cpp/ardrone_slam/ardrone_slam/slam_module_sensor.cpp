@@ -279,8 +279,8 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 		update_elevation_map(elevation, state->at<float>(12)); // return sonar measured distance
 
 
-	//if (counter++ % 2 == 0)
-	//{
+	if (counter++ % 2 == 0)
+	{
 		/*
 		printf("error: %f, %f, %f\n", 
 			abs(state->at<float>(0) - m->gt_loc[0]),
@@ -289,19 +289,16 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 			);
 		*/
 
-		/*
 		fprintf(error_log, "%f,%f,%f,%f,%f\n",
 			(float) m->time,
-			//state->at<float>(2),
+			(float) m->altitude,
+			state->at<float>(12),
 			state->at<float>(13),
-			state->at<float>(8),
-			measurement_vel.at<float>(2),
-			(float) m->altitude
+			state->at<float>(14)
 		);
 
 		fflush(error_log);
-		*/
-	//}
+	}
 }
 
 
@@ -318,14 +315,14 @@ float slam_module_sensor::process_altitude_elevation(float sonar_raw, float vel,
 		if (abs(accel) < 5000.0f)
 			stable_altitude = sonar_raw;
 
-		if (accel < -600000.0f)
+		if (accel < -800000.0f)
 		{
 			printf("ELEVATION MODE: UP (%f)\n", delta);
 			elevation_mode	= ELEVATION_STATE_UP;
 			elevation_start	= stable_altitude;
 			return stable_altitude;
 		}
-		else if (accel > 600000.0f)
+		else if (accel > 800000.0f)
 		{
 			printf("ELEVATION MODE: DOWN (%f)\n", delta);
 			elevation_mode	= ELEVATION_STATE_DOWN;

@@ -5,7 +5,7 @@
 namespace cv {
 	float RectRadius(const vector<Point3f>& corners);
 	float Kabsch(Mat& P, Mat& Q, Mat& R);
-	bool getMatSubset( const Mat& m1, const Mat& m2, Mat& ms1, Mat& ms2, int maxAttempts, CvRNG& rng );
+	bool getMatSubset( const Mat& m1, const Mat& m2, Mat& ms1, Mat& ms2, int maxAttempts, CvRNG& rng, int *subset_idx );
 	bool checkSubset( const Mat& m, int count );
 	void dumpMatrix(const Mat &mat);
 	double MatMax(const Mat &mat);
