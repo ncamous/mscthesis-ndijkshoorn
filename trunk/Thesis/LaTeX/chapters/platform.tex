@@ -17,7 +17,6 @@ The intelligence onboard of the vehicle is described.
 Moreover, the open Application Programming Interface (API) is examined.
 
 
-
 % Quadrotor flight control
 \section{Quadrotor flight control}
 % http://www.stanford.edu/~haomiao/papers/ICRA09AeroEffects.pdf
@@ -64,7 +63,13 @@ Increasing thrust for one rotor while decreasing thrust for the other will maint
 
 % Hardware
 \section{Hardware}
-The AR.Drone is remote-controlled consumer quadrotor helicoptor developed by Parrot SA\footnote{\url{www.parrot.com}}.
+\begin{figure}[htb]
+\centering
+\includegraphics[width=7cm]{images/ardrone.jpg}
+\caption{TDO BE REPLACED WITH OWN PICTURE. The AR.Drone quadrotor helicopter with protection hull attached.}
+\label{fig:ardrone_hull}
+\end{figure}
+The AR.Drone (Figure \ref{fig:ardrone_hull}) is remote-controlled consumer quadrotor helicoptor developed by Parrot SA\footnote{\url{www.parrot.com}}.
 The body is made of carbon fiber tube structure and high resistance 
 %PA66
 plastic.
@@ -228,7 +233,7 @@ Despite the high frequency, the frames are streamed at 15 frames per second.
 \textit{front + bottom camera sample}
 
 The bottom camera plays a central role in the AR.Drone's onboard intelligence.
-It is used for horizontal / vertical stabilization (i.e., automatic hovering and trimming) and to estimated the velocity of the drone.
+It is used for horizontal stabilization (i.e., automatic hovering and trimming) and to estimated the velocity of the drone.
 More details about the onboard intelligence can be found in Section \ref{sec:platform_onboard_intelligence}.
 
 
