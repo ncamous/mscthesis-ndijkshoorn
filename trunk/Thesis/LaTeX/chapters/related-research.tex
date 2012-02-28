@@ -8,7 +8,7 @@ However, these bulky sensors cannot be used on small (flying) vehicles.
 As a result, researchers focused on using vision sensors, which offer a good balance in terms of weight, accuracy and power consumption.
 Lightweight cameras are especially attractive for small flying vehicles (AUVs).
 
-Almost all publication related to my research describe a methodology that is able to learn the environment, but do not produce a visual map.
+Almost all publications related to my research describe a methodology that is able to learn the environment, but do not produce a visual map.
 An exception is the research by Steder, which builds a visual map of the environment.
 
 
@@ -77,7 +77,7 @@ The solution with the highest score is returned as the assumption for the transf
 Features correspondences between images are selected using a deterministic PROSAC \cite{chum2005matching} algorithm.
 PROSAC takes into account a quality measure (e.g., distance between feature descriptors) of the correspondences during sampling, where RANSAC draws the samples uniformly.
 
-This article describes how to estimate the motion of a vehicle and perform place revisiting using a feature map.
+Their article describes how to estimate the motion of a vehicle and perform place revisiting using a feature map.
 However, the article doesn't describe how the visual map is constructed (from poses and images) and visualized.
 Furthermore, it lacks how an elevation map is constructed and how this elevation map can be used to improve the position estimates (e.g., elevation constraints).
 A great disadvantage of the described method are the computational costs of the optimization method, which cannot be performed online (i.e. during flight). This reduces the number of practical applications.
@@ -85,7 +85,7 @@ A great disadvantage of the described method are the computational costs of the 
 
 \subsubsection{Online Mosaicking}
 While Steder uses a Euclidean distance measure to compare the correspondences of the features in two images, Caballero \textit{et al.} \cite{caballero2009unmanned} indicate that this is a last resort.
-They are able to make a robust estimation of the spatial relationship on different levels: homogeneous, affine and Euclidean.
+They are able to make a robust estimation of the spatial relationship on different levels: homogeneous, affine and Euclidean (as described in Section \ref{sec:background-projective-geometry}).
 The article addresses the problem for aerial vehicles with a single camera, like the AR.Drone.
 %Geo-referenced mosaics can be sufficient as environment model for certain tasks.
 A mosaic is built by aliging a set of images gathered to a common frame, while the aerial vehicle is moving.
@@ -143,7 +143,7 @@ For this reason, the image is warped to match the image from the mosaic, which s
 The computed homography is used to obtain the correct alignment.
 Now, the relations among the most recent image and the corresponding image from the mosaic can be updated.
 
-The relations between images are maintained and updated by using an Extended Kalman Filter.
+The relations between images are maintained and updated by using an Extended Kalman Filter (Section \ref{sec:background-solution-techniques}).
 The state vector including the mean and covariance of all images is defined as:
 \begin{equation}
 x^{-} = [x_1, x_2, ..., x_n]^T = [h_{01}, x_1 \cdot h_{12}, ..., x_{(n-1)n} \cdot h_{(n-1)n}]^T
@@ -165,11 +165,15 @@ Due to its large footprint, a radar sensor cannot be mounted on small UAVs.
 Unlike a radar sensor, an ultrasound sensor can be carried by a small UAV.
 This sensor provides feedback for altitude stabilization and obstacle detection.
 According to my knowledge, no publication addresses the problem of elevation mapping using a single airborne ultrasound sensor.
-However, the problem is addressed using advanced (e.g., multibeam) ultrasound sensor.
+However, the problem is addressed using advanced (e.g., multibeam) ultrasound sensors.
+These advanced ultrasound sensors are commonly used for obstacle detection and navigation of underwater robots.
+%are popular for underwater navigation \cite{majumder2001multisensor}.
+Underwater robots observe the seafloor from above, very similar to the way airborne vehicles observe the floor from above.
+This similarity suggest that methods developped for underwater mapping are applicable to airborne mapping.
 
 \subsubsection{Seafloor mapping}
 Seafloor mapping is a research area for which ultrasound sensors have been used for building elevation maps. Some examples are \cite{johnson1996seafloor,strauss1999multibeam,zerr1996three,evans2002three}.
-\cite{kenny2003overview} Gives and overview of seabed-mapping technologies.
+Kenny et al \cite{kenny2003overview} give an overview of seabed-mapping technologies.
 Elevation mapping is essential for an autonomous underwater vehicle designed to navigate close to the seafloor.
 The map is being used for obstacle avoidance, path planning and self-localization.
 
@@ -198,7 +202,7 @@ Unlike the AR.Drone, the pencil beam scanning sonar of the UUV returns high-reso
 In cases where a priori maps are not available, a mechanism must exist for building a map while simultaneously using that map for the purposes of localisation.
 During motion, the vehicle builds a complete map of landmarks and uses these to provide continuous estimates of the vehicle location.
 By tracking the relative position between the vehicle and identifiable features in the environment, both the position of the vehicle and the position of the features can be estimated simultaneously.
-An Extended Kalman Filter (EKF) is used for stochastic estimation of the vehicle's position and map feature locations.
+An Extended Kalman Filter is used for stochastic estimation of the vehicle's position and map feature locations.
 The state is represented by an augmented state vector $\hat{x}^{+}(t)$, consisting of $n_v$ states.
 \begin{equation}
 \hat{x}^+ = \left[ {
@@ -218,12 +222,14 @@ The covariance matrix for the state at time $t$ is defined as:
 It was assumed that the roll and pitch of the vehicle were negligible, based on observations of the vehicle performance during in-water tests and results from the design of the vehicle.
 The vehicle pose at time step $k$ is represented by
 \begin{equation}
-\hat{x}^+_v(t) = \left[ \begin{array}{cccc} \hat{x}^+_v(t) & \hat{y}^+_v(t) & \hat{z}^+_v(t) & \hat{\psi}^+_v(t) \end{array}\right]^T
+\hat{x}^+_v(t) = \left[ \begin{array}{cccc} \hat{\textit{x}}^+_v(t) & \hat{\textit{y}}^+_v(t) & \hat{\textit{z}}^+_v(t) & \hat{\psi}^+_v(t) \end{array}\right]^T
 \end{equation}
-and the features states are represented by
+where $\hat{\textit{x}}^+_v(t)$, $\hat{\textit{y}}^+_v(t)$ and $\hat{\textit{z}}^+_v(t)$ are the $x$, $y$ and $z$ coordinates of the vehicle at time $t$ and $\hat{\psi}^+_v(t)$ is the vehicle's yaw at time $t$.
+The features states are represented by
 \begin{equation}
-\hat{x}^+_i(t) = \left[ \begin{array}{ccc} \hat{x}^+_i(t) & \hat{y}^+_i(t) & \hat{z}^+_v(t) \end{array}\right]^T
+\hat{x}^+_i(t) = \left[ \begin{array}{ccc} \hat{\textit{x}}^+_i(t) & \hat{\textit{y}}^+_i(t) & \hat{\textit{z}}^+_i(t) \end{array}\right]^T
 \end{equation}
+where $\hat{\textit{x}}^+_i(t)$, $\hat{\textit{y}}^+_i(t)$ and $\hat{\textit{z}}^+_i(t)$ are the $x$, $y$ and $z$ coordinates of a feature.
 
 Ultrasound and vision information can be combined to aid in the identification and classification of natural features present in the environment.
 For maximum overlap of both sensors the ultrasound sensor is mounted directly above the high-resolution vision system.
@@ -231,16 +237,16 @@ The ultrasound sensor scans the sea floor directly below the vehicle and is used
 profiles of the surface.
 The returns \textbf{received} by the ultrasound are then processed to identify the \textbf{principal returns} which are used to initialise new features in the SLAM map.
 The observation of range $R$ and bearing $\theta$ are combined with the estimated value of the vehicle pose $\hat{x}_v(t)$ and the measured position
-$\left[ \begin{array}{ccc} x_s & y_s & z_s \end{array}\right]^T$ of the sonar relative to the camera frame.
+$\left[ \begin{array}{ccc} \textit{x}_s & \textit{y}_s & \textit{z}_s \end{array}\right]^T$ of the sonar relative to the camera frame.
 \begin{equation}
 \left[ {
-\begin{array}{c} \hat{x}_i \\ \hat{y}_i \\ \hat{z}_i \end{array}
+\begin{array}{c} \hat{\textit{x}}_i \\ \hat{\textit{y}}_i \\ \hat{\textit{z}}_i \end{array}
 } \right] =
 \left[ {
 \begin{array}{c}
-	\hat{x}_v + x_s cos \hat{\psi}_v - (y_s + R cos \theta) sin \hat{\psi}_v \\
-	\hat{y}_v + x_s sin \hat{\psi}_v + (y_s + R cos \theta) cos \hat{\psi}_v \\
-	\hat{z} + z_s + R sin \theta
+	\hat{\textit{x}}_v + \textit{x}_s cos \hat{\psi}_v - (\textit{y}_s + R cos \theta) sin \hat{\psi}_v \\
+	\hat{\textit{y}}_v + \textit{x}_s sin \hat{\psi}_v + (\textit{y}_s + R cos \theta) cos \hat{\psi}_v \\
+	\hat{\textit{z}} + \textit{z}_s + R sin \theta
 \end{array}
 } \right]
 \end{equation}
@@ -276,15 +282,28 @@ A recent publication is from Cornell University \cite{Bills2011icra}, where an A
 Their method method first classifies the type of indoor environment (e.g., corridors, staircases, rooms and corners) then uses vision algorithms based on perspective cues to estimate the desired direction to fly.
 This method require very little computational power and can be used by a controller directly without building a 3D model.
 
+\begin{figure}[htb!]
+  \begin{center}
+    \subfigure[(Top) Original corridor image. (Bottom) Corridor processed with Canny edge detector and Hough transform to find the vanishing point (blue circle).]{\label{fig:cornell-corridor}\includegraphics[height=6cm]{images/ardrone-corridor.jpg}}
+\hspace{1cm}
+    \subfigure[(Top) Original image of staircase. (Bottom) Image with bold red line marking location of staircase.]{\label{fig:cornell-staircase}\includegraphics[height=6cm]{images/ardrone-staircase.jpg}}
+   
+  \end{center}
+  \caption{Autonomous corridor and staircase flights based on line detection (Courtesy Bills \textit{et al.} \cite{Bills2011icra}).}
+  \label{featureImg}
+\end{figure}
+
 The type of environment is determined using two algorithms.
-The first method uses GIST features \cite{oliva2001modeling} with a Support Vector Machine (SVM) learning algorithm for classification.
+The first method uses GIST features \cite{oliva2001modeling} (Section \ref{sec:background-feature-extraction}) with a Support Vector Machine (SVM) learning algorithm for classification.
 GIST features are well-suited for this task because they directly measure the global distribution of oriented line segments in an image, which takes advantage of the long lines found in indoor images.
 The second method computes a confidence estimate from both the stair and corridor vision algorithms.
 The confidence values are compared, and the highest is used to select the environment type.
 
-When navigating corridors, vanishing points are used to locate the end of the corridor. 
-First, the Canny edge detector is used to detected edges and a probabilistic Hough transform is used to find long lines.
-The vanishing points (i.e., end of the corridor) are found by searching for the image region which has the highest density of pair-wise line intersections.
+When navigating corridors, parallel lines appear to converge.
+The points where lines appear to converge are called vanishing points.
+Vanishing points are used to locate the end of the corridor. 
+First, the Canny edge detector \cite{canny1986computational} is used to detected edges and a probabilistic Hough transform \cite{kiryati1991probabilistic} is used to find long lines.
+The vanishing points (end of the corridor) are found by searching for the image region which has the highest density of pair-wise line intersections.
 A probabilistic model with Gaussians is constructed to model the noise in the location of a vanishing point.
 Staircases can be nagivated by finding the center of the staircase, so the AR.Drone can follow the staircase using its onboard intelligence (i.e., altitude stabilization).
 Lines that represent the staircase are found by classifying the line segments as horizontal or vertical and looking for the largest horizontal-line cluster in the Hough transform space.
