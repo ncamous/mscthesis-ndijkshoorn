@@ -1,4 +1,4 @@
-As indicated in \cite{Michael2010ra}, an accurate simulation of a quadrotor is a valuable asset, which allows safe and efficient development of control algorithms. Additionally, it gives direct access to ground truth values and allows to design repeatable experiments.
+As indicated by Michael et al \cite{Michael2010ra}, an accurate simulation of a quadrotor is a valuable asset, which allows safe and efficient development of control algorithms. Additionally, it gives direct access to ground truth values and allows to design repeatable experiments.
 
 This chapter proceeds as follows.
 First, the AR.Drone simulation model is presented.
@@ -20,10 +20,10 @@ The level of effort devoted to validation has been a distinguishing feature of U
 Each of its major constituents (e.g., robot kinematics, interaction with the environment, sensors, and camera video) have been subjected to ongoing validation testing \cite{formsma2011realistic,carpin2006high,wang2005validating,carpin2007bridging,carpin2006quantitative}.
 
 USARSim was originally developed aiming to Urban Search And Rescue simulation.
-The Robocup Rescue league is part of the Robocup\footnote{\url{http://www.robocup.org}} initiative.
+The RoboCup Rescue league is part of the RoboCup\footnote{\url{http://www.robocup.org}} initiative.
 This league aims at the development of robotics artifacts that could effectively help human rescuers in the aftermath of disasters like earthquakes, terroristic attacks, and other extreme situations.
 In addition to a Rescue league with real robots, the Virtual Robots Competition was started, which uses USARSim as simulation environment.
-%The first tournament took place during Robocup 2006, with the participation of eight teams from four continents.
+%The first tournament took place during RoboCup 2006, with the participation of eight teams from four continents.
 
 Another key feature of USARSim is the \textit{UnrealEd}\footnote{\url{http://nl.wikipedia.org/wiki/UnrealEd}} versatile environment editor.
 The editor is part of Unreal Tournament and can be used to create an modify virtual environments.
@@ -34,7 +34,7 @@ The details needed for an experiment or competition can be easily added (e.g., r
 
 		\subsection{Motion model}
 The AR.Drone is a stabilized system (Figure \ref{fig:QuadRotorBody}). When no control signals are given the quadrotor hovers on the same location, which is accomplished by a feedback loop which uses the ultrasound sensor (for altitude) and the bottom camera (for horizontal position). The simulation makes use of this assumption. When no control signal is given, the AR.Drone stays at the same location.
-When a control signal for a longitudinal or lateral velocity is given, it calculates the force needed to reach that velocity (and assuming that the drag force $D_b$ increases linearly with the velocity). When the control signal stops, the drag force $D_b$ slows the quadrotor down until it hovers again.
+When a control signal for a linear (forward/backward) or lateral (sideward) velocity is given, it calculates the force needed to reach that velocity (and assuming that the drag force $D_b$ increases linearly with the velocity). When the control signal stops, the drag force $D_b$ slows the quadrotor down until it hovers again.
 The USARSim quadrotor model uses the Karma physics engine (part of the Unreal Engine \cite{Carpin2006}) to simulate the force and torque acting on the aircraft. Yet, only the overall thrust is calculated, the differential thrust is not used.
 When moving in the horizontal plane, a real quadrotor changes its angle of attack (which is the defined as the angle between direction of motion $e_V$ and the body frame $e_N$ \cite{Yechout2003}). 
 The Karma physics engine does not need this angle to calculate the resulting horizontal movement. Yet, this angle of attack has direct consequences for the viewing directions of the sensors, so the roll and the pitch should be adjusted in correspondence with horizontal movements. The active control of the AR.Drone is incorporated in the value of the dragforce $D_b$.
@@ -58,7 +58,7 @@ If the angle between a trace and the surface normal is smaller than angle $\alph
 
 \begin{figure}[htb!]
 \centering
-\includegraphics[width=4cm]{images/usarsim_sonar_fixed.png}
+\includegraphics[width=6cm]{images/usarsim_sonar_beams.png}
 \caption{The ultrasound sensor is modeled by emitting a number of traces, which in combination form a cone.} 
 \label{fig:3Dmodel}
 \end{figure}
@@ -116,8 +116,8 @@ Due to this abstraction, both the real and simulated AR.Drone can be used to val
 
 The main functionalities of the framework can be summarized as follows:
 \begin{itemize}
-\item Object-oriented programming: robots are represented with an object and bot parameters;
-\item Abstraction from actual device: both the real and simulated AR.Drone can be plugged;
+\item Object-oriented programming: robots are represented with an object and are configured using parameters;
+\item Abstraction from actual device: both the real and simulated AR.Drone can be connected to the framework;
 \item Dataset recording and playback;
 \item Queued sensor data and camera frame processing;
 \item Keyboard controls;
@@ -154,7 +154,7 @@ An abstraction layer is used to abstract a bot from the actual device.
 This enables to control both a real and simulated AR.Drone in the same manner.
 \textit{Interfaces} are used to map a bot object to a (simulated) device.
 When a bot object is instantiated, an interface has to be selected.
-This can be either a real AR.Drone (using the ARDroneLib), simulated AR.Drone (USARSim) or None for dataset playback (i.e., there is no communication with a robot).
+This can be either a real AR.Drone (using the ARDroneLib), simulated AR.Drone (USARSim) or use no interface for dataset playback (i.e., there is no communication with a robot).
 The interface is responsible for transforming data received in device-specific format to a generic datastructure used by the framework.
 Also, the control commands that are sent to the robot are transformed from generic format to device-specific format.
 
@@ -165,25 +165,39 @@ The advantages of a queue are twofold: it allows data buffering and passing data
 The latter is very important for a SLAM system, since blocking causes wasted data or delayed data.
 The SLAM object has three modules: Sensor, Frame and UI.
 Each module runs in a separate thread to prevent blocking and allow simultaneous data processing.
-The Sensor module processes navdata from the AR.Drone ($200 \small{Hz}$) and updates the estimated state (EKF).
-The Frame module processes camera frames.
-After processing is done, the estimated state (EKF) is updated.
+Both the Sensor and Frame module are able to update the EKF independently.
+
+The \textbf{Sensor module} processes navdata (e.g., altitude and velocity estimates) from the AR.Drone at $200 \small{Hz}$.
+When a navdata package is received, the EKF predicts a new state from the previous estimate (Section \ref{sec:background-solution-techniques}).
+Each navdata package is processed before it can be used to update the estimated state of the AR.Drone.
+This processing task includes the transformation of measurements to the global reference frame and the detection of obstacles.
+The processed navdata is used to generate a measurement for the EKF.
+Elements of the measurement matrix that cannot be (reliably) extracted from the processed navdata, are extraced from the prediced state and added to the measurement matrix with a higher covariance (uncertainty).
+Finally, the measurement is used to update the state of the EKF.
+
+The \textbf{Frame module} processes camera frames.
+When a camera frame is received, the EKF predicts a new state from the previous estimate (Section \ref{sec:background-solution-techniques}).
+Each camera frame is processed to extract information that is used to update the estimated state of the AR.Drone.
+Processing includes Visual Odometry (Section \ref{sec:visual-slam-visual-odemetry}), updating the map (Section \ref{sec:mapping}) and recovering the global position of the AR.Drone by matching the frame against the map (Section \ref{sec:localization}).
+The extracted information (i.e., velocities or global position) is used to generate a measurement for the EKF.
+Elements of the measurement matrix that are be extracted from the camera frames (e.g., altitude), are extraced from the prediced state and added to the measurement matrix with a higher covariance (uncertainty).
+Finally, the measurement is used to update the state of the EKF.
+
 Processing a single frame may take up to $200 \small{ms}$ and causes a delay between input and updating the state.
-This introduces a synchronization issue between state updates: when a update from the Frame module is applied, the estimated state is already updated with newer information from the navdata.
+This introduces a synchronization issue between state updates: when a update from the Frame module is applied, the estimated state is already updated by the Sensor module with more recent information that originates from the navdata.
 This issue is solved by pausing the Sensor module (processing) while processing a frame.
 After the state update by the Frame module is applied, the Sensor module is resumed and the queued navdata information is processed.
-The UI module is responsible for visualizing the map.
-It initializes a Terrain3D object and pushes local map updates to it.
 
+The \textbf{UI module} is responsible for visualizing the map.
+It initializes a Terrain3D object and pushes local map updates to it.
+The Terrain3D object renders the map (Figure \ref{fig:terrain3d_map}).
+It allows 3D rendering of a textured elevation map.
+Both the visual map and elevation map are integrated to a single map.
+The code is based on the work by Chad Vernon \footnote{\url{http://www.chadvernon.com/blog/resources/directx9/moving-around-a-3d-world}} and uses DirectX 9 for rendering.
+The estimated position of the AR.Drone is visualized with a red arrow.
 \begin{figure}[htb!]
 \centering
 \includegraphics[width=6cm]{images/3dterrain_map.png}
 \caption{Textured elevation map rendered by the Terrain3D object.} 
 \label{fig:terrain3d_map}
 \end{figure}
-
-The Terrain3D object renders the map (Figure \ref{fig:terrain3d_map}).
-It allows 3D rendering of a textured elevation map.
-Both the visual map and elevation map are integrated to a single map.
-The code is based on the work by Chad Vernon \footnote{\url{http://www.chadvernon.com/blog/resources/directx9/moving-around-a-3d-world}} and uses DirectX 9 for rendering.
-The estimated position of the AR.Drone is visualized with a red arrow.
