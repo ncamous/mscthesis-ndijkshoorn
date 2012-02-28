@@ -8,6 +8,7 @@ These quadrotors make it possible to shift the research from basic control of th
 The platform selected is the Parrot AR.Drone\footnote{\url{http://ardrone.parrot.com}} quadrotor helicopter.
 The main advantages of this quadrotor are the robustness and affordable pricetag.
 The AR.Drone is equipped with a front-camera and a down-looking camera that provide live video streaming.
+Two complementary algorithms make use of the down-looking camera for improved stabilization.
 Furthermore, the AR.Drone is equipped with an ultrasound sensor and an inertial unit that measures pitch, roll, yaw and accelerations along all axes.
 The vehicle is controlled by sending commands over a Wi-Fi connection.
 
@@ -19,6 +20,7 @@ Moreover, the open Application Programming Interface (API) is examined.
 
 % Quadrotor flight control
 \section{Quadrotor flight control}
+\label{sec:platform-quadrotor-flight-control}
 % http://www.stanford.edu/~haomiao/papers/ICRA09AeroEffects.pdf
 % http://www2.engr.arizona.edu/~sprinkjm/research/c2wt/uploads/Main/QuadrotorDynamicsGNC.pdf
 The mechanical structure of a quadrotor consists of four rotors attached to a body frame (see Figure \ref{fig:QuadRotorBody}).
@@ -73,7 +75,7 @@ The AR.Drone (Figure \ref{fig:ardrone_hull}) is remote-controlled consumer quadr
 The body is made of carbon fiber tube structure and high resistance 
 %PA66
 plastic.
-A protection hull is made of Polypropylene Foaming Material.
+A protection hull is made of Expanded Polypropylene (EPP) foam \footnote{\url{http://en.wikipedia.org/wiki/Polypropylene}}, which is durable, light weight, and recyclable.
 This hull provides protection during indoor flights.
 The propellors are powered by four brushless motors (35,000 rpm, power: 15W).
 Energy is provided by a Lithium polymer battery with a capacity of 1000 mAh, which allows a flight time of approximately 10 minutes.
@@ -96,10 +98,11 @@ In addition, a front camera is present to provide the user visual feedback from 
 
 \subsubsection{Inertial measurement unit}
 The AR.Drone features an 6 degrees of freedom (DOF) inertial measurement unit.
-It provides the software with pitch, roll and yaw measurements.
+It provides the software with \textit{pitch}, \textit{roll} and \textit{yaw measurements} (Figure X).
+Pitch, roll and yaw are often used in ... and indicate the orientation the rotation ... $x$, $y$ and $z$ direction.
 These measurements are used for automatic pitch, roll and yaw stabilization and assisted tilting control.
 The measurement unit is a \textit{micro electro-mechanical system} (MEMS) and contains
-a 3 axis accelerometer, a 2 axis gyrometer and a 1 axis yaw precision gyrometer.
+a 3 axis accelerometer, a 2 axis roll and pitch gyrometer and a 1 axis yaw precision gyrometer.
 
 The \textbf{accelerometer} is a BMA150\footnote{\url{http://www.bosch-sensortec.com/content/language1/downloads/BMA150_DataSheet_Rev.1.5_30May2008.pdf}} made by Bosch Sensortec.
 %It provides three sensitivity ranges (i.e., maximum g-force it can report): $\pm 2g / \pm 4g / \pm 8g$.
@@ -114,7 +117,7 @@ An accelerometer at rest relative to the Earth's surface will indicate approxima
 To obtain the acceleration due to motion with respect to the Earth, this gravity offset must be subtracted and corrections for effects caused by the Earth's rotation relative to the inertial frame.
 Since the accelerometer can measure gravity, it can be used as a tilt sensor.
 
-The AR.Drone has a 2 axis \textbf{gyrometer} and a 1 axis yaw precision gyrometer.
+The AR.Drone has a 2 axis roll and pitch \textbf{gyrometer} and a 1 axis yaw precision gyrometer.
 The gyrometer measures angular velocity in degrees per second, based on the principles of angular momentum.
 In order to estimate the absolute angle $\theta$, the angular velocity signal $\Omega$ needs to be integrated with respect to time.
 A major problem with this method is that bias errors in the angular velocity signal will cause the integrated angle value to drift over time, since all gyroscopes have at least a small amount of bias error in their angular rate signal.
@@ -176,7 +179,7 @@ A small experiment has been performed to determine the opening angle.
 
 The AR.Drone was positioned at a fixed altitude of $79\small{cm}$ above a flat floor.
 No obstacle was in range of the ultrasound sensor to make sure the measured altitude is the actual altitude of the AR.Drone.
-The altitude measured by the ultrasound sensor was $75.2\small{cm}$, which equals an acceptable error of $3.8\small{cm}$.
+The altitude measured by the ultrasound sensor was $75.2\small{cm}$, which equals a systematic error of $3.8\small{cm}$.
 The AR.Drone's bottom camera was used to mark a point on the floor that is exactly below the center of the AR.Drone.
 This point is equal to the center of ultrasound cone.
 In order to measure the opening angle, floating objects were moved from outside the cone towards the cone.
@@ -251,7 +254,7 @@ The vehicle control system must be robust to the various disturbances that can b
 Redundancy in the state estimation is the solution in this case.
 The AR.Drone has multiple methods to compute estimated states.
 However, the onboard software (firmware) is closed source and not documented by the manufacturer.
-In august, the manufacturer's academic partner \textit{MINES ParisTech for navigation and control design}, published an article \cite{bristeau2011navigation} which described the navigation and control technology inside the AR.Drone.
+In August, the manufacturer's academic partner \textit{MINES ParisTech for navigation and control design}, published an article \cite{bristeau2011navigation} which described the navigation and control technology inside the AR.Drone.
 
 
 
@@ -273,7 +276,7 @@ A least-squares minimization method is used to determine the micro-rotation.
 After each landing, this onboard calibration is automatically performed to compensate for the misalignment due to the displacement of the damping foam during the stopping shock.
 
 After inertial sensors calibration, sensors are used inside a complementary filter to estimate the attitude and de-bias the gyroscopes.
-The de-biased gyroscopes are used for vision velocity information combined with the velocity and altitude estimates from a ver- tical dynamics observer
+The de-biased gyroscopes are used for vision velocity information combined with the velocity and altitude estimates from a vertical dynamics observer.
 The velocity from the computer vision algorithm is used to de-bias the accelerometers, the estimated bias is used to increase the accuracy of the attitude estimation algorithm.
 Finally, the de-biased accelerometer gives a precise body velocity from an aerodynamics model.
 
@@ -289,7 +292,9 @@ Eventually, the de-biased accelerometer gives a precise body velocity from an ae
 Below, some techniques are described is more detail.
 
 \subsubsection{Visual odometry}
-The images provided by the vertical camera are used to estimate the 3D velocity of the vehicle (visual odometry).
+\label{sec:platform-visual-odometry}
+The images provided by the vertical camera are used to estimate the 3D velocity of the vehicle.
+This process is called Visual Odometry and is introduced in Section \ref{sec:background-visual-odometry}.
 According to \cite{bristeau2011navigation}, two complementary algorithms are available.
 Depending on the scene content or the expected quality of their results, one is preferred to the other.
 
@@ -347,13 +352,19 @@ When an obstacle is in range of the ultrasound sensor, the measured altitude dec
 The AR.Drone responds by increasing its absolute altitude to maintain a fixed measured altitude.
 Consequently, the AR.Drone decreases its absolute altitude when the obstacle is out of range.
 However, this behavior was not always observed during experiments.
-For example, when a floating object ($1\small{m}$ above the floor) become in range of the ultrasound sensor.
-In these cases, the raw ultrasound measurements show a sudden large change, while the filtered altitude measurements show a small change (Figure X).
+For example, when a floating object ($70\small{cm}$ above the floor) become in range of the ultrasound sensor.
+In these cases, the raw ultrasound measurements show a sudden large change, while the filtered altitude measurements show a small change (Figure \ref{fig:platform-ultasound-raw-filtered}).
 Now, AR.Drone does not change its absolute altitude and remains at the same absolute altitude.
-Based on this observation, we suspect that the altitude stabilization is based on a filtered derivative \small{(raw measurements should cause convergence to the actual measurements over time)} of the raw ultrasound measurements.
+This observation suggests that the altitude stabilization is based on a filtered derivative.
+%\small{(raw measurements should cause convergence to the actual measurements over time)} of the raw ultrasound measurements.
 The filter minimizes the impact of sudden changes that occur for a short period.
 
-[plot]
+\begin{figure}[htb]
+\centering
+\includegraphics[height=6cm]{images/altitude_raw_vs_filtered_1m_obstacle.eps}
+\caption{Comparison between the AR.Drone's raw and filtered ultrasound measurements when an object floating at  $1\small{m}$ comes in range of the ultrasound sensor.}
+\label{fig:platform-ultasound-raw-filtered}
+\end{figure}
 
 Similar to altitude stabilization, the ultrasound sensor is used for take-off and landing.
 When a take-off command is issued, the engines are started automatically and the AR.Drone increases its altitude until a pre-determined altitude is reached (which is $50\small{cm}$ by default). When this altitude is reached, the vehicle switched to hovering mode.

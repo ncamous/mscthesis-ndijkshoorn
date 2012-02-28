@@ -28,6 +28,7 @@
 \usepackage{xcolor}
 \usepackage{subfigure}
 \usepackage{amsthm}
+\usepackage{dsfont}
 
 \newtheorem{name}{Printed output}
 \newtheorem{mydef}{Definition}

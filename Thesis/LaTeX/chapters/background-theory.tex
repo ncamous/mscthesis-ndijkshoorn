@@ -1,10 +1,11 @@
 In this chapter, an introduction to required background theory for this thesis is given.
-The work presented relies on \textbf{probabilistic robotics} and \textbf{computer vision} techniques.
+The work presented in this thesis relies on \textbf{probabilistic robotics} (Thrun et al \cite{fox2005probabilistic}) and \textbf{computer vision} (Hartley and Zisserman \cite{Hartley2004}).
 A clear vocabulary and corresponding mathematical nomenclature will be established that will be used consistently in the remainder of this thesis.
+Probabilistic robots uses the notation of Thrun et al \cite{fox2005probabilistic} and computer vision uses the notation of Hartley and Zisserman \cite{Hartley2004}.
 
 \section{Probabilistic robotics}
-Sensor are limited in what they can percieve (e.g., the range and resolution is subject to physical limitations).
-Sensor are also subject to noise, which deviates sensor measurements in unpredictable ways.
+Sensors are limited in what they can percieve (e.g., the range and resolution is subject to physical limitations).
+Sensors are also subject to noise, which deviates sensor measurements in unpredictable ways.
 This noise limits the information that can be extraced from the sensor measurements.
 Robot actuators (e.g., motors) are also subject to noise, which introduces uncertainty.
 Another source of uncertainty is caused by the robot's software, which uses approximate models of the world.
@@ -15,9 +16,9 @@ This requires the use of algorithmic approximations, but increases the amount of
 For some robotic applications (e.g., assembly lines with controlled environment), uncertainty is a marginal factor.
 However, robots operating in uncontrolled environments (e.g., homes, other planets) will have to cope with significant uncertainty.
 Since robots are increasingly deployed in the open world, the issue of uncertainty has become a major challenge for designing capable robots.
-\textit{Probabilistic robots} is a relatively new apprach to robotics that pays attentation to the uncertainty in perception and action.
+\textit{Probabilistic robots} is a relatively new approach to robotics that pays attentation to the uncertainty in perception and action.
 Uncertainty is represented explicitly using the calculus of probability theory.
-This means that probabilistic algorithms represent information by probability distributions over a whole space of guesses.
+This means that probabilistic algorithms represent information by probability distributions over a space.
 This allows to represent ambiguity and degree of belief in a mathematically sound way.
 Now, robots can make choices (plan) relative to the uncertainty that remains, or chose to reduce the uncertainty (e.g., explore) if that is the best choice.
 
@@ -43,7 +44,7 @@ Sensors observe only partial information about those quantities and their measur
 State estimation tries to recover state variables from the data.
 Instead of computing a single state, a belief distribution is computed over possible world states.
 \begin{mydef}
-\textbf{State estimation} addresses the problem of estimating quantities form sensor data that are not directly observable, but can be inferred.
+\textbf{State estimation} addresses the problem of estimating quantities from sensor data that are not directly observable, but can be inferred.
 A belief distribution is computed over possible world states.
 \end{mydef}
 
@@ -55,7 +56,8 @@ $z_{t_1:t_2} = z_{t_1}, z_{t_1 + 1}, z_{t_1 + 2}, \hdots, z_{t_2}$ denotes the s
 $u_{t_1:t_2} = u_{t_1}, u_{t_1 + 1}, u_{t_1 + 2}, \hdots, u_{t_2}$ denotes the sequence of all \textbf{control data} from time $t_1$ to time $t_2$, for $t_1 \leq t_2$.
 \end{mydef}
 The control data conveys information regarding the change of state.
-For example, setting a robot's velocity at 1 m/s, suggests that the robot's new position after 2 {seconds is 2 m ahead of its position before the command was executed.
+For example, setting a robot's velocity at $1 \small{m/s}$, suggests that the robot's new position after $2$ seconds is approximately $2$ meters ahead of its position before the command was executed.
+As a result of noise, $1.9$ or $2.1$ meters ahead are also likely new positions.
 Generally, measurements provide information about the environment's state, increasing the robot's knowledge.
 Motion tends to induce a loss of knowledge due to the inherent noise in robot actuation and the stochasticity of the environment.
 
@@ -92,7 +94,7 @@ A \textit{prediction} before a measurement is denoted as follows:
 This equation predicts the state at time $t$ based on the previous state posterior, before incorporating the measurement at time $t$.
 %A \textit{correction} or \textit{measurement update} is obtained by calculating $bel(x_t)$ from $\overline{bel}(x_t)$.
 
-The most simple algorithm for calculcating beliefs is the \textbf{Bayes filter}.
+The most general algorithm for calculcating beliefs is the \textbf{Bayes filter}.
 The input of the algorithm is the (initial) belief $bel$ at time $t-1$, the most recent control $u_t$ and measurement $z_t$.
 First, a \textit{prediction} for the new belief is computed based on control $u_t$ (the measurement is ignored):
 \begin{equation}
@@ -123,10 +125,11 @@ In Section \ref{sec:measurement_model}, the \textit{measurement model} is descri
 Probabilistic motion models describe the relationship between the previous and current pose and the issued controls (commands) by a probability distribution. This is called the \textit{state transition probability}.
 The state transition probability plays an essential role in the prediction step of the Bayes filter.
 \begin{mydef}
-A probabilistic motion \textbf{model defines} the state transition between two consecutive time steps $t-1$ and $t$ after a control action $u_{t}$ has been carried out. It is expressed by the posterior distribution $p (x_t | x_{t-1}, u_{t})$.
+A probabilistic \textbf{motion model} defines the state transition between two consecutive time steps $t-1$ and $t$ after a control action $u_{t}$ has been carried out. It is expressed by the posterior distribution $p (x_t | x_{t-1}, u_{t})$.
 \end{mydef}
 %In order to derive $p (x_t | x_{t-1}, u_{t})$, it is necessary to derive the kinematics from its mechanics and its %possible sources of noise and deviation.
-Two popular probabilistic motion models are the \textit{Velocity Motion Model} and the \textit{Odometry Motion Model}.
+
+Two complementary probabilistic motion models are the \textit{Velocity Motion Model} and the \textit{Odometry Motion Model}.
 The Velocity Motion Model assumes that a robot is controlled through two velocities: a rotational velocity $\omega_t$ and translational velocity ($v_t$).
 \begin{equation}
 u_t = 
@@ -135,10 +138,19 @@ v_t \\
 \omega_t \end{array} \right)
 \end{equation}
 Algorithms for computing the probability $p (x_t | x_{t-1}, u_{t})$ can be found in \cite{fox2005probabilistic}.
-The Odometry Motion Model assumes that one has only access to odometry information.
+The Odometry Motion Model assumes that one has access to odometry information (e.g., wheel encoder information).
 In practice, odometry models tend to be more accurate, because most robots do not execute velocity command with the level of accuracy that is obtained by measuring odometry.
 Technically, odometry reading are not controls because they are received after executing a command.
 However, using odometry readings as controls results in a simpler formulation of the estimation problem.
+
+Both motion models are not directly applicable to MAVs.
+For example, quadrotor helicopters are controlled through pitch, roll and yaw (as explained in Section \ref{sec:platform-quadrotor-flight-control}).
+A conversion between angles to velocities is required to use the Velocity Motion Model for a quadrotor helicopter.
+For ground robots, the odemetry reading can be obtained by integrating wheel encoder information.
+Because a quadrotor helicopter has no contact with the ground, odometry readings are not directly available.
+Instead, different sources of information are used to obtain odometry information.
+For example, the AR.Drone uses a camera that points downwards to recover odometry information (Section \ref{sec:platform-visual-odometry}).
+
 
 		\subsection{Measurement model}
 		\label{sec:measurement_model}
@@ -188,6 +200,7 @@ Additionally, the map can be optimized after a loop-closure event is detected.
 
 
 \subsection{Solution techniques}
+\label{sec:background-solution-techniques}
 In practice, it is not possible to compute the posterior analytically.
 Therefore, a number of approximation techniques exist. 
 This section describes the most popular solutions techniques for SLAM problems.
@@ -302,6 +315,7 @@ The main advantage of the Information Filter is that $N$ measurements can be fil
 This makes Information Filters particularly interesting for scenarios where multiple robots have to merge their local information with the information collected by other robots.
 
 
+\begin{comment}
 \subsubsection{Multi-hypothesis trackers}
 Single-hypothesis trackers fail to model ambiguities adequately.
 An example is a soccer field, which is a symmetrical environment.
@@ -338,7 +352,7 @@ Particle filters overcome the limitations of using a Gaussian to represent a pro
 With sufficient samples, they approach the Bayesian optimal estimate, so they can be made more accurate than either the EKF or UKF.
 The increased representational power of particle filters comes at the cost of higher computational complexity.
 And, when the number of particles is unsufficient, the particle filter might suffer from sample impoverishment.
-
+\end{comment}
 
 
 \section{Computer vision}
@@ -352,6 +366,7 @@ Since a camera is the AR.Drone's only sensor that is capable of retrieving detai
 In addition, vision techniques can be used to calibrate other sensors of a robot.
 
 \subsection{Projective geometry}
+\label{sec:background-projective-geometry}
 Projective geometry describes the relation between a scene and how a picture of it is formed.
 A projective transformation is used to map objects onto a picture.
 This transformation preserves straightness.
@@ -359,7 +374,7 @@ Multiple geometrical systems can be used to describe geometry.
 
 \textbf{Euclidean geometry} is a popular mathematical system.
 A point in Euclidean 3-space is represented by an unordered pair of real numbers, $(x, y, z)$.
-However, this coordinate system is unable to represent points at infinity.
+However, this coordinate system is unable to represent points vanishing points.
 The \textit{Homogeneous coordinates} coordinate system is able to represent points at infinity.
 Homogeneous coordinates have an additional coordinate.
 Now, points are represented by \textit{equivalance classes}, where points are equivalant when they differ by a common multiple.
@@ -372,9 +387,9 @@ A more general type of transformation is an \textbf{affine transformation}, whic
 The resulting transformation performs moving, rotating and finally stretching linearly possibly by different ratios in different directions.
 
 In computer vision problems, projective space is used as a convenient way of representing the real 3D world.
-A \textbf{projective transformation} of projective space $P^n$?? is represented by a linear transformation of homogeneous coordinates:
+A \textbf{projective transformation} of projective space $\mathds{P}^n$ is represented by a linear transformation of homogeneous coordinates:
 \begin{equation}
-X' = H_(n+1) \times _(n+1)X
+X' = H_{(n+1)} \times _{(n+1)}X
 \end{equation}
 where $X$ is a coordinate vector and $H$ is a non-singular matrix.
 
@@ -387,7 +402,8 @@ The relationship between the distance to an object $z$ and the distance behind t
 \end{equation}
 where $f$ is the focal length.
 
-The \textbf{pinhole camera} has been the first example of camera in the history.
+The \textbf{pinhole camera} has been the first example of camera in the history \cite{gernsheim1969history}.
+%\footnote{\url{http://inventors.about.com/od/pstartinventions/a/stilphotography.htm}}
 It is a lightproof box with a very small aperture instead of a lens.
 Light from the scene passes through the aperture and projects an \textit{inverted image} on the opposit side of the box.
 This principle has been adopted as a standard model for perspective cameras.
@@ -427,7 +443,6 @@ f & 0 & 0 & 0  \\
 0 & f & 0 & 0 \\
 0 & 0 & 1 & 0
 \end{array} \right]
-=
 \left[ \begin{array}{c}
 P_x \\
 P_y \\
@@ -457,13 +472,11 @@ or
 0 & \alpha_v & v_0 \\
 0 & 0 & 1
 \end{array} \right]
-=
 \left[ \begin{array}{c c c c}
 r_{11} & r_{12} & r_{13} & t_1 \\
 r_{21} & r_{22} & r_{23} & t_2 \\
 r_{31} & r_{32} & r_{33} & t_3
 \end{array} \right]
-=
 \left[ \begin{array}{c}
 P_x \\
 P_y \\
@@ -496,6 +509,7 @@ They enable more compact and robust descriptions of the environment.
 Choosing the approriate features is a critical task when designing a mobile robot.
 
 \subsubsection{Feature extraction}
+\label{sec:background-feature-extraction}
 A local feature is small image patch that differs that is different than its immediate neighborhood.
 Difference can be in terms on intensity, color and texture.
 Commonly, feature are edges, corners or junctions.
@@ -531,6 +545,8 @@ In order to localise interest points in the image and over scales, a non-maximum
 The maxima of the determinant of the Hessian matrix are then interpolated in scale and image space.
 A descriptor is construced that describess the distribution of the intensity content within the interest point neighbourhood.
 First-order Haar wavelet responses in $x$ and $y$ direction are used rather than the gradient, exploit integral images for speed. The size of the descriptor is reduced to $64$ dimensions.
+
+\textbf{GIST}
 
 \subsubsection{Feature matching}
 \label{sec:theory_feature_matching}
@@ -578,6 +594,7 @@ Finally, the images are transformed according to the corresponding homographies,
 
 
 \subsection{Visual Odometry}
+\label{sec:background-visual-odometry}
 An interesting combination of computer vision and mobile robotics is \textit{Visual Odometry (VO)}, which is the process of estimating the egomotion of a mobile robot using one or more onboard cameras.
 Below, only the case of a single camera and 2-D feature coordinates is described.
 There are two main approaches two compute the relative motion from video images: \textit{appearance-based} methods and \textit{feature-based} methods.
