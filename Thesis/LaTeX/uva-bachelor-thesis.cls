@@ -30,6 +30,21 @@
 \usepackage{amsthm}
 \usepackage{dsfont}
 
+
+\newtheoremstyle{slplain}% name
+  {.3\baselineskip\@plus.2\baselineskip\@minus.2\baselineskip}% Space above
+  {.3\baselineskip\@plus.2\baselineskip\@minus.2\baselineskip}% Space below
+  {\itshape\rmfamily}% Body font
+  {}%Indent amount (empty = no indent, \parindent = para indent)
+  {\bfseries\rmfamily}%  Thm head font
+  {. }%       Punctuation after thm head
+  { }%      Space after thm head: " " = normal interword space;
+        %       \newline = linebreak
+  {}%       Thm head spec
+
+
+\theoremstyle{slplain}
+
 \newtheorem{name}{Printed output}
 \newtheorem{mydef}{Definition}
 

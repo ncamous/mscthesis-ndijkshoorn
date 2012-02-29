@@ -168,49 +168,13 @@ A final limition is the limited operating frequency.
 Before a soundwave can be emitted, the previously emitted soundwave has to be detected by the sensor.
 This reduces the minimal operating speed of the AR.Drone's ultrasound sensor to $300 / (2 \times 6) = 25\small{Hz}$.
 
-\begin{center}
-\line(1,0){250}
-\end{center}
-\color{mediumgray}
-\small
-
 The opening angle of the AR.Drone's ultrasound sensor is not documented.
-A small experiment has been performed to determine the opening angle.
+Appendix \ref{appendix:opening_angle} describes an experiment that was performed to determine the opening angle.
+The average measured opening angle was $25.03^{\circ}$ with a standard deviation of $1.45^{\circ}$.
 
-The AR.Drone was positioned at a fixed altitude of $79\small{cm}$ above a flat floor.
-No obstacle was in range of the ultrasound sensor to make sure the measured altitude is the actual altitude of the AR.Drone.
-The altitude measured by the ultrasound sensor was $75.2\small{cm}$, which equals a systematic error of $3.8\small{cm}$.
-The AR.Drone's bottom camera was used to mark a point on the floor that is exactly below the center of the AR.Drone.
-This point is equal to the center of ultrasound cone.
-In order to measure the opening angle, floating objects were moved from outside the cone towards the cone.
-The objects require a certain distance from the floor to achieve a distance short than the shortest distance between the sonar and the floor.
-The minimal altitude of an object when assuming a maximum opening angle of 40 degrees is:
-\begin{equation}
-a = 79\small{cm} - (cos(40\deg) \times 79\small{cm}) = 18.48\small{cm}
-\end{equation}
-Fluctuations in the altitude measurements indicate that the object is entering the cone.
-The horizontal distance $d$ between the object and cone center (marked point) is the width of the cone and $h = 79\small{cm} - a$ is the height of the cone.
-The angle $\alpha$ of the cone can be recovered with:
-\begin{equation}
-\alpha = tan^{-1}(d / h)
-\end{equation}
-
-The experiment was repeated 10 times with different objects.
-The average opening angle is $25.03^{\circ}$ with a standard deviation of $1.45^{\circ}$.
-\normalsize
-\normalcolor
-
-
-\begin{center}
-\line(1,0){250}
-\end{center}
-\color{mediumgray}
-\small
-
-During flight, the AR.Drone can take a broad range of angles (the default maximum angle of attack is $12^{\circ}$).
+During flight, the AR.Drone can take a broad range of angles\footnote{The AR.Drone's default maximum angle of attack is $12^{\circ}$}.
 The floor is not always perpendicular to the orientation of the ultrasound sensor, which may influence the altitude measurements.
 A small experiment was performed to measure the effect of the AR.Drone's angle of attack $\alpha$ and the error $\epsilon$ of the measured altitude.
-
 This experiment was performed above a flat floor.
 The angle of attack $\alpha$ was changed slowly while keeping the AR.Drone at a fixed altitude.
 A relation between the angle $\alpha$ and measured altitude was observed.
