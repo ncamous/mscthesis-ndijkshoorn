@@ -2,7 +2,7 @@ This chapter presents methods to build a visual map and how to use this map to m
 In order to initialize a visual localization and mapping algorithm, a good estimate of the position based on the internal sensors of the AR.Drone is essential.
 Section \ref{sec:pose_estimation} describes multiple methods to estimate the pose.
 When an estimate of the pose is available, a map can be constructed using the method described in Section \ref{sec:mapping}.
-Section \ref{sec:localization} described how this map is used by the AR.Drone to localize itself and reduce the errors pose estimates.
+Section \ref{sec:localization} described how this map is used by the AR.Drone to localize itself and reduce the error of the estimated pose.
 Finally, Section \ref{sec:elevation_map} describes an experimental method to build an elevation map using a single ultrasound sensor.
 
 	\section{Pose estimation}
@@ -13,9 +13,9 @@ The AR.Drone has several sources of information available about its movements an
 The AR.Drone is equipped with a number of sensors, which give frequent updates about the motion. 
 The inertial sensor measures the body accelerations and angular velocities.
 A proprietary filter on board of the AR.Drone converts the angular velocities to an estimated attitude (orientation).
-A sonar sensor is used to measure the altitude of the vehicle.
-In addition to the body accelerations, the AR.Drone sends an estimate of its estimated body velocity.
-This estimate is based on the inertia measurements and optical flow obtained from the relative motion between camera frames.
+A ultrasound sensor is used to measure the altitude of the vehicle.
+In addition to the body accelerations, the AR.Drone sends an estimate of its estimated body velocity (Section \ref{sec:platform_onboard_intelligence}).
+This estimate is based on the inertia measurements and visual odometry obtained from the relative motion between camera frames.
 %Unfortunately, the details of this velocity estimation are
 %currently
 %not documented by the manufacturer.
@@ -31,10 +31,12 @@ x = [ p^{W}  v^{W}  a^{W}  q^{W} ]
 \label{eq:EKF_state_vecor}
 \end{equation}
 
-The filtered attitude (orientation) from the proprietary onboard filter is written directly to the attitude vector $q^{W}$ of the state.
+%The filtered attitude (orientation) from the proprietary onboard filter is written directly to the attitude vector of the EKF's measurement matrix.
+This is possible because the attitude measurements are filtered and debiased onboard of the AR.Drone (Section \ref{sec:platform_onboard_intelligence}).
 %This is possible because 
 Steder et al. \cite{steder2008visual} found that roll and pitch measurements are accurate, even for low-cost sensors and can be directly integrated into the state.
-The body accelerations can be used to estimate the current velocity of the vehicle.
+
+
 %However, from experiments \ref{Section sec:exp_accel} we found that the low-cost acceleration sensor from the AR.Drone provides unreliable data.
 However, we found that the low-cost acceleration sensor from the AR.Drone provides unreliable data.
 This is modeled by a large uncertainty in the covariance matrix $Q$ of the EKF.
@@ -58,7 +60,9 @@ Relying only on the sonar sensor is not optimal since the measurements depend he
 
 	\section{Mapping}
 	\label{sec:mapping}
-This visual map consists of a texture map and a feature map. The texture map is used for human navigation and the feature map is used by the AR.Drone to localize itself.
+When an estimate of the AR.Drone's pose is available, a map can be constructed to make the AR.Drone localize itself and reduce the error of the estimated pose.
+The visual map consists of a texture map and a feature map.
+The texture map is used for human navigation and the feature map is used by the AR.Drone to localize itself.
 
 	\subsection{Visual map}
 \label{sec:texture_map}
@@ -68,10 +72,17 @@ The frames captured by this camera can be warped on a flat canvas to create a vi
 Directly merging the frames on the canvas is not possible, because individual frames can be taken from a broad range of angles and altitudes.
 Instead, perspective correction is applied and all frames are normalized in size and orientation.
 
+An initial approach of the mapping algorithm was published \cite{visser2011closing} and presented at the \textit{IMAV2011 conference}.
+This approach uses image stitching \cite{levin2004seamless} to create a visual map.
+Knowledge about the AR.Drone estimated state is not used.
+%The propagation of stitching errors results in an increasing error.
+Because all transformation of the previous frames are used to compute the transformation of the recent frame, the method is sensitive to incorrect transformations.
+Therefore, a new mapping method is developped.
+
 Before describing how a frame is warped, some basics about image formation are explained. %the camera matrix are explained.
 The AR.Drone's camera is modeled using a pinhole camera model (Figure \ref{fig:mapping1}).
 In this model, a scene view is formed by projecting 3D points into the image plane using a perspective transformation.
-3D camera coordinates are typically described with homogeneous coordinates.
+3D camera coordinates are typically described with homogeneous coordinates (Section \ref{sec:background-computer-vision}).
 
 \begin{figure}[htb]
 \centering
@@ -96,7 +107,7 @@ The $3 \times 4$ joint rotation-translation matrix $[R|t]$ includes the \textit{
 \begin{figure}[htb]
 \centering
 \includegraphics[width=10cm]{images/mapping1.png}
-\caption{Visual map: warping a camera frame on the map's canvas. The frame's corners ($\small{px}$) are mapped to 2D world coordinates that lie on the world's plane. The 2D world coordinates of the frame are mapped to the map's canvas coordinates ($\small{px}$).}
+\caption{Visual map: warping a camera frame on the map's canvas. The frame's corners ($\small{px}$) are mapped to 2D world coordinates that lie on the world's plane. The 2D world coordinates of the frame are mapped to the map's canvas coordinates ($\small{px}$). Equation \ref{eq:visual-slam-perspective-transformation} is used to compute the perspective transformation $H$ to transform all pixels of the frame to the corresponding positions on the map's canvas.}
 \label{fig:mapping2}
 \end{figure}
 
@@ -170,6 +181,7 @@ In order to transform a frame to the map's canvas, a relation between the frame'
 A transformation from the frame's corner pixel coordinates and the corresponding pixel coordinates of the map's canvas can be computed.
 
 \begin{equation}
+\label{eq:visual-slam-perspective-transformation}
 \left[ {
 \begin{array}{c} x_{m,i} \\ y_{m,i} \\ 1 \end{array}
 } \right]
@@ -188,9 +200,6 @@ By warping the frame on a flat canvas, implicit perspective correction is applie
 We used OpenCV's \textit{warpPerspective}\footnote{\url{http://opencv.itseez.com/modules/imgproc/doc/geometric_transformations.html}} to warp the frame on the map's canvas.
 
 In this way a texture map can be built. This map consists of a set overlapping textures. The placement and discontinuities of the overlapping textures could be further optimized by map stitching, as described in \cite{Visser2011imav}. Here the texture map is used for human navigation. For automatic navigation a feature map is used, as described in the next section.
-
-[REFER TO PAPER - map stitching]
-[REFER TO MAP OPTIMIZATION]
 
 			%\subsubsection{Map stitching}
 			%\subsubsection{Pose-based mapping}
