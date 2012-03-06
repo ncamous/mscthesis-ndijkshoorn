@@ -115,7 +115,7 @@ citecolor=darkgray,
 \renewcommand{\maketitle}{%
 	\thispagestyle{empty}	
 
-	\begin{textblock*}{21cm}(0cm,10cm)
+	\begin{textblock*}{21cm}(0cm,5cm)
 	
 	\begin{center}
 	{\LARGE \@title}
@@ -123,10 +123,14 @@ citecolor=darkgray,
 	\vspace{1.0cm}
 	 \@author\\
 	 %\@email\\
-	\vspace{1.0cm}
+	\vspace{0.3cm}
 	\@date
 	
-	\vspace{6.5cm}
+	\vspace{3.0cm}
+
+	\includegraphics[height=5cm]{images/ardrone_blender_final.png}
+
+	\vspace{4.0cm}
 
 	\includegraphics[scale=1.0]{images/UVALOGO.pdf}
 	\end{center}
@@ -139,8 +143,8 @@ citecolor=darkgray,
 		\begin{description}
 		\item[Master Thesis:] Artificial Intelligence
 		%\item[Faculteit:] Faculteit der Natuurwetenschappen, Wiskunde en Informatica
-		\item[Supervisors:] \@supervisors
-		\item[Signed:] \@signedby
+		\item[Supervisor:] \@supervisors
+		%\item[Signed:] \@signedby
 		\end{description}
 	\end{textblock*}
 	\hspace{0.1cm} % prevents page from being empty
