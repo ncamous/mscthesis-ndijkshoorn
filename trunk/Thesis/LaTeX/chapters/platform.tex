@@ -268,7 +268,7 @@ It computes the optical flow over the whole picture range using a kernel to smoo
 Attitude changes between two images are ignored during the first resolution refinement step.
 The error is finally efficiently canceled in most cases by subtracting the displacement of the optical center induced by the attitude change alone.
 The second algorithm estimates the displacement of several interesting image points (features).
-For this, FAST image features are used.
+For this, FAST image features \cite{rosten2010faster} are used.
 An iteratively weighted least-squares minimization procedure is used to recover the displacements.
 The IRLS estimation \cite{michaelsen2004pose} is carried out by assuming the depth of the scene is uniform.
 This optical flow based method is used by default.
@@ -337,7 +337,7 @@ These movements are often not observed by the AR.Drone's internal state estimati
 In case of a landing command, the AR.Drone decreases its altitude until it has landed on the floor. The vertical velocity is decreased when the drone comes near the floor to prevent a heavy shock.
 The engines are stopped automatically stopped.
 
-\textit{Funny observation: sticking tape on the ultrasound sensor results in infinite take-off and landing (e.g., vehicle keeps increasing or decreasing altitude).}
+%\textit{Funny observation: sticking tape on the ultrasound sensor results in infinite take-off and landing (e.g., vehicle keeps increasing or decreasing altitude).}
 
 
 % Open application programming interface
