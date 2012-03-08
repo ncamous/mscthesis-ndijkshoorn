@@ -115,35 +115,34 @@ citecolor=darkgray,
 \renewcommand{\maketitle}{%
 	\thispagestyle{empty}	
 
-	\begin{textblock*}{21cm}(0cm,5cm)
+	\begin{textblock*}{21cm}(0cm,4cm)
 	
 	\begin{center}
 	{\LARGE \@title}
 	
-	\vspace{1.0cm}
+	\vspace{0.5cm}
 	 \@author\\
 	 %\@email\\
-	\vspace{0.3cm}
+	\vspace{0.4cm}
 	\@date
 	
 	\vspace{3.0cm}
 
 	\includegraphics[height=5cm]{images/ardrone_blender_final.png}
 
-	\vspace{4.0cm}
-
-	\includegraphics[scale=1.0]{images/UVALOGO.pdf}
 	\end{center}
 	
 	\end{textblock*}	
 	
 	
-	\begin{textblock*}{12cm}(3cm,25cm)
+	\begin{textblock*}{11cm}(3cm,22.5cm)
 		\noindent
+		\includegraphics[scale=1.0]{images/UVALOGO.pdf}
+
 		\begin{description}
-		\item[Master Thesis:] Artificial Intelligence
+		\item[Master's Thesis] for the graduation in Artificial Intelligence
 		%\item[Faculteit:] Faculteit der Natuurwetenschappen, Wiskunde en Informatica
-		\item[Supervisor:] \@supervisors
+		\item[Supervised by] \@supervisors
 		%\item[Signed:] \@signedby
 		\end{description}
 	\end{textblock*}

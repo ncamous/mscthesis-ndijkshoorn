@@ -1,13 +1,13 @@
-A major goal of robotics is to develop mobile robots that can operate fully autonomously in real world situations.
+A major goal of robotics is to develop mobile robots that can operate fully autonomously in real world situations \cite{murphy2000introduction}.
 These autonomous robots can be used for a wide range of applications.
-A few example are cleaning, inspection and transportation tasks or medical and construction assistance.
+For example, cleaning, inspection, transportation tasks or medical and construction assistance.
 Robots can also operate in dangerous environments (e.g., life rescue or pollution control) without risking human lives.
 Although much progress has been made, a truthly autonomous robot that can operate in the real world, has not been developed yet.
 
 One of the main prerequisites of an autonomous robot is the ability to known its position and movement in the environment.
 Since no assumptions can be made about the environment, the robot has to learn from its environment.
 This ability has been identified as a fundamental problem in robotics.
-The process of incremental map construction and using it for localization is called \textbf{Simultaneous Localization And Mapping (SLAM)}.
+The process of incremental map construction and using it for localization is called \textbf{Simultaneous Localization and Mapping (SLAM)}.
 Its main function is to aggregate observations obtained by sensors in order to obtain information of the environment and store it in a map.
 This location information is used by other subsystems of the robot, such as interaction with the environment depending on the robots task.
 %This process was inspired by the the human ability to learn maps of the surrounding environment and to use them for localization.
@@ -30,12 +30,12 @@ One of them is SLAM with micro aerial vehicles (MAVs), which have a limited sens
 
 A \textbf{micro aerial vehicle (MAV)} is a class of unmanned aerial vehicles (UAV).
 Their small size allows a wide ringe of robotic applications, such as surveillance, inspection and search \& rescue.
-An example of a MAV developped for surveillance and inspection is the Aeryon Scout\footnote{\url{http://www.aeryon.com/products/avs.html}} (Figure \ref{fig:introduction_aeryon_scout}), which is already being deployed in the field\footnote{\url{http://www.aeryon.com/news/pressreleases/271-libyanrebels.html}}.
+An example of a MAV developed for surveillance and inspection is the Aeryon Scout\footnote{\url{http://www.aeryon.com/products/avs.html}} (Figure \ref{fig:introduction_aeryon_scout}), which is already being deployed in the field\footnote{\url{http://www.aeryon.com/news/pressreleases/271-libyanrebels.html}}.
 Particularly interesting are small quadrotor helicopters, which are lifted and propelled by four rotors.
-They offer great manouvrability and stability, making them ideal for indoor flights.
+They offer great manouvrability and stability, making them ideal for indoor and urban flights.
 Due to technical developments in the last years, small quadrotors with on-board stabilization like the Parrot AR.Drone can be bought off-the-shelf.
 These quadrotors make it possible to shift the research from basic control of the platform towards intelligent applications that require information about the surrounding environment.
-However, the limited sensor suite and the fast movements make it quite a challenge to perform SLAM-like methods for such platforms.
+However, the limited sensor suite and the fast movements make it quite a challenge to use SLAM methods for such platforms.
 
 %	\section{Versatile scouting capabilities of a quadrotor helicopter}
 
@@ -87,7 +87,7 @@ The resulting model can be used by teams to make use the advantages of MAVs in d
 
 
 	\section{Objectives and research questions}
-One goal of robotics is to develop mobile robots that can operate robustly and fully autonomously in real world situations \cite{murphy2000introduction} [can find better ref?].
+One goal of robotics is to develop mobile robots that can operate robustly and fully autonomously in real world situations \cite{murphy2000introduction}.
 One of the main prerequisites of an autonomous robot is the ability to known its location and movement in the environment \cite{talluri1992position}.
 Since no assumptions can be made about the environment, the robot has to learn from its environment.
 
@@ -131,7 +131,7 @@ Since no method has been proposed by others, the question arises how to construc
 \section{Contributions}
 The first contribution of this thesis is a framework that aids in the development of applications for the AR.Drone.
 The framework contains an abstraction layer to abstract from the actual device and use a simulated AR.Drone in way similar to the real AR.Drone.
-Therefore, a simulation model of the AR.Drone is developped in USARSim.
+Therefore, a simulation model of the AR.Drone is developed in USARSim.
 The main contribution is a novel approach that enables a MAV with a low-resolution down-looking camera to navigate in circumstances encountered during the IMAV competition.
 A pragmatic algorithm is presented to estimate the transformation between a camera frame and a map.
 In addition to the navigation capabilities, the approach generates a visual map, which can be used for human navigation.
