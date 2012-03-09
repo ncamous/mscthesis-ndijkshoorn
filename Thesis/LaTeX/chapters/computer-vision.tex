@@ -8,8 +8,8 @@ However, this sensor has a number of problems (e.g., limited range, deal with dy
 Vision has long been advertised as a solution.
 A camera can make a robot perceive the world in a way similar to humans.
 
-\textbf{Computer vision} is a field that includes methods for acquiring, processing, analysing, and understanding images.
-Since a camera is the AR.Drone's only sensor that is capable of retrieving detailed information of the environment, computer vision techniques are essential when performing robot localization with the AR.Drone.
+\textbf{Computer vision} is a field that includes methods for acquiring, processing, analysing and understanding images.
+Since a camera is the AR.Drone's only sensor capable of retrieving detailed information of the environment, computer vision techniques are essential when performing robot localization with the AR.Drone.
 In addition, vision techniques can be used to calibrate other sensors of a robot.
 
 \section{Projective geometry}
@@ -30,19 +30,19 @@ Points at infinity are respresented using $(x, y, z, 0)$, because $(x/0, y/0, z/
 In Euclidean geometry, one point is picked out as the \textit{origin}.
 A coordinate can be transformed to another coordinate by translating and rotating to a diffent position.
 This operation is know as a \textbf{Euclidian transformation}.
-A more general type of transformation is an \textbf{affine transformation}, which is linear transformation (linear stretching), followed by a Euclidian transformation.
-The resulting transformation performs moving, rotating and finally stretching linearly possibly by different ratios in different directions.
+A more general type of transformation is an \textbf{affine transformation}, which is a linear transformation (linear stretching), followed by a Euclidian transformation.
+The resulting transformation performs moving (translating), rotating and finally stretching linearly possibly by different ratios in different directions.
 
 In computer vision problems, projective space is used as a convenient way of representing the real 3D world.
 A \textbf{projective transformation} of projective space $\mathds{P}^n$ is represented by a linear transformation of homogeneous coordinates:
 \begin{equation}
 X' = H_{(n+1)} \times _{(n+1)}X
 \end{equation}
-where $X$ is a coordinate vector and $H$ is a non-singular matrix.
+where $X$ is a coordinate vector, $H$ is a non-singular matrix and $X'$ is a vector with the transformed coordinates.
 
 In order to analyze and manipulate images, understanding about the image formation process is required.
 Light from a scene reaches the camera and passes through a lens before it reached the sensor.
-The relationship between the distance to an object $z$ and the distance behind the lens $e$ at which a focuses image is formed, can be expresses as:
+The relationship between the distance to an object $z$ and the distance behind the lens $e$ at which a focused image is formed, can be expresses as:
 \begin{equation}
 \label{eq:optics}
 \frac{1}{f} = \frac{1}{z} + \frac{1}{e}
@@ -52,9 +52,9 @@ where $f$ is the focal length.
 The \textbf{pinhole camera} has been the first example of camera in the history \cite{gernsheim1969history}.
 %\footnote{\url{http://inventors.about.com/od/pstartinventions/a/stilphotography.htm}}
 It is a lightproof box with a very small aperture instead of a lens.
-Light from the scene passes through the aperture and projects an \textit{inverted image} on the opposit side of the box.
+Light from the scene passes through the aperture and projects an \textit{inverted image} on the opposite side of the box.
 This principle has been adopted as a standard model for perspective cameras.
-In this model, \textit{optical center} $C$ (apeture) corresponds to the center of the lens.
+In this model, \textit{optical center} $C$ (aperture) corresponds to the center of the lens.
 The intersection $O$ between the the optical axis and the image plane is called \textit{principal point}.
 The pinhole model is commonly described with the image plane between $C$ and the scene in order to preserve the same orientation as the object.
 
@@ -75,8 +75,8 @@ When using homogeneous coordinates, a linear transformation is obtained:
 \begin{equation}
 \left[ \begin{array}{c}
 \lambda p_x \\
-\delta p_y \\
-\delta
+\lambda p_y \\
+\lambda
 \end{array} \right]
 =
 \left[ \begin{array}{c}
@@ -100,7 +100,7 @@ P_z \\
 From this equation can be seen that it is not possible to estimate the distance to a point (i.e., all points on a line project to a single point on the image plane).
 
 A more realistic camera model is called the \textbf{general camera model}.
-It takes into account the rigid body transformation between the camera and the scene, and \textit{pixelization} (i.e.e, shapes and position of the CCD sensor).
+It takes into account the rigid body transformation between the camera and the scene, and \textit{pixelization} (i.e., shape and position of the camera's sensor).
 Pixelization is addressed by replacing the focal length matrix with a \textit{camera intrinsic parameter matrix} $A$.
 The rigid body transformation is adressed by adding a combined rotation and translation matrix $[R|t]$, which are called the \textit{camera extrinsic parameters}.
 \begin{equation}
@@ -110,8 +110,8 @@ or
 \begin{equation}
 \left[ \begin{array}{c}
 \lambda p_x \\
-\delta p_y \\
-\delta
+\lambda p_y \\
+\lambda
 \end{array} \right]
 =
 \left[ \begin{array}{c c c}
@@ -140,6 +140,7 @@ The method requires serveral pictures of the pattern shown at different position
 Because the 2D positions of the corners are known and matched between all images, the instrinsic and extrinsic parameters are determined simultaneously by solving a least-square minimization.
 
 \section{Feature extraction and matching}
+\label{sec:computer-vision-feature-extraction-matching}
 In order to perform robot localization using vision sensors, the robot must be able to relate recent camera frames to previously received camera frames (map).
 However, all measurents have an error, which complicates the matching.
 A strategy to deal with uncertainty is by generating a higher-level description of the sensor data instead of using the raw sensor data.
@@ -148,17 +149,17 @@ This process is called \textit{feature extraction}.
 \begin{mydef}
 \textbf{Features} are recognizable structures of elements in the environment.
 They are extracted from measurements and described in a mathematical way.
-\textit{Low-level features} are geometric primitives (e.g., lines, points, corners) and \textit{high-level features} are objexts (e.g., doors, tables).
+\textit{Low-level features} are geometric primitives (e.g., lines, points, corners) and \textit{high-level features} are objects (e.g., doors, tables).
 \end{mydef}
 
-Features play an essential role in mobile robots.
+Features play an essential role for mobile robots.
 They enable more compact and robust descriptions of the environment.
 Choosing the approriate features is a critical task when designing a mobile robot.
 
 \subsection{Feature extraction}
 \label{sec:background-feature-extraction}
-A local feature is small image patch that differs that is different than its immediate neighborhood.
-Difference can be in terms on intensity, color and texture.
+A local feature is small image patch that is different than its immediate neighborhood.
+Difference can be in terms of intensity, color and texture.
 Commonly, feature are edges, corners or junctions.
 The most important aspect of a feature detector is \textit{repeatability}, which means the detector is able to detect the same features, when multiple images (with different viewing and illumuniation conditions) of the same scene are used.
 Another important aspect of a feature detector is \textit{distinctiveness}, which means the information carried by a patch is distinctive as possible.
@@ -167,9 +168,8 @@ Good feature are \textit{invariant}, meaning that changes in camera viewpoint, i
 
 \textbf{Scale-invariant feature transform (SIFT)} \cite{lowe1999object} is the most popular feature extractor.
 It is invariant to scale, rotation, illumination and viewpoint.
-
 The algorithm can be outlined as follows.
-First, an internal representation is computed to ensure scale invariance.
+First, an internal representation of an image is computed to ensure scale invariance.
 Secondly, an approximation of the Laplacian of Gaussian is used to find interesting keypoints.
 Third, keypoints are found at maxima and minima in the Difference of Gaussian from the previous step.
 Fourth, bad keypoints (e.g., edges and low contrast regions are eliminated.
@@ -179,19 +179,19 @@ FInally, a high-level representation is calculated to uniquely identify features
 This \textit{feature descriptors} is a vector of 128 elements, containing orientation histograms.
 
 For some applications or mobile platforms, the SIFT extractor is too slow.
-Therefore, some faster variants are proposed, like \textbf{Speeded Up Robust Feature (SURF)} \cite{Bay2008cviu}.
+Therefore, faster variants are proposed, like \textbf{Speeded Up Robust Feature (SURF)} \cite{Bay2008cviu}.
 %SURF is partly inspired by the SIFT descriptor.
 The standard version of SURF is several times faster than SIFT and claimed by its authors to be more robust against different image transformations than SIFT.
-The important speed gain is achieved by using integral images, which drastically reduce the number of operations for simple box convolutions, independent of the chosen scale.
+The important speed gain is achieved by using integral images, which drastically reduces the number of operations for simple box convolutions, independent of the chosen scale.
 
 The algorithm can be outlined as follows.
 Initially, an integral image and Hessian matrix \cite{van1994complex} are computed.
 The Hessian matrix is a square matrix of second-order partial derivatives of a function, describing the local curvature of a function.
 Blob-like structures are detected at locations where the determinant matrix is maximum.
-The images are repeatedly smoothed with a Gaussian and then sub-sampled in order to create pyramid of different resolutions.
-In order to localise interest points in the image and over scales, a non-maximum suppression in a $3 \times 3 \times 3$ neigh bourhood is applied. 
+The images are repeatedly smoothed with a Gaussian and then sub-sampled in order to create a pyramid of different resolutions.
+In order to find interest points in the image and over scales, a non-maximum suppression in a $3 \times 3 \times 3$ neighbourhood is applied. 
 The maxima of the determinant of the Hessian matrix are then interpolated in scale and image space.
-A descriptor is construced that describess the distribution of the intensity content within the interest point neighbourhood.
+A descriptor is constructed that describes the distribution of the intensity content within the interest point neighbourhood.
 First-order Haar wavelet \cite{stollnitz1995wavelets} responses in $x$ and $y$ direction are used rather than the gradient, exploit integral images for speed. The size of the descriptor is reduced to $64$ dimensions.
 
 \subsection{Feature matching}
@@ -201,7 +201,7 @@ Ideally, each feature extracted from the current frame is correlated against the
 
 A \textit{matching function} is used to compute the correspondance between two feature descriptors.
 The matching function usually depends on the type of feature descriptor.
-In general, a feature descriptor is a high-dimensional vector, and matching features can be found by computing the distance using the $L_2$ norm, which is defined as follows:
+In general, a feature descriptor is a high-dimensional vector and matching features can be found by computing the distance using the $L_2$ norm, which is defined as:
 \begin{equation}
 L2(a,b) =\sqrt { \sum_{i=1}^{N} \left| a_i - b_i \right| ^2 }
 \end{equation}
@@ -230,14 +230,13 @@ Since most features are invariant under rotation and scale changes, images with 
 Images that have a large number of matches between them are identified.
 These image are likely to have some degree of overlap.
 A homography $\boldsymbol{H}$ (projective transformation) is computed between matching image pairs.
-This homography described how the second image needs to be transformed in order to correctly overlap the first image.
+This homography describes how the second image needs to be transformed in order to correctly overlap the first image.
 Different types of homographies can be used to describe the transformation between image pairs, depending on the level of displacement between images.
 
-$\boldsymbol{H}$ cannot be computed from all feature matches directly.
+The homography $\boldsymbol{H}$ cannot be computed from all feature matches directly.
 False matches would reduce the accuracy of the estimated homography.
 Instead, a robust estimation procedure is applied.
-
-\textbf{RANSAC (Random Sample Consensus)} \cite{fischler1981random} is a simple robust estimation procedure that uses a minimal set of randomly sampled correspondences to estimate image transformation parameters, and finds a solution that has the best consensus with the data.
+\textbf{RANSAC (Random Sample Consensus)} \cite{fischler1981random} is a robust estimation procedure that uses a minimal set of randomly sampled correspondences to estimate image transformation parameters, and finds a solution that has the best consensus with the data.
 Commonly, 4 random feature correspondences are used to compute the homography $\boldsymbol{H}$ of an image pair.
 This step is repeated $N$ trials and the solution that has the maximum number of inliers (whose projections are consistent with $\boldsymbol{H}$ within a tolerance $\epsilon$ pixels) is selected.
 
@@ -248,10 +247,12 @@ Finally, the images are transformed according to the corresponding homographies,
 \section{Visual Odometry}
 \label{sec:background-visual-odometry}
 An interesting combination of computer vision and mobile robotics is \textit{Visual Odometry (VO)}, which is the process of estimating the egomotion of a mobile robot using one or more onboard cameras.
-Below, only the case of a single camera and 2-D feature coordinates is described.
+Below,
+%only
+the case of a single camera and 2D feature coordinates is described.
 There are two main approaches two compute the relative motion from video images: \textit{appearance-based} methods and \textit{feature-based} methods.
-Appearance-based methods use intensity information, while feature-based methods use higher-level features.
-In this thesis, a feature-based approach was chosen because high-level features are used for localization against a map.
+Appearance-based methods use intensity information, while feature-based methods use higher-level features (Section \ref{sec:computer-vision-feature-extraction-matching}).
+In this thesis a feature-based approach was chosen, because high-level features are used for localization against a map.
 Therefore, parts of the localization code can be reused for a Visual Odometry algorithm.
 %Feature-based methods are more popular, because they are faster and more accurate than appearance-based methods.
 %Therefore, this thesis focusses on feature-based methods and the remainder of this section describes Visual Odometry using the feature-based approach.
@@ -266,17 +267,17 @@ R_{t,t-1} & t_{t,t-1} \\
 0 & 1
 \end{array} \right]
 \end{equation}
-where $R_{t,t-1}$ is the rotation matrix and $t_{t,t-1}$ is the translation vector.
+where $R_{t,t-1}$ is the rotation matrix and $t_{t,t-1}$ is the translation matrix.
 The set $T_{1:n} = \{T_1, \hdots, T_n\}$ contains all subsequent motions.
 The set of camera poses $C_{0:n} = \{C_0, \hdots, C_n\}$ contains the transformation of the camera with respect to the initial coordinate frame at time $t = 0$.
 
-The objective of Visual Odometry is to recover the full trajectory of the camera $C_{0:n}$ (i.e., egomotion).
+The objective of Visual Odometry is to recover the full trajectory of the camera $C_{0:n}$ (egomotion).
 This is achieved by computing the relative transformation $T_t$ from images $I_t$ and $I_{t-1}$.
 When all relative transformation are concatenated, the full trajectory of the camera $C_{0:n}$ is recovered.
 An iterative refinement procedure like \textit{windowed-bundle adjustment} can be performed to obtain a more accurate estimate of the local trajectory.
 
 The first step of VO is the extraction of image features $f_t$ from a new image $I_t$.
-These features are matched with features $f_{t-1}$ from the previous image (multiple images can be used to recover 3-D motion).
+These features are matched with features $f_{t-1}$ from the previous image (multiple images can be used to recover 3D motion).
 The third step consists of computing the relative motion $T_t$ between time $t-1$ and $t$.
 For an accurate motion estimation, feature correspondences should not contain outliers, as described in Section \ref{sec:theory_feature_matching}.
 
@@ -296,7 +297,7 @@ t_z & 0 & -t_x \\
 The rotation and translation of the camera can be extracted from $E$.
 %At least five feature correspondences are required.
 %An efficient implementation is proposed Nister \cite{nistér2004efficient}, which has become the standard for 2-D to 2-D motion estimation.
-A simple solution when at least eight feature correspondences are available, is the Longuet-Higgins's eight-point algorithm \cite{longuet1987computer}.
+A solution when at least eight feature correspondences are available, is the Longuet-Higgins's eight-point algorithm \cite{longuet1987computer}.
 Each feature correspondence gives a constraint of the following form:
 \begin{equation}
 \left[ \begin{array}{c c c c c c c c c}
@@ -311,9 +312,9 @@ Stacking these constraints gives the linear equation $A E = 0$, where $A$ is the
 This equation can be solved by using singular value decomposition (SVD), which has the form $A = USV^T$.
 Now, the projected essential matrix $\overline{E}$ can be found as the last column of $V$:
 \begin{equation}
-\overline{E} = U diag\{1, 1, 0\} V_T
+\overline{E} = U diag\{1, 1, 0\} V^T
 \end{equation}
-The rotation and translation can be extraced from $\overline{E}$:
+The rotation and translation can be extracted from $\overline{E}$:
 \begin{equation}
 R = U (\pm W^T) V^T
 \end{equation}

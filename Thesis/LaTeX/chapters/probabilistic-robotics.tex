@@ -1,4 +1,4 @@
-In Chapter 2 and 3, an introduction to required background theory for this thesis is given.
+In Chapter 2 and 3, an introduction to background theory for this thesis is given.
 The work presented in this thesis relies on \textbf{probabilistic robotics} (Thrun et al \cite{fox2005probabilistic}), which is introduced in this chapter.
 The work also relies on \textbf{computer vision} (Hartley and Zisserman \cite{Hartley2004}), which is introduced in Chapter \ref{chapter:computer-vision}.
 A clear vocabulary and corresponding mathematical nomenclature will be established that will be used consistently in the remainder of this thesis.
@@ -26,7 +26,7 @@ Now, robots can make choices (plan) relative to the uncertainty that remains, or
 \section{Recursive state estimation}
 \label{sec:background-recursive-state-estimation}
 Environments are characterized by \textit{state}.
-A state can be seen as a collection of all aspects of the robots and the environment that can impact the future.
+A state can be seen as a collection of all aspects of the robot's and the environment that can impact the future.
 The state also includes variables regarding the robot itself (e.g., pose, velocity, acceleration).
 \begin{mydef}
 Environments are characterized by \textbf{state}, which describes all aspects of a robot and the environment that can impact the future.
@@ -36,8 +36,8 @@ The state at time $t$ is denoted $x_t$.
 \end{mydef}
 Common state variables are:
 \begin{itemize}
-\item The robot \textit{pose}, which is its location and orientation (pitch, roll, yaw) relative to a global coodinate frame.
-\item The \textit{robot velocity}, consisting of a velocity for each pose variable. A change in attitude is called \textit{angular velocity}.
+\item The robot \textit{pose}, which is its location and orientation relative to a global coodinate frame.
+\item The \textit{robot velocity}, consisting of a velocity for each pose variable.%A change in attitude is called \textit{angular velocity}.
 \item The \textit{location and features of surrounding objects in the environment}. The objects can be either \textit{static} or \textit{dynamic}. For some problems, the objects are modelled as \textit{landmarks}, which are distinct, stationary features that provide reliable recognition.
 \end{itemize}
 
@@ -45,7 +45,7 @@ A core idea of probabilistic robotics is the estimation of the state from sensor
 Sensors observe only partial information about those quantities and their measurements are affected by noise. 
 State estimation tries to recover state variables from the data.
 Instead of computing a single state, a probability distribution is computed over possible world states.
-This probability distribution over possible world states is called \textit{Belief} and is described on the next page.
+This probability distribution over possible world states is called \textit{belief} and is described on the next page.
 \begin{mydef}
 \textbf{State estimation} addresses the problem of estimating quantities from sensor data that are not directly observable, but can be inferred.
 A probability distribution is computed over possible world states.
@@ -122,14 +122,14 @@ The second step of the Bayes filter is the \textit{measurement update}:
 \label{eq:background-theory-bayes-measurement}
 bel(x_t) = \eta p(z_t | x_t) \overline{bel}(x_t)
 \end{equation}
-Where $\eta$ is a normalization constant to ensure a probability.
+Where $\eta$ is a normalization constant to ensure a valid probability.
 Now, $bel(x_t)$ is the robot's belief about the state after the measurement and control data are used to improve the robot's knowledge.
 Both steps of the algorithm are performed recursively for all measurements and controls.
 
 The most popular family of recursive state estimators are the \textbf{Gaussian filters}.
 Gaussian filters represent belief by multivariate normal distributions (approximated by a Gaussian function).
 The density (probability) over the state space $x$ is characterized by two parameters: the mean $\mu$ and the covariance $\Sigma$.
-The dimension of the covariance matrix is is the dimensionality of the state $x$ squared.
+The dimension of the covariance matrix is the dimensionality of the state $x$ squared.
 Representing the posterior by a Gaussian has some important consequences.
 First, Gaussians are unimodel and have a single maximum.
 However, this is characterisic for many tracking problems, where the posterior is focussed around the true state with a certain margin of uncertainty.
@@ -167,7 +167,7 @@ A conversion between angles to velocities is required to use the Velocity Motion
 For ground robots, the odemetry reading can be obtained by integrating wheel encoder information.
 Because a quadrotor helicopter has no contact with the ground, odometry readings are not directly available.
 Instead, different sources of information are used to obtain odometry information.
-For example, the AR.Drone uses a camera that points downwards to recover odometry information (Section \ref{sec:platform-visual-odometry}).
+For example, the AR.Drone uses a down-pointing camera to recover odometry information (Section \ref{sec:platform-visual-odometry}).
 
 
 		\section{Measurement model}
@@ -184,7 +184,7 @@ Where $N$ is the total number of objects in the environment.
 Maps are often \textit{Features-based Maps} or \textit{Location-based maps}.
 Location-based maps are volumetric and offer a label for any location.
 Features-based Maps only describe the shape of the environment at specific locations, which are commonly objects.
-Features-based maps are more popular because the representation makes it easy to adjust (refine) the position of objects.
+Features-based maps are more popular because the representation makes it easier to adjust (refine) the position of objects.
 \begin{mydef}
 A probabilistic \textbf{sensor model} describes the relation between a world state $x_t$ and a sensor reading $z_t$ given an environmental model $m$ in form of a posterior distribution $p (z_t | x_t, m)$.
 \end{mydef}
@@ -225,7 +225,7 @@ Additionally, the map can be optimized after a loop-closure event is detected.
 
 \subsection{Solution techniques}
 \label{sec:background-solution-techniques}
-In practice, it is not possible to compute a robots belief (posterior probabilities) analytically.
+In practice, it is not possible to compute a robot's belief (posterior probabilities) analytically.
 %the posterior (belief) analytically.
 Therefore, a number of approximation techniques exist. 
 This section describes the most popular solutions techniques for SLAM problems.
@@ -241,11 +241,11 @@ Due to the absence of ambiguity, the trackers fails to model ambiguities adequat
 The main advantage of the multi-hypothesis representation is that the robot can explicitly maintain uncertainty regarding its state.
 This allows a robot to believe in multiple poses simultaneously, allowing the robot to track and reject different hypotheses independently.
 One of the main disadvantages of a multi-hypothesis representation involves decision making.
-If the robot represents its position as a set of points, it becomes less obvious to compute a next move.
+If the robot represents its position as a set of points, it becomes less obvious to compute a next action.
 
 Futhermore, solution techniques can be divided in two branches of time constraints: \textit{online computing} and \textit{offline computing}.
 \textbf{Online} techniques solve a problem in real-time and must guarantee response within strict time constraints.
-One advantage of online techniques is the ability to use the response as input for decision making (navigation), which is essential for autonomous robots.
+One advantage of online techniques is the ability to use the response as input for decision making (e.g., navigation), which is essential for autonomous robots.
 Due to the strict time constraints, a limited amount of computations can be performed, which limits the complexity of solution techniques.
 
 \textbf{Offline} techniques have less strict time contraints, which allows increased complexity.
@@ -279,7 +279,7 @@ K_t & = & \overline{\Sigma}_t C_t^T (C_t \overline{\Sigma}_t C_t^T + Q_t)^{-1} &
 The Kalman Filter presesents the belief $bel(x_t)$ at time $t$ by the mean $\mu_t$ and covariance $\Sigma_t$.
 When a measurement is received, a new belief $bel(x_t)$ is predicted based on the previous belief bel($x_{t-1}$), the control data $u_t$ and both the state transition model and motion model.
 This predicted belief describes the most likely state $\overline{\mu}_t$ at time $t$ and the covariance $\overline{\Sigma}_t$.
-The measurement is not yet included, because its a predicted belief.
+The measurement is not yet included, because it's a predicted belief.
 The update step transforms the predicted belief ($\overline{\mu}_t$, $\overline{\Sigma}_t$) into the desired belief ($\mu_t$, $\Sigma_t$), by incorporating the measurement $z_t$.
 The Kalman gain $K_t$ specifies the degree to which the measurement is incorporated into the new state estimate.
 The key concept used for Kalman Filtering is the \textit{innovation}, which is the difference between the actual measurement $z_t$ and the expected measurement $C_t \overline{\mu}_t$, which is derived from the predicted state.
@@ -319,6 +319,7 @@ K_t & = & \overline{\Sigma}_t \boldsymbol{H_t^T} (\boldsymbol{H_t} \overline{\Si
 
 
 \subsubsection{TORO}
+\label{sec:prob-rob-toro}
 As stated in Section \ref{sec:probabilistic-robotics-slam}, both the estimated path and constructed map are affected by noise.
 Both of them become increasingly inaccurate during travel.
 However, when a place that has been mapped is revisited (loop-closure), the uncertainty can be reduced and the map can be optimized to reduce its error.
@@ -328,10 +329,12 @@ A solution technique for the map optimization problem is TORO \cite{grisetti2007
 The TORO algorithm operates on a graph-based formulation of the SLAM problem, in which the poses of the robot are modeled by nodes in a graph.
 Constraints between poses resulting from observations or from odometry are encoded in the edges between the nodes.
 The goal of TORO is to find a configuration of the nodes that maximizes the observation likelihood encoded in the constraints.
-Gradient Descent (GD) \cite{olson2006fast} seeks for a configuration of the nodes that maximizes the likelihood of the observations by iteratively selecting an edge (constraint) $< j, i >$ and by moving a set of nodes of the network in order to decrease the error introduced by the selected constraint.
+Gradient Descent (GD) \cite{olson2006fast} seeks for a configuration of the nodes that maximizes the likelihood of the observations by iteratively selecting an edge (constraint) $< j, i >$ and by moving a set of nodes
+%of the network
+in order to decrease the error introduced by the selected constraint.
 
 \begin{comment}
-The nodes are updated according to the following equation:
+The nodes are updated according to the following equation: 
 \begin{equation}
 x^{t + 1} = x^t + \Delta x
 %\lambda \cdot J_{ji}^T \Omega_{ji} r_{ji}
@@ -345,10 +348,10 @@ The TORO algorithm uses a tree based parameterization for describing the configu
 %Such a tree can be obtained by computing a spanning tree from a graph.
 Such a tree can be constructed from trajectory of the robot.
 The first node is the root of the tree.
-An unique id is assigned to each node based on the timestamps.
+An unique id is assigned to each node based on the timestamps of the observations.
 Furthermore, the parent of a node is the node with the smallest id (timestamp) and a constraint between both nodes.
 Each node $i$ in the tree is related to a pose $p_i$ in the network and maintains a parameter $x_i$.
-The parameter $x_i$ is a 6D vector and describes the relative movement (rotation and translation) from the parent of the node $i$ to the node $i$ itself.
+The parameter $x_i$ is a 6D vector and describes the relative movement (rotation and translation) from the parent of node $i$ to  node $i$ itself.
 %\begin{equation}
 %x_i = p_i \ominus p_{parent(i)}
 %\end{equation}
@@ -356,7 +359,7 @@ The pose of a node can be expressed as:
 \begin{equation}
 P_i = \prod_{k \in \mathcal{P}_{i,0}} X_k
 \end{equation}
-Where $\mathcal{P}_{i,0}$ is the ordered list of nodes describing a path in the tree from the root to the node $i$.
+Where $\mathcal{P}_{i,0}$ is the ordered list of nodes describing a path in the tree from the root to node $i$.
 The homogenous transformation matrix $X_i$ consists of a rotational matrix $R$ and a translational component $t$.
 
 Distributing an error $\epsilon$ over a sequence of $n$ nodes in the two-dimensional space can be done in a straightforward manner.
@@ -370,7 +373,7 @@ The error introduced by a constraint is computed as follows:
 E_{ji} = \Delta_{ji}^{-1} P_i^{-1} P_j
 \end{equation}
 In TORO's approach, the error reduction is done in two steps.
-First, they update the rotational components $R_k$ of the variables $x_k$ and second, they update the translational components $t_k$.
+First, it updates the rotational components $R_k$ of the variables $x_k$ and second, it updates the translational components $t_k$.
 The orientation of pose $p_j$ is described by:
 \begin{equation}
 \mathcal{R}_1\mathcal{R}_2 \hdots \mathcal{R}_n = \mathcal{R}_{1:n}
