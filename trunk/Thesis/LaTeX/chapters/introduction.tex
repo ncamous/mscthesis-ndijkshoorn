@@ -9,11 +9,11 @@ Since no assumptions can be made about the environment, the robot has to learn f
 This ability has been identified as a fundamental problem in robotics.
 The process of incremental map construction and using it for localization is called \textbf{Simultaneous Localization and Mapping (SLAM)}.
 Its main function is to aggregate observations obtained by sensors in order to obtain information of the environment and store it in a map.
-This location information is used by other subsystems of the robot, such as interaction with the environment depending on the robots task.
+This location information is used by other subsystems of the robot, such as interaction with the environment depending on the robot's task.
 %This process was inspired by the the human ability to learn maps of the surrounding environment and to use them for localization.
 
 A wide range of SLAM methods have been presented.
-These methods include various sensor configurations to obtain map information as well as knowledge about the robots location.
+These methods include various sensor configurations to obtain map information as well as knowledge about the robot's location.
 %A wide range of methods have been presented, depending on the application environment and the a-priori information about it.
 Available solutions for certain environments and sensor configurations are well understood.
 For other environments and sensor configurations, open problems remain.
@@ -42,9 +42,9 @@ However, the limited sensor suite and the fast movements make it quite a challen
 
 	\section{International Micro Air Vehicle Competition}
 \label{sec:introduction-imav}
-The international Micro Air Vehicle Competition (IMAV) is an effort to stimulate the practical demonstration of MAV technologies.
+The International Micro Air Vehicle Competition (IMAV) is an effort to stimulate the practical demonstration of MAV technologies.
 The competitions have as goal to shorten the road from novel scientific insights to application of the technology in the field.
-Since the Summer 2011 edition of IMAV, teams can apply for borrowing a Parrot AR.Drone.
+Since the Summer 2011 edition of IMAV, teams can borrowing a Parrot AR.Drone quadrotor helicopter.
 This allows teams to focus research on the artificial intelligence part of the competitions.
 
 Currently, IMAV has three distinct competitions: two indoor competitions and one outdoor competition.
@@ -56,13 +56,13 @@ The competition rules\footnote{\url{http://www.imav2011.org/images/stories/docum
 \centering
 \includegraphics[width=11cm]{images/imav2011_pylon.jpg}
 \caption{The IMAV2011 Pylon challenge environment, which is located in a sports gym.
-The objective is to navigate a MAV in figure-8’s around two poles that are $10\small{m}$ apart. Each pole has a height of approximately $4\small{m}$.}
+The objective is to navigate a MAV in figure-8 shapes around two poles that are $10\small{m}$ apart. Each pole has a height of approximately $4\small{m}$.}
 \label{fig:imav2011_pylon}
 \end{figure}
 
 The main bottleneck for indoor autonomy is reliable indoor positioning.
 Team are allowed to use external aids to solve their positioning problem, at the cost of points.
-Examples of external aids are visual references, radio positioning beacons, etc.
+Examples of external aids are visual references (markers) and radio positioning beacons.
 One of the contributions of this thesis is the development of basic navigation capabilities for the AR.Drone, without relying on external aids.
 These navigation capabilities can be used during the IMAV competitions, allowing fully autonomous flights.
 %This thesis is an effort to develop 
@@ -74,16 +74,18 @@ The RoboCup competions have as goal to stimulate research by providing standard 
 Unlike the IMAV competitions, the RoboCup competitions are not limited to MAVs.
 
 The RoboCup Rescue league \cite{kitano1999robocup} is part of the RoboCup initiative.
-This league aims at the development of robotic technology that could effectively help human rescuers in the aftermath of disasters like earthquakes, terroristic attacks, and other extreme situations.
+This league aims at the development of robotic technology that could 
+%effectively
+help human rescuers in the aftermath of disasters like earthquakes, terroristic attacks and other extreme situations.
 In addition to a Rescue league with real robots, the Virtual Robots Competition was started, which uses a simulator instead of real robots.
 Simulation has some significant advantages above real competitions, such as the low costs and the ability to easily construct different disaster scenarios.
 
 The main bottleneck for robot simulation is the requirement of realistic motion and sensor models.
 The simulation environment selected for the Virtual Robots Competition is USARSim \cite{Balakirsky2009iros,carpin2007usarsim}, which includes models of a wide range of robotic platforms and sensors.
 Unfortunately, the support of aerial vehicles in USARSim is little, while MAVs offer great advantages above other robots due to the versatile scouting capabilities.
-In 2011, the expensive AirRobot quadrotor was the single aerial vehicle available in USARSim.
+In 2011, the expensive AirRobot quadrotor was the only aerial vehicle available in USARSim.
 One of the contributions arising from this thesis is a simulation model of the cheap AR.Drone quadrotor.
-The resulting model can be used by teams to make use the advantages of MAVs in disaster scenarios.
+The resulting model can be used by teams to make use of the advantages of MAVs in disaster scenarios.
 
 
 	\section{Objectives and research questions}
@@ -91,13 +93,15 @@ One goal of robotics is to develop mobile robots that can operate robustly and f
 One of the main prerequisites of an autonomous robot is the ability to known its location and movement in the environment \cite{talluri1992position}.
 Since no assumptions can be made about the environment, the robot has to learn from its environment.
 
-Localization and mapping using aerial vehicles is an active research area in robotics.
+Simultaneous Localization and Mapping using aerial vehicles is an active research area in robotics.
 However, current approaches use estimation and optimization algorithms that are computationally expensive and cannot be applied for realtime navigation problems.
-Furthermore, other researchers rely on expensive aerial vehicles equipped with advanced sensors (e.g., laser range finder).
+Furthermore, other researchers rely on expensive aerial vehicles
+%equipped
+with advanced sensors like a laser range finder.
 Focusing on realtime methods and cheap MAVs increases the employability of aerial vehicles in the real world situations.
 In case of semi-autonomous robots, building and visualizing an elevated and textured map of the invironment offers additional feedback to the teleoperator of the vehicle.
 
-The main research question therefore is to determine a realtime localization and mapping approach that can be used for MAVs with a low-resolution down-pointing camera (e.g., AR.Drone).
+The main research question therefore is to determine a realtime Simultaneous Localization and Mapping approach that can be used for MAVs with a low-resolution down-pointing camera (e.g., AR.Drone).
 This main research question is divided into several subquestions:
 \begin{itemize}
 \item How to construct (visual) a map from camera frames?
@@ -113,14 +117,14 @@ In order to perform (global) localization, a map of the environment has to be co
 Considering the limited sensor suite of cheap quadrotors (e.g., AR.Drone), camera images are often the best information source for localization and mapping.
 This poses the questions how to construct a map from camera frames.
 The AR.Drone is equipped with a very low-resolution camera, which poses the question if localization against a map is possible with such cameras.
-The recent progress in reducing the size of high-resolution cameras enabled MAVs to be equipped with high-resolution cameras.
-This leads to the question how the (increased) image resolution will affect the localization performance.
+The recent developments in miniaturing high-resolution cameras enables MAVs to be equipped with high-resolution cameras.
+This leads to the question how the (increasing) image resolution will affect the localization performance.
 When a map is constructed, the camera frames are matched against the map to perform (global) localization.
-A robust transformation is computed to describe the relation between the vehicle's position and map.
+A robust transformation is computed to describe the relation between the vehicle's position and the map.
 Different transformation estimation methods can be used and have to be compared.
 The performance of the localization method is also depending on the environment.
 Circumstances encountered during the IMAV competition are challenging due to the repeating patterns (lines) and the lack of natural features.
-Therefore, the localization method is envestigated for such circumstances.
+Therefore, the localization method is evaluated for such circumstances.
 Finally, an elevation map is constructed using a single airborne ultrasound.
 Since no method has been proposed by others, the question arises how to construct this map.
 
@@ -129,8 +133,8 @@ Since no method has been proposed by others, the question arises how to construc
 
 
 \section{Contributions}
-The first contribution of this thesis is a framework that aids in the development of applications for the AR.Drone.
-The framework contains an abstraction layer to abstract from the actual device and use a simulated AR.Drone in way similar to the real AR.Drone.
+The first contribution of this thesis is a framework that aids in the development of (intelligent) applications for the AR.Drone.
+The framework contains an abstraction layer to abstract from the actual device and use a simulated AR.Drone in a way similar to the real AR.Drone.
 Therefore, a simulation model of the AR.Drone is developed in USARSim.
 The main contribution is a novel approach that enables a MAV with a low-resolution down-looking camera to navigate in circumstances encountered during the IMAV competition.
 A pragmatic algorithm is presented to estimate the transformation between a camera frame and a map.
@@ -144,7 +148,7 @@ In \textbf{Chapter \ref{chapter:related-research}}, an overview of related resea
 This reseach is divided into three segments: SLAM methods for building visual maps, elevation mapping with ultrasound sensors and research conducted with the AR.Drone.
 An extensive overview of the AR.Drone platform is presented in \textbf{Chapter \ref{chapter:platform}}.
 The platform overview covers the hardware, the basics of the quadrotor flight control and finally its Application Programming Interface (API).
-However, the API lacks functionalities to employ a SLAM method.
+This API lacks functionalities to employ a SLAM method.
 Therefore, it is extended to a development framework in \textbf{Chapter \ref{chapter:development-environment}}.
 In addition to this framework, a realistic simulation model of the AR.Drone is developed.
 This simulation model allows safe and efficient development and testing of algorithms.

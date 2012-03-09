@@ -1,12 +1,12 @@
-A preliminary step is to find a suitable robot platform that enables both the development and testing of indoor Aerial SLAM methods.
+A preliminary step is to find a suitable robot platform that enables both the development and testing of indoor aerial SLAM methods.
 A straightforward choice is to use a \textit{quadrotor helcopter}, commonly designed to be unmanned aerial vehicles (UAVs).
-Their small size and extremely maneuverability allows both indoor and outdoor flight.
+Their small size and extremely maneuverability allows both indoor and outdoor flights.
 Furthermore, quadrotors don't require mechanical linkages to vary the rotor blade pitch angle, which simplifies the design.
 
 Nowadays, small quadrotors with on-board stabilization can be bought off-the-shelf.
 These quadrotors make it possible to shift the research from basic control of the platform towards intelligent applications.
 The platform selected is the Parrot AR.Drone\footnote{\url{http://ardrone.parrot.com}} quadrotor helicopter.
-The main advantages of this quadrotor are the robustness and affordable pricetag.
+The main advantages of this quadrotor are its robustness and affordable pricetag.
 The AR.Drone is equipped with a front-camera and a down-looking camera that provide live video streaming.
 Two complementary algorithms make use of the down-looking camera for improved stabilization.
 Furthermore, the AR.Drone is equipped with an ultrasound sensor and an inertial unit that measures pitch, roll, yaw and accelerations along all axes.
@@ -67,24 +67,24 @@ Increasing thrust for one rotor while decreasing thrust for the other will maint
 \section{Hardware}
 \begin{figure}[htb]
 \centering
-\includegraphics[width=7cm]{images/ardrone.jpg}
-\caption{TDO BE REPLACED WITH OWN PICTURE. The AR.Drone quadrotor helicopter with protection hull attached.}
+\includegraphics[width=9cm]{images/ardrone.jpg}
+\caption{The AR.Drone quadrotor helicopter with protection hull attached.}
 \label{fig:ardrone_hull}
 \end{figure}
 The AR.Drone (Figure \ref{fig:ardrone_hull}) is remote-controlled consumer quadrotor helicoptor developed by Parrot SA\footnote{\url{www.parrot.com}}.
-The body is made of carbon fiber tube structure and high resistance 
+The body is made of a carbon fiber tube structure and high resistance 
 %PA66
 plastic.
-A protection hull is made of Expanded Polypropylene (EPP) foam \footnote{\url{http://en.wikipedia.org/wiki/Polypropylene}}, which is durable, light weight, and recyclable.
+A protection hull is made of Expanded Polypropylene (EPP) foam\footnote{\url{http://en.wikipedia.org/wiki/Polypropylene}}, which is durable, light weight, and recyclable.
 This hull provides protection during indoor flights.
 The propellors are powered by four brushless motors (35,000 rpm, power: 15W).
 Energy is provided by a Lithium polymer battery with a capacity of 1000 mAh, which allows a flight time of approximately 10 minutes.
 
-The AR.Drone carries an internal computer with an 468MHz ARM9-processor and 128MB of RAM, running a custom Linux operating system.
-A mini-USB connector is included for software flashing purposes and to allow add-ons to be plugged
+The AR.Drone carries an internal computer with a 468MHz ARM9-processor and 128MB of RAM, running a custom Linux operating system.
+A mini-USB connector is included for software flashing purposes and to plugin add-ons (e.g., GPS sensor).
 An integrated 802.11g wireless card provides network connectivity with an external device that controls the vehicle.
-No remote-control is provided. Instead, a regular wifi-enabled device can be used to control the AR.Drone.
-It was initially designed for the Apple platforms (e.g., iPhone, iPod and iPad) and became available on other platforms in the last few months.
+A remote-control is not included. Instead, a regular wifi-enabled device can be used to control the AR.Drone.
+It was initially designed for Apple platforms (e.g., iPhone, iPod and iPad) and became available on other platforms during 2011.
 It is also possible to control the AR.Drone from a Linux or Windows PC with the software designed for application developers.
 
 
@@ -98,11 +98,19 @@ In addition, a front camera is present to provide the user visual feedback from 
 
 \subsubsection{Inertial measurement unit}
 The AR.Drone features an 6 degrees of freedom (DOF) inertial measurement unit.
-It provides the software with \textit{pitch}, \textit{roll} and \textit{yaw measurements} (Figure X).
-Pitch, roll and yaw are often used in ... and indicate the orientation the rotation ... $x$, $y$ and $z$ direction.
+It provides the software with \textit{pitch}, \textit{roll} and \textit{yaw measurements} (Figure \ref{fig:roll-pitch-yaw}).
+Pitch, roll and yaw are often used in flight dynamics and indicate the angles of rotation in three dimensions about the vehicle's center of mass.
 These measurements are used for automatic pitch, roll and yaw stabilization and assisted tilting control.
 The measurement unit is a \textit{micro electro-mechanical system} (MEMS) and contains
 a 3 axis accelerometer, a 2 axis roll and pitch gyrometer and a 1 axis yaw precision gyrometer.
+
+\section{Hardware}
+\begin{figure}[htb]
+\centering
+\includegraphics[width=8cm]{images/Rollpitchyawplain.png}
+\caption{Roll, yaw and pitch axis orientation for an aerial vehicle.}
+\label{fig:roll-pitch-yaw}
+\end{figure}
 
 The \textbf{accelerometer} is a BMA150\footnote{\url{http://www.bosch-sensortec.com/content/language1/downloads/BMA150_DataSheet_Rev.1.5_30May2008.pdf}} made by Bosch Sensortec.
 %It provides three sensitivity ranges (i.e., maximum g-force it can report): $\pm 2g / \pm 4g / \pm 8g$.
