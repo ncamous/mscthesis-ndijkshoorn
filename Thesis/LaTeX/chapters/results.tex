@@ -6,9 +6,9 @@ To evaluate the USARSim simulation model,
 a set of maneuvers is flown with the actual AR.Drone and
 simulated AR.Drone. The differences between the maneuvers are studied in detail. To enable multiple repetitions of the same maneuver it is
 described as a set of time points (milliseconds since initialization) each coupled to a movement command.
-We wrote wrappers for the AR.Drone programming interface and for USARSim interface which read these scripts and output a control
-signal, using the system clock to manage the timing independently from the game engine and the AR.Drone hardware.
-Orientation, altitude and horizontal speed are recorded at a frequency of 200Hz during the maneuvers. These are gathered through the AR.Drone's internal sensors and the build-in algorithms, which are
+%We wrote wrappers for the AR.Drone programming interface and for USARSim interface which read these scripts and output a control
+%signal, using the system clock to manage the timing independently from the game engine and the AR.Drone hardware.
+Orientation, altitude and horizontal speed are recorded at a frequency of $200\hertz$ during the maneuvers. These are gathered through the AR.Drone's internal sensors and the build-in algorithms, which are
 also used by the controller to operate the drone. The filtered output of the MEMS gyroscope is used
 for estimating orientation. The filtered output of the ultrasound distance sensor is used for estimating
 altitude. The optical 
