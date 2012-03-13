@@ -1,35 +1,37 @@
-This chapter presents methods to build a visual map and how to use this map to make the AR.Drone localize itself.
+This chapter presents methods to build a visual elevation map and use this map to make the AR.Drone localize itself.
 In order to initialize a visual localization and mapping algorithm, a good estimate of the position based on the internal sensors of the AR.Drone is essential.
-Section \ref{sec:pose_estimation} describes multiple methods to estimate the pose.
+Section \ref{sec:pose_estimation} describes how the pose is estimated.
 When an estimate of the pose is available, a map can be constructed using the method described in Section \ref{sec:mapping}.
 Section \ref{sec:localization} described how this map is used by the AR.Drone to localize itself and reduce the error of the estimated pose.
-Finally, Section \ref{sec:elevation_map} describes an experimental method to build an elevation map using a single ultrasound sensor.
+Finally, Section \ref{sec:elevation_map} describes an experimental method to build an elevation map using a single airborne ultrasound sensor.
 
 	\section{Pose estimation}
 	\label{sec:pose_estimation}
 %In order to initialize a visual localization and mapping algorithm, a good estimate of the position based on the internal sensors of the AR.Drone is essential.
-The AR.Drone has several sources of information available about its movements and the majority of its computing power is dedicated to combine these sources into combined estimates. Here this information is combined into a state vector, with all information needed to initialize visual localization and mapping.
+The AR.Drone has several sources of information available about its movements and the majority of its computing power is dedicated to combine these sources into reliable estimates (Section \ref{sec:platform_onboard_intelligence}). Here this information is combined into a state vector, with all information needed to initialize visual localization and mapping.
 
 The AR.Drone is equipped with a number of sensors, which give frequent updates about the motion. 
 The inertial sensor measures the body accelerations and angular velocities.
 A proprietary filter on board of the AR.Drone converts the angular velocities to an estimated attitude (orientation).
-A ultrasound sensor is used to measure the altitude of the vehicle.
+An ultrasound sensor is used to measure the altitude of the vehicle.
 In addition to the body accelerations, the AR.Drone sends an estimate of its estimated body velocity (Section \ref{sec:platform_onboard_intelligence}).
-This estimate is based on the inertia measurements and visual odometry obtained from the relative motion between camera frames.
+This estimate is based on the inertia measurements, aerodynamic model and visual odometry obtained from the relative motion between camera frames.
 %Unfortunately, the details of this velocity estimation are
 %currently
 %not documented by the manufacturer.
 The details of this algorithm are proprietary information of the manufacturer. 
 
 The information from the sensors are used in an Extended Kalman Filter (EKF) to estimate the current position.
-The EKF has been considered~\cite{julier2004unscented} the facto standard in the theory of nonlinear state estimation.
-Our EKF state vector comprises a position vector $p^{W}$, velocity vector $v^{W}$, acceleration vector $a^{W}$ and attitude (orientation) vector $q^{W}$.
+An EKF has been considered~\cite{julier2004unscented} the facto standard in the theory of nonlinear state estimation.
+The EKF state vector comprises a position vector $p^{W}$, velocity vector $v^{W}$, acceleration vector $a^{W}$, attitude (orientation) vector $q^{W}$ and altitude vector $h^W$ (Section \ref{sec:pose_estimation}).
 All vectors are 3-dimensional Cartesian coordinates.
 
 \begin{equation}
 x = [ p^{W}  v^{W}  a^{W}  q^{W} ]
 \label{eq:EKF_state_vecor}
 \end{equation}
+
+\textbf{TODO}
 
 %The filtered attitude (orientation) from the proprietary onboard filter is written directly to the attitude vector of the EKF's measurement matrix.
 This is possible because the attitude measurements are filtered and debiased onboard of the AR.Drone (Section \ref{sec:platform_onboard_intelligence}).
@@ -49,9 +51,9 @@ p_{t} = p_{t-1} + v_{t} \times \Delta t + a_{t} \times 0.5 \Delta t^2
 \end{equation}
 where $\Delta t$ is the variable time (seconds) between the last two measurements.
 The body accelerations or velocity is sufficient to estimate the vehicle's altitude.
-However, the sonar's altitude measurement can be integrated into the EKF to improve the altitude estimate.
-The sonar sensor is not sensitive to drift because it provides an absolute altitude measurement.
-Relying only on the sonar sensor is not optimal since the measurements depend heavily on material and structure of the floor.
+However, the ultrasound's altitude measurement can be integrated into the EKF to improve the altitude estimate.
+The ultrasound sensor is not sensitive to drift because it provides an absolute altitude measurement.
+Relying only on the ultrasound sensor is not optimal since the measurements depend heavily on material and structure of the floor.
 
 
 %\subsection{Inertia measurements}
@@ -61,7 +63,7 @@ Relying only on the sonar sensor is not optimal since the measurements depend he
 	\section{Mapping}
 	\label{sec:mapping}
 When an estimate of the AR.Drone's pose is available, a map can be constructed to make the AR.Drone localize itself and reduce the error of the estimated pose.
-The visual map consists of a texture map and a feature map.
+The map consists of a texture map and a feature map.
 The texture map is used for human navigation and the feature map is used by the AR.Drone to localize itself.
 
 	\subsection{Visual map}
@@ -72,17 +74,17 @@ The frames captured by this camera can be warped on a flat canvas to create a vi
 Directly merging the frames on the canvas is not possible, because individual frames can be taken from a broad range of angles and altitudes.
 Instead, perspective correction is applied and all frames are normalized in size and orientation.
 
-An initial approach of the mapping algorithm was published \cite{visser2011closing} and presented at the \textit{IMAV2011 conference}.
+An initial approach of the mapping algorithm was published \cite{visser2011closing} and presented at the IMAV2011 conference.
 This approach uses image stitching \cite{levin2004seamless} to create a visual map.
 Knowledge about the AR.Drone estimated state is not used.
 %The propagation of stitching errors results in an increasing error.
 Because all transformation of the previous frames are used to compute the transformation of the recent frame, the method is sensitive to incorrect transformations.
 Therefore, a new mapping method is developped.
 
-Before describing how a frame is warped, some basics about image formation are explained. %the camera matrix are explained.
+Before describing how a frame is warped, some basics about image formation are repeated. %the camera matrix are explained.
 The AR.Drone's camera is modeled using a pinhole camera model (Figure \ref{fig:mapping1}).
 In this model, a scene view is formed by projecting 3D points into the image plane using a perspective transformation.
-3D camera coordinates are typically described with homogeneous coordinates (Section \ref{sec:background-projective-geometry}).
+%3D camera coordinates are typically described with homogeneous coordinates (Section \ref{sec:background-projective-geometry}).
 
 \begin{figure}[htb]
 \centering
@@ -111,7 +113,7 @@ The $3 \times 4$ joint rotation-translation matrix $[R|t]$ includes the \textit{
 \label{fig:mapping2}
 \end{figure}
 
-In order to warp a camera frame on the correct position of the canvas, we need to know which area of the world (floor) is captured by the camera.
+In order to warp a camera frame on the correct position of the canvas, the algorithm needs to know which area of the world (floor) is captured by the camera.
 This is the inverse operation of the image formation described above.
 Instead of mapping 3D world coordinates to 2D pixel coordinates, 2D pixel coordinates are mapped to 3D world coordinates ($\small{mm}$).
 It is impossible to recover the exact 3D world coordinates, because a pixel coordinate maps to a line instead of a point (i.e., multiple points in 3D world coordinates map to the same 2D pixel coordinate).
@@ -131,6 +133,7 @@ s \cdot \left[ {
 This ambiguity can be resolved by assuming that all 3D world points lie on a plane ($z_w = 0$), which makes it possible to recover $x_w$ and $y_w$.
 The 2D world coordinates of the frame's corners are obtained by casting rays from the four frame's corners (top of Figure \ref{fig:mapping2}).
 The 2D world coordinate that corresponds to a frame corner is defined as the point $(x_w,  y_w , 0)$ where the ray intersects the world plane ($z_w = 0$).
+Both $x_w$ and $y_w$ are computed as follows:
 
 \begin{equation}
 \left[ {
@@ -178,7 +181,7 @@ where $s_{map} = 1 / 4.884$.
 
 Now, the map's pixel coordinates of the frame corners are known (bottom of Figure \ref{fig:mapping2}).
 In order to transform a frame to the map's canvas, a relation between the frame's pixels and map's pixels is required.
-A transformation from the frame's corner pixel coordinates and the corresponding pixel coordinates of the map's canvas can be computed.
+A transformation from the frame's corner pixel coordinates and the corresponding pixel coordinates of the map's canvas can be expressed as:
 
 \begin{equation}
 \label{eq:visual-slam-perspective-transformation}
@@ -191,15 +194,17 @@ H
 \begin{array}{c} x_{f,i} \\ y_{f,i} \\ 1 \end{array}
 } \right]
 \end{equation}
-
 The local perspective transformation $H$ is calculated by minimizing the back-projection using a least-squares algorithm.
-We used OpenCV's \textit{findHomography}\footnotemark[3] to find the perspective transformation.
+OpenCV's \textit{findHomography}\footnotemark[3] is used to solve the perspective transformation $H$.
 This transformation describes how each frame's pixel needs to be transformed in order to map to the corresponding (sub) pixel of the map's canvas.
 The transformation is used to warp the frame on the map's canvas.
 By warping the frame on a flat canvas, implicit perspective correction is applied to the frames.
-We used OpenCV's \textit{warpPerspective}\footnote{\url{http://opencv.itseez.com/modules/imgproc/doc/geometric_transformations.html}} to warp the frame on the map's canvas.
+OpenCV's \textit{warpPerspective}\footnote{\url{http://opencv.itseez.com/modules/imgproc/doc/geometric_transformations.html}} is used to warp the frame on the map's canvas.
 
-In this way a texture map can be built. This map consists of a set overlapping textures. The placement and discontinuities of the overlapping textures could be further optimized by map stitching, as described in \cite{Visser2011imav}. Here the texture map is used for human navigation. For automatic navigation a feature map is used, as described in the next section.
+In this way a texture map can be built. This map consists of a set overlapping textures. The placement and discontinuities of the overlapping textures could be further optimized by map stitching, as described in \cite{Visser2011imav}. Here the texture map is used for human navigation.
+For
+%automatic navigation
+localization a feature map is used, as described in the next section.
 
 			%\subsubsection{Map stitching}
 			%\subsubsection{Pose-based mapping}
@@ -208,7 +213,7 @@ In this way a texture map can be built. This map consists of a set overlapping t
 
 		\subsection{Feature map}
 \label{sec:feature_map}
-In addition to the visual map described above, a grid of image features (feature map) is created using a method we have developed.
+In addition to the visual map described above, a grid of image features (feature map) is created using a method that is presented in this section.
 This feature map will be used for localization purposes, as described in Section~\ref{sec:localization}.
 The inertia measurements provide frequent position estimates.
 %However, drift will increase the inaccuracy over time.
@@ -226,10 +231,10 @@ as large as the indoor arena of the IMAV competition (as described in Section~\r
 A 2D grid with a fixed resolution of $100 \times 100mm$ per cell is used.
 %which is nearly equivalent with $20 \times 20\small{px}$.
 %Each grid cell corresponds to an area of $100 \times 100\small{mm}$ of the world.
-From each camera frame we extract Speeded-Up Robust Features (SURF) \cite{Bay2008cviu} that are invariant with respect to rotation and scale.
+From each camera frame the method extracts Speeded-Up Robust Features (SURF) \cite{Bay2008cviu} that are invariant with respect to rotation and scale.
 % SURF features are scale- and rotation-invariant. See Bay2008cviu
-Each feature is an abstract description of an "interesting" part of an image (e.g., corners).
-A feature is described by a center point in image sub-pixel coordinates and a descriptor vector that consists of 64 floats.
+Each feature is an abstract description of an interesting part of an image (Section \ref{sec:computer-vision-feature-extraction-matching}).
+A SURF feature is described by a center point in image sub-pixel coordinates and a descriptor vector that consists of 64 floats.
 
 Each feature that is detected in a camera frame is mapped to the corresponding cell of the feature map.
 A feature's center point ($x_f, y_f$) is transformed to its corresponding position in 2D world coordinates ($x_w, y_w$), visible in the top of Figure \ref{fig:mapping3}.
@@ -270,6 +275,7 @@ where $D_{x,y}$ is the set of features that is mapped to cell $x_{bin} ,y_{bin}$
 %This way, each cell of the grid is connected to a descriptor from the descriptors matrix.
 The remaining (best) feature descriptors, including the corresponding world coordinates ($x_w, y_w$), are added to the corresponding grid cells.
 
+\textbf{TODO: BUFFER}
 
 \begin{comment}
 \subsubsection{Processing time}
@@ -291,10 +297,15 @@ $9.55\small{m/s}$, which is significantly faster than the AR.Drone's default max
 	\section{Localization}
 \label{sec:localization}
 
-The feature map created in the previous section can be used for absolute position estimates, at the moment of loop-closure (when the AR.Drone is above a location where it has been before).
+The feature map created in the previous section can be used for absolute position estimates, at the moment of loop-closure (when the AR.Drone observes a location where it has observed before).
 This allows to correct the drift that originates from the internal sensors of the AR.Drone.
-The inertia measurements provide frequent position estimates.
-However, the estimated position will drift over time, because the errors of the inertia measurements being accumulated.
+The
+%inertia
+sensor measurements provide frequent velocity estimates.
+However, the estimated position will drift over time, because the errors of the
+%inertia measurements
+velocities estimates
+being accumulated.
 The feature map that is created can be exploited to reduce this drift, because localization against this map provides absolute positions of the vehicle.
 These absolute positions are integrated into the EKF and improve the estimated position and reduce the covariance of the state.
 
@@ -318,13 +329,13 @@ For each query descriptor $d_q$ from the frame, function $C(d_q)$ selects the tr
 
 
 \begin{equation}
-C(d_q) = \arg\min_{d_t \in D_T} L2(d_q, d_t)
+C(d_q) = \arg\min_{d_t \in D_T} L^2(d_q, d_t)
 \end{equation}
 where $D_T$ is the set of map descriptors within a window around the estimated position.
-The $L2$ distance between two descriptors $a$ and $b$ is defined as:
+The $L^2$ distance between two descriptors $a$ and $b$ is defined as:
 
 \begin{equation}
-L2(a,b) =\sqrt { \sum_{i=1}^{N} \left| a_i - b_i \right| ^2 }
+L^2(a,b) =\sqrt { \sum_{i=1}^{N} \left| a_i - b_i \right| ^2 }
 \end{equation}
 where $N = 64$ is the length of the SURF descriptor vector.
 
@@ -353,7 +364,7 @@ This transformation describes the relation between the EKF estimated vehicle pos
 \label{sec:pose-recovery}
 Different types of transformations can be used to describe the relation between the point pairs (e.g., perspective transformation or affine transformation).
 However, if not all of the point pairs fit the transformation (due to outliers), the initial transformation estimate will be poor.
-We use Random Sample Consensus (RANSAC) \cite{fischler1981random} to filter the set of matches in order to detect and eliminate erroneous matches (point pairs).
+Random Sample Consensus (RANSAC) \cite{fischler1981random} is used to filter the set of matches in order to detect and eliminate erroneous matches (point pairs).
 RANSAC tries different random subsets of corresponding point pairs.
 It estimates the transformation using this subset and then computes the quality of the computed transformation by counting the number of inliers.
 
@@ -439,12 +450,19 @@ A big advantage of this two degrees of freedom approach is that it is very effic
 If the confidence $c_{T}$ of the translation $T_{best}$ exceeds a threshold, the transformation $T$ is added to the estimated position $p^W$ to compute the corrected position $p^{W*}$. This corrected position is integrated in the EKF as measurement with low covariance.
 Please note this method requires that the estimated yaw of the vehicle is close to the actual yaw.
 A large difference between estimated and actual yaw results in low confidence $c_T$.
-Localization on regular basis should sufficiently correct errors in the estimated yaw.
+%Localization on regular basis should sufficiently correct errors in the estimated yaw, when using the method described below.
+Therefore, the next paragraph describes a method to reduce the error in the estimated yaw.
+Performing this optimization on regular basis should sufficiently correct errors in the estimated yaw.
+
 
 If the confidence is exceptionally high (i.e., good matches are found), the selected point pairs are used to determine the rotation between the estimated yaw and the real yaw of the vehicle. This rotation is used to correct the drift in yaw.
 The rotation is computed using Kabsch algorithm \cite{Kabsch:a12999}.
-This method computes the optimal rotation matrix that minimizes the RMSD (root mean squared deviation) between two paired sets of points.
-Like the translation, the rotation is added to the estimated rotation to calculate the correct rotation. This rotation is directly written to the EKF state.
+This method computes the optimal rotation matrix that minimizes the RMSD (root mean squared deviation) between two sets of points.
+% (in this case the sets that are used to determine the translation).
+These sets of points are the same two sets of points used to compute the translation, as described above.
+%Like the translation, the rotation is added to the estimated rotation to calculate the correct rotation.
+This rotation is added as an offset to all future yaw measurements.
+%This rotation is directly written to the EKF state.
 
 In Section \ref{sec:results-pose-recovery}, an experiment is performed to validate that the proposed pose recovery method outperforms other popular appraches.
 
@@ -463,7 +481,7 @@ When a camera frame $f_t$ is received, SURF features are extracted.
 Each feature consists of a center position in pixel coordinates ($x_f, y_f$) and a feature descriptor.
 A feature's center point ($x_f, y_f$) is transformed to its corresponding position in 2D world coordinates ($x_w, y_w$).
 This is done using ray-casting, as described in Section \ref{sec:texture_map}.
-Opposed to the previous sections, the origin of the ray is set to $(0, 0, z)$, such that the estimated position of the AR.Drone doesn't influence the visual odometry.
+Opposed to the previous sections, the origin of the ray is set to $(0, 0, z)$, such that the estimated position of the AR.Drone doesn't influence the visual odometry calculations.
 % where the position of the AR.Drone is set to $(0, 0)$.
 
 The next step is matching the feature descriptors from the last frame $f_t$ against the feature descriptors from the previous frame $f_{t-1}$.
@@ -472,12 +490,12 @@ Matching is done using a brute force matcher that uses the $L^2$ norm as similar
 For each descriptor $d_{t}$ from frame $f_t$, function $C(d_{t})$ selects the descriptor $d_{t-1}$ from the previous frame $f_{t-1}$ that minimizes the $L^2$ norm:
 
 \begin{equation}
-C(d_{t}) = \arg\min_{d_{t-1} \in D_{t-1}} L2(d_t, d_{t-1})
+C(d_{t}) = \arg\min_{d_{t-1} \in D_{t-1}} L^2(d_t, d_{t-1})
 \end{equation}
-The $L2$ distance between two descriptors $a$ and $b$ is defined as:
+The $L^2$ distance between two descriptors $a$ and $b$ is defined as:
 
 \begin{equation}
-L2(a,b) =\sqrt { \sum_{i=1}^{N} \left| a_i - b_i \right| ^2 }
+L^2(a,b) =\sqrt { \sum_{i=1}^{N} \left| a_i - b_i \right| ^2 }
 \end{equation}
 where $N = 64$ is the length of the SURF descriptor vector.
 
@@ -538,22 +556,28 @@ Another limitation of using an ultrasound sensor for elevation mapping is the re
 As described in Section \ref{sec:ultrasound_altimeter}, an ultrasound sensor is unable to obtain precise directional information about objects.
 Sound progragates in a cone-like manner.
 Due to this property, the sensor acquires entire regions of constant depth instead of discrete depth points.
-So, the ultrasound sensor can only tell there is an elevation at the measured distance somewhere within the measured cone.
-This makes it hard to accurately determine the contours/borders of obstacles.
+As a result, the ultrasound sensor can only tell there is an elevation at the measured distance somewhere within the measured cone.
+This makes it hard to accurately determine the contours of obstacles.
 
 A third difficulty is related to the altitude stabilization of the AR.Drone (Section \ref{sec:platform-controls}).
 The AR.Drone will change its absolute altitude when an altitude difference is detected.
-This complicates the detection of elevations, since it cannot be assumed the absolute altitude will remain roughly the same when flying above an object.
+This complicates the detection of elevations, since it cannot be assumed the absolute altitude will remain approximately the same when flying above an object.
 
 The remaining part of this section describes a method to extract elevation information from an airborne ultrasound sensor.
-The true altitude of the AR.Drone is modeled as the combination of the measured altitude $z_{sensor}$ and the elevation of the floor $\delta$ below the vehicle:
+The true altitude of the AR.Drone is modeled as the combination of the measured altitude $z_{sensor}$ and the estimated elevation of the floor $\delta$ below the vehicle:
 \begin{equation}
 z_{true} = \delta + z_{sensor}
 \end{equation}
 where the elevation $\delta$ is unknown and needs to be recovered from the ultrasound measurements.
+
 A key part of recovering $\delta$ is a finite-state machine that describes \textit{elevation events}.
 A schematic overview of the finite-state machine is given in Figure \ref{fig:elevation_map_fsm}.
-This finite-state machine has three different states: $\{ \text{NONE}, \text{UP}, \text{DOWN} \}$.
+This finite-state machine has three different states: \\ $\{ \text{NONE}, \text{UP}, \text{DOWN} \}$.
+\begin{comment}
+$\left \{ {
+\begin{array}{c c c} \text{NONE} & \text{UP} & \text{DOWN} \end{array}
+} \right \}$
+\end{comment}
 State NONE indicates no significant elevation changes are occuring, state UP indicates a significant increase of elevation is detected and state DOWN indicates a significant decrease of elevation is detected.
 
 \begin{figure}[htb]
@@ -563,11 +587,11 @@ State NONE indicates no significant elevation changes are occuring, state UP ind
 \label{fig:elevation_map_fsm}
 \end{figure}
 
-Elevation changes are detected using a filtered second order derivative (acceleration) of the sonar measurement $z_{sensor}$.
-Obstacles that enter or leave the range of the ultrasound sensor result in sudden changes in ultrasound distance measurements.
+Elevation changes are detected using a filtered second order derivative (acceleration) of the ultrasound measurement $z_{sensor}$.
+Obstacles that enter or leave the range of the ultrasound sensor result in sudden changes in measured ultrasound distance.
 These changes are detected when the second order derivative exceeds a certain threshold $\gamma_{elevationEvent}$ and an elevation event is triggered.
 The threshold $\gamma_{elevationEvent}$ was carefully chosen such that altitude corrections performed by the AR.Drone altitude stabilization are not detected as being elevation events.
-In addition, the second order derivative is filtered by adding to the EKF state vector.
+The second order derivative is filtered by adding it to the altitude vector $h^W$ of the EKF state vector.
 An elevation event ends when the sign of the second order derivative switches.
 This happens when the AR.Drone altitude stabilization starts to change the absolute altitude to compensate for the change in measured altitude.
 Now, the elevation change can be recovered by substracting the measured distance at the end of the elevation event from the measured distance before the elevation event was triggered:
@@ -613,9 +637,9 @@ Because the exact size of an object is unkown, the elevation is written to all g
 This process is visualized in Figure \ref{visual-slam-elevation-map1} and \ref{visual-slam-elevation-map2}.
 
 This approach may lead to cases where the size of an obstacle is overestimated in the elevation map, as can be seen in Figure \ref{visual-slam-elevation-map2}.
-Therefore, an additional refinement step was added to the elevation mapping methods.
+Therefore, an additional refinement step is added. %. to the elevation mapping methods.
 If no elevation is measured ($\delta_t \approx 0$), it can be assumed there is no obstacle inside the cone of the ultrasound sensor.
-Using this assuption, all grid cells within the cone can resetted to zero elevation and locked to prevent future changes.
+Using this assumption, all grid cells within the cone can resetted to zero elevation and locked to prevent future changes.
 This refinement step is visualized Figure \ref{visual-slam-elevation-map3}.
 The radius of the cone is computed using the following equation:
 \begin{equation}
@@ -632,6 +656,6 @@ where $r$ is the radius of a cone of height $z_{sensor}$ and $\alpha_{ultrasound
     \subfigure[Obstacle in range]{\label{visual-slam-elevation-map2}\includegraphics[width=0.4\linewidth]{images/elevation_map2.png}}
     \subfigure[Obstacle out of range]{\label{visual-slam-elevation-map3}\includegraphics[width=0.4\linewidth]{images/elevation_map3.png}}
  \end{center}
-  \caption{Overview of the elevation map updates. The green cone indicates the range of the ultrasound sensor. The red line inside the cone respresents the center of the cone, perpendicular to the AR.Drone body. In \ref{visual-slam-elevation-map1} and \ref{visual-slam-elevation-map2} an elevation is measured. All grid cells within a radius $\gamma_{elevationRadius}$ around the center of the cone (red line) are updated to store the measured elevation. \ref{visual-slam-elevation-map3} Describes the refinement step. When no elevation is measured, all grid cells within the cone (red cubes) are resetted to zero elevation.}
+  \caption{Overview of the elevation map updates. The green cone indicates the range of the ultrasound sensor. The red line inside the cone respresents the center of the cone, perpendicular to the AR.Drone's body. In \ref{visual-slam-elevation-map1} and \ref{visual-slam-elevation-map2} an elevation is measured. All grid cells within a radius $\gamma_{elevationRadius}$ around the center of the cone (red line) are updated to store the measured elevation. \ref{visual-slam-elevation-map3} Describes the refinement step. When no elevation is measured, all grid cells within the cone (red cubes) are resetted to zero elevation.}
   \label{visual-slam-elevation-map}
 \end{figure}

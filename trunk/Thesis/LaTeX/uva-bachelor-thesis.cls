@@ -29,6 +29,7 @@
 \usepackage{subfigure}
 \usepackage{amsthm}
 \usepackage{dsfont}
+\usepackage{SIunits}
 
 
 \newtheoremstyle{slplain}% name
