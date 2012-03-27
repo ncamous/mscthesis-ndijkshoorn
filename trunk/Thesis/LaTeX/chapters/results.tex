@@ -1,4 +1,10 @@
-\textbf{TODO}
+In this chapter, the performance of both the simulation model and visual SLAM method are analyzed in a series of empirical experiments.
+In Section \ref{sec:simulation_results}, the USARSim simulation model is validated.
+A set of maneuvers is flown with the actual AR.Drone and
+simulated AR.Drone. The differences between the maneuvers are studied in detail.
+In Section \ref{sec:results-position-accuracy}, the accuracy of the AR.Drone's estimated position is evaluated.
+A set of 8-shapes is flown with the AR.Drone and the estimated positions are compared against the groundtruth from a laser range finder.
+
 
 	\section{Simulation model}
 \label{sec:simulation_results}
@@ -8,11 +14,10 @@ simulated AR.Drone. The differences between the maneuvers are studied in detail.
 described as a set of time points (milliseconds since initialization) each coupled to a movement command.
 %We wrote wrappers for the AR.Drone programming interface and for USARSim interface which read these scripts and output a control
 %signal, using the system clock to manage the timing independently from the game engine and the AR.Drone hardware.
-Orientation, altitude and horizontal speed are recorded at a frequency of $200\hertz$ during the maneuvers. These are gathered through the AR.Drone's internal sensors and the build-in algorithms, which are
-also used by the controller to operate the drone. The filtered output of the MEMS gyroscope is used
-for estimating orientation. The filtered output of the ultrasound distance sensor is used for estimating
-altitude. The optical 
-flow algorithm using the bottom camera is used for estimating the horizontal (linear
+Orientation, altitude and horizontal speed are recorded at a frequency of $200\hertz$ during the maneuvers. These are gathered through the AR.Drone's internal sensors and the onboard algorithms, which are
+also used by the controller to operate the drone. The filtered output of the gyroscope is used
+to estimate the orientation. The filtered output of the ultrasound distance sensor is used to estimate
+the altitude. The onboard visual odometry algorithm is used to estimate the horizontal (linear
 and lateral) speeds. The simulator has equivalent sensors. In addition, simulation can provide ground-truth data. 
 Also for the real maneuvers an attempt was made to generate ground truth via an external reference system; the movements were recorded with a synchronized video system consisting of four firewire cameras, capturing images at 20 frames per second at a resolution of $1024 \times 768$ pixels. The position of the AR.Drone 
 in each frame has been annotated by hand. 
@@ -42,7 +47,7 @@ maintains a stable hover when given no other commands, which is accomplished by 
 %are concerned with the hovering behavior with minor disturbances. 
 So, the hovering experiment is performed  
 indoors
-with an underground chosen to have enough texture for the optical flow motion estimation algorithm.
+with an underground chosen to have enough texture for the onboard visual odometry estimation algorithm.
 
 As experiment the AR.Drone maintains a hover for 35 seconds. This experiment was repeated 10 times,
 collecting 60.000 movement samples for a total of 350 seconds. Over all samples the mean absolute error in horizontal
@@ -160,146 +165,200 @@ signal until it reaches the commanded pitch. The result is illustrated in Figure
 \label{fig:ComparisonOfResponse}
 \end{figure}
 
-As one can see, the acceleration has for the real and simulated AR.Drone nearly the same slope. The deceleration of the simulated AR.Drone is slightly lower. In the real AR.Drone the feedback loop (based on the optical flow of the ground camera) actively decelerates the system. Overall, the dynamic behavior of the simulator closely resembles the dynamic behavior of the real system. Additionally, tests with more complex maneuvers (horizontal and vertical square) have been recorded, but unfortunately not yet analyzed in detail.
+As one can see, the acceleration has for the real and simulated AR.Drone nearly the same slope. The deceleration of the simulated AR.Drone is slightly lower. In the real AR.Drone the feedback loop (based on the onboard visual odometry of the ground camera) actively decelerates the system. Overall, the dynamic behavior of the simulator closely resembles the dynamic behavior of the real system. Additionally, tests with more complex maneuvers (horizontal and vertical square) have been recorded, but unfortunately not yet analyzed in detail.
 
 
-	\section{Pose estimation}
-	\section{Mapping}
-An experiment has been carried out to evaluate the mapping approach.
-This experiment is performed with the AR.Drone and the simulated AR.Drone using USARSim.
+\section{Position accuracy}
+\label{sec:results-position-accuracy}
+An experiment has been carried out to evaluate the accuracy of the AR.Drone's estimated position.
+This experiment is performed above a texture-rich floor (Section \ref{sec:exp1-texture-poor}) and a texture-poor floor (Section \ref{sec:exp1-texture-poor}).
+The position can be estimated using different methods and the accuracy of all these methods are evaluated.
+To ensure fair comparison of the different estimation methods, a flight was recorded (Section \ref{sec:proposed-framework}) and played back to generate the same input for all methods.
+
+The first position estimation method integrates the AR.Drone's onboard velocity (AV) measurements to estimate the position (Section \ref{sec:pose_estimation}).
+Recent AR.Drone firmwares calculcate an estimated position onboard\footnote{Firmware 1.7.4}, which is used as second estimation method.
+The third position estimation method uses the visual odometry method presented in this thesis (Section \ref{sec:visual-slam-visual-odemetry}).
+The final estimation method uses the AR.Drone's onboard velocity (AV) for frequent position updates and the presented localization method (Section \ref{sec:localization}) to localize against the map that is constructed during flight.
+
+The estimated position is compared against the groundtruth (real) position to calculcate the accuracy of the estimated position.
+Great care was taken to collect accurate groundtruth of the AR.Drone's position.
+A high-end laser range finder (LRF)\footnote{Hokuyo UTM-30LX, \url{http://www.hokuyo-aut.jp/02sensor/07scanner/utm_30lx.html}} is used to determine the position of the AR.Drone.
+The LRF measures distance to objects.
+A window is placed on the measurements to filter out measurements that originate from the environment.
+All remaining distance measurements are assumed to originate from the AR.Drone.
+The mean position of the filtered distance measurements is used as center position of the AR.Drone.
+Futhermore, a white cylinder with a diameter of 9\begin{small}cm\end{small} and a height of 37\begin{small}cm\end{small} was added on top of the AR.Drone to improve its visability for the LRF.
+
+The LRF measures the AR.Drone's position in its own reference frame.
+Therefore, the AR.Drone's reference frame has to be accurately aligned with the LRF's reference frame.
+This is achieved by rotating the AR.Drone before takeoff, such that it points in exactly the same direction as the LRF.
+The following method was used to align the LRF and the AR.Drone (Figure \ref{fig:exp1-floorplan-align}).
+First, the LRF is aligned against two poles in the environment.
+The LRF is rotated until both poles obtained an equal y-distance in the LRF's reference frame.
+Now, the LRF's x-axis is parallel to the poles.
+Next, the AR.Drone's takeoff position and orientation are determined.
+The takeoff position is marked on the floor (green star).
+Another position was marked (red star) to indicate the desired heading direction of the AR.Drone.
+Both marked position are parallel to the LRF's x-axis and the two poles.
+Finally, a laser pointer is used to align the heading direction of the AR.Drone to the marked position.
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=13.0cm]{images/floorplan.pdf} %8cm te klein
-\caption{Top view of the experiment's floorplan. The AR.Drone flew an 8-shape. The labels A-G represent six landmarks that provide ground truth to evaluate the accuracy of a map.}
-\label{fig:exp_floorplan}
+\includegraphics[width=13cm]{images/exp1-floorplan-align.pdf}
+\caption{The alignment of the laser range finder and the AR.Drone. The laser range finder (LRF) is aligned against two poles. The takeoff position is marked with a green star. The red star indicates the marked heading direction of the AR.Drone. A laser pointer is used to align the heading direction of the AR.Drone to the marker position.}
+\label{fig:exp1-floorplan-align}
 \end{figure}
 
-A sports hall is used as indoor testing environment. This environment closely resembles the environment of the IMAV2011 indoor competitions.
-Six magazines are laid out on the floor at the locations A, B, C, D, F, G in Figure \ref{fig:exp_floorplan}.
-These magazines are used as landmarks that are easily recognizable in the map.
-% Each landmark has a label (A, B, C, etc).
-The distances between these landmarks are known, providing ground truth.
-The AR.Drone flew in an 8-shape above the floor to capture an intermediate loop (point A and E in Figure \ref{fig:exp_floorplan}).
-% also 8-shape to mimic the goal of the indoor competition.
-In addition to the landmarks, the lines on the floor provide visual clues about the overall quality of a created map.
-Care has been taken to mimic the gym floor in the simulated environment.
-The floor of the simulated environment consists of an image taken at the IMAV2011 competitions. 
-The image was taken from the gym tribune and warped with an image editor to remove the perspective view as much as possible.
-Unfortunately, some warping artifacts are visible on the simulated gym floor.
-%These artifacts are visible in the map that is created by the mapping method.
 
-The mapping method is performed on the floor as described above. The distances between the landmarks inside the generated map (red lines) are compared to the know ground truth to compute the error of the map.
 
-\begin{figure}[htb]
+
+
+
+
+
+\subsection{Texture-rich floor}
+\label{sec:exp1-texture-rich}
+The first experiment was performed above a texture-rich floor (Figure \ref{fig:exp1-floor}), to benchmark the methods in preferable circumstances.
+Magazine were spraid out on the floor to provide sufficient texture for the computer vision algorithms.
+The AR.Drone flew three 8-shapes above the magazines.
+An 8-shape was chosen to capture an intermediate loop.
+
+\begin{figure}[htb!]
 \centering
-\includegraphics[width=\linewidth]{images/map_ardrone.png}
-\caption{Visual map created by the mapping method. Camera images are taken by the AR.Drone, flying at approximately 70cm altitude.}
-\label{fig:res_mapping_ardrone}
+\includegraphics[width=8cm]{images/exp1-floor.jpg}
+\caption{Photo of the texture-rich floor used for the first experiment. Magazine are spraid out on the floor to provide sufficient texture. The dimensions of the 8-shape are approximately $5\small{m} \times 2.5\small{m}$.}
+\label{fig:exp1-floor}
 \end{figure}
-
-\begin{figure}[htb]
-\centering
-\includegraphics[width=14.8cm]{images/map_usarsim.png}
-\caption{Visual map created by the mapping method. Camera images are taken by the simulated AR.Drone, flying at approximately 85cm altitude.}
-\label{fig:res_mapping_usarsim}
-\end{figure}
-
 
 \begin{table}[htb!]
     \centering
     \begin{tabular}
-        { | l | l | l | l | l | l | l | l | l |} 
+        { | l | l | l | } 
 	\hline
-	landmarks & A-B & B-C & C-D & D-E & E-F & F-G & B-G & C-F \\
+	Method & mean absolute error (\small{mm}) & mean relative error (percentage of trajectory length) \\
         \hline
-        \textbf{AR.Drone} & & & & & & & & \\
-	%\hline
-	mean error (m) & 0.042 & 0.653 & 0.087 & 0.726 & 0.350 & 0.579 & 0.491 & 0.388  \\
-	error (\%) & 0.71 & 32.65 & 1.44 & 36.28 & 5.84 & 28.95 & 4.03 & 3.19\\
-	\hline
-	\textbf{USARSim simulator} & & & & & & & & \\
-	%\hline
-	mean error (m) & 0.280 & 0.095 & 0.319 & 0.010 & 0.172 & 0.021 & 4.566 & 0.496 \\
-	error (\%) & 4.66 & 4.74 & 5.31 & 4.98 & 2.85 & 1.1 & 3.75 & 4.1 \\
+        onboard velocity (AV) & 477 & 0.715\% \\
+	onboard position (AP) & 476 & 0.714\% \\
+	visual odometry (VO) & 552 & 0.828\% \\
+	AV + localization & 260 & 0.390\% \\
 	\hline
     \end{tabular}
-    \caption{Accuracy of the visual map by measuring the distance between landmarks. The maps are created using the AR.Drone (Figure \ref{fig:res_mapping_ardrone}) and the USARSim simulator (Figure \ref{fig:res_mapping_usarsim}) .}
+    \caption{Errors made by the position estimation methods when flying above a texture-rich floor.}
     \label{tab:res_mapping}
 \end{table}
 
-%This experiment illustrates that the current mapping approach is able to produce a map in a controlled environment. 
+The results of this experiment can be found in Table \ref{tab:res_mapping} and Figures \ref{fig:exp1-texture-error} (errors), \ref{fig:exp1-texture-path} (trajectories) and \ref{fig:exp1-texture-map} (visual map).
+For the encountered circumstances, all methods are able to estimate the position quite accurately.
+Both the onboard velocity (AV) method and the onboard position (AP) method produce exactly the same trajectory, which implies the onboard position estimate (AP) is based on the velocity that is estimated by the AR.Drone.
 
-The results of this experiment can be found in Table \ref{tab:res_mapping} and Figures \ref{fig:res_mapping_ardrone} (real AR.Drone) and \ref{fig:res_mapping_usarsim} (simulated AR.Drone).
-Both the simulated and real AR.Drone produce a map with enough quality for
-%human navigation
-navigation in the IMAV Pylon challenge.
-The visual map could be further optimized by a method equivalent to TORO \cite{Grisetti2007iros}.
-The visual map created by the simulated AR.Drone contains fewer errors than the map of the real AR.Drone.
-Despite the simulator's inertia measurements are noise-free, there are small errors in the map.
-These errors are due to integrating the acceleration measurements to velocities and positions.
-The largest errors are in the long stretches of the trajectory, because these parts of the trajectory are longer affected by integration errors due to the larger traveling times.
+The onboard velocity (AV) slightly outperforms the visual odometry (VO) method presented in Section \ref{sec:visual-slam-visual-odemetry}.
+An explanation could be that the AR.Drone features an additional optical flow algorithm that is used when the appearance-based method is performing poorly.
+From Figure \ref{fig:exp1-texture-path} can be seen that the onboard velocity (AV) method has the largest error in the x-direction.
+Around $54\begin{small}s\end{small}$ the error is increasing rapidly.
+Analysis of the dataset pointed out that a small part of a magazine and a large part of a white line were in range of the camera.
+This resulted in a velocity thas was estimated in the wrong direction along the white line, which can be recognized by the small green loop on the right side of Figure \ref{fig:exp1-texture-path}.
 
-The position of the real AR.Drone was estimated using the AR.Drone's velocity estimates produced by the proprietary onboard filter.
-This estimate is based on inertia measurements and optical flow obtained from the relative motion between camera frames.
-These measurements suffer from noise, resulting in larger map errors.
-The AR.Drone's proprietary optical flow algorithm is probably having difficulties with the gym floor.
-When flying along a single line or parallel lines (e.g. path B-C in Figure \ref{fig:res_mapping_ardrone}), no apparent motion can be observed from the camera frames.
-These circumstances mainly occured when flying along the short stretches in the trajectory, producing the largest errors in this direction.
-This behavior is not observed for the simulated AR.Drone, because it lacks an optical flow method to estimate the velocity.
+The visual odometry (VO) method has the largest error in the y-direction.
+Around $80\begin{small}s\end{small}$ the error is increasing rapidly.
+Analysis of the dataset pointed out that the magazines were out of the camera's range. During this period the velocities could not be updated.
 
-
-\begin{comment}
-\textbf{How to integrate the white balancing paragraph? To explain visual differences between both maps?} \
-Care has been taken to reproduce the circumstances in simulation as good as possible; the camera images in simulation are post-processed (decreased saturation, increased brightness, down-sampled resolution) to mimic the real images as close as possible. The difference between real and simulated visual map could also be explained by smoother movements between the frames in simulation. Yet, also here care has been taken to mimic the dynamics of the AR.Drone as close as possible (as described in Section \ref{sec:validation_results}). Visual inspection of the video stream shows that there are equivalent changes in the movements between frames. Our hypothesis is that the remaining difference between simulation and reality are due to the effect of automatic white balancing of the real camera. In the next experiment this hypothesis will be further studied.
-\end{comment}
-
-
-	\section{Localization}
-Another experiment has been carried out to evaluate the localization approach.
-This experiment resembles quite closely the IMAV Pylon Challenge. This experiment is performed with the simulated AR.Drone only to demonstrate the possibilities for localization when a reasonable accurate visual map (errors in the order of 5\%, as found in the previous section) is available. 
-The USARSim simulator provides accurate ground truth that is used to evaluate the performance.
-
-For this experiment, the trajectory from the mapping experiment (Figure \ref{fig:exp_floorplan}) is repeated several times.
-%The map created in the previous experiment (Section \ref{sec:res_mapping}) is now used for localization.
-Eleven 8-shapes (called rounds) were flown autonomously.
-During the first round, the map is created.
-The remaining 10 rounds are flown with mapping turned off and localization turned on.
-The $x, y$ and $z$ distance between the estimated location and real location (ground truth) is measured and used as error measure.
-This experiment is repeated with localization turned off, meaning that the location is estimated using the inertia measurements only.
-
-\begin{figure}[htb!]
-\centering
-\includegraphics[width=14cm]{images/error_loc-eps-converted-to.pdf}
-\caption{Error between the estimated position and actual position (ground truth). The experiment is performed  with visual localization (solid lines) and repeated without visual localization (dashed lines).}
-\label{fig:res_localization_error}
-\end{figure}
-
-\begin{figure}[htb!]
-\centering
-\includegraphics[width=14.0cm]{images/ardrone_map_loc_positions.png}
-\caption{Visual map with localization positions. Each red dot represents a position of the AR.Drone where visual localization was performed.}
-\label{fig:res_loc_positions}
-\end{figure}
-
-The results of this experiment can be found in Figure \ref{fig:res_localization_error}.
-Without localization, the error of the estimated position increases over time (dashed lines).
-Around 280 seconds the drift in Y direction seems to reverse.
-This drift in reversed direction is causing a decreasing Y error until the error is completely compensated.
-However, the drift is continuing and the error increases again.
-With localization turned on, the error remains low during the whole flight.
-The first 75 seconds correspond to the first 8-shape that is used create a map.
-During this mapping flight, the error of the estimated position increases and the quality (accuracy) of the map decreases.
-Again, reversed drifting causes a temporary drop in error around 35 seconds.
+A combination of the onboard velocity (AV) with localization against the map outperforms all other methods.
+With localization against the map, the error is reduced significantly.
+%The map is constructed during the first 8-shape (first $40\begin{small}s\end{small}$).
+From Figure \ref{fig:exp1-texture-error} can be seen that the maximum error is not exceeding the error made during the first 8-shape.
 The repetitive error pattern suggests that the error of the estimated position largely depends on the quality (accuracy) of the map, if localization can be performed regularly.
+%Around $85\begin{small}s\end{small}$ the error increases rapidly. This error is caused by a false match %against the map. However, future localizations correct this mistake.
 
-Figure \ref{fig:res_loc_positions} indicates the positions where the AR.Drone was able to localize itself.
-Localization was performed at almost every position of the 8-shape trajectory.
-Not only the magazines, but also the lines on the gym floor provide sufficient information for localization.
-At some positions localization was not possible, because the camera observed insufficient image features.
-For example, when lines without intersections are observed.
-%\textit{From these results we [conclude] that our localization method can be deployed for the IMAV indoor competitions.}
-These results confirm that the localization method is able to deal with circumstances encountered during the IMAV competition.
+The visual map (Figure \ref{fig:exp1-texture-map}) shows that the AR.Drone's onboard white balancing is reducing the contrast of the magazines, which affects the performance of the feature detector.
+This is a source of error for the visual odometry (VO) algorithm.
+Futhermore, errors in the ultrasound and IMU measurements are other sources that result in errors in the estimated velocities.
+
+% 66674 mm
+
+\begin{figure}[htb!]
+\centering
+\includegraphics[width=\linewidth]{images/exp1-run13-error.eps}
+\caption{Errors between the estimated positions and the groundtruth.}
+\label{fig:exp1-texture-error}
+\end{figure}
+
+\begin{figure}[htb!]
+\centering
+\includegraphics[width=\linewidth]{images/exp1-run13-path.eps}
+\caption{Estimated trajectories of the different position estimation methods. The AR.Drone flew three 8-shapes above above a texture-rich floor.}
+\label{fig:exp1-texture-path}
+\end{figure}
+
+\begin{figure}[htb!]
+\centering
+\includegraphics[width=0.75\linewidth]{images/exp1-run13-map.jpg}
+\caption{Visual map created by the visual mapping method (Section \ref{sec:texture_map}). The map is constructed during the first 8-shape. The position estimates are based on the onboard velocity (AV) and the visual localization method (Section \ref{sec:localization}).}
+\label{fig:exp1-texture-map}
+\end{figure}
 
 
-	\section{Elevation mapping}
+
+
+\subsection{Texture-poor floor}
+\label{sec:exp1-texture-poor}
+The experiment is repeated above a floor with low texture, to benchmark the methods in difficult circumstances.
+Therefore, all magazines (Figure \ref{fig:exp1-floor}) are removed, resulting in a green floor with few white lines.
+The AR.Drone flew a single 8-shape.
+
+
+% 19616
+\begin{table}[htb!]
+    \centering
+    \begin{tabular}
+        { | l | l | l | } 
+	\hline
+	Method & mean absolute error (\small{mm}) & mean relative error (percentage of trajectory length) \\
+        \hline
+        onboard velocity (AV) & 1292 & 6.586\% \\
+	onboard position (AP) & 1294 & 6.597\% \\
+	visual odometry (VO) & 1126 & 5.740\% \\
+	\hline
+    \end{tabular}
+    \caption{Errors made by the position estimation methods when flying above a texture-poor floor.}
+    \label{tab:res_mapping-poor}
+\end{table}
+
+
+The results of this experiment can be found in Table \ref{tab:res_mapping-poor} and Figures \ref{fig:exp1-notexture-error} (errors), \ref{fig:exp1-notexture-path} (trajectories) and \ref{fig:exp1-notexture-map} (visual map).
+For the encountered circumstances, all methods are unable to estimate the position accurately.
+Again, both the onboard velocity (AV) method and the onboard position (AP) method produce exactly the same trajectory.
+Localization was not possible and therefore omitted from the plots.
+
+The visual odometry (VO) method slightly outperforms the onboard velocity (AV) method.
+One would expect that the AR.Drone's additional optical flow method outperforms appearance-based methods.
+From Figure \ref{fig:exp1-notexture-path} can be seen that the onboard velocity (AV) method fails to correctly deal with the lines on the floor.
+The onboard velocity (AV) methods measures a velocity in the wrong direction along the lines, resulting in a large error.
+One would expect that the onboard aerodynamic model should correct this (i.e., the angle of the AR.Drone can be used to determine the correct direction).
+
+From Figure \ref{fig:exp1-notexture-path} can be seen that the visual odometry (VO) method underestimates the velocities.
+At places where the AR.Drone changes direction, the method was able to track sufficient features (due to the presence of corners) and estimate the velocities.
+At these places, the AR.Drone's velocity was below the average speed due to deaccelerations.
+Along most straight parts of the trajectory insufficient features were tracked and the (higher) velocity could not be updated.
+Therefore, the lower velocities during the direction changes are maintained when flying along the straight parts of the trajectory.
+
+
+\begin{figure}[htb!]
+\centering
+\includegraphics[width=\linewidth]{images/exp1-run2-error.eps}
+\caption{Error}
+\label{fig:exp1-notexture-error}
+\end{figure}
+
+\begin{figure}[htb!]
+\centering
+\includegraphics[width=\linewidth]{images/exp1-run2-path.eps}
+\caption{Trajectory}
+\label{fig:exp1-notexture-path}
+\end{figure}
+
+\begin{figure}[htb!]
+\centering
+\includegraphics[width=0.75\linewidth]{images/exp1-run2-map.jpg}
+\caption{Visual map created by the visual mapping method (Section \ref{sec:texture_map}). The position estimates are based on the onboard velocity (AV).}
+\label{fig:exp1-notexture-map}
+\end{figure}
