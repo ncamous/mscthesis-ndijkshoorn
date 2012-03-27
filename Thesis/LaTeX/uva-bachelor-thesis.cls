@@ -138,7 +138,7 @@ citecolor=darkgray,
 	
 	\begin{textblock*}{11cm}(3cm,22.5cm)
 		\noindent
-		\includegraphics[scale=1.0]{images/UVALOGO.pdf}
+		\includegraphics[width=9.3cm]{images/uva®merken_NL.eps}
 
 		\begin{description}
 		\item[Master's Thesis] for the graduation in Artificial Intelligence
