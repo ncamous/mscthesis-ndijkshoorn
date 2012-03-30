@@ -4,6 +4,7 @@ A set of maneuvers is flown with the actual AR.Drone and
 simulated AR.Drone. The differences between the maneuvers are studied in detail.
 In Section \ref{sec:results-position-accuracy}, the accuracy of the AR.Drone's estimated position is evaluated.
 A set of 8-shapes is flown with the AR.Drone and the estimated positions are compared against the groundtruth from a laser range finder.
+Finally, in Section \ref{sec:results-elevation-accuracy} the accurracy of the elevation map is evaluated in terms of elevation error and the error in the estimated size of objects.
 
 
 	\section{Simulation model}
@@ -362,3 +363,45 @@ Therefore, the lower velocities during the direction changes are maintained when
 \caption{Visual map created by the visual mapping method (Section \ref{sec:texture_map}). The position estimates are based on the onboard velocity (AV).}
 \label{fig:exp1-notexture-map}
 \end{figure}
+
+
+
+\section{Accuracy w.r.t. pose recovery approaches}
+
+
+\section{Accuracy w.r.t. camera resolution}
+
+
+
+\section{Elevation accuracy}
+\label{sec:results-elevation-accuracy}
+The accurracy of the elevation map is evaluated in terms of elevation error and the error in the estimated size of objects.
+
+In the first experiment, the AR.Drone flew with a constant speed over a large stair (Figure \ref{fig:exp2-stair-photo}).
+The depth of each step is $30\begin{small}cm\end{small}$ and the height of each step is $18\begin{small}cm\end{small}$.
+The total height of the stair is $480\begin{small}cm\end{small}$.
+After the stair is fully traversed by the AR.Drone, the estimated elevation is compared against the actual height of the stair.
+
+\begin{figure}[htb!]
+\centering
+\includegraphics[width=0.5\linewidth]{images/exp2-stair-photo.jpg}
+\caption{Photo of the stair which is traversed by the AR.Drone. The depth of each step is $30\small{cm}$ and the height of each step is $18\small{cm}$. The total height of the stair is $480\small{cm}$.}
+\label{fig:exp2-stair-photo}
+\end{figure}
+
+The results of this experiment can be found in Figure \ref{fig:exp2-results}.
+After fully traversing the stair, the measured final elevation is $313\begin{small}cm\end{small}$ and the accuracy is $(313/480) \times 100 = 65\%$.
+
+
+\begin{figure}[htb!]
+  \begin{center}
+    \subfigure[Plot of the detected elevation]{\label{fig:exp2-stair-plot}%
+	\includegraphics[width=0.55\linewidth]{images/exp2-stair-elevation-plot.eps}}%
+    \subfigure[Visual elevation map]{\label{fig:exp2-stair-map}%
+\includegraphics[width=0.4\linewidth]{images/exp2-stair-map.jpg}}
+
+ \end{center}
+  \caption{Blup2}
+  \label{fig:exp2-results}
+\end{figure}
+
