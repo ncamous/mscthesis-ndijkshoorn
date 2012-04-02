@@ -375,7 +375,7 @@ Therefore, the lower velocities during the direction changes are maintained when
 
 \section{Elevation accuracy}
 \label{sec:results-elevation-accuracy}
-The accurracy of the elevation map is evaluated in terms of elevation error and the error in the estimated size of objects.
+The accurracy of the elevation map is evaluated in terms of elevation error and the error in the estimated dimensions of objects.
 
 In the first experiment, the AR.Drone flew with a constant speed over a large stair (Figure \ref{fig:exp2-stair-photo}).
 The depth of each step is $30\begin{small}cm\end{small}$ and the height of each step is $18\begin{small}cm\end{small}$.
@@ -390,7 +390,14 @@ After the stair is fully traversed by the AR.Drone, the estimated elevation is c
 \end{figure}
 
 The results of this experiment can be found in Figure \ref{fig:exp2-results}.
-After fully traversing the stair, the measured final elevation is $313\begin{small}cm\end{small}$ and the accuracy is $(313/480) \times 100 = 65\%$.
+After fully traversing the stair, the measured elevation is $313\begin{small}cm\end{small}$ and the error is $\frac{480 - 313}{480} \times 100 = 35\%$.
+The shape of the measured elevation (Figure \ref{fig:exp2-results}) corresponds with the shape of the stair (Figure \ref{fig:exp2-stair-photo}).
+However, the approach underestimates the elevation.
+When traversing the stair, the AR.Drone's altitude stabilization increases the altitude smoothly, which causes a continuous altitude increase.
+Therefore, the observed altitude difference within an elevation event is smaller than the actual altitude different caused by an object.
+Another explaination of the underestimation is the error in the triggering of elevation events (due to thresholds).
+When an elevent event is triggered at a suboptimal timestamp, the full altitude difference is not observed.
+Ideally, an elevation UP event is triggered right before an object is detected by the ultrasound sensor, and an elevation NONE event is triggered right after the full height of the object is observed by the ultrasound sensor.
 
 
 \begin{figure}[htb!]
@@ -401,7 +408,12 @@ After fully traversing the stair, the measured final elevation is $313\begin{sma
 \includegraphics[width=0.4\linewidth]{images/exp2-stair-map.jpg}}
 
  \end{center}
-  \caption{Blup2}
+  \caption{Elevation map of a large stair (Figure \ref{fig:exp2-stair-photo}). In \ref{fig:exp2-stair-plot} the measured elevation is plotted over time. In \ref{fig:exp2-stair-map} the elevation map is rendered using the 3DTerrain component of the presented framework.}
   \label{fig:exp2-results}
 \end{figure}
 
+
+In the second experiment, the elevation map is evaluated in terms of error in the estimated dimensions of objects.
+Objects with different dimensions were laid out on a flat floor.
+A schematic overview of the floorplan and the object's dimensions can be found in Figure X.
+The AR.Drone flew the marked trajectory over all objects.
