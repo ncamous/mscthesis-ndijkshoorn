@@ -236,7 +236,7 @@ An 8-shape was chosen to capture an intermediate loop.
     \begin{tabular}
         { | l | l | l | } 
 	\hline
-	Method & mean absolute error (\small{mm}) & mean relative error (percentage of trajectory length) \\
+	Method & Mean absolute error (\small{mm}) & Mean relative error (percentage of trajectory length) \\
         \hline
         onboard velocity (AV) & 477 & 0.715\% \\
 	onboard position (AP) & 476 & 0.714\% \\
@@ -313,7 +313,7 @@ The AR.Drone flew a single 8-shape.
     \begin{tabular}
         { | l | l | l | } 
 	\hline
-	Method & mean absolute error (\small{mm}) & mean relative error (percentage of trajectory length) \\
+	Method & Mean absolute error (\small{mm}) & Mean relative error (percentage of trajectory length) \\
         \hline
         onboard velocity (AV) & 1292 & 6.586\% \\
 	onboard position (AP) & 1294 & 6.597\% \\
@@ -377,6 +377,8 @@ Therefore, the lower velocities during the direction changes are maintained when
 \label{sec:results-elevation-accuracy}
 The accurracy of the elevation map is evaluated in terms of elevation error and the error in the estimated dimensions of objects.
 
+\subsubsection{Elevation map of a stair}
+
 In the first experiment, the AR.Drone flew with a constant speed over a large stair (Figure \ref{fig:exp2-stair-photo}).
 The depth of each step is $30\begin{small}cm\end{small}$ and the height of each step is $18\begin{small}cm\end{small}$.
 The total height of the stair is $480\begin{small}cm\end{small}$.
@@ -384,7 +386,7 @@ After the stair is fully traversed by the AR.Drone, the estimated elevation is c
 
 \begin{figure}[htb!]
 \centering
-\includegraphics[width=0.5\linewidth]{images/exp2-stair-photo.jpg}
+\includegraphics[width=0.4\linewidth]{images/exp2-stair-photo.jpg}
 \caption{Photo of the stair which is traversed by the AR.Drone. The depth of each step is $30\small{cm}$ and the height of each step is $18\small{cm}$. The total height of the stair is $480\small{cm}$.}
 \label{fig:exp2-stair-photo}
 \end{figure}
@@ -412,8 +414,65 @@ Ideally, an elevation UP event is triggered right before an object is detected b
   \label{fig:exp2-results}
 \end{figure}
 
+\subsubsection{Elevation map of multiple objects}
 
-In the second experiment, the elevation map is evaluated in terms of error in the estimated dimensions of objects.
+In the second experiment, the elevation mapping approach is evaluated in terms of error in the estimated dimensions of objects.
 Objects with different dimensions were laid out on a flat floor.
-A schematic overview of the floorplan and the object's dimensions can be found in Figure X.
-The AR.Drone flew the marked trajectory over all objects.
+A photo of the floorplan can be found in Figure \ref{fig:exp2-setup}.
+The AR.Drone's trajectory, which covers all objects, is indicated with a red line.
+% and the object's dimensions 
+%The AR.Drone flew the marked trajectory over all objects.
+
+\begin{figure}[htb!]
+\centering
+\includegraphics[width=0.4\linewidth]{images/exp2-elevation-setup.jpg}
+\caption{Photo of the floorplan with different objects. The dimensions of the objects can be found in Table \ref{tab:exp2}. The red line indicates the trajectory of the AR.Drone.}
+\label{fig:exp2-setup}
+\end{figure}
+
+The results of this experiment can be found in Table \ref{tab:exp2} and Figure \ref{fig:exp2-2-results}.
+An object's width is evaluated in the trajectory's direction only. 
+For the other direction, the width of an object cannot be estimated accurately, because the refinement step from Section \ref{sec:elevation_map} cannot be applied.
+
+
+\begin{table}[htb!]
+    \centering
+    \begin{tabular}
+        { | l | l | l | l | l | } 
+	\hline
+	Object & Dimensions (w$\times$h) (\small{mm}) & Estimated dimensions & Absolute error & Relative error \\
+        \hline
+        1. White box	& 460 $\times$ 290	& 390 $\times$ 245	& 70 $\times$ 45	& \textbf{15 $\times$ 16 \%}\\
+	2. Blue box	& 245 $\times$ 490	& 250 $\times$ 420	& 5 $\times$ 70	& \textbf{2 $\times$ 14 \%}\\
+	3, Brown box	& 570 $\times$ 140	& - 					& - 				& - \\
+	4. Ramp		& 1380 $\times$ 360	& - 					& - 				& - \\
+	\hline
+    \end{tabular}
+    \caption{Errors made in the estimated dimensions of objects. The first dimension is the width of an object in the y-direction and the second dimension is the height of an object. }
+    \label{tab:exp2}
+\end{table}
+
+The white and blue boxes are detected.
+The errors of both the estimated width and height are small.
+Similar to the previous experiment, the height of an object is (slightly) underestimated.
+The width of the white box is underestimated, which is probably caused by unreliable velocity estimates due to the lack of sufficient features.
+Another explaination could be that the visual odometry methods assume a flat world, which does not hold when flying above objects.
+Between both boxes, a false elevation is detected (clearly visible in Figure \ref{fig:exp2-elevation-plot}).
+This elevation is probably triggered by an aggressive descent, caused by the AR.Drone's altitude stabilization, after the white box is passed.
+
+The brown box is not detected due its limited height.
+Therefore, the measured (ultrasound) acceleration is unsufficient to trigger an elevation event.
+As expected, the ramp was not detected.
+The gradual elevation change does not produce a significant acceleration.
+
+\begin{figure}[htb!]
+  \begin{center}
+    \subfigure[Plot of the detected elevation]{\label{fig:exp2-elevation-plot}%
+	\includegraphics[width=0.55\linewidth]{images/exp2-contourf.eps}}%
+    \subfigure[Visual elevation map]{\label{fig:exp2-elevation-map}%
+\includegraphics[width=0.4\linewidth]{images/exp2-elevation-map.png}}
+
+ \end{center}
+  \caption{Elevation map of multiple objects (Figure \ref{fig:exp2-setup}). In \ref{fig:exp2-stair-plot} a contour map of the elevation is plotted. In \ref{fig:exp2-stair-map} the elevation map is rendered using the 3DTerrain component of the presented framework.}
+  \label{fig:exp2-2-results}
+\end{figure}
