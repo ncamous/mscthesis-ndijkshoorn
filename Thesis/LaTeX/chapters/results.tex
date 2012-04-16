@@ -371,6 +371,138 @@ Therefore, the lower velocities during the direction changes are maintained when
 
 \section{Accuracy w.r.t. camera resolution}
 
+Blup
+
+Blup
+
+Blup
+
+Blup
+
+\begin{table}[htb!]
+    \centering
+    \begin{tabular}
+        { | l | l | l | l | } 
+	\hline
+	Resolution & Nr. frames processed & Nr. frames velocity extracted & Mean error (mm) \\
+        \hline
+        33.3\% & 2275 & 213 & 11742 \\
+	66.6\% & 2239 & 1346 & 2166 \\
+	90.0\% & 2259 & 1847 & \textbf{531} \\
+	100.0\% & 2168 & 1945 & 579 \\
+	\hline
+    \end{tabular}
+    \caption{AR.Drone}
+    \label{tab:res-resolution-ar}
+\end{table}
+
+\begin{table}[htb!]
+    \centering
+    \begin{tabular}
+        { | l | l | l | l | } 
+	\hline
+	Resolution & Nr. frames processed & Nr. frames velocity extracted & Mean error (mm) \\
+        \hline
+        33.3\% & 1600 & 5 & 9295 \\
+	66.6\% & 1598 & 247 & 528 \\
+	90.0\% & 1570 & 850 & 100 \\
+	100.0\% & 1365 & 841 & \textbf{73} \\
+	133.3\% & 1000 & 791 & 100 \\
+	166.6\% & 685 & 612 & 77 \\
+	200.0\% & 552 & 531 & 98 \\
+	\hline
+    \end{tabular}
+    \caption{Simulated AR.Drone (USARSim)}
+    \label{tab:res-resolution-usar}
+\end{table}
+
+
+
+\begin{figure}[htb!]
+  \begin{center}
+    \subfigure[PA]{\label{fig:exp3-2-a}%
+	\includegraphics[width=0.55\linewidth]{images/exp3-ar-res-error2.eps}}%
+    \subfigure[B]{\label{fig:exp3-2-b}%
+\includegraphics[width=0.55\linewidth]{images/exp3-usar-res-error2.eps}}
+
+ \end{center}
+  \caption{A}
+  \label{fig:exp3-error2}
+\end{figure}
+
+
+
+\begin{figure}[htb!]
+  \begin{center}
+    \subfigure[A]{\label{fig:exp3-a}%
+	\includegraphics[width=1.0\linewidth]{images/exp3-ar-res-error.eps}}%
+\\
+    \subfigure[B]{\label{fig:exp3-b}%
+\includegraphics[width=1.0\linewidth]{images/exp3-usar-res-error.eps}}
+
+ \end{center}
+  \caption{AB}
+  \label{fig:exp3-error}
+\end{figure}
+
+
+
+\begin{comment}
+% USARSIM
+usar-33  = 5/1600
+usar-66  = 247/1598
+usar-90  = 850/1570
+usar-100 = 841/1365
+usar-133 = 791/1000
+usar-166 = 612/685
+usar-200 = 531/552
+
+
+
+
+[33]
+9294.523849, 6275.971701
+
+[66]
+528.011637, 264.881965
+
+[90]
+99.933571, 41.612158
+
+[100]
+73.188934, 31.546714
+
+[133.3]
+100.064949, 47.737359
+
+[166.6]
+77.383557, 41.207540
+
+[200]
+98.255163, 50.079516
+
+
+
+% REAL AR.DRONE
+ar-100 1945/2168
+ar-90  1847/2259
+ar-66  1346/2239
+ar-33  213/2275
+
+
+[33]
+11742.337124, 5503.479076
+
+[66]
+2166.391959, 1356.548951
+
+[90]
+531.474630, 251.091508
+
+[100]
+578.864016, 214.820721
+
+\end{comment}
 
 
 \section{Elevation accuracy}
