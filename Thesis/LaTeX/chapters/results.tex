@@ -174,7 +174,7 @@ As one can see, the acceleration has for the real and simulated AR.Drone nearly 
 \section{Position accuracy}
 \label{sec:results-position-accuracy}
 An experiment has been carried out to evaluate the accuracy of the AR.Drone's estimated position.
-This experiment is performed above a texture-rich floor (Section \ref{sec:exp1-texture-poor}) and a texture-poor floor (Section \ref{sec:exp1-texture-poor}).
+This experiment is performed above a texture-rich floor (Section \ref{sec:exp1-texture-poor}), a texture-poor floor (Section \ref{sec:exp1-texture-poor}) and a floor that resembles the circumstances encountered during the IMAV competitions.
 The position can be estimated using different methods and the accuracy of all these methods are evaluated.
 To ensure fair comparison of the different estimation methods, a flight was recorded (Section \ref{sec:proposed-framework}) and played back to generate the same input for all methods.
 
@@ -218,7 +218,7 @@ Finally, a laser pointer is used to align the heading direction of the AR.Drone 
 
 
 
-
+\clearpage
 \subsection{Texture-rich floor}
 \label{sec:exp1-texture-rich}
 The first experiment was performed above a texture-rich floor (Figure \ref{fig:exp1-floor}), to benchmark the methods in preferable circumstances.
@@ -368,7 +368,71 @@ Therefore, the lower velocities during the direction changes are maintained when
 
 
 
-%\section{Accuracy w.r.t. pose recovery approaches}
+\subsection{IMAV circumstances}
+\label{sec:exp1-imav-circumstances}
+The experiment is repeated in a sports hall.
+This environment closely resembles the environment of the IMAV2011 indoor competitions.
+
+
+
+
+
+\clearpage
+\section{Accuracy w.r.t. pose recovery approaches}
+Section \ref{sec:pose-recovery} proposed a novel method to robustly recover the translation and rotation between \textit{two frames} (visual odometry) or \textit{a frame and a map} (localization).
+Instead of computing a full perspective, affine or Euclidean transformation, a more pragmatic approach is used.
+In this experiment, the proposed pose recovery approach is benchmarked against other pose recovery approaches.
+
+An approach similar to the position accuracy experiment from Section \ref{sec:results-position-accuracy} is used.
+The positions are estimated using the Visual Odometry (VO) method from Section \ref{sec:visual-slam-visual-odemetry}, which relies on pose recovery to determine the velocity.
+The recorded dataset of the texture-rich floor (Section \ref{sec:exp1-texture-rich} ) is used as input.
+ 
+The pose recovery approaches is benchmarked against OpenCV's robust \textit{Euclidean transformation}, \textit{affine transformation} and \textit{perspective transformation}.
+The \textbf{Euclidean transformation} is computed using OpenCV's \textit{estimateRigidTransform}\footnote{\url{http://opencv.itseez.com/modules/video/doc/motion_analysis_and_object_tracking.html?highlight=estimateRigidTransform}} with the parameter \textit{fullAffine} off to compute a Euclidean transformation.
+The translation vector from the transformation matrix is used as velocity estimate.
+The maximum allowed reprojection error is set to $10\small{mm}$.
+Additional filtering is required to remove bad transformation.
+A recovered transformation is rejected if the percentage of inliers is below $50\%$ or if the translation is too large ($T \geq 500\small{mm}$).
+The \textbf{affine transformation} is computed using OpenCV's \textit{estimateRigidTransform}\footnote{\url{http://opencv.itseez.com/modules/video/doc/motion_analysis_and_object_tracking.html?highlight=estimateRigidTransform}} with the parameter \textit{fullAffine} on.
+The \textbf{perspective transformation} is computed using OpenCV's \textit{findHomography}\footnote{\url{http://opencv.itseez.com/modules/video/doc/motion_analysis_and_object_tracking.html?highlight=findhomography}} with a RANSAC-based robust method.
+The translation vector from the homography is used as velocity estimate.
+
+\begin{table}[htb!]
+    \centering
+    \begin{tabular}
+        { | l | l | l | } 
+	\hline
+	Method & Mean absolute error (\small{mm}) & \parbox{5cm}{Mean relative error \\(percentage of trajectory length)} \\
+        \hline
+        visual odometry (VO) & 552 & 0.828\% \\
+	visual odometry (VO) - euclidean transform & 967 & 1.449\% \\
+	visual odometry (VO) - affine transform & 3784 & 5.672\% \\
+	visual odometry (VO) - perspective transform & 8923 & 13.375\% \\
+	\hline
+    \end{tabular}
+    \caption{Errors made by the visual odometry (VO) position estimation method when using different pose recovery approaches.}
+    \label{tab:res_transform}
+\end{table}
+
+The results of this experiment can be found in Table \ref{tab:res_transform} and Figure \ref{fig:exp4-transform-error}.
+The proposed pose recovery approach outperforms the other pose recovery approaches.
+This approach reduces the degrees of freedom and is more robust against noise.
+This corresponds with the observations made by Caballero et al (Section \ref{related-online-mosaicking}).
+OpenCV's pose recovery approaches use the percentage of inliers to determine the quality of a recovered pose.
+However, the percentage of inliers may not reflect the actual quality of a recovered pose.
+For example, a faulty transformation (pose) can maximize the number of inliers, as described in Section \ref{sec:pose-recovery}.
+The proposed approach uses the covariance between the points of a hypothesis to determine the quality of a recovered pose.
+This approach is able to estimate the quality of a recovered pose more accurately, resulting in recovered poses that contain less error.
+%This seems to be a beter measure to determine the quality, resulting in a reduced error.
+
+
+\begin{figure}[htb!]
+\centering
+\includegraphics[width=\linewidth]{images/exp4-transform-error.eps}
+\caption{Errors between the estimated positions and the groundtruth.}
+\label{fig:exp4-transform-error}
+\end{figure}
+
 
 
 \clearpage
@@ -433,6 +497,20 @@ In Figure \ref{fig:exp3-error}, the position error is plotted over time.
     \label{tab:res-resolution-usar}
 \end{table}
 
+
+\begin{figure}[htb!]
+  \begin{center}
+    \subfigure[Real AR.Drone]{\label{fig:exp3-2-a}%
+	\includegraphics[width=0.55\linewidth]{images/exp3-ar-res-error2.eps}}%
+    \subfigure[Simulated AR.Drone (USARSim)]{\label{fig:exp3-2-b}%
+\includegraphics[width=0.55\linewidth]{images/exp3-usar-res-error2.eps}}
+
+ \end{center}
+  \caption{Mean error of the estimated position with respect to the image resolution. For each resolution, the number of processed frames is counted (green line). A part of these frames can be used to extract the velocity of the AR.Drone (red line).}
+  \label{fig:exp3-error2}
+\end{figure}
+
+
 From Table \ref{tab:res-resolution-ar} can be seen that the original camera resolution is sufficient for frequent velocity updates.
 Out of the $2168$ processes frames, $1945$ frames ($90\%$) could be used to extract the velocity using the Visual Odometry method.
 When the image resolution is slightly decreased to $90\%$ of the original resolution, more frames were processed.
@@ -447,6 +525,7 @@ An exception is the camera resolution of $90\%$, which has a slightly lower erro
 This exception is probably caused by a coincidental drift that reduces the error.
 
 The results of the simulated AR.Drone can be found in Table \ref{tab:res-resolution-usar} and Figure \ref{fig:exp3-2-b}.
+The overall mean errors are smaller than the real AR.Drone, due to the lack of noise generated by the IMU and ultrasound sensor.
 Similar to the real AR.Drone, a reduced resolution results in more frames being processed, but less frames that could be used to extract the velocity.
 When the resolution increases, the number of processed frames decreases due to the increased computational time per frame.
 However, the percentage of frames that could be used to extract the velocity increases.
@@ -459,17 +538,6 @@ This results in a mean error that is not smaller than the original resolution.
 Based on these observations can be concluded that the AR.Drone's bottom camera resolution offers a good balance between image quality (usefulness) and processing time.
 An increased camera resolution is expected to yield improved position accuracy when the machine running the SLAM method is able to maintain the number of processed frames when the image resolution increases.
 
-\begin{figure}[htb!]
-  \begin{center}
-    \subfigure[Real AR.Drone]{\label{fig:exp3-2-a}%
-	\includegraphics[width=0.55\linewidth]{images/exp3-ar-res-error2.eps}}%
-    \subfigure[Simulated AR.Drone (USARSim)]{\label{fig:exp3-2-b}%
-\includegraphics[width=0.55\linewidth]{images/exp3-usar-res-error2.eps}}
-
- \end{center}
-  \caption{Mean error of the estimated position with respect to the image resolution. For each resolution, the number of processed frames is counted (green line). A part of these frames can be used to extract the velocity of the AR.Drone (red line).}
-  \label{fig:exp3-error2}
-\end{figure}
 
 
 
