@@ -110,6 +110,7 @@ Belief over state variable $x_t$ is denoted by $bel(x_t)$.
 \end{mydef}
 
 \subsection{Bayes filter}
+\label{sec:prob-rob-bayes}
 The most general algorithm for calculcating beliefs is the \textbf{Bayes filter}.
 The input of the algorithm is the (initial) belief $bel$ at time $t-1$, the most recent control $u_t$ and measurement $z_t$.
 First, a \textit{prediction} for the new belief is computed based on control $u_t$ (the measurement is ignored):
@@ -255,6 +256,7 @@ Because a response is not available in real-time, the robot has to wait or make 
 
 
 \subsubsection{Kalman Filter (KF)}
+\label{sec:prob-rob-kf}
 The most popular technique for implementing a Bayes filter is probably the Kalman Filter (1960) \cite{kalman1960new}, often used for improving vehicle navigation.
 The filter has a Single-hypothesis belief representation and can be performed in real-time.
 The Kalman Filter is based on the assumption that the system is linear and both the motion model and measurement model are affected by white Gaussian noise.

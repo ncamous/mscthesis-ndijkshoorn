@@ -116,7 +116,9 @@ citecolor=darkgray,
 \renewcommand{\maketitle}{%
 	\thispagestyle{empty}	
 
-	\begin{textblock*}{21cm}(0cm,4cm)
+	\includegraphics[width=9.3cm]{images/uva®merken_NL.eps}
+
+	\begin{textblock*}{21cm}(0cm,7.5cm)
 	
 	\begin{center}
 	{\LARGE \@title}
@@ -136,10 +138,7 @@ citecolor=darkgray,
 	\end{textblock*}	
 	
 	
-	\begin{textblock*}{11cm}(3cm,22.5cm)
-		\noindent
-		\includegraphics[width=9.3cm]{images/uva®merken_NL.eps}
-
+	\begin{textblock*}{11cm}(3cm,23.5cm)
 		\begin{description}
 		\item[Master's Thesis] for the graduation in Artificial Intelligence
 		%\item[Faculteit:] Faculteit der Natuurwetenschappen, Wiskunde en Informatica

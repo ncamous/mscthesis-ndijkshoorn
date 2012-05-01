@@ -2,8 +2,10 @@ In this chapter, the performance of both the simulation model and visual SLAM me
 In Section \ref{sec:simulation_results}, the USARSim simulation model is validated.
 A set of maneuvers is flown with the actual AR.Drone and
 simulated AR.Drone. The differences between the maneuvers are studied in detail.
-In Section \ref{sec:results-position-accuracy}, the accuracy of the AR.Drone's estimated position is evaluated.
+In Section \ref{sec:results-position-accuracy}, the accuracy of the estimated position is evaluated.
 A set of 8-shapes is flown with the AR.Drone and the estimated positions are compared against the groundtruth from a laser range finder.
+In Section \ref{sec:results-pose-recovery}, the proposed pose recovery approach is benchmarked against other pose recovery approaches.
+In Section \ref{sec:res-cam-resolution}, the influence of the camera resolution is investigated.
 Finally, in Section \ref{sec:results-elevation-accuracy} the accurracy of the elevation map is evaluated in terms of elevation error and the error in the estimated size of objects.
 
 
@@ -192,6 +194,13 @@ All remaining distance measurements are assumed to originate from the AR.Drone.
 The mean position of the filtered distance measurements is used as center position of the AR.Drone.
 Futhermore, a white cylinder with a diameter of 9\begin{small}cm\end{small} and a height of 37\begin{small}cm\end{small} was added on top of the AR.Drone to improve its visability for the LRF.
 
+\begin{figure}[htb]
+\centering
+\includegraphics[width=13cm]{images/exp1-floorplan-align.pdf}
+\caption{The alignment of the laser range finder and the AR.Drone. The laser range finder (LRF) is aligned against two poles. The takeoff position is marked with a green star. The red star indicates the marked heading direction of the AR.Drone. A laser pointer is used to align the heading direction of the AR.Drone to the marker position.}
+\label{fig:exp1-floorplan-align}
+\end{figure}
+
 The LRF measures the AR.Drone's position in its own reference frame.
 Therefore, the AR.Drone's reference frame has to be accurately aligned with the LRF's reference frame.
 This is achieved by rotating the AR.Drone before takeoff, such that it points in exactly the same direction as the LRF.
@@ -205,20 +214,10 @@ Another position was marked (red star) to indicate the desired heading direction
 Both marked position are parallel to the LRF's x-axis and the two poles.
 Finally, a laser pointer is used to align the heading direction of the AR.Drone to the marked position.
 
-\begin{figure}[htb]
-\centering
-\includegraphics[width=13cm]{images/exp1-floorplan-align.pdf}
-\caption{The alignment of the laser range finder and the AR.Drone. The laser range finder (LRF) is aligned against two poles. The takeoff position is marked with a green star. The red star indicates the marked heading direction of the AR.Drone. A laser pointer is used to align the heading direction of the AR.Drone to the marker position.}
-\label{fig:exp1-floorplan-align}
-\end{figure}
 
 
 
 
-
-
-
-\clearpage
 \subsection{Texture-rich floor}
 \label{sec:exp1-texture-rich}
 The first experiment was performed above a texture-rich floor (Figure \ref{fig:exp1-floor}), to benchmark the methods in preferable circumstances.
@@ -250,6 +249,27 @@ An 8-shape was chosen to capture an intermediate loop.
     \label{tab:res_mapping}
 \end{table}
 
+\begin{figure}[htb!]
+\centering
+\includegraphics[width=\linewidth]{images/exp1-run13-error.eps}
+\caption{Errors between the estimated positions and the groundtruth.}
+\label{fig:exp1-texture-error}
+\end{figure}
+
+\begin{figure}[htb!]
+\centering
+\includegraphics[width=\linewidth]{images/exp1-run13-path.eps}
+\caption{Estimated trajectories of the different position estimation methods. The AR.Drone flew three 8-shapes above above a texture-rich floor.}
+\label{fig:exp1-texture-path}
+\end{figure}
+
+\begin{figure}[htb!]
+\centering
+\includegraphics[width=0.75\linewidth]{images/exp1-run13-map.jpg}
+\caption{Visual map created by the visual mapping method (Section \ref{sec:texture_map}). The map is constructed during the first 8-shape. The position estimates are based on the onboard velocity (AV) and the visual localization method (Section \ref{sec:localization}).}
+\label{fig:exp1-texture-map}
+\end{figure}
+
 The results of this experiment can be found in Table \ref{tab:res_mapping} and Figures \ref{fig:exp1-texture-error} (errors), \ref{fig:exp1-texture-path} (trajectories) and \ref{fig:exp1-texture-map} (visual map).
 For the encountered circumstances, all methods are able to estimate the position quite accurately.
 Both the onboard velocity (AV) method and the onboard position (AP) method produce exactly the same trajectory, which implies the onboard position estimate (AP) is based on the velocity that is estimated by the AR.Drone.
@@ -278,26 +298,7 @@ Futhermore, errors in the ultrasound and IMU measurements are other sources that
 
 % 66674 mm
 
-\begin{figure}[htb!]
-\centering
-\includegraphics[width=\linewidth]{images/exp1-run13-error.eps}
-\caption{Errors between the estimated positions and the groundtruth.}
-\label{fig:exp1-texture-error}
-\end{figure}
 
-\begin{figure}[htb!]
-\centering
-\includegraphics[width=\linewidth]{images/exp1-run13-path.eps}
-\caption{Estimated trajectories of the different position estimation methods. The AR.Drone flew three 8-shapes above above a texture-rich floor.}
-\label{fig:exp1-texture-path}
-\end{figure}
-
-\begin{figure}[htb!]
-\centering
-\includegraphics[width=0.75\linewidth]{images/exp1-run13-map.jpg}
-\caption{Visual map created by the visual mapping method (Section \ref{sec:texture_map}). The map is constructed during the first 8-shape. The position estimates are based on the onboard velocity (AV) and the visual localization method (Section \ref{sec:localization}).}
-\label{fig:exp1-texture-map}
-\end{figure}
 
 
 
@@ -326,6 +327,27 @@ The AR.Drone flew a single 8-shape.
     \label{tab:res_mapping-poor}
 \end{table}
 
+\begin{figure}[htb!]
+\centering
+\includegraphics[width=\linewidth]{images/exp1-run2-error.eps}
+\caption{Errors made by the position estimation methods when flying above a texture-poor floor.}
+\label{fig:exp1-notexture-error}
+\end{figure}
+
+\begin{figure}[htb!]
+\centering
+\includegraphics[width=\linewidth]{images/exp1-run2-path.eps}
+\caption{Estimated trajectories of the different position estimation methods. The AR.Drone flew three 8-shapes above above a texture-poor floor.}
+\label{fig:exp1-notexture-path}
+\end{figure}
+
+\begin{figure}[htb!]
+\centering
+\includegraphics[width=0.75\linewidth]{images/exp1-run2-map.jpg}
+\caption{Visual map created by the visual mapping method (Section \ref{sec:texture_map}). The position estimates are based on the onboard velocity (AV).}
+\label{fig:exp1-notexture-map}
+\end{figure}
+
 
 The results of this experiment can be found in Table \ref{tab:res_mapping-poor} and Figures \ref{fig:exp1-notexture-error} (errors), \ref{fig:exp1-notexture-path} (trajectories) and \ref{fig:exp1-notexture-map} (visual map).
 For the encountered circumstances, all methods are unable to estimate the position accurately.
@@ -345,40 +367,25 @@ Along most straight parts of the trajectory insufficient features were tracked a
 Therefore, the lower velocities during the direction changes are maintained when flying along the straight parts of the trajectory.
 
 
-\begin{figure}[htb!]
-\centering
-\includegraphics[width=\linewidth]{images/exp1-run2-error.eps}
-\caption{Error}
-\label{fig:exp1-notexture-error}
-\end{figure}
-
-\begin{figure}[htb!]
-\centering
-\includegraphics[width=\linewidth]{images/exp1-run2-path.eps}
-\caption{Trajectory}
-\label{fig:exp1-notexture-path}
-\end{figure}
-
-\begin{figure}[htb!]
-\centering
-\includegraphics[width=0.75\linewidth]{images/exp1-run2-map.jpg}
-\caption{Visual map created by the visual mapping method (Section \ref{sec:texture_map}). The position estimates are based on the onboard velocity (AV).}
-\label{fig:exp1-notexture-map}
-\end{figure}
 
 
 
 \subsection{IMAV circumstances}
 \label{sec:exp1-imav-circumstances}
-The experiment is repeated in a sports hall.
+The experiment is repeated in a sports hall, to benchmark the methods in circumstances encountered during the IMAV competitions.
 This environment closely resembles the environment of the IMAV2011 indoor competitions.
-
+The trajectory of the AR.Drone is increased to approximately $12 \times 2.5\small{m}$ in order to match the trajectory of the IMAV competitions.
+This  trajectory is flown three times.
+%The AR.Drone flown three 8-shapes.
+Furthermore, the flight altitude of the AR.Drone is increased to $2\begin{small}m\end{small}$.
+This allows the camera to capture sufficient visual clues (i.e., lines) to perform for visual odometry.
 
 
 
 
 \clearpage
 \section{Accuracy w.r.t. pose recovery approaches}
+\label{sec:results-pose-recovery}
 Section \ref{sec:pose-recovery} proposed a novel method to robustly recover the translation and rotation between \textit{two frames} (visual odometry) or \textit{a frame and a map} (localization).
 Instead of computing a full perspective, affine or Euclidean transformation, a more pragmatic approach is used.
 In this experiment, the proposed pose recovery approach is benchmarked against other pose recovery approaches.
@@ -437,6 +444,7 @@ This approach is able to estimate the quality of a recovered pose more accuratel
 
 \clearpage
 \section{Accuracy w.r.t. camera resolution}
+\label{sec:res-cam-resolution}
 The AR.Drone is equipped with a low resolution down-looking camera.
 The recent developments in miniaturing high-resolution cameras enables MAVs to be equipped with high-resolution cameras.
 This poses the question if the proposed method benefit from an increased image resolution.
