@@ -8,7 +8,7 @@ Finally, Section \ref{sec:elevation_map} describes an experimental method to bui
 	\section{Pose estimation}
 	\label{sec:pose_estimation}
 %In order to initialize a visual localization and mapping algorithm, a good estimate of the position based on the internal sensors of the AR.Drone is essential.
-The AR.Drone has several sources of information available about its movements and the majority of its computing power is dedicated to combine these sources into reliable estimates (Section \ref{sec:platform_onboard_intelligence}). Here this information is combined into a state vector, with all information needed to initialize visual localization and mapping.
+The AR.Drone has several sources of information available about its movements and the majority of its computing power is dedicated to combine these sources into reliable estimates (Section \ref{sec:platform_onboard_intelligence}). In the proposed methods, this information is combined into a state vector, with all information needed to initialize visual localization and mapping.
 
 The AR.Drone is equipped with a number of sensors, which give frequent updates about the motion. 
 The inertial sensor measures the body accelerations and angular velocities.
@@ -21,39 +21,45 @@ This estimate is based on the inertia measurements, aerodynamic model and visual
 %not documented by the manufacturer.
 The details of this algorithm are proprietary information of the manufacturer. 
 
-The information from the sensors are used in an Extended Kalman Filter (EKF) to estimate the current position.
+The information from the sensors are used in an Extended Kalman Filter (EKF) to estimate the current pose.
 An EKF has been considered~\cite{julier2004unscented} the facto standard in the theory of nonlinear state estimation.
-The EKF state vector comprises a position vector $p^{W}$, velocity vector $v^{W}$, acceleration vector $a^{W}$, attitude (orientation) vector $q^{W}$ and altitude vector $h^W$ (Section \ref{sec:pose_estimation}).
+The EKF state vector comprises a position vector $p^{W}$, velocity vector $v^{W}$, acceleration vector $a^{W}$ and attitude (orientation) vector $q^{W}$.
 All vectors are 3-dimensional Cartesian coordinates.
+An altitude vector $h^W$ is added for the elevation mapping method (Section \ref{sec:elevation_map}). It contains the filtered altitude, first-order and second-order derivatives of the altitude.
 
 \begin{equation}
-x = [ p^{W}  v^{W}  a^{W}  q^{W} ]
+x = [ p^{W}  v^{W}  a^{W}  q^{W} h^{W} ]
 \label{eq:EKF_state_vecor}
 \end{equation}
 
-\textbf{TODO}
-
-%The filtered attitude (orientation) from the proprietary onboard filter is written directly to the attitude vector of the EKF's measurement matrix.
+The sensor data from the AR.Drone is used to fill a measurement matrix.
+This measurement matrix is used by the EKF to update the state (Section \ref{sec:background-recursive-state-estimation}).
+The attitude (orientation) information from the AR.Drone's proprietary onboard filter is written to the attitude vector of the measurement matrix.
 This is possible because the attitude measurements are filtered and debiased onboard of the AR.Drone (Section \ref{sec:platform_onboard_intelligence}).
+%The filtered attitude (orientation) from the proprietary onboard filter is written directly to the attitude vector of the EKF's measurement matrix.
 %This is possible because 
-Steder et al. \cite{steder2008visual} found that roll and pitch measurements are accurate, even for low-cost sensors and can be directly integrated into the state.
-
-
+%Steder et al. \cite{steder2008visual} found that roll and pitch measurements are accurate, even for low-cost sensors and can be directly integrated into the state.
 %However, from experiments \ref{Section sec:exp_accel} we found that the low-cost acceleration sensor from the AR.Drone provides unreliable data.
-However, we found that the low-cost acceleration sensor from the AR.Drone provides unreliable data.
-This is modeled by a large uncertainty in the covariance matrix $Q$ of the EKF.
-
-Unlike the acceleration data, the velocity estimate sent by the AR.Drone is accurate enough for integration into the state.
-Based on the previous position $p_{t-1}$, the state's velocity $v_{t}$ and time between measurements, the new position $p_{t}$ can be calculated as follows:
-
+%However, we found that the low-cost acceleration sensor from the AR.Drone provides unreliable data.
+%This is modeled by a large uncertainty in the covariance matrix $Q$ of the EKF.
+The position of the AR.Drone cannot be estimated directly and is derived from the estimated velocities.
+%Unlike the acceleration data, the velocity estimate sent by the AR.Drone is accurate enough for integration into the state.
+The velocity estimate sent by the AR.Drone is written to the velocity vector of the measurement matrix.
+Based on the previous position $p_{t-1}$, the state's velocity $v_{t}$ and time between measurements $\Delta t$, the new position $p_{t}$ can be calculated as follows:
 \begin{equation}
 p_{t} = p_{t-1} + v_{t} \times \Delta t + a_{t} \times 0.5 \Delta t^2
 \end{equation}
 where $\Delta t$ is the variable time (seconds) between the last two measurements.
-The body accelerations or velocity is sufficient to estimate the vehicle's altitude.
-However, the ultrasound's altitude measurement can be integrated into the EKF to improve the altitude estimate.
+Instead of using the AR.Drone's onboard velocity estimate, the visual odometry method proposed in Section \ref{sec:visual-slam-visual-odemetry} can be used to determine the AR.Drone's velocity.
+
+In theory, the velocity can be estimated by integrating the body acceleration measurements.
+However, the low-cost acceleration sensor from the AR.Drone provides unreliable data, which would result in large velocity errors.
+Therefore, the body acceleration measurements are not written to the EKF's measurement matrix.
+
+Similar to the estimated position, the vertical velocity estimate is used to estimate the vehicle's altitude (vertical position).
+However, the ultrasound's altitude measurement can be integrated into the EKF's measurement matrix to improve the altitude estimate.
 The ultrasound sensor is not sensitive to drift because it provides an absolute altitude measurement.
-Relying only on the ultrasound sensor is not optimal since the measurements depend heavily on material and structure of the floor.
+Relying only on the ultrasound sensor is not optimal since the measurements are affected by the material and structure of the floor (Section \ref{sec:ultrasound_altimeter}).
 
 
 %\subsection{Inertia measurements}
@@ -501,12 +507,9 @@ where $N = 64$ is the length of the SURF descriptor vector.
 
 \begin{figure}[htb!]
   \begin{center}
-	%\hspace*{-1.5cm}
-\advance\leftskip-2.5cm\rightskip-2.5cm
-    \subfigure[Frame $f_{t-1}$]{\label{visual-slam-visual-odometry1}\includegraphics[width=0.4\linewidth]{images/visual_odometry1.png}}
-    %\hspace{1cm}
-    \subfigure[Frame $f_t$]{\label{visual-slam-visual-odometry2}\includegraphics[width=0.4\linewidth]{images/visual_odometry2.png}}
-    \subfigure[Feature coordinates of frame $f_{t-1}$ and $f_t$]{\label{visual-slam-visual-odometry3}\includegraphics[width=0.4\linewidth]{images/visual_odometry3.png}}
+    \subfigure[Frame $f_{t-1}$]{\label{visual-slam-visual-odometry1}\includegraphics[width=0.33\linewidth]{images/visual_odometry1.png}}
+    \subfigure[Frame $f_t$]{\label{visual-slam-visual-odometry2}\includegraphics[width=0.33\linewidth]{images/visual_odometry2.png}}
+    \subfigure[Feature coordinates of frame $f_{t-1}$ and $f_t$]{\label{visual-slam-visual-odometry3}\includegraphics[width=0.33\linewidth]{images/visual_odometry3.png}}
  \end{center}
   \caption{Overview of the visual odometry algorithm. In \ref{visual-slam-visual-odometry1} features from the previous frame $f_{t-1}$ are transformed to corresponding 2D world coordinates using ray-casting. In \ref{visual-slam-visual-odometry2} this step is repeated for the newest frame $f_t$. In both frames the same three features are found, at different locations in the frame. These differences indicate the AR.Drone has moved. Features from this new frame $f_t$ (red circles) are matched against the features from the previous frame (black circles). In \ref{visual-slam-visual-odometry3} a transformation is computed between the world coordinates of both feature sets. This transformation describes the movement $T$ of the AR.Drone between both frames.}
   \label{visual-slam-visual-odometry}
@@ -649,12 +652,9 @@ where $r$ is the radius of a cone of height $z_{sensor}$ and $\alpha_{ultrasound
 
 \begin{figure}[htb!]
   \begin{center}
-	%\hspace*{-1.5cm}
-\advance\leftskip-2.5cm\rightskip-2.5cm
-    \subfigure[Obstacle enters range]{\label{visual-slam-elevation-map1}\includegraphics[width=0.4\linewidth]{images/elevation_map1.png}}
-    %\hspace{1cm}
-    \subfigure[Obstacle in range]{\label{visual-slam-elevation-map2}\includegraphics[width=0.4\linewidth]{images/elevation_map2.png}}
-    \subfigure[Obstacle out of range]{\label{visual-slam-elevation-map3}\includegraphics[width=0.4\linewidth]{images/elevation_map3.png}}
+    \subfigure[Obstacle enters range]{\label{visual-slam-elevation-map1}\includegraphics[width=0.33\linewidth]{images/elevation_map1.png}}
+    \subfigure[Obstacle in range]{\label{visual-slam-elevation-map2}\includegraphics[width=0.33\linewidth]{images/elevation_map2.png}}
+    \subfigure[Obstacle out of range]{\label{visual-slam-elevation-map3}\includegraphics[width=0.33\linewidth]{images/elevation_map3.png}}
  \end{center}
   \caption{Overview of the elevation map updates. The green cone indicates the range of the ultrasound sensor. The red line inside the cone respresents the center of the cone, perpendicular to the AR.Drone's body. In \ref{visual-slam-elevation-map1} and \ref{visual-slam-elevation-map2} an elevation is measured. All grid cells within a radius $\gamma_{elevationRadius}$ around the center of the cone (red line) are updated to store the measured elevation. \ref{visual-slam-elevation-map3} Describes the refinement step. When no elevation is measured, all grid cells within the cone (red cubes) are resetted to zero elevation.}
   \label{visual-slam-elevation-map}
