@@ -1,6 +1,119 @@
-\textbf{TODO}
+This chapter concludes this thesis by summarizing its content and answering the research questions.
+Section \ref{sec:conclusions-contributions} describes the contributions of this thesis.
+Finally, Section \ref{sec:conclusions-future} motivates several interesting directions for future research.
 
+Nowadays, small quadrotors with on-board stabilization can be bought off-the-shelf.
+These quadrotors make it possible to shift the research from basic control of the platform towards intelligent applications.
+The platform selected in this thesis is the Parrot AR.Drone quadrotor helicopter.
+A simulation model of the AR.Drone is proposed, which allows safe and efficient development of algorithms.
+This simulation model consists of a motion model, visual model and sensor model.
 The validation effort of the hovering and the forward movement shows that the dynamic behavior of the simulated AR.Drone closely resembles the dynamic behavior of the real AR.Drone.
+
+A framework is proposed to perform high-level tasks with the AR.Drone.
+This framework includes an abstraction layer to abstract from the actual device, which allows to use both the real and simulated AR.Drone to test the proposed methods.
+The framework stores video frames and sensor measurements from the AR.Drone in queue's, such that algorithms can operate on the data.
+Futhermore, the framework includes a 3D map visualization and provides functionalities to record and playback data.
+
+This thesis proposed a realtime Simultaneous Localization and Mapping approach that can be used for micro aerial vehicle with a low-resolution down-pointing camera (e.g., AR.Drone).
+The information from the sensors are used in an Extended Kalman Filter (EKF) to estimate the AR.Drone's pose.
+The position of the AR.Drone cannot be estimated directly and is derived from the velocity estimates from the AR.Drone.
+This estimate is based on the inertia measurements, aerodynamic model and visual odometry obtained from the relative motion between camera frames.
+When an estimate of the AR.Drone's pose is available, a map can be constructed to make the AR.Drone localize itself and reduce the error of the estimated pose.
+The map consists of a texture map and a feature map.
+The texture map is used for human navigation and the feature map is used by the AR.Drone to localize itself.
+
+The visual map is constructed by warping a camera frame's on a flat canvas.
+A homography matrix describes how each frame has to be transformed (warped) in order to generate a seamless texture map without perspective distortion.
+For each frame, the estimated pose and camera matrix are used to determine the area of the world which is observed by the camera.
+This area is described by four 2D coordinates (a flat world is assumed).
+Now, the homography is estimated from the four 2D world positions and their corresponding frame's pixel coordinates.
+
+The feature map consists of a grid with SURF features.
+For each camera frame, SURF features are extracted.
+The estimated pose and camera matrix are used to compute the 2D world position of each feature.
+Based on the 2D world position, a feature's cell inside the grid is computed.
+Only the best feature of a cell is stored.
+
+This feature map is used by the AR.Drone to localize itself.
+For each camera frame, SURF features are extracted.
+Similar to the mapping approach, the corresponding 2D world position of each feature is computed.
+Each feature is matched against the most similar feature from the feature map.
+From the feature pairs, a robust transformation between the 2D world coordinates is estimated.
+
+A pragmatic approach is proposed to compute the transformation between a frame and a map.
+The method is very similar to RANSAC, but uses covariance instead of the number inliers as quality measure.
+Three random feature pairs are selected.
+From these pairs, the 2D world coordinates are used to compute the mean translation.
+The covariance describes the quality of a translation.
+These steps are repeated multiple times and the best translation is selected.
+If a translation is very good (i.e., low covariance), Kabsch algorithm is used to refine the AR.Drone's estimated rotation.
+Experiment show that the proposed method significantly outperforms OpenCV's implementation to estimate a perspective, affine or Euclidean transformation.
+By reducing the degrees of freedom, the robustness against noise increases.
+
+A slighly modified version of the localization approach is used to perform visual odometry (estimate the velocity from camera images).
+Instead of matching the last frame against the feature map, now the last frame is matched against the previous frame.
+This estimated velocity can be used instead 
+% or in combination with
+ the AR.Drone's onboard velocity estimate.
+Experiments show that the accuracy of the proposed visual odometry method is comparable to the AR.Drone's onboard velocity estimate.
+
+Experiment show the AR.Drone down-pointing's camera offers good balance between image quality and computational performance.
+When the resolution of the AR.Drone's camera is reduced, the accuracy of the estimated position decreases.
+The reduced image quality results in less frame that could be used to robustly recover the velocity.
+A simulated AR.Drone was used to investigate an increased camera resolution.
+An increased image resolution does not produce more accuracate estimated positions.
+While relatively more frames could be used to used to robustly recover the velocity, the absolute number of processed frames decreased due to the increased computational complexity.
+Therefore, the velocities are estimated less frequent.
+
+Another experiment shows that localization is possible for circumstances encountered during the IMAV competition.
+When flying the figure-8 shape three times, the maximum error was $x\%$.
+During a flight of $x\small{s}$, the visual odometry was recovered $x$ times, and localization against a map was performed $x$ times.
+
+In addition to the texture and feature map, this thesis proposed a method to construct an elevation map using a single airborne ultrasound sensor.
+Elevations are detected through sudden changes in ultrasound measurements.
+These sudden changes are detected when the filtered second order derivative exceeds a certain threshold.
+Experiments show that the relative error when flying over small objects is below $20\%$.
+When flying over a large stair, the relative error in estimated altitude was $35\%$.
+
+
+
+
+
+
+
+
+\begin{comment}
+The main research question therefore is to determine a realtime Simultaneous Localization and Mapping approach that can be used for MAVs with a low-resolution down-pointing camera (e.g., AR.Drone).
+This main research question is divided into several subquestions:
+\begin{itemize}
+\item How to construct (visual) a map from camera frames?
+\item What camera resolution (e.g., $176 \times 144$ pixels) is required for localization against a map? What is the relationship between camera resolution and the localization performance?
+\item What is the performance and robustness of different methods to estimate the transformation between a camera frame and a map?
+\item Is localization on regular basis possible for circumstances encountered during the IMAV competition?
+\item How to construct an elevation map with a single ultrasound sensor?
+\end{itemize}
+\end{comment}
+
+
+
+
+
+
+
+\section{Contributions}
+\label{sec:conclusions-contributions}
+
+The first contribution of this thesis is a framework that aids in the development of (intelligent) applications for the AR.Drone.
+The framework contains an abstraction layer to abstract from the actual device and use a simulated AR.Drone in a way similar to the real AR.Drone.
+Therefore, a simulation model of the AR.Drone is developed in USARSim.
+The main contribution is a novel approach that enables a MAV with a low-resolution down-looking camera to navigate in circumstances encountered during the IMAV competition.
+A pragmatic algorithm is presented to estimate the transformation between a camera frame and a map.
+In addition to the navigation capabilities, the approach generates a visual map, which can be used for human navigation.
+Another contribution is a method to construct an elevation with a single airborne ultrasound sensor.
+
+\section{Future research}
+\label{sec:conclusions-future}
+
 Further improvement would require more system identifications (e.g., rotational movements, wind-conditions) and include the characteristics of the Parrot's proprietary controller into the simulation model. 
 Our research would benefit from a realistic modeling of the noise aggregation
 in the inertia sensor.
@@ -14,6 +127,4 @@ The optical flow algorithm in the AR.Drone's firmware should improve the accurac
 
 The localization method is able to significantly reduce the error of the estimated position when places are revisited.
 The lines on the gym floor provide sufficient information for robust localization. It was demonstrated that autonomous navigation is possible by visual localization and mapping, with the natural texture of the IMAV indoor competition. This removes the reliance on the detection of the artificial landmarks in the IMAV Pylon challenge.
-	\section{Contributions}
-	\section{Limitations}
-	\section{Future research}
+
