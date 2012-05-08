@@ -113,18 +113,32 @@ Another contribution is a method to construct an elevation with a single airborn
 
 \section{Future research}
 \label{sec:conclusions-future}
+%This thesis provides a broad range of directions for future research.
 
-Further improvement would require more system identifications (e.g., rotational movements, wind-conditions) and include the characteristics of the Parrot's proprietary controller into the simulation model. 
-Our research would benefit from a realistic modeling of the noise aggregation
-in the inertia sensor.
+The proposed simulation model of the AR.Drone is validated in terms of hovering and forward movements. 
+Further improvements would require more system identifications (e.g., rotational movements, wind-conditions) and include the characteristics of the Parrot's proprietary controller into the simulation model. 
+The current sensor model uses a set of default USARSim sensors, which do not model noise accurately.
+This research would benefit from a realistic modeling of the noise in the sensors.
 
-The mapping method is able to map areas visually with sufficient quality for both human and artificial navigation purposes.
-Both the AR.Drone and USARSim simulator can be used as source for the mapping algorithm.
-The visual map created by the simulated AR.Drone contains fewer errors than the map of the real AR.Drone.
-The difference can be explained by the measurement noise produced by the real AR.Drone.
-%In addition to inertia measurements. 
-The optical flow algorithm in the AR.Drone's firmware should improve the accuracy, but is probably having difficulties with the gym floor.
+The proposed SLAM method is able to construct a map and localize the AR.Drone in realtime.
+However, the proposed method lacks a global map optimization method, which reduces the error in the map when a loop-closure is detected.
+An interesting research direction is to develop a global map optimization that is able to optimize both the feature map and visual map in realtime.
 
-The localization method is able to significantly reduce the error of the estimated position when places are revisited.
-The lines on the gym floor provide sufficient information for robust localization. It was demonstrated that autonomous navigation is possible by visual localization and mapping, with the natural texture of the IMAV indoor competition. This removes the reliance on the detection of the artificial landmarks in the IMAV Pylon challenge.
+Experiments have shown that the proposed visual odometry method is unable to accurately estimate the velocity when unsufficient texture is visible on the floor.
+In these circumstances, the AR.Drone's onboard optical-flow based visual odometry method is able to estimate the velocity more accurately.
+However, salient lines on the floor cause the AR.Drone's optical-flow method to estimate the velocity in the wrong direction.
+This problem can be solved by integrating additional information (e.g., aerodynamic model) into the optical-flow method, to correct the direction of the estimated velocity.
+When such a method is incorporated in the proposed SLAM method, it would yield an increased accuracy of the estimated velocities in low-texture conditions.
 
+The elevation mapping experiment has shown that elevation mapping with a single ultrasound sensor is possible.
+However, the proposed method is sensitive to errors that accumulate.
+When an object is detected, the elevation is increased.
+When an object is out of range, the elevation is decreased.
+When both events do not observe an equal elevation, an incorrect elevation propagates into the elevation map.
+A possible solution could be a global optimization method, which is able to correct incorrect elevations.
+For example, large areas for which the elevation does not change can be assumed to be the floor.
+Furthermore, the current approach is unable to estimate the dimensions of an object in all directions.
+Visual clues could be used to estimate the dimensions of an object.
+For example, image segmentation can be used to determine the boundaries of an object.
+Another possible solution is to create a depth map from optical flow.
+Just as stereo vision can be used to create a depth map of the environment, the optical flow between two subsequent frames can be used to create a depth map \cite{Jurriaans2011}.
