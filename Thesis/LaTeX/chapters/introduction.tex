@@ -2,7 +2,7 @@ A major goal of robotics is to develop mobile robots that can operate fully auto
 These autonomous robots can be used for a wide range of applications.
 For example, cleaning, inspection, transportation tasks or medical and construction assistance.
 Robots can also operate in dangerous environments (e.g., life rescue or pollution control) without risking human lives.
-Although much progress has been made, a truthly autonomous robot that can operate in the real world, has not been developed yet.
+Although much progress has been made, a truly autonomous robot that can operate in the real world, has not been developed yet.
 
 One of the main prerequisites of an autonomous robot is the ability to known its position and movement in the environment.
 Since no assumptions can be made about the environment, the robot has to learn from its environment.
@@ -44,7 +44,7 @@ However, the limited sensor suite and the fast movements make it quite a challen
 \label{sec:introduction-imav}
 The International Micro Air Vehicle Competition (IMAV) is an effort to stimulate the practical demonstration of MAV technologies.
 The competitions have as goal to shorten the road from novel scientific insights to application of the technology in the field.
-Since the Summer 2011 edition of IMAV, teams can borrowing a Parrot AR.Drone quadrotor helicopter.
+Since the Summer 2011 edition of IMAV, teams can borrow a Parrot AR.Drone quadrotor helicopter.
 This allows teams to focus research on the artificial intelligence part of the competitions.
 
 Currently, IMAV has three distinct competitions: two indoor competitions and one outdoor competition.
@@ -78,7 +78,7 @@ This league aims at the development of robotic technology that could
 %effectively
 help human rescuers in the aftermath of disasters like earthquakes, terroristic attacks and other extreme situations.
 In addition to a Rescue league with real robots, the Virtual Robots Competition was started, which uses a simulator instead of real robots.
-Simulation has some significant advantages above real competitions, such as the low costs and the ability to easily construct different disaster scenarios.
+Simulation has some \mbox{significant} advantages above real competitions, such as the low costs and the ability to easily construct different disaster scenarios.
 
 The main bottleneck for robot simulation is the requirement of realistic motion and sensor models.
 The simulation environment selected for the Virtual Robots Competition is USARSim \cite{Balakirsky2009iros,carpin2007usarsim}, which includes models of a wide range of robotic platforms and sensors.
@@ -90,7 +90,7 @@ The resulting model can be used by teams to make use of the advantages of MAVs i
 
 	\section{Objectives and research questions}
 One goal of robotics is to develop mobile robots that can operate robustly and fully autonomously in real world situations \cite{murphy2000introduction}.
-One of the main prerequisites of an autonomous robot is the ability to known its location and movement in the environment \cite{talluri1992position}.
+One of the main prerequisites of an autonomous robot is the ability to know its location and movement in the environment \cite{talluri1992position}.
 Since no assumptions can be made about the environment, the robot has to learn from its environment.
 
 Simultaneous Localization and Mapping using aerial vehicles is an active research area in robotics.
@@ -136,10 +136,10 @@ Since no method has been proposed by others, the question arises how to construc
 The first contribution of this thesis is a framework that aids in the development of (intelligent) applications for the AR.Drone.
 The framework contains an abstraction layer to abstract from the actual device and use a simulated AR.Drone in a way similar to the real AR.Drone.
 Therefore, a simulation model of the AR.Drone is developed in USARSim.
-The main contribution is a novel approach that enables a MAV with a low-resolution down-looking camera to navigate in circumstances encountered during the IMAV competition.
+The main contribution is a new approach that enables a MAV with a low-resolution down-looking camera to navigate in circumstances encountered during the IMAV competition.
 A pragmatic algorithm is presented to estimate the transformation between a camera frame and a map.
 In addition to the navigation capabilities, the approach generates a visual map, which can be used for human navigation.
-Another contribution is a method to construct an elevation with an airborne ultrasound sensor.
+Another contribution is a method to construct an elevation map with an airborne ultrasound sensor.
 
 	\section{Outline}
 \textbf{Chapter \ref{chapter:probabilistic-robotics} and \ref{chapter:computer-vision}} give an overview of the background theory that is part of the presented methods.
@@ -155,5 +155,4 @@ This simulation model allows safe and efficient development and testing of algor
 \textbf{Chapter \ref{chapter:visual-slam}} presents the Visual SLAM method for the AR.Drone.
 It includes pose estimation, realtime  mapping, localization using the map and building an elevation map using a single ultrasound sensor.
 \textbf{Chapter \ref{chapter:results}} describes the conducted experiments and presents the results.
-The methods and results are discussed in depth in \textbf{Chapter \ref{chapter:discussion}}.
 In \textbf{Chapter \ref{chapter:conclusions}}, this thesis concludes by answering the research questions and summarizing directions for future research.
