@@ -1,1 +1,46 @@
+%Due to technical developments in the last years, micro aerial vehicles (MAVs) become increasingly popular.
+The small size of micro aerial vehicles (MAVs) allows a wide ringe of robotic applications, such as surveillance, inspection and search \& rescue.
+In order to operate autonomously, the robot requires the ability to known its position and movement in the environment.
+Since no assumptions can be made about the environment, the robot has to learn from its environment.
+Simultaneous Localization and Mapping (SLAM) using aerial vehicles is an active research area in robotics.
+However, current approaches use algorithms that are computationally expensive and cannot be applied for realtime navigation problems.
+Furthermore, most researchers rely on expensive aerial vehicles with advanced sensors.
+
+This thesis presents a realtime SLAM approach for cheap MAVs with a down-looking camera.
+Focusing on realtime methods and cheap MAVs increases the employability of aerial vehicles in  real world situations.
+The approach has been validated with the AR.Drone quadrotor helicoptor, which is the standard platform for the International Micro Air Vehicle Competition.
+The development is partly based on simulation, which requires both a realistic sensor and motion model.
+%The simulation models we used are described and validated.
+The AR.Drone simulation model is described and validated.
+
+Furthermore, this thesis describes how a visual map of the environment can be made.
+%, including the effect of sensor noise.
+This visual map consists of a texture map and a feature map. The texture map is used for human navigation and the feature map is used by the AR.Drone to localize itself.
+To do so, a localization method is presented.
+It uses a novel approach to robustly recover the translation and rotation between a camera frame and the map.
+An experimental method to create an elevation map with a single airborne ultrasound sensor is presented.
+This elevation map is combined with the texture map and visualized in realtime.
+
+Experiments have validated that the presented methods works in a variety of environments.
+One of the experiments demonstrates how well the localization works for circumstances encountered during the IMAV competition. 
+Furthermore, the impact of the camera resolution and various pose recovery approaches are investigated.
+
+
+
+
+
+\begin{comment}
+Extensive experiments have validated that the approach works in a vast variety of environments. It has been shown that a visual compass can supply a mobile robot in natural environments with accurate heading estimates. Finally, it is shown in experiments that a robot using multiple compasses is able to estimate its translational pose.
+\end{comment}
+
+\vspace{\baselineskip}
+
 Parts of this thesis have been published in:
+
+\vspace{\baselineskip}
+
+N. Dijkshoorn and A. Visser, "Integrating Sensor and Motion Models to Localize an Autonomous AR. Drone", \textit{International Journal of Micro Air Vehicles}, volume 3, pp. 183-200, 2011
+
+\vspace{\baselineskip}
+
+A. Visser, N. Dijkshoorn, M. van der Veen, R. Jurriaans, "Closing the gap between simulation and reality in the sensor and motion models of an autonomous AR.Drone", \textit{Proceedings of the International Micro Air Vehicle Conference and Flight Competition (IMAV11)}, 2011
