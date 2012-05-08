@@ -15,14 +15,14 @@ In addition, vision techniques can be used to calibrate other sensors of a robot
 \section{Projective geometry}
 \label{sec:background-projective-geometry}
 Projective geometry describes the relation between a scene and how a picture of it is formed.
-A projective transformation is used to map objects onto a picture.
+A projective transformation is used to map objects into a flat picture.
 This transformation preserves straightness.
 Multiple geometrical systems can be used to describe geometry.
 
 \textbf{Euclidean geometry} is a popular mathematical system.
 A point in Euclidean 3-space is represented by an unordered pair of real numbers, $(x, y, z)$.
-However, this coordinate system is unable to represent points vanishing points.
-The \textit{Homogeneous coordinates} coordinate system is able to represent points at infinity.
+However, this coordinate system is unable to represent vanishing points.
+The \textit{Homogeneous coordinate system} is able to represent points at infinity.
 Homogeneous coordinates have an additional coordinate.
 Now, points are represented by \textit{equivalance classes}, where points are equivalant when they differ by a common multiple.
 For example, $(x, y, z, 1)$ and $(2x, 2y, 2z, 2)$ represent the same point.
@@ -31,7 +31,8 @@ In Euclidean geometry, one point is picked out as the \textit{origin}.
 A coordinate can be transformed to another coordinate by translating and rotating to a diffent position.
 This operation is know as a \textbf{Euclidian transformation}.
 A more general type of transformation is an \textbf{affine transformation}, which is a linear transformation (linear stretching), followed by a Euclidian transformation.
-The resulting transformation performs moving (translating), rotating and finally stretching linearly possibly by different ratios in different directions.
+The resulting transformation performs moving (translating), rotating and finally stretching linearly.
+% possibly by different ratios in different directions.
 
 In computer vision problems, projective space is used as a convenient way of representing the real 3D world.
 A \textbf{projective transformation} of projective space $\mathds{P}^n$ is represented by a linear transformation of homogeneous coordinates:
@@ -41,15 +42,15 @@ X' = H_{(n+1)} \times _{(n+1)}X
 where $X$ is a coordinate vector, $H$ is a non-singular matrix and $X'$ is a vector with the transformed coordinates.
 
 In order to analyze and manipulate images, understanding about the image formation process is required.
-Light from a scene reaches the camera and passes through a lens before it reached the sensor.
-The relationship between the distance to an object $z$ and the distance behind the lens $e$ at which a focused image is formed, can be expresses as:
+Light from a scene reaches the camera and passes through a lens before it reaches the sensor.
+The relationship between the distance to an object $z$ and the distance behind the lens $e$ at which a focused image is formed, can be expressed as:
 \begin{equation}
 \label{eq:optics}
 \frac{1}{f} = \frac{1}{z} + \frac{1}{e}
 \end{equation}
 where $f$ is the focal length.
 
-The \textbf{pinhole camera} has been the first example of camera in the history \cite{gernsheim1969history}.
+The \textbf{pinhole camera} has been the first example of camera in history \cite{gernsheim1969history}.
 %\footnote{\url{http://inventors.about.com/od/pstartinventions/a/stilphotography.htm}}
 It is a lightproof box with a very small aperture instead of a lens.
 Light from the scene passes through the aperture and projects an \textit{inverted image} on the opposite side of the box.
@@ -136,8 +137,8 @@ P_z \\
 As explained in the previous paragraph, these parameters are required to calculcate the mapping between 3D scene points to 2D points on the image plane.
 When scene points $P$ and image points $p$ are known, it is possible to compute $A$, $R$, $t$ by solving the perspective projection equation.
 Newer camera calibration techniques use a planar grid (e.g., chessboard-like pattern) instead of 3D points, to ease the extraction of corners.
-The method requires serveral pictures of the pattern shown at different positions and orientations.
-Because the 2D positions of the corners are known and matched between all images, the instrinsic and extrinsic parameters are determined simultaneously by solving a least-square minimization.
+The method requires several pictures of the pattern shown at different positions and orientations.
+Because the 2D positions of the corners are known and matched between all images, the instrinsic and extrinsic parameters are determined simultaneously by applying a least-square minimization.
 
 \section{Feature extraction and matching}
 \label{sec:computer-vision-feature-extraction-matching}
@@ -152,15 +153,16 @@ They are extracted from measurements and described in a mathematical way.
 \textit{Low-level features} are geometric primitives (e.g., lines, points, corners) and \textit{high-level features} are objects (e.g., doors, tables).
 \end{mydef}
 
-Features play an essential role for mobile robots.
+Features play an essential role %
+in the software of for mobile robots.
 They enable more compact and robust descriptions of the environment.
-Choosing the approriate features is a critical task when designing a mobile robot.
+Choosing the appropriate features is a critical task when designing a mobile robot.
 
 \subsection{Feature extraction}
 \label{sec:background-feature-extraction}
-A local feature is small image patch that is different than its immediate neighborhood.
+A local feature is a small image patch that is different than its immediate neighborhood.
 Difference can be in terms of intensity, color and texture.
-Commonly, feature are edges, corners or junctions.
+Commonly, features are edges, corners or junctions.
 The most important aspect of a feature detector is \textit{repeatability}, which means the detector is able to detect the same features, when multiple images (with different viewing and illumuniation conditions) of the same scene are used.
 Another important aspect of a feature detector is \textit{distinctiveness}, which means the information carried by a patch is distinctive as possible.
 This is important for robust feature matching.
@@ -172,7 +174,7 @@ The algorithm can be outlined as follows.
 First, an internal representation of an image is computed to ensure scale invariance.
 Secondly, an approximation of the Laplacian of Gaussian is used to find interesting keypoints.
 Third, keypoints are found at maxima and minima in the Difference of Gaussian from the previous step.
-Fourth, bad keypoints (e.g., edges and low contrast regions are eliminated.
+Fourth, bad keypoints (e.g., edges and low contrast regions) are eliminated.
 Fifth, an orientation is calculated for each keypoint.
 Any further calculations are done relative to this orientation, making it rotation invariant.
 FInally, a high-level representation is calculated to uniquely identify features.
@@ -188,15 +190,15 @@ The algorithm can be outlined as follows.
 Initially, an integral image and Hessian matrix \cite{van1994complex} are computed.
 The Hessian matrix is a square matrix of second-order partial derivatives of a function, describing the local curvature of a function.
 Blob-like structures are detected at locations where the determinant matrix is maximum.
-The images are repeatedly smoothed with a Gaussian and then sub-sampled in order to create a pyramid of different resolutions.
-In order to find interest points in the image and over scales, a non-maximum suppression in a $3 \times 3 \times 3$ neighbourhood is applied. 
+The images are repeatedly smoothed with a Gaussian kernel and then sub-sampled in order to create a pyramid of different resolutions.
+In order to find interest points in the image and over scales, a non-maximum suppression in a $3 \times 3 \times 3$ neighborhood is applied. 
 The maxima of the determinant of the Hessian matrix are then interpolated in scale and image space.
-A descriptor is constructed that describes the distribution of the intensity content within the interest point neighbourhood.
-First-order Haar wavelet \cite{stollnitz1995wavelets} responses in $x$ and $y$ direction are used rather than the gradient, exploit integral images for speed. The size of the descriptor is reduced to $64$ dimensions.
+A descriptor is constructed that describes the distribution of the intensity content within the interest point neighborhood.
+First-order Haar wavelet \cite{stollnitz1995wavelets} responses in $x$ and $y$ direction are used rather than the gradient, exploiting integral images for speed. The size of the descriptor is reduced to $64$ dimensions.
 
 \subsection{Feature matching}
 \label{sec:theory_feature_matching}
-To perform robot localization, extracted feature descriptors need to matched against the feature descriptors that are part of the map.
+To perform robot localization, extracted feature descriptors need to be matched against the feature descriptors that are part of the map.
 Ideally, each feature extracted from the current frame is correlated against the corresponding feature inside the map.
 
 A \textit{matching function} is used to compute the correspondance between two feature descriptors.
@@ -212,7 +214,8 @@ A popular matcher is the \textit{Brute-force descriptor matcher}. For each descr
 However, the brute-force matcher becomes very slow for large descriptors sets, due to the complexity of $O(n^2)$.
 For large descriptor sets, the \textit{Fast Library for Approximate Nearest Neighbors (FLANN)} \cite{muja2009flann} matcher performs more efficient matching.
 It uses an Approximate Nearest Neighbors algorithm to find similar descriptors efficiently.
-The authors state that the approximation has proven to be a good-enough in most practical applications and in most cases, orders of magnitude faster that the algorithms performing the exact searches.
+The authors state that the approximation has proven to be good-enough in most practical applications.
+In most cases it is orders of magnitude faster than performing the exact searches.
 
 In this thesis, the Brute-force descriptor matcher is used.
 The estimated pose of the vehicle is used to select a part of the map (descriptor set), which reduces the size of the descriptor set.
@@ -228,7 +231,7 @@ The first step involves extracting features for all images.
 Since most features are invariant under rotation and scale changes, images with varying orientation and zoom can be used for stitching.
 %These features are matched to search for image alignments that minimize the sum of absolute differences between overlapping pixels.
 Images that have a large number of matches between them are identified.
-These image are likely to have some degree of overlap.
+These images are likely to have some degree of overlap.
 A homography $\boldsymbol{H}$ (projective transformation) is computed between matching image pairs.
 This homography describes how the second image needs to be transformed in order to correctly overlap the first image.
 Different types of homographies can be used to describe the transformation between image pairs, depending on the level of displacement between images.
@@ -241,7 +244,7 @@ Commonly, 4 random feature correspondences are used to compute the homography $\
 This step is repeated $N$ trials and the solution that has the maximum number of inliers (whose projections are consistent with $\boldsymbol{H}$ within a tolerance $\epsilon$ pixels) is selected.
 
 When the homographies of all image pairs are estimated, a global optimization method can be applied to reduce drift or other sources of error.
-Finally, the images are transformed according to the corresponding homographies, resulting in a seamless panorama or high-resolution image. 
+Finally, the images are transformed according to the corresponding homographies, resulting in a seamless panorama or high-resolution images. 
 
 
 \section{Visual Odometry}

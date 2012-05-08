@@ -17,20 +17,20 @@ This requires the use of algorithmic approximations, but increases the amount of
 For some robotic applications (e.g., assembly lines with controlled environment), uncertainty is a marginal factor.
 However, robots operating in uncontrolled environments (e.g., homes, other planets) will have to cope with significant uncertainty.
 Since robots are increasingly deployed in the open world, the issue of uncertainty has become a major challenge for designing capable robots.
-\textit{Probabilistic robots} is a relatively new approach to robotics that pays attentation to the uncertainty in perception and action.
+\textit{Probabilistic robots} is a relatively new approach to robotics that pays attention to the uncertainty in perception and action.
 Uncertainty is represented explicitly using the calculus of probability theory.
 This means that probabilistic algorithms represent information by probability distributions over a space.
 This allows to represent ambiguity and degree of belief in a mathematically sound way.
-Now, robots can make choices (plan) relative to the uncertainty that remains, or chose to reduce the uncertainty (e.g., explore) if that is the best choice.
+Now, robots can make choices (plan) with respect to the uncertainty that remains, or chose to reduce the uncertainty (e.g., explore) if that is the best choice.
 
 \section{Recursive state estimation}
 \label{sec:background-recursive-state-estimation}
 Environments are characterized by \textit{state}.
-A state can be seen as a collection of all aspects of the robot's and the environment that can impact the future.
+A state can be seen as a collection of all aspects of the robot and the environment that can impact the future.
 The state also includes variables regarding the robot itself (e.g., pose, velocity, acceleration).
 \begin{mydef}
 Environments are characterized by \textbf{state}, which describes all aspects of a robot and the environment that can impact the future.
-A state can be either \textbf{static state} (non-changing) or \textbf{dynamic state} when certain state variables tend to change over time.
+A state can be either \textbf{static state} (non-changing) or \textbf{dynamic state} where certain state variables tend to change over time.
 A state is denoted $x$.
 The state at time $t$ is denoted $x_t$.
 \end{mydef}
@@ -109,7 +109,7 @@ This equation predicts the state at time $t$ based on the previous state posteri
 Belief over state variable $x_t$ is denoted by $bel(x_t)$.
 \end{mydef}
 
-\subsection{Bayes filter}
+\subsection{Algorithms}
 \label{sec:prob-rob-bayes}
 The most general algorithm for calculcating beliefs is the \textbf{Bayes filter}.
 The input of the algorithm is the (initial) belief $bel$ at time $t-1$, the most recent control $u_t$ and measurement $z_t$.
@@ -159,7 +159,7 @@ v_t \\
 Algorithms for computing the probability $p (x_t | x_{t-1}, u_{t})$ can be found in \cite{fox2005probabilistic}.
 The Odometry Motion Model assumes that one has access to odometry information (e.g., wheel encoder information).
 In practice, odometry models tend to be more accurate, because most robots do not execute velocity command with the level of accuracy that is obtained by measuring odometry.
-Technically, odometry reading are not controls because they are received after executing a command.
+Technically, odometry readings are not controls because they are received after executing a command.
 However, using odometry readings as controls results in a simpler formulation of the estimation problem.
 
 Both motion models are not directly applicable to MAVs.
@@ -220,7 +220,7 @@ A solution to this problem would make a robot truly autonomous.
 SLAM is a difficult problem because both the estimated path and constructed map are affected by noise.
 Both of them become increasingly inaccurate during travel.
 However, when a place that has been mapped is revisited, the uncertainty can be reduced.
-This processes is called \textit{loop-closing}.
+This process is called \textit{loop-closing}.
 Additionally, the map can be optimized after a loop-closure event is detected.
 
 
@@ -229,13 +229,13 @@ Additionally, the map can be optimized after a loop-closure event is detected.
 In practice, it is not possible to compute a robot's belief (posterior probabilities) analytically.
 %the posterior (belief) analytically.
 Therefore, a number of approximation techniques exist. 
-This section describes the most popular solutions techniques for SLAM problems.
+This section describes the most popular solution techniques for SLAM problems.
 
 Solution techniques can be divided in two major branches of belief representation: \textit{Single-hypothesis belief} and \textit{Multi-hypothesis belief}.
 \textbf{Single-hypothesis trackers} represent belief by a single world state.
 This estimate is associated by a measure of certainty (or variance), allowing the tracker to broaden or narrow the estimated region in the state space.
 The main advantage of the single-hypothesis representation is the absence of ambiguity, simplifying decision-making at the robot's cognitive level (e.g., pathplanning).
-Due to the absence of ambiguity, the trackers fails to model ambiguities adequately.
+Due to the absence of ambiguity, the trackers fail to model ambiguities adequately.
 %An example is a soccer field, which is a symmetrical environment.
 
 \textbf{Multi-hypothesis trackers} represent belief not just as a single world state, but as a possibly infinite set of states.
@@ -249,7 +249,7 @@ Futhermore, solution techniques can be divided in two branches of time constrain
 One advantage of online techniques is the ability to use the response as input for decision making (e.g., navigation), which is essential for autonomous robots.
 Due to the strict time constraints, a limited amount of computations can be performed, which limits the complexity of solution techniques.
 
-\textbf{Offline} techniques have less strict time contraints, which allows increased complexity.
+\textbf{Offline} techniques have less strict time constraints, which allow increased complexity.
 For example, additional refinements or optimizations can be performed that would be too slow for online techniques.
 One of the main disadvantages of offline techniques involves decision making.
 Because a response is not available in real-time, the robot has to wait or make a decision without incorporating the response.
@@ -278,10 +278,10 @@ K_t & = & \overline{\Sigma}_t C_t^T (C_t \overline{\Sigma}_t C_t^T + Q_t)^{-1} &
 \end{array}
 \end{equation}
 
-The Kalman Filter presesents the belief $bel(x_t)$ at time $t$ by the mean $\mu_t$ and covariance $\Sigma_t$.
+The Kalman Filter represents the belief $bel(x_t)$ at time $t$ by the mean $\mu_t$ and covariance $\Sigma_t$.
 When a measurement is received, a new belief $bel(x_t)$ is predicted based on the previous belief bel($x_{t-1}$), the control data $u_t$ and both the state transition model and motion model.
 This predicted belief describes the most likely state $\overline{\mu}_t$ at time $t$ and the covariance $\overline{\Sigma}_t$.
-The measurement is not yet included, because it's a predicted belief.
+The measurement is not yet included, because it is a predicted belief.
 The update step transforms the predicted belief ($\overline{\mu}_t$, $\overline{\Sigma}_t$) into the desired belief ($\mu_t$, $\Sigma_t$), by incorporating the measurement $z_t$.
 The Kalman gain $K_t$ specifies the degree to which the measurement is incorporated into the new state estimate.
 The key concept used for Kalman Filtering is the \textit{innovation}, which is the difference between the actual measurement $z_t$ and the expected measurement $C_t \overline{\mu}_t$, which is derived from the predicted state.
@@ -381,7 +381,7 @@ The orientation of pose $p_j$ is described by:
 \mathcal{R}_1\mathcal{R}_2 \hdots \mathcal{R}_n = \mathcal{R}_{1:n}
 \end{equation}
 where $n$ is the length of the path $\mathcal{P}_{ji}$.
-The error can be distributed by determine a set of increments in the intermediate rotations of the chain so that the orientation of the last node $j$ is $\mathcal{R}_{1:n} B$. Here $B$ is a matrix that rotates $x_j$ to the desired orientation based on the error.
+The error can be distributed by determining a set of increments in the intermediate rotations of the chain so that the orientation of the last node $j$ is $\mathcal{R}_{1:n} B$. Here $B$ is a matrix that rotates $x_j$ to the desired orientation based on the error.
 Matrix $B$ can be decomposed into a set of incremental rotations $B = B_{1:n}$.
 The individual matrices $B_k$ are computed using a spherical linear interpolation (slerp) \cite{barrera2004incremental}.
 

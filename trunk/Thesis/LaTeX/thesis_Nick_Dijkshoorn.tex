@@ -40,6 +40,8 @@
 
 
 \tableofcontents
+\clearpage
+
 \pagenumbering{arabic}
 
 
@@ -107,13 +109,16 @@
 
 
 
-\appendix
+\begin{appendix}
 \input{chapters/appendix.tex}
+\end{appendix}
 
+\setcounter{chapter}{0}
 \linespread{1.0}
 \bibliographystyle{mystyle}
 %\bibliographystyle{unsrt}
 %\vspace{0.3in}
+\addcontentsline{toc}{chapter}{Bibliography}
 \bibliography{references}
 
 \end{document}
