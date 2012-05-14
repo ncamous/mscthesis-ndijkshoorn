@@ -259,7 +259,7 @@ An 8-shape was chosen to capture an intermediate loop.
 \begin{figure}[htb!]
 \centering
 \includegraphics[width=\linewidth]{images/exp1-run13-path.eps}
-\caption{Estimated trajectories of the different position estimation methods. The AR.Drone flew three 8-shapes above above a texture-rich floor.}
+\caption{Estimated trajectories of the different position estimation methods. The AR.Drone flew three 8-shapes above a texture-rich floor.}
 \label{fig:exp1-texture-path}
 \end{figure}
 
@@ -337,7 +337,7 @@ The AR.Drone flew a single 8-shape.
 \begin{figure}[htb!]
 \centering
 \includegraphics[width=\linewidth]{images/exp1-run2-path.eps}
-\caption{Estimated trajectories of the different position estimation methods. The AR.Drone flew three 8-shapes above above a texture-poor floor.}
+\caption{Estimated trajectories of the different position estimation methods. The AR.Drone flew three 8-shapes above a texture-poor floor.}
 \label{fig:exp1-notexture-path}
 \end{figure}
 
@@ -378,9 +378,77 @@ The trajectory of the AR.Drone is increased to approximately $12 \times 2.5\smal
 This  trajectory is flown three times.
 %The AR.Drone flown three 8-shapes.
 Furthermore, the flight altitude of the AR.Drone is increased to $2\begin{small}m\end{small}$.
-This allows the camera to capture sufficient visual clues (i.e., lines) to perform for visual odometry.
+This allows the camera to capture sufficient visual clues (i.e., lines and intersections) to perform for visual odometry.
 
+\begin{figure}[htb!]
+\centering
+\includegraphics[width=8cm]{images/exp1-imav-floor.jpg}
+\caption{Photo of the sports floor, which resambles the circumstances encountered during the IMAV competitions.}
+\label{fig:exp1-floor}
+\end{figure}
 
+\begin{table}[htb!]
+    \centering
+    \begin{tabular}
+        { | l | l | l | } 
+	\hline
+	Method & Mean absolute error (\small{mm}) & Mean relative error (percentage of trajectory length) \\
+        \hline
+        onboard velocity (AV) & 988 & 0.960\% \\
+	onboard position (AP) & 988 & 0.960\% \\
+	visual odometry (VO) & 4251 & 4.172\% \\
+	AV + localization & 461 & 0.452\% \\
+	VO + localization & 1158 & 1.136\% \\
+	\hline
+    \end{tabular}
+    \caption{Errors made by the position estimation methods when flying in circumstances encountered during the IMAV competitions.}
+    \label{tab:res_mapping_imav}
+\end{table}
+
+\begin{figure}[htb!]
+\centering
+\includegraphics[width=\linewidth]{images/exp1-imav-error.eps}
+\caption{Errors between the estimated positions and the groundtruth.}
+\label{fig:exp1-imav-error}
+\end{figure}
+
+\begin{figure}[htb!]
+\centering
+\includegraphics[width=\linewidth,trim=2cm 1.5cm 2cm 2cm]{images/exp1-imav-path.eps}
+\caption{Estimated trajectories of the different position estimation methods. The AR.Drone flew three 8-shapes above a gym floor. All units are in \small{mm}.}
+\label{fig:exp1-imav-path}
+\end{figure}
+
+\begin{figure}[htb!]
+\centering
+\includegraphics[width=0.75\linewidth]{images/exp1-imav-map.png}
+\caption{Visual map created by the visual mapping method (Section \ref{sec:texture_map}). The map is constructed during the first 8-shape. The position estimates are based on the onboard velocity (AV) and the visual localization method (Section \ref{sec:localization}). The red ellipse indicaties an area for which the visual odometry method is unable to estimate the velocity.}
+\label{fig:exp1-imav-map}
+\end{figure}
+
+The results of this experiment can be found in Table \ref{tab:res_mapping_imav} and Figures \ref{fig:exp1-imav-error} (errors), \ref{fig:exp1-imav-path} (trajectories) and \ref{fig:exp1-imav-map} (visual map).
+As noted before, both the onboard velocity (AV) method and the onboard position (AP) method produce exactly the same trajectory.
+For the encountered circumstances, not all methods are able to estimate the position accurately.
+The AR.Drone's onboard velocity (AV) is able to estimate the velocitiy quite well, with an average error of $1\small{m}$.
+However, the error increases steadily over time due to drift.
+%However, the error increases steadily over time due to the lack of a map.
+The proposed visual odometry method (VO) is having more difficulties.
+From Figure \ref{fig:exp1-imav-error} can be seen that the error of the visual odometry method (blue line) is increasing rapidly at certain moments in time.
+The repetitive behavior suggests the sudden increase in error is correlated to a certain position of the floor.
+Investigation showed that the visual odometry method was unable to estimate the velocity within a specific area (red ellipse in Figure \ref{fig:exp1-imav-map}).
+In this area, the floor has too few visual clues.
+
+When using localization against the map, the errors decrease significantly.
+The localization method is able to recover the AR.Drone's position from the map, which reduces the drift.
+However, due to the lack of a map optimization method, the map contains errors.
+These errors affect the accuracy of a localization.
+Therefore, a repetitive error pattern is visible.
+%Because localization was possible on regular basis, the errors do not exceed the errors of the first 8-shape in which the map is build.
+For each 8-shape, the errors are approximately bounded to the errors made during the first 8-shape.
+
+These results confirm that the localization method is able to deal with circumstances encountered during the IMAV competitions.
+A feature-based approach to visual odometry is insufficient to estimate the velocity above all areas of a gym floor.
+Therefore, an additional appearance-based method is required to estimate the velocity at all times.
 
 
 \clearpage
