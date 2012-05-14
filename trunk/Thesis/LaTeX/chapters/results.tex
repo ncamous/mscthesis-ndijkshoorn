@@ -44,7 +44,7 @@ If no noise model is explicitly added, the USARSim model performs a perfect hove
 horizontal speeds are zero and the altitude stays exactly the same.
 
 For the AR.Drone, this is a good zero-order model. One of the commercial features of the AR.Drone is its ease of operation. As part of this feature it
-maintains a stable hover when given no other commands, which is accomplished by a visual feedback loop.
+maintains a stable hover when no other commands are given, which is accomplished by a visual feedback loop.
 %The hover is quite robust and in impromptu
 %ad-hoc tests was able to recover from major attitude disturbances up to $\sim45^o$. However, in this section we
 %are concerned with the hovering behavior with minor disturbances. 
@@ -52,15 +52,14 @@ So, the hovering experiment is performed
 indoors
 with an underground chosen to have enough texture for the onboard visual odometry estimation algorithm.
 
-As experiment the AR.Drone maintains a hover for 35 seconds. This experiment was repeated 10 times,
+As experiment the AR.Drone maintained a hover for 35 seconds. This experiment was repeated 10 times,
 collecting 60.000 movement samples for a total of 350 seconds. Over all samples the mean absolute error in horizontal
-velocity (the Euclidean norm of the velocity vector) is $0.0422\small{m/s}$ with a sample variance of $0.0012\small{m^2/s^2}$. From
-the samples we obtain the distribution of the linear and lateral velocity components. 
+velocity (the Euclidean norm of the velocity vector) was $0.0422\small{m/s}$ with a sample variance of $0.0012\small{m^2/s^2}$. The distribution of the linear and lateral velocity components was obtained from the samples.
 
 From the velocity logs the position of the AR.Drone during the 35-second 
 flight was calculated. 
 %Figure \ref{fig:scatterplot} shows a scatterplot of positions over all flights.
-The mean absolute error of the horizontal position is $0.0707\small{m}$ with a sample variance of $0.0012\small{m^2}$.
+The mean absolute error of the horizontal position was $0.0707\small{m}$ with a sample variance of $0.0012\small{m^2}$.
 
 \begin{comment} % to save some space
 \begin{figure}[htb]
@@ -154,11 +153,13 @@ The USARSim model has a parameter $P_\theta$ for calculating the angle (radian) 
 % theoretical $P_\theta = \frac{1}{0.2967} \cdot \frac{\pi}{180} = 0.0588$. However, doing a least-squares fit on the angle given the velocity gives 
 is the value $\hat{P}_\theta = 0.057$, as used in subsequent simulations.
 
-The next experiment checks the acceleration of the real and simulated AR.Drone. First we give an estimate of how quickly the AR.Drone's controller changes its pitch to match the commanded pitch and how well it can keep it. For this we select all samples from 100ms after the start
-of the 2s, 3s and 5s pulses till the first sample at which the commanded pitch has been reached. This
+The next experiment checks the acceleration of the real and simulated AR.Drone. First i give an estimate of how quickly the AR.Drone's controller changes its pitch to match the commanded pitch and how well it can keep it.
+For this i select all samples from 100ms after the start
+of the 2s, 3s and 5s pulses till the commanded pitch has been reached.
+This
 corresponds to the time-span between which the AR.Drone has started to act on the change in the control
 signal until it reaches the commanded pitch. The result is illustrated in Figure \ref{fig:ComparisonOfResponse}.
-%For each of these spans we estimate the tangent:
+%For each of these spans i estimate the tangent:
 
 \begin{figure}[htb]
 \centering
@@ -168,7 +169,7 @@ signal until it reaches the commanded pitch. The result is illustrated in Figure
 \label{fig:ComparisonOfResponse}
 \end{figure}
 
-As one can see, the acceleration has for the real and simulated AR.Drone nearly the same slope. The deceleration of the simulated AR.Drone is slightly lower. In the real AR.Drone the feedback loop (based on the onboard visual odometry of the ground camera) actively decelerates the system. Overall, the dynamic behavior of the simulator closely resembles the dynamic behavior of the real system. Additionally, tests with more complex maneuvers (horizontal and vertical square) have been recorded, but unfortunately not yet analyzed in detail.
+As one can see, the acceleration shows for the real and simulated AR.Drone nearly the same slope. The deceleration of the simulated AR.Drone is slightly lower. In the real AR.Drone the feedback loop (based on the onboard visual odometry of the ground camera) actively decelerates the system. Overall, the dynamic behavior of the simulator closely resembles the dynamic behavior of the real system. Additionally, tests with more complex maneuvers (horizontal and vertical square) have been recorded, but unfortunately not yet analyzed in detail.
 
 
 
@@ -181,15 +182,15 @@ The position can be estimated using different methods and the accuracy of all th
 To ensure fair comparison of the different estimation methods, a flight was recorded (Section \ref{sec:proposed-framework}) and played back to generate the same input for all methods.
 
 The first position estimation method integrates the AR.Drone's onboard velocity (AV) measurements to estimate the position (Section \ref{sec:pose_estimation}).
-Recent AR.Drone firmwares calculcate an estimated position onboard\footnote{Firmware 1.7.4}, which is used as second estimation method.
+Recent versions of the AR.Drone firmware calculcate an estimated position onboard\footnote{Firmware 1.7.4}, which is used as second estimation method.
 The third position estimation method uses the visual odometry method presented in this thesis (Section \ref{sec:visual-slam-visual-odemetry}).
 The final estimation method uses the AR.Drone's onboard velocity (AV) for frequent position updates and the presented localization method (Section \ref{sec:localization}) to localize against the map that is constructed during flight.
 
 The estimated position is compared against the groundtruth (real) position to calculcate the accuracy of the estimated position.
-Great care was taken to collect accurate groundtruth of the AR.Drone's position.
-A high-end laser range finder (LRF)\footnote{Hokuyo UTM-30LX, \url{http://www.hokuyo-aut.jp/02sensor/07scanner/utm_30lx.html}} is used to determine the position of the AR.Drone.
+Much attention was paid to collect accurate groundtruth of the AR.Drone's position.
+A high-end laser range finder (LRF)\footnote{Hokuyo UTM-30LX, \url{http://www.hokuyo-aut.jp/02sensor/07scanner/utm_30lx.html}} was used to determine the position of the AR.Drone.
 The LRF measures distance to objects.
-A window is placed on the measurements to filter out measurements that originate from the environment.
+A window was placed on the measurements to filter out measurements that originate from the environment.
 All remaining distance measurements are assumed to originate from the AR.Drone.
 The mean position of the filtered distance measurements is used as center position of the AR.Drone.
 Futhermore, a white cylinder with a diameter of 9\begin{small}cm\end{small} and a height of 37\begin{small}cm\end{small} was added on top of the AR.Drone to improve its visability for the LRF.
@@ -210,8 +211,8 @@ The LRF is rotated until both poles obtained an equal y-distance in the LRF's re
 Now, the LRF's x-axis is parallel to the poles.
 Next, the AR.Drone's takeoff position and orientation are determined.
 The takeoff position is marked on the floor (green star).
-Another position was marked (red star) to indicate the desired heading direction of the AR.Drone.
-Both marked position are parallel to the LRF's x-axis and the two poles.
+Another position is marked (red star) to indicate the desired heading direction of the AR.Drone.
+Both marked positions are parallel to the LRF's x-axis and the two poles.
 Finally, a laser pointer is used to align the heading direction of the AR.Drone to the marked position.
 
 
@@ -221,7 +222,7 @@ Finally, a laser pointer is used to align the heading direction of the AR.Drone 
 \subsection{Texture-rich floor}
 \label{sec:exp1-texture-rich}
 The first experiment was performed above a texture-rich floor (Figure \ref{fig:exp1-floor}), to benchmark the methods in preferable circumstances.
-Magazine were spraid out on the floor to provide sufficient texture for the computer vision algorithms.
+Magazines were spraid out on the floor to provide sufficient texture for the computer vision algorithms.
 The AR.Drone flew three 8-shapes above the magazines.
 An 8-shape was chosen to capture an intermediate loop.
 
@@ -275,7 +276,7 @@ For the encountered circumstances, all methods are able to estimate the position
 Both the onboard velocity (AV) method and the onboard position (AP) method produce exactly the same trajectory, which implies the onboard position estimate (AP) is based on the velocity that is estimated by the AR.Drone.
 
 The onboard velocity (AV) slightly outperforms the visual odometry (VO) method presented in Section \ref{sec:visual-slam-visual-odemetry}.
-An explanation could be that the AR.Drone features an additional optical flow algorithm that is used when the appearance-based method is performing poorly.
+An explanation could be that the AR.Drone features an additional optical flow algorithm that is used when the appearance-based method is performing badly.
 From Figure \ref{fig:exp1-texture-path} can be seen that the onboard velocity (AV) method has the largest error in the x-direction.
 Around $54\begin{small}s\end{small}$ the error is increasing rapidly.
 Analysis of the dataset pointed out that a small part of a magazine and a large part of a white line were in range of the camera.
@@ -430,7 +431,11 @@ The results of this experiment can be found in Table \ref{tab:res_mapping_imav} 
 As noted before, both the onboard velocity (AV) method and the onboard position (AP) method produce exactly the same trajectory.
 For the encountered circumstances, not all methods are able to estimate the position accurately.
 The AR.Drone's onboard velocity (AV) is able to estimate the velocitiy quite well, with an average error of $1\small{m}$.
-However, the error increases steadily over time due to drift.
+The error increases steadily over time due to drift.
+In Figure \ref{fig:exp1-imav-path} can be seen that this method underestimates the distance along the left vertical path of the trajectory.
+During this path, the camera observes parallel lines, for which it is hard to recover the velocity from vision.
+Similar behavior is visible for the proposed visual odometry method (VO).
+
 %However, the error increases steadily over time due to the lack of a map.
 The proposed visual odometry method (VO) is having more difficulties.
 From Figure \ref{fig:exp1-imav-error} can be seen that the error of the visual odometry method (blue line) is increasing rapidly at certain moments in time.
@@ -448,13 +453,13 @@ For each 8-shape, the errors are approximately bounded to the errors made during
 
 These results confirm that the localization method is able to deal with circumstances encountered during the IMAV competitions.
 A feature-based approach to visual odometry is insufficient to estimate the velocity above all areas of a gym floor.
-Therefore, an additional appearance-based method is required to estimate the velocity at all times.
+Therefore, an additional appearance-based method (like the AR.Drone uses) is required to estimate the velocity at all times.
 
 
 \clearpage
 \section{Accuracy w.r.t. pose recovery approaches}
 \label{sec:results-pose-recovery}
-Section \ref{sec:pose-recovery} proposed a novel method to robustly recover the translation and rotation between \textit{two frames} (visual odometry) or \textit{a frame and a map} (localization).
+Section \ref{sec:pose-recovery} proposed a new method to robustly recover the translation and rotation between \textit{two frames} (visual odometry) or \textit{a frame and a map} (localization).
 Instead of computing a full perspective, affine or Euclidean transformation, a more pragmatic approach is used.
 In this experiment, the proposed pose recovery approach is benchmarked against other pose recovery approaches.
 
@@ -462,7 +467,7 @@ An approach similar to the position accuracy experiment from Section \ref{sec:re
 The positions are estimated using the Visual Odometry (VO) method from Section \ref{sec:visual-slam-visual-odemetry}, which relies on pose recovery to determine the velocity.
 The recorded dataset of the texture-rich floor (Section \ref{sec:exp1-texture-rich} ) is used as input.
  
-The pose recovery approaches is benchmarked against OpenCV's robust \textit{Euclidean transformation}, \textit{affine transformation} and \textit{perspective transformation}.
+The pose recovery approach is benchmarked against OpenCV's robust \textit{Euclidean transformation}, \textit{affine transformation} and \textit{perspective transformation}.
 The \textbf{Euclidean transformation} is computed using OpenCV's \textit{estimateRigidTransform}\footnote{\url{http://opencv.itseez.com/modules/video/doc/motion_analysis_and_object_tracking.html?highlight=estimateRigidTransform}} with the parameter \textit{fullAffine} off to compute a Euclidean transformation.
 The translation vector from the transformation matrix is used as velocity estimate.
 The maximum allowed reprojection error is set to $10\small{mm}$.
@@ -497,7 +502,7 @@ OpenCV's pose recovery approaches use the percentage of inliers to determine the
 However, the percentage of inliers may not reflect the actual quality of a recovered pose.
 For example, a faulty transformation (pose) can maximize the number of inliers, as described in Section \ref{sec:pose-recovery}.
 The proposed approach uses the covariance between the points of a hypothesis to determine the quality of a recovered pose.
-This approach is able to estimate the quality of a recovered pose more accurately, resulting in recovered poses that contain less error.
+This approach is able to estimate the quality of a recovered pose more accurately, resulting in recovered poses that contain less errors.
 %This seems to be a beter measure to determine the quality, resulting in a reduced error.
 
 
@@ -514,8 +519,8 @@ This approach is able to estimate the quality of a recovered pose more accuratel
 \section{Accuracy w.r.t. camera resolution}
 \label{sec:res-cam-resolution}
 The AR.Drone is equipped with a low resolution down-looking camera.
-The recent developments in miniaturing high-resolution cameras enables MAVs to be equipped with high-resolution cameras.
-This poses the question if the proposed method benefit from an increased image resolution.
+The recent developments in miniature high-resolution cameras enables MAVs to be equipped with high-resolution cameras.
+This poses the question if the proposed method benefits from an increased image resolution.
 
 In this experiment, the accuracy of the estimated position is evaluated for various camera resolutions.
 An approach similar to the position accuracy experiment from Section \ref{sec:results-position-accuracy} is used.
@@ -526,7 +531,7 @@ The experiment is repeated for different camera resolutions, which are simulated
 The camera calibration matrix is scaled accordingly.
 
 The experiment is repeated with a simulated AR.Drone in USARSim, which enables to both increase and decrease the resolution of the camera.
-Care was taken to mimic the AR.Drone's camera\footnote{A previous article \cite{Visser2011imav} describes the influence of white balancing on image stitching and how to mimic the real images as close as possible.}.
+Attention was paid to mimic the AR.Drone's camera\footnote{A previous article \cite{Visser2011imav} describes the influence of white balancing on image stitching and how to mimic the real images as close as possible.}.
 
 The results of the real AR.Drone can be found in Table \ref{tab:res-resolution-ar} and the results of the simulated AR.Drone can be found in Table \ref{tab:res-resolution-usar}.
 For each camera resolution, the number of processed frames is counted.
@@ -588,9 +593,9 @@ In Figure \ref{fig:exp3-error}, the position error is plotted over time.
 
 
 From Table \ref{tab:res-resolution-ar} can be seen that the original camera resolution is sufficient for frequent velocity updates.
-Out of the $2168$ processes frames, $1945$ frames ($90\%$) could be used to extract the velocity using the Visual Odometry method.
+Out of the $2168$ processed frames, $1945$ frames ($90\%$) could be used to extract the velocity using the Visual Odometry method.
 When the image resolution is slightly decreased to $90\%$ of the original resolution, more frames were processed.
-Algorithm such as the SURF feature extractor require less processing time, allowing more frames to be processed.
+Algorithm such as the SURF feature extractor requires less processing time, allowing more frames to be processed.
 However, only $82\%$ of these frames could be used to extract the velocity.
 When the resolution decreases further, the number of processed frames remains stable, which indicates the processing time is not significantly decreasing.
 However, the number of frames that could be used to extract the velocity is decreasing.
@@ -611,8 +616,8 @@ One would expect that an increased image resolution would result in a smaller er
 However, due to the increased computational time per frame, less frames can be processed resulting in less frequent velocity estimates.
 This results in a mean error that is not smaller than the original resolution.
 
-Based on these observations can be concluded that the AR.Drone's bottom camera resolution offers a good balance between image quality (usefulness) and processing time.
-An increased camera resolution is expected to yield improved position accuracy when the machine running the SLAM method is able to maintain the number of processed frames when the image resolution increases.
+From these observations can be concluded that the AR.Drone's bottom camera resolution offers a good balance between image quality (usefulness) and processing time.
+An increased camera resolution is expected to yield improved position accuracy when the machine running the SLAM method is able to keep the same number of processed frames when the image resolution increases.
 
 
 
@@ -716,7 +721,7 @@ However, the approach underestimates the elevation.
 When traversing the stair, the AR.Drone's altitude stabilization increases the altitude smoothly, which causes a continuous altitude increase.
 Therefore, the observed altitude difference within an elevation event is smaller than the actual altitude different caused by an object.
 Another explaination of the underestimation is the error in the triggering of elevation events (due to thresholds).
-When an elevent event is triggered at a suboptimal timestamp, the full altitude difference is not observed.
+When an elevation event is triggered at a suboptimal timestamp, the full altitude difference is not observed.
 Ideally, an elevation UP event is triggered right before an object is detected by the ultrasound sensor, and an elevation NONE event is triggered right after the full height of the object is observed by the ultrasound sensor.
 
 
@@ -774,12 +779,12 @@ The white and blue boxes are detected.
 The errors of both the estimated width and height are small.
 Similar to the previous experiment, the height of an object is (slightly) underestimated.
 The width of the white box is underestimated, which is probably caused by unreliable velocity estimates due to the lack of sufficient features.
-Another explaination could be that the visual odometry methods assume a flat world, which does not hold when flying above objects.
+Another explanation could be that the visual odometry methods assume a flat world, which does not hold when flying above objects.
 Between both boxes, a false elevation is detected (clearly visible in Figure \ref{fig:exp2-elevation-plot}).
-This elevation is probably triggered by an aggressive descent, caused by the AR.Drone's altitude stabilization, after the white box is passed.
+This elevation is probably triggered by a fast descent, caused by the AR.Drone's altitude stabilization, after the white box is passed.
 
 The brown box is not detected due its limited height.
-Therefore, the measured (ultrasound) acceleration is unsufficient to trigger an elevation event.
+Therefore, the measured (ultrasound) acceleration is not sufficient to trigger an elevation event.
 As expected, the ramp was not detected.
 The gradual elevation change does not produce a significant acceleration.
 
