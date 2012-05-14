@@ -1,5 +1,5 @@
 A preliminary step is to find a suitable robot platform that enables both the development and testing of indoor aerial SLAM methods.
-A straightforward choice is to use a \textit{quadrotor helcopter}, commonly designed to be unmanned aerial vehicles (UAVs).
+A straightforward choice is to use a \textit{quadrotor helicopter}, commonly designed to be unmanned aerial vehicles (UAVs).
 Their small size and extremely maneuverability allows both indoor and outdoor flights.
 Furthermore, quadrotors don't require mechanical linkages to vary the rotor blade pitch angle, which simplifies the design.
 
@@ -57,7 +57,7 @@ Varying the angular velocity of each rotor pair yields angular acceleration abou
 If the total thrust is kept constant, the vertical velocity remains unchanged.
 A vertical movement is achieved by increasing or decreasing the thrust from each motor by the same amount, so that total thrust changes but differential torque on the body remains zero. 
 A horizontal movement is achieved by maintaining a non-zero pitch $\theta$ or roll angle $\phi$.
-Angular accelerations about the pitch and roll axes can be caused separately.
+Angular accelerations about the pitch and roll axes can be generated separately.
 Each pair of blades rotating in the same direction controls one axis, either roll or pitch.
 Increasing thrust for one rotor while decreasing thrust for the other will maintain the torque balance needed for yaw stability and induce a differential torque about the roll or pitch axes. 
 
@@ -83,8 +83,8 @@ The AR.Drone (Figure \ref{fig:ardrone_hull}) is remote-controlled consumer quadr
 The body is made of a carbon fiber tube structure and high resistance 
 %PA66
 plastic.
-A protection hull is made of Expanded Polypropylene (EPP) foam\footnote{\url{http://en.wikipedia.org/wiki/Polypropylene}}, which is durable, light weight, and recyclable.
-This hull provides protection during indoor flights.
+A protection hull is made of Expanded Polypropylene (EPP) foam\footnote{\url{http://en.wikipedia.org/wiki/Polypropylene}}, which is durable, light in weight and recyclable.
+The hull provides protection during indoor flights.
 The propellors are powered by four brushless motors (35,000 rpm, power: 15W).
 Energy is provided by a Lithium polymer battery with a capacity of 1000 mAh, which allows a flight time of approximately 10 minutes.
 
@@ -151,13 +151,13 @@ The yaw orientation is measured using a high precision gyrometer, the Epson Toyo
 An ultrasound sensor provides altitude measures for automatic altitude stabilization and assisted vertical speed control.
 The ultrasound sensor is attached on the bottom of the AR.Drone and points downwards in order to measure the distance to the floor.
 A packet of ultrasonic soundwaves is transmitted towards the floor, which reflects the sound back to the sensor.
-The system then measures the time $t$ for the echo to return to the sensor and computes the distance $d$ to the target using the speed of sound, using:
+The system then measures the time $t$ for the echo to return to the sensor and computes the distance $d$ to the target using the speed of sound:
 \begin{equation}
 d = \frac{c \times t}{2}
 \end{equation}
 where $c \approx 343\small{m/s}$ is the speed of sound in air.
 
-Altrasound range measurements suffer from some fundamental drawbacks which limit the usefulness.
+Ultrasound range measurements suffer from some fundamental drawbacks which limit the usefulness.
 These drawbacks are inherent to the principle of an ultrasonic sensor and their commonly used wavelengths.
 Borenstein and Koren \cite{borenstein1988obstacle} describe some of these drawbacks in the context of obstacle avoidance.
 A limitation is the small range in which the sensor is able to operate.
@@ -216,17 +216,17 @@ More details about the onboard intelligence can be found in Section \ref{sec:pla
 % Onboard intelligence
 \section{Onboard intelligence}
 \label{sec:platform_onboard_intelligence}
-Usually quadrotor remote controls feature levers and trims for controlling pitch, roll, yaw and throttle.
+Usually quadrotor remote controls have jmultiple joysticks and knobs for controlling pitch, roll, yaw and throttle.
 It generally takes hours of practice to safely perform basic manoeuvres like take-off, trimming, hovering with constant altitude and landing.
 Thanks to the onboard computer and sensors, take-off, hovering, trimming and landing are now completely automatic and all manoeuvres are assisted.
 
 Because the quadrotor system is unstable, feedback from the sensors to the control system is required.
 This raises the issue of state estimation.
-The vehicle's control system must be robust to the various disturbances that can be encountered in practice.
+The vehicle's control system must be robust to cope with various disturbances that can be encountered in practice.
 Redundancy in the state estimation is the solution in this case.
 The AR.Drone has multiple methods to compute estimated states.
 However, the onboard software (firmware) is closed source and not documented by the manufacturer.
-In August, the manufacturer's academic partner \textit{MINES ParisTech for navigation and control design}, published an article \cite{bristeau2011navigation} which globally describes the navigation and control technology inside the AR.Drone.
+In August 2011, the manufacturer's academic partner \textit{MINES ParisTech for navigation and control design}, published an article \cite{bristeau2011navigation} which globally describes the navigation and control technology inside the AR.Drone.
 
 
 
@@ -256,12 +256,12 @@ Finally, the de-biased accelerometer gives a precise body velocity from an aerod
 \subsection{State estimation}
 To address the problem of state estimation, the AR.Drone is equipped with embedded sensors that are described in the previous section.
 When combining the sensor measurements in data fusion algorithms, relatively good state estimates are obtained.
-Multiple techniques form a tightly integrated vision and inertial navigation filter that can be summarized as follows.
+Multiple techniques form a tightly integrated vision and inertial navigation filter that can be summarized as described hereafter.
 After inertial sensors calibration, sensors are used inside a complementary filter to estimate the attitude and de-bias the gyroscopes.
 The de-biased gyroscopes are used for vision-based velocity information provided by the vertical camera.
 The vision-based velocity is used to de-bias the accelerometers. This estimated accelerometer bias is used to increase the accuracy of the attitude estimation algorithm.
 Eventually, the de-biased accelerometer gives a precise body velocity from an aerodynamics model.
-Below, some techniques are described is more detail.
+Below, some techniques are described in more detail.
 
 \subsubsection{Visual odometry}
 \label{sec:platform-visual-odometry}
@@ -271,7 +271,7 @@ According to \cite{bristeau2011navigation}, two complementary algorithms are ava
 Depending on the scene content or the expected quality of their results, one is preferred to the other.
 
 The first algorithm is a multi-resolution scheme.
-The methodolog is described in \cite{lukas1981iterative}.
+The methodology is described in \cite{lukas1981iterative}.
 It computes the optical flow over the whole picture range using a kernel to smooth spatial and temporal derivatives.
 Attitude changes between two images are ignored during the first resolution refinement step.
 The error is finally efficiently canceled in most cases by subtracting the displacement of the optical center induced by the attitude change alone.
@@ -297,7 +297,7 @@ The dynamic behavior of a quadrotor is quite complex.
 In particular, the aerodynamics of the propellers and the motion of the rigid frame can interfere to produce a coupled dynamical model.
 This model is beyond the scope of this thesis.
 In summary, linear drag term exists from the interaction between the rigid body and the rotors and this term is reinforced by tilt phenomenon which changes a lift force component in drag.
-These induced-drag effects are non negligible and they yield interesting information on the velocity of the system.
+These induced-drag effects are non-negligible and they yield interesting information on the velocity of the system.
 The induced forces are directly measured by the accelerometers, and through the model, can be used to reliably estimate the velocities of the vehicle.
 
 
@@ -327,7 +327,7 @@ However, this behavior was not always observed during experiments.
 For example, when a floating object ($70\small{cm}$ above the floor) becomes in range of the ultrasound sensor.
 In these cases, the raw ultrasound measurements show a sudden large change, while the onboard filtered altitude measurements show a small change (Figure \ref{fig:platform-ultasound-raw-filtered}).
 Now, AR.Drone does not change its absolute altitude and remains at the same absolute altitude.
-This observation suggests that the altitude stabilization is based on a filtered derivative of the ultrasoud measurements.
+This observation suggests that the altitude stabilization is based on a filtered derivative of the ultrasound measurements.
 %\small{(raw measurements should cause convergence to the actual measurements over time)} of the raw ultrasound measurements.
 The filter minimizes the impact of sudden changes that occur for a short period of time.
 
@@ -352,7 +352,7 @@ The engines are stopped automatically.
 \section{Open Application Programming Interface}
 \label{sec:API}
 The AR.Drone API\footnote{\url{https://projects.ardrone.org}} (Application Programming Interface) is the reference project for developing applications for the AR.Drone.
-It includes SDK source code (written in C), multiplatform examples and documentation.
+It includes SDK (Software Development Kit) source code written in C, multiplatform examples and documentation.
 The API does not include software that is embedded on the AR.Drone.
 
 Communication with the AR.Drone is done through four main \textit{communication services}, which are implemented in the SDK.
@@ -362,7 +362,7 @@ Communication with the AR.Drone is done through four main \textit{communication 
 The navdata also includes filtered and raw sensor measurements.
 This information is sent by the drone to its client at a frequency of approximately 30 (demo mode) or 200 times per second;
 \item A video stream is sent by the AR.Drone to the client device.
-Images from this video stream are decoded using the codecs included in the SDK.
+Images from this video stream are decoded using the codecs (decoders) included in the SDK.
 \item Critical data is communicated over a channel called the \textit{control port}.
 This is a TCP connection to provide reliable communication.
 It is used to retrieve configuration data and to acknowledge important information such as the sending of configuration information.
@@ -388,7 +388,7 @@ Its content can be summarized as following:
 
 Unfortunately, the AR.Drone API has some drawbacks.
 The API was mainly developed for the iPhone application.
-Support for other platforms (e.g., Linux and Windows) was added in an early release and not updated for a while.
+Support for other platforms (e.g., Linux and Windows) was added in an early release and but updated for a while.
 In order to make recent versions of the API working under Windows, a significant amount of fixes is required.
 Another drawback is the bulkiness.
 The API consists of many files and lines of undocumented code.

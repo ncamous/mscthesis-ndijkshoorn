@@ -2,7 +2,8 @@ This chapter presents methods to build a visual elevation map and use this map t
 In order to initialize a visual localization and mapping algorithm, a good estimate of the position based on the internal sensors of the AR.Drone is essential.
 Section \ref{sec:pose_estimation} describes how the pose is estimated.
 When an estimate of the pose is available, a map can be constructed using the method described in Section \ref{sec:mapping}.
-Section \ref{sec:localization} described how this map is used by the AR.Drone to localize itself and reduce the error of the estimated pose.
+Section \ref{sec:localization} describes how this map is used by the AR.Drone to localize itself and reduce the error of the estimated pose.
+This localization method is extended in Section \ref{sec:visual-slam-visual-odemetry} to operate as a visual odometry algorithm .
 Finally, Section \ref{sec:elevation_map} describes an experimental method to build an elevation map using a single airborne ultrasound sensor.
 
 	\section{Pose estimation}
@@ -80,11 +81,11 @@ The frames captured by this camera can be warped on a flat canvas to create a vi
 Directly merging the frames on the canvas is not possible, because individual frames can be taken from a broad range of angles and altitudes.
 Instead, perspective correction is applied and all frames are normalized in size and orientation.
 
-An initial approach of the mapping algorithm was published \cite{visser2011closing} and presented at the IMAV2011 conference.
+An initial approach of the mapping algorithm was published \cite{Visser2011imav} and presented at the IMAV2011 conference.
 This approach uses image stitching \cite{levin2004seamless} to create a visual map.
 Knowledge about the AR.Drone estimated state is not used.
 %The propagation of stitching errors results in an increasing error.
-Because all transformation of the previous frames are used to compute the transformation of the recent frame, the method is sensitive to incorrect transformations.
+Because the transformations of all previous frames are used to compute the transformation of the recent frame, the method is sensitive to incorrect transformations.
 Therefore, a new mapping method is developped.
 
 Before describing how a frame is warped, some basics about image formation are repeated. %the camera matrix are explained.
@@ -202,7 +203,7 @@ H
 \end{equation}
 The local perspective transformation $H$ is calculated by minimizing the back-projection using a least-squares algorithm.
 OpenCV's \textit{findHomography}\footnotemark[3] is used to solve the perspective transformation $H$.
-This transformation describes how each frame's pixel needs to be transformed in order to map to the corresponding (sub) pixel of the map's canvas.
+This transformation describes how each frame's pixel needs to be transformed in order to map to the \mbox{corresponding} (sub) pixel of the map's canvas.
 The transformation is used to warp the frame on the map's canvas.
 By warping the frame on a flat canvas, implicit perspective correction is applied to the frames.
 OpenCV's \textit{warpPerspective}\footnote{\url{http://opencv.itseez.com/modules/imgproc/doc/geometric_transformations.html}} is used to warp the frame on the map's canvas.
@@ -281,7 +282,7 @@ where $D_{x,y}$ is the set of features that is mapped to cell $x_{bin} ,y_{bin}$
 %This way, each cell of the grid is connected to a descriptor from the descriptors matrix.
 The remaining (best) feature descriptors, including the corresponding world coordinates ($x_w, y_w$), are added to the corresponding grid cells.
 
-\textbf{TODO: BUFFER}
+%\textbf{TODO: BUFFER}
 
 \begin{comment}
 \subsubsection{Processing time}
@@ -310,8 +311,7 @@ The
 sensor measurements provide frequent velocity estimates.
 However, the estimated position will drift over time, because the errors of the
 %inertia measurements
-velocities estimates
-being accumulated.
+velocities estimates are being accumulated.
 The feature map that is created can be exploited to reduce this drift, because localization against this map provides absolute positions of the vehicle.
 These absolute positions are integrated into the EKF and improve the estimated position and reduce the covariance of the state.
 
@@ -379,8 +379,8 @@ Since the point pairs are normalized,
 the perspective deformation and scale differences between the point pairs (matches) are already removed.
 The remaining degrees of freedom are the translation and rotation between the point pairs. 
 Perspective transformation and affine transformation provide more degrees of freedom than required.
-This is potentially dangerous, because an incorrect transformation may still results in a high percentage of inliers.
-For example, this may happen when multiple query descriptors (frame) are matched against a single training descriptor (map).
+This is potentially dangerous, because an incorrect transformation may still result in a high percentage of inliers.
+For example, this may happen when multiple query descriptors (from the frame) are matched against a single training descriptor (from the map).
 In that case, a perspective or affine transformation is found that scales all points to a single position.
 This transformation does not correspond with the actual translation and rotation, but is a valid transformation according to the RANSAC algorithm.
 
@@ -476,18 +476,18 @@ In Section \ref{sec:results-pose-recovery}, an experiment is performed to valida
 
 \section{Visual odometry}
 \label{sec:visual-slam-visual-odemetry}
-The AR.Drone's onboard intelligence estimates the velocity using two complementary visual odometry algorithm and an aerodynamic model of the AR.Drone.
+The AR.Drone's onboard intelligence estimates the velocity using two complementary visual odometry algorithms and an aerodynamic model of the AR.Drone.
 However, its limited processing power requires the use of lightweight features and algorithms, which may affect the accuracy of the estimated velocities.
-Running a visual odometry algorithm offboard eases the computational limitations, allowing more complex (better) features and algorithms.
+Running a visual odometry algorithm offboard relaxes the computational limitations, allowing more complex (better) features and algorithms.
 In this section, the localization method presented in the previous section is modified to operate as a visual odometry algorithm.
 Instead of matching the last frame against the feature map, now the last frame is matched against the previous frame.
-The resulting velocity estimates can be fused with the onboard velocity estimates to improve the accuracy of estimated velocity.
+The resulting velocity estimates can be merged with the onboard velocity estimates to improve the accuracy of estimated velocity.
 
 When a camera frame $f_t$ is received, SURF features are extracted.
 Each feature consists of a center position in pixel coordinates ($x_f, y_f$) and a feature descriptor.
 A feature's center point ($x_f, y_f$) is transformed to its corresponding position in 2D world coordinates ($x_w, y_w$).
 This is done using ray-casting, as described in Section \ref{sec:texture_map}.
-Opposed to the previous sections, the origin of the ray is set to $(0, 0, z)$, such that the estimated position of the AR.Drone doesn't influence the visual odometry calculations.
+Contrary to the previous sections, the origin of the ray is set to $(0, 0, z)$, such that the estimated position of the AR.Drone doesn't influence the visual odometry calculations.
 % where the position of the AR.Drone is set to $(0, 0)$.
 
 The next step is matching the feature descriptors from the last frame $f_t$ against the feature descriptors from the previous frame $f_{t-1}$.
@@ -516,7 +516,7 @@ where $N = 64$ is the length of the SURF descriptor vector.
 \end{figure}
 
 
-Each descriptor from frame $f_t$ is matched against the descriptor from the previous frame $f_{t-1}$ that is most similar.
+Each descriptor from frame $f_t$ is matched against the most similar descriptor from the previous frame $f_{t-1}$.
 For each match $C(d_t, d_{t-1})$ the 2D world coordinates $(x_{w, d_t}, y_{w, d_t})$ and $(x_{w, d_{t-1}}, y_{w, d_{t-1}})$ of both descriptors are already computed.
 These point pairs can be used to calculate a transformation between the points from the last frame and the previous frame.
 This transformation describes the movement (e.g., translation) of the AR.Drone between the last two frames.
@@ -642,7 +642,7 @@ This process is visualized in Figure \ref{visual-slam-elevation-map1} and \ref{v
 This approach may lead to cases where the size of an obstacle is overestimated in the elevation map, as can be seen in Figure \ref{visual-slam-elevation-map2}.
 Therefore, an additional refinement step is added. %. to the elevation mapping methods.
 If no elevation is measured ($\delta_t \approx 0$), it can be assumed there is no obstacle inside the cone of the ultrasound sensor.
-Using this assumption, all grid cells within the cone can resetted to zero elevation and locked to prevent future changes.
+Using this assumption, all grid cells within the cone can be resetted to zero elevation and locked to prevent future changes.
 This refinement step is visualized Figure \ref{visual-slam-elevation-map3}.
 The radius of the cone is computed using the following equation:
 \begin{equation}

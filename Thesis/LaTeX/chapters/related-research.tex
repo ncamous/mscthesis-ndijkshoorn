@@ -3,8 +3,8 @@ This problem arises when the robot does not have access to a map of the environm
 This knowledge is critical for robots to operate autonomously.
 SLAM is an active research area in robotics.
 A variety of solutions have been developed.
-Most solutions rely on bulky sensors that have a high range and accuracy (e.g., SICK laser range finder).
-However, these bulky sensors cannot be used on small (flying) vehicles.
+Most solutions rely on large and heavy sensors that have a high range and accuracy (e.g., SICK laser range finder).
+However, these sensors cannot be used on small (flying) vehicles.
 As a result, researchers focused on using vision sensors, which offer a good balance in terms of weight, accuracy and power consumption.
 Lightweight cameras are especially attractive for small flying vehicles (AUVs).
 
@@ -50,14 +50,16 @@ The constraints between nodes are computed from the features associated with the
 
 In the case of place revisiting, they compare the features of the current frame with all previous features.
 To speed up this potentially expensive operation, multiple filters are used.
-First, only the features from robot poses that lie within Tipaldi's \cite{tipaldi2007approximate} confidence interval are used.
-Second, only the best features from the current image are used (i.e., features with the lowest descriptor distance during visual odmetry).
+Firstly, only the features from robot poses that lie within Tipaldi's \cite{tipaldi2007approximate} confidence interval are used.
+Secondly, only the best features from the current image are used (i.e., features with the lowest descriptor distance during visual odmetry).
 Finally, a $k$-D tree is used to efficiently query for similar features, together with the best-bins-first technique proposed by Lowe \cite{lowe1999object}.
 
 The camera pose is computed as follows.
 Using known camera calibration parameters, the positions of the features are projected on a normalized image plane.
 Now, the altitude of the camera is computed by exploiting the similarity of triangles.
-Once the altitude is known, the yaw of the camera is computed by projecting map features (from previous camera images) into the same normalized image plane.
+Once the altitude is known, the yaw (Section \ref{sec:platform-quadrotor-flight-control}) of the camera is computed by projecting map features 
+%(from previous camera images)
+into the same normalized image plane.
 When matching two features from the camera image against two features from the map, the yaw is the angle between the two  lines on this plane.
 Finally, the feature positions from the camera image are projected into the map according to the known altitude and yaw angle.
 The $x$ and $y$ coordinates are determined as the difference between the positions of the map features and the projections of the corresponding image points.
@@ -69,13 +71,13 @@ This transformation is then evaluated based on the other features in both sets u
 The score function calculates the relative displacement between the image features and the map features projected into the current camera image.
 The solution with the highest score is returned as the assumption for the transformation.
 
-Features correspondences between images are selected using a deterministic PROSAC \cite{chum2005matching} algorithm.
+Feature correspondences between images are selected using a deterministic PROSAC \cite{chum2005matching} algorithm.
 PROSAC takes into account a quality measure (e.g., distance between feature descriptors) of the correspondences during sampling, where RANSAC draws the samples uniformly.
 
-Their article describes how to estimate the motion of a vehicle and perform place revisiting using a feature map.
+Steder's article describes how to estimate the motion of a vehicle and perform place revisiting using a feature map.
 However, the article doesn't describe how the visual map is constructed (from poses and images) and visualized.
 Furthermore, it lacks how an elevation map is constructed and how this elevation map can be used to improve the position estimates (e.g., elevation constraints).
-A great disadvantage of the described method are the computational costs of the optimization method, which cannot be performed online (i.e. during flight). This reduces the number of practical applications.
+A great disadvantage of the described method is the computational cost of the optimization method, which cannot be performed online (i.e. during flight). This reduces the number of practical applications.
 
 
 \subsubsection{Online Mosaicking}
@@ -84,7 +86,7 @@ While Steder uses a Euclidean distance measure to compare the correspondences of
 They are able to make a robust estimation of the spatial relationship on different levels: homogeneous, affine and Euclidean (as described in Section \ref{sec:background-projective-geometry}).
 The article addresses the problem for aerial vehicles with a single camera, like the AR.Drone.
 %Geo-referenced mosaics can be sufficient as environment model for certain tasks.
-A mosaic is built by aliging a set of images gathered to a common frame, while the aerial vehicle is moving.
+A mosaic is built by aligning a set of images gathered to a common frame, while the aerial vehicle is moving.
 A set of matches between two views can be used to estimate a homographic model for the apparent image motion.
 
 \begin{figure}[htb]
@@ -96,7 +98,7 @@ A set of matches between two views can be used to estimate a homographic model f
 
 
 The homography that relates two given images is computed from sets of matched features.
-Depending on the scene characteristics (e.g., the parallax effect and small overlap between images), the homography computation could become a hard problem. 
+Depending on the scene characteristics (e.g., the parallax effect and small overlap between images), the homography computation could become a difficult problem. 
 A classical solution to improve the results is to introduce additional constraints to reduce the number of degrees of freedom of the system of equations.
 This is accomplished through a hierarchy of homographic models, ￼in which the complexity of the model to be fitted is decreased whenever the system of equations is ill-constrained.
 An estimation of this accuracy will be given by the covariance matrix of the computed parameters.
@@ -145,7 +147,7 @@ The state vector including the mean and covariance of all images is defined as:
 x^{-} = [x_1, x_2, ..., x_n]^T = [h_{01}, x_1 \cdot h_{12}, ..., x_{(n-1)n} \cdot h_{(n-1)n}]^T
 \end{equation}
 The correction obtained when a loop-closing is detected is employed to update the state.
-All states affected by the correct are now update by the Extended Kalman Filter.
+All states affected by the correction are now updated by the Extended Kalman Filter.
 
 Similar to Steder's research, Caballero uses a probabilistic representation of the estimated poses.
 Both approaches optimize the map after a loop-closure event is detected, but use different optimization methods.
@@ -162,13 +164,13 @@ Unlike a radar sensor, an ultrasound sensor can be carried by a small UAV.
 This sensor provides feedback for altitude stabilization and obstacle detection.
 According to my knowledge, no publication addresses the problem of elevation mapping using a single airborne ultrasound sensor.
 However, the problem is addressed using advanced (e.g., multibeam) ultrasound sensors.
-These advanced ultrasound sensors are commonly used for obstacle detection and navigation of underwater robots.
+These advanced ultrasound sensors are commonly used for obstacle detection and navigation by underwater robots.
 %are popular for underwater navigation \cite{majumder2001multisensor}.
 Underwater robots observe the seabed from above, very similar to the way airborne vehicles observe the floor from above.
-This similarity suggest that methods developped for underwater mapping are applicable to airborne mapping.
+This similarity suggests that methods developped for underwater mapping can be used for airborne mapping.
 
 \subsubsection{Seabed mapping}
-Seabed mapping is a research area for which ultrasound sensors have been used for building elevation maps. Some examples are \cite{johnson1996seafloor,strauss1999multibeam,zerr1996three,evans2002three}.
+Seabed mapping is a research area in which ultrasound sensors have been used for building elevation maps. Some examples are \cite{johnson1996seafloor,strauss1999multibeam,zerr1996three,evans2002three}.
 Kenny et al. \cite{kenny2003overview} give an overview of seabed-mapping technologies.
 Elevation mapping is essential for an autonomous underwater vehicle designed to navigate close to the seabed.
 The map is being used for obstacle avoidance, path planning and self-localization.
@@ -249,7 +251,7 @@ $\left[ \begin{array}{ccc} \textit{x}_s & \textit{y}_s & \textit{z}_s \end{array
 
 Once the ultrasound features have been initialized, they are tracked using observations from the vision system.
 When a new feature is initialised, the sonar footprint is projected into the visual frame of the camera.
-The centre of this footprint is then used to identify a high contrast feature in the image within the area convered by the sonar.
+The centre of this footprint is then used to identify a high contrast feature in the image within the area covered by the sonar.
 These visual features are tracked from frame to frame using the Lucas and Kanade feature tracking technique \cite{lucas1998application}.
 Observation of elevation $z_e$ and azimuth $z_a$ (orientation) are provided to the SLAM algorithm.
 The estimated elevation and azimuth are computed using the current estimate of the vehicle pose and feature position:
@@ -266,7 +268,7 @@ The estimated elevation and azimuth are computed using the current estimate of t
 \end{equation}
 The difference between the actual observation received from the camera and the predicted observation is the innovation, which is used in computing the posterior state estimate.
 The current implementation makes use of very simple features.
-These features are sufficient for tracking puroposes, but are not applicable to detected loop-closures.
+These features are sufficient for tracking puroposes, but are not applicable to detect loop-closures.
 
 
 \section{Research using the AR.Drone}
@@ -298,7 +300,7 @@ The confidence values are compared and the highest is used to select the environ
 When navigating corridors, parallel lines appear to converge.
 The points where lines appear to converge are called vanishing points.
 Vanishing points are used to locate the end of the corridor. 
-First, the Canny edge detector \cite{canny1986computational} is used to detected edges and a probabilistic Hough transform \cite{kiryati1991probabilistic} is used to find lines.
+The Canny edge detector \cite{canny1986computational} is used to detected edges and a probabilistic Hough transform \cite{kiryati1991probabilistic} is used to find lines.
 The vanishing points (end of the corridor) are found by searching for the image region which has the highest density of pair-wise line intersections.
 A probabilistic model with Gaussians is constructed to model the noise in the location of a vanishing point.
 Staircases can be nagivated by finding the center of the staircase, so the AR.Drone can follow the staircase using its onboard intelligence (i.e., altitude stabilization).

@@ -82,23 +82,6 @@ When flying over a large stair, the relative error in estimated altitude was $35
 
 
 
-\begin{comment}
-The main research question therefore is to determine a realtime Simultaneous Localization and Mapping approach that can be used for MAVs with a low-resolution down-pointing camera (e.g., AR.Drone).
-This main research question is divided into several subquestions:
-\begin{itemize}
-\item How to construct (visual) a map from camera frames?
-\item What camera resolution (e.g., $176 \times 144$ pixels) is required for localization against a map? What is the relationship between camera resolution and the localization performance?
-\item What is the performance and robustness of different methods to estimate the transformation between a camera frame and a map?
-\item Is localization on regular basis possible for circumstances encountered during the IMAV competition?
-\item How to construct an elevation map with a single ultrasound sensor?
-\end{itemize}
-\end{comment}
-
-
-
-
-
-
 
 \section{Contributions}
 \label{sec:conclusions-contributions}
@@ -142,3 +125,7 @@ Visual clues could be used to estimate the dimensions of an object.
 For example, image segmentation can be used to determine the boundaries of an object.
 Another possible solution is to create a depth map from optical flow.
 Just as stereo vision can be used to create a depth map of the environment, the optical flow between two subsequent frames can be used to create a depth map \cite{Jurriaans2011}.
+
+The proposed framework uses a single thread to process the camera frames.
+Therefore, the proposed SLAM method is unable to benefit from an increased image resolution.
+This issue can be solved by processing multiple frames in parallel (using multiple video processing threads), to make beter use of a multicore CPU.
