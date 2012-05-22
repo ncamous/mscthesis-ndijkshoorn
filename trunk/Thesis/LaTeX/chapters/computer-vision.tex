@@ -177,7 +177,7 @@ Third, keypoints are found at maxima and minima in the Difference of Gaussian fr
 Fourth, bad keypoints (e.g., edges and low contrast regions) are eliminated.
 Fifth, an orientation is calculated for each keypoint.
 Any further calculations are done relative to this orientation, making it rotation invariant.
-FInally, a high-level representation is calculated to uniquely identify features.
+Finally, a high-level representation is calculated to uniquely identify features.
 This \textit{feature descriptors} is a vector of 128 elements, containing orientation histograms.
 
 For some applications or mobile platforms, the SIFT extractor is too slow.
@@ -195,6 +195,12 @@ In order to find interest points in the image and over scales, a non-maximum sup
 The maxima of the determinant of the Hessian matrix are then interpolated in scale and image space.
 A descriptor is constructed that describes the distribution of the intensity content within the interest point neighborhood.
 First-order Haar wavelet \cite{stollnitz1995wavelets} responses in $x$ and $y$ direction are used rather than the gradient, exploiting integral images for speed. The size of the descriptor is reduced to $64$ dimensions.
+
+Another feature extractor is the \textbf{GIST} descriptor \cite{oliva2001modeling}, which characterizes several important statistics about a scene.
+The GIST descriptor measures the global distribution of oriented line segments in an image.
+This makes the descriptor well-suited for determining the type of environment.
+The GIST feature is computed by convolving an oriented filter with the image at several different orientations and scales. 
+The scores of the convolution at each orientation and scale are stored in array.
 
 \subsection{Feature matching}
 \label{sec:theory_feature_matching}
@@ -224,7 +230,7 @@ For such limited descriptor sets, the Brute-force descriptor matcher performs qu
 
 
 \subsection{Popular application: image stitching}
-A popular computer vision application that heavily relies on features is \textit{image stiching}, which is the process of combining multiple photos with overlapping fields of view.
+A popular computer vision application that heavily relies on features is \textit{image stitching}, which is the process of combining multiple photos with overlapping fields of view.
 The result is a segmented panorama or high-resolution image. 
 
 The first step involves extracting features for all images.
@@ -240,7 +246,7 @@ The homography $\boldsymbol{H}$ cannot be computed from all feature matches dire
 False matches would reduce the accuracy of the estimated homography.
 Instead, a robust estimation procedure is applied.
 \textbf{RANSAC (Random Sample Consensus)} \cite{fischler1981random} is a robust estimation procedure that uses a minimal set of randomly sampled correspondences to estimate image transformation parameters, and finds a solution that has the best consensus with the data.
-Commonly, 4 random feature correspondences are used to compute the homography $\boldsymbol{H}$ of an image pair.
+Commonly, four random feature correspondences are used to compute the homography $\boldsymbol{H}$ of an image pair.
 This step is repeated $N$ trials and the solution that has the maximum number of inliers (whose projections are consistent with $\boldsymbol{H}$ within a tolerance $\epsilon$ pixels) is selected.
 
 When the homographies of all image pairs are estimated, a global optimization method can be applied to reduce drift or other sources of error.
@@ -253,7 +259,7 @@ An interesting combination of computer vision and mobile robotics is \textit{Vis
 Below,
 %only
 the case of a single camera and 2D feature coordinates is described.
-There are two main approaches two compute the relative motion from video images: \textit{appearance-based} methods and \textit{feature-based} methods.
+There are two main approaches to compute the relative motion from video images: \textit{appearance-based} methods and \textit{feature-based} methods.
 Appearance-based methods use intensity information, while feature-based methods use higher-level features (Section \ref{sec:computer-vision-feature-extraction-matching}).
 In this thesis a feature-based approach was chosen, because high-level features are used for localization against a map.
 Therefore, parts of the localization code can be reused for a Visual Odometry algorithm.
@@ -280,7 +286,7 @@ When all relative transformation are concatenated, the full trajectory of the ca
 An iterative refinement procedure like \textit{windowed-bundle adjustment} can be performed to obtain a more accurate estimate of the local trajectory.
 
 The first step of VO is the extraction of image features $f_t$ from a new image $I_t$.
-These features are matched with features $f_{t-1}$ from the previous image (multiple images can be used to recover 3D motion).
+In the second step, these features are matched with features $f_{t-1}$ from the previous image (multiple images can be used to recover 3D motion).
 The third step consists of computing the relative motion $T_t$ between time $t-1$ and $t$.
 For an accurate motion estimation, feature correspondences should not contain outliers, as described in Section \ref{sec:theory_feature_matching}.
 
@@ -312,7 +318,7 @@ where $E = [e_1  e_2  e_3  e_4  e_5  e_6  e_7  e_8  e_9]^T$,
 $\tilde{u}$ and $\tilde{v}$ are the $x$ and $y$ coordinates in the first image and $\tilde{u}'$ and $\tilde{v}'$ are the $x$ and $y$ coordinates in the second image.
 
 Stacking these constraints gives the linear equation $A E = 0$, where $A$ is the camera instrinsic matrix.
-This equation can be solved by using singular value decomposition (SVD), which has the form $A = USV^T$.
+This equation can be solved by using singular value decomposition (SVD) \cite{klema1980singular}, which has the form $A = USV^T$.
 Now, the projected essential matrix $\overline{E}$ can be found as the last column of $V$:
 \begin{equation}
 \overline{E} = U diag\{1, 1, 0\} V^T

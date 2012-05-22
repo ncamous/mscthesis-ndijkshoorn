@@ -165,7 +165,7 @@ However, using odometry readings as controls results in a simpler formulation of
 Both motion models are not directly applicable to MAVs.
 For example, quadrotor helicopters are controlled through pitch, roll and yaw (as explained in Section \ref{sec:platform-quadrotor-flight-control}).
 A conversion between angles to velocities is required to use the Velocity Motion Model for a quadrotor helicopter.
-For ground robots, the odemetry reading can be obtained by integrating wheel encoder information.
+For ground robots, the odometry reading can be obtained by integrating wheel encoder information.
 Because a quadrotor helicopter has no contact with the ground, odometry readings are not directly available.
 Instead, different sources of information are used to obtain odometry information.
 For example, the AR.Drone uses a down-pointing camera to recover odometry information (Section \ref{sec:platform-visual-odometry}).
@@ -287,7 +287,7 @@ The Kalman gain $K_t$ specifies the degree to which the measurement is incorpora
 The key concept used for Kalman Filtering is the \textit{innovation}, which is the difference between the actual measurement $z_t$ and the expected measurement $C_t \overline{\mu}_t$, which is derived from the predicted state.
 A measurement $z_t$ which is far off the predicted measurement, is less reliable, thus less incorporated in the new state estimate.
 
-The standard Kalman Filter requires a linear system (.i.e, a linear combination of Gaussians results in another Gaussian), which is insufficient to describe many real-life problems.
+The standard Kalman Filter requires a linear system (i.e., a linear combination of Gaussians results in another Gaussian), which is insufficient to describe many real-life problems.
 Therefore, variations of the original algorithm have been proposed that can cope with different levels of non-linearity.
 These variations approximate the motion and sensor models in a way to make them linear again.
 
@@ -327,7 +327,7 @@ Both of them become increasingly inaccurate during travel.
 However, when a place that has been mapped is revisited (loop-closure), the uncertainty can be reduced and the map can be optimized to reduce its error.
 This optimization procedure is computationally expensive since it needs to search for a configuration that minimizes the error of the map.
 
-A solution technique for the map optimization problem is TORO \cite{grisetti2007efficient}.
+A solution technique for the map optimization problem is TORO \cite{grisetti2007efficient}. This technique is used in a comparable setting (visual SLAM with a MAV), as described in Section \ref{sec:realted-visual-slam-steder}.
 The TORO algorithm operates on a graph-based formulation of the SLAM problem, in which the poses of the robot are modeled by nodes in a graph.
 Constraints between poses resulting from observations or from odometry are encoded in the edges between the nodes.
 The goal of TORO is to find a configuration of the nodes that maximizes the observation likelihood encoded in the constraints.

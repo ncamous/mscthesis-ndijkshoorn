@@ -2,8 +2,6 @@ This chapter concludes this thesis by summarizing its content and answering the 
 Section \ref{sec:conclusions-contributions} describes the contributions of this thesis.
 Finally, Section \ref{sec:conclusions-future} motivates several interesting directions for future research.
 
-Nowadays, small quadrotors with on-board stabilization can be bought off-the-shelf.
-These quadrotors make it possible to shift the research from basic control of the platform towards intelligent applications.
 The platform selected in this thesis is the Parrot AR.Drone quadrotor helicopter.
 A simulation model of the AR.Drone is proposed, which allows safe and efficient development of algorithms.
 This simulation model consists of a motion model, visual model and sensor model.
@@ -40,7 +38,7 @@ Similar to the mapping approach, the corresponding 2D world position of each fea
 Each feature is matched against the most similar feature from the feature map.
 From the feature pairs, a robust transformation between the 2D world coordinates is estimated.
 
-A pragmatic approach is proposed to compute the transformation between a frame and a map.
+An approach is proposed to compute the transformation between a frame and a map.
 The method is very similar to RANSAC, but uses covariance instead of the number inliers as quality measure.
 Three random feature pairs are selected.
 From these pairs, the 2D world coordinates are used to compute the mean translation.
@@ -59,7 +57,7 @@ Experiments show that the accuracy of the proposed visual odometry method is com
 
 Experiment show the AR.Drone down-pointing's camera offers good balance between image quality and computational performance.
 When the resolution of the AR.Drone's camera is reduced, the accuracy of the estimated position decreases.
-The reduced image quality results in less frame that could be used to robustly recover the velocity.
+The reduced image quality results in less frames that could be used to robustly recover the velocity.
 A simulated AR.Drone was used to investigate an increased camera resolution.
 An increased image resolution does not produce more accuracate estimated positions.
 While relatively more frames could be used to used to robustly recover the velocity, the absolute number of processed frames decreased due to the increased computational complexity.
@@ -73,7 +71,7 @@ In addition to the texture and feature map, this thesis proposed a method to con
 Elevations are detected through sudden changes in ultrasound measurements.
 These sudden changes are detected when the filtered second order derivative exceeds a certain threshold.
 Experiments show that the relative error when flying over small objects is below $20\%$.
-When flying over a large stair, the relative error in estimated altitude was $35\%$.
+When flying over a large staircase, the relative error in estimated altitude was $35\%$.
 
 
 
@@ -90,7 +88,7 @@ The first contribution of this thesis is a framework that aids in the developmen
 The framework contains an abstraction layer to abstract from the actual device and use a simulated AR.Drone in a way similar to the real AR.Drone.
 Therefore, a simulation model of the AR.Drone is developed in USARSim.
 The main contribution is a novel approach that enables a MAV with a low-resolution down-looking camera to navigate in circumstances encountered during the IMAV competition.
-A pragmatic algorithm is presented to estimate the transformation between a camera frame and a map.
+An algorithm is presented to estimate the transformation between a camera frame and a map.
 In addition to the navigation capabilities, the approach generates a visual map, which can be used for human navigation.
 Another contribution is a method to construct an elevation with a single airborne ultrasound sensor.
 

@@ -15,6 +15,7 @@ An exception is the research by Steder, which builds a visual map of the environ
 \section{Visual-map SLAM}
 
 \subsubsection{Visual SLAM for flying vehicles}
+\label{sec:realted-visual-slam-steder}
 The approach presented in this thesis was inspired by Steder et al. \cite{steder2008visual}, who presented a system to learn large visual maps of the ground using flying vehicles.
 The setup used is comparable to the AR.Drone, with an inertial sensor and a low-quality camera pointing downward.
 If a stereo camera setup is available, their system is able to learn visual elevation maps of the ground.
@@ -50,7 +51,7 @@ The constraints between nodes are computed from the features associated with the
 
 In the case of place revisiting, they compare the features of the current frame with all previous features.
 To speed up this potentially expensive operation, multiple filters are used.
-Firstly, only the features from robot poses that lie within Tipaldi's \cite{tipaldi2007approximate} confidence interval are used.
+Firstly, only the features from robot poses that lie within Tipaldi's confidence interval \cite{tipaldi2007approximate} are used.
 Secondly, only the best features from the current image are used (i.e., features with the lowest descriptor distance during visual odmetry).
 Finally, a $k$-D tree is used to efficiently query for similar features, together with the best-bins-first technique proposed by Lowe \cite{lowe1999object}.
 
@@ -294,7 +295,7 @@ This method requires little computational power and can be used directly without
 The type of environment is determined using two algorithms.
 The first method uses GIST features \cite{oliva2001modeling} (Section \ref{sec:background-feature-extraction}) with a Support Vector Machine (SVM) learning algorithm for classification.
 GIST features are well-suited for this task because they directly measure the global distribution of oriented line segments in an image, which takes advantage of the long lines found in indoor images.
-The second method computes a confidence estimate from both the stair and corridor vision algorithms.
+The second method computes a confidence estimate from both the staircase and corridor vision algorithms.
 The confidence values are compared and the highest is used to select the environment type.
 
 When navigating corridors, parallel lines appear to converge.
