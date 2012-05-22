@@ -26,7 +26,12 @@ The information from the sensors are used in an Extended Kalman Filter (EKF) to 
 An EKF has been considered~\cite{julier2004unscented} the facto standard in the theory of nonlinear state estimation.
 The EKF state vector comprises a position vector $p^{W}$, velocity vector $v^{W}$, acceleration vector $a^{W}$ and attitude (orientation) vector $q^{W}$.
 All vectors are 3-dimensional Cartesian coordinates.
-An altitude vector $h^W$ is added for the elevation mapping method (Section \ref{sec:elevation_map}). It contains the filtered altitude, first-order and second-order derivatives of the altitude.
+The position vector $p^{W}$ includes the estimated altitude, which is based on the AR.Drone's ultrasound measurement plus the estimated elevation of the floor (Section \ref{sec:elevation_map}).
+An additional altitude vector $h^W$ is added to the EKF state vector, which contains the unmodified ultrasound measurement without the estimated elevation.
+Furthermore, it contains first-order and second-order derivatives of the ultrasound measurement.
+These derivatives are used by the elevation mapping method (Section \ref{sec:elevation_map}).
+%for the elevation mapping method (Section \ref{sec:elevation_map}).
+%This vector contains the filtered altitude, first-order and second-order derivatives of the u.
 
 \begin{equation}
 x = [ p^{W}  v^{W}  a^{W}  q^{W} h^{W} ]
@@ -226,7 +231,7 @@ The inertia measurements provide frequent position estimates.
 %However, drift will increase the inaccuracy over time.
 %However, drift will decrease the accuracy over time.
 If the AR.Drone is able to relate a video frame to a position inside the feature map, the vehicle is able to correct this drift long enough to build a map 
-as large as the indoor arena of the IMAV competition (as described in Section~\ref{sec:results}).
+as large as the indoor arena of the IMAV competition (as described in Section \ref{sec:exp1-imav-circumstances}).
 
 \begin{figure}[htb]
 \centering
@@ -470,7 +475,7 @@ These sets of points are the same two sets of points used to compute the transla
 This rotation is added as an offset to all future yaw measurements.
 %This rotation is directly written to the EKF state.
 
-In Section \ref{sec:results-pose-recovery}, an experiment is performed to validate that the proposed pose recovery method outperforms other appraches.
+In Section \ref{sec:results-pose-recovery}, an experiment is performed to validate that the proposed pose recovery method outperforms three other approaches.
 
 
 
@@ -636,7 +641,7 @@ Between both events, the AR.Drone performs an altitude correction, as can be see
 The elevation information is stored in a grid that is similar to the feature map described in Section \ref{sec:feature_map}.
 For each ultrasound distance measurement, elevation $\delta_t$ is computed and stored in the grid cells that corresponds to the world coordinates where a line perpendicular to the AR.Drone body intersects the world plane.
 These world coordinates are the position where the center of the ultrasound sensor's cone hits the floor.
-Because the exact size of an object is unkown, the elevation is written to all grid cells within a radius $\gamma_{elevationRadius}$ around the intersection point.
+Because the exact size of an object is unknown, the elevation is written to all grid cells within a radius $\gamma_{elevationRadius}$ around the intersection point.
 This process is visualized in Figure \ref{visual-slam-elevation-map1} and \ref{visual-slam-elevation-map2}.
 
 This approach may lead to cases where the size of an obstacle is overestimated in the elevation map, as can be seen in Figure \ref{visual-slam-elevation-map2}.

@@ -40,15 +40,15 @@ However, the limited sensor suite and the fast movements make it quite a challen
 %	\section{Versatile scouting capabilities of a quadrotor helicopter}
 
 
-	\section{International Micro Air Vehicle Competition}
+	\section{International Micro Air Vehicle competition}
 \label{sec:introduction-imav}
-The International Micro Air Vehicle Competition (IMAV) is an effort to stimulate the practical demonstration of MAV technologies.
+The International Micro Air Vehicle competition (IMAV) is an effort to stimulate the practical demonstration of MAV technologies.
 The competitions have as goal to shorten the road from novel scientific insights to application of the technology in the field.
 Since the Summer 2011 edition of IMAV, teams can borrow a Parrot AR.Drone quadrotor helicopter.
 This allows teams to focus research on the artificial intelligence part of the competitions.
 
 Currently, IMAV has three distinct competitions: two indoor competitions and one outdoor competition.
-One of the indoor competitions is the Pylon (Figure-8) challenge (Figure \ref{fig:imav2011_pylon}).
+One of the indoor competitions is the Pylon challenge (Figure \ref{fig:imav2011_pylon}).
 The objective of the Pylon challenge is to navigate a MAV in figure-8 shapes around two poles.
 The competition rules\footnote{\url{http://www.imav2011.org/images/stories/documents/imav2011-summerediton_indoor_challenges_v3.0.pdf}} have been created to stimulate the level of autonomy; significantly more points are given to fully autonomous flights.
 
@@ -84,7 +84,7 @@ The main bottleneck for robot simulation is the requirement of realistic motion 
 The simulation environment selected for the Virtual Robots Competition is USARSim \cite{Balakirsky2009iros,carpin2007usarsim}, which includes models of a wide range of robotic platforms and sensors.
 Unfortunately, the support of aerial vehicles in USARSim is little, while MAVs offer great advantages above other robots due to the versatile scouting capabilities.
 In 2011, the expensive AirRobot quadrotor was the only aerial vehicle available in USARSim.
-One of the contributions arising from this thesis is a simulation model of the cheap AR.Drone quadrotor.
+One of the contributions arising from this thesis is a simulation model of the affordable AR.Drone quadrotor.
 The resulting model can be used by teams to make use of the advantages of MAVs in disaster scenarios.
 
 
@@ -98,14 +98,15 @@ However, current approaches use estimation and optimization algorithms that are 
 Furthermore, other researchers rely on expensive aerial vehicles
 %equipped
 with advanced sensors like a laser range finder.
-Focusing on realtime methods and cheap MAVs increases the employability of aerial vehicles in real world situations.
+Focusing on realtime methods and affordable MAVs increases the employability of aerial vehicles in real world situations.
 In case of semi-autonomous robots, building and visualizing an elevated and textured map of the invironment offers additional feedback to the teleoperator of the vehicle.
 
 The main research question therefore is to determine a realtime Simultaneous Localization and Mapping approach that can be used for MAVs with a low-resolution down-pointing camera (e.g., AR.Drone).
 This main research question is divided into several subquestions:
 \begin{itemize}
 \item How to construct (visual) a map from camera frames?
-\item What camera resolution (e.g., $176 \times 144$ pixels) is required for localization against a map? What is the relationship between camera resolution and the localization performance?
+%\item What camera resolution (e.g., $176 \times 144$ pixels) is required for localization against a map? What is the relationship between camera resolution and the localization performance?
+\item What is the relation between camera resolution and localization performance? Is a camera resolution of $176 \times 144$ pixels enough to localize against a map?
 \item What is the performance and robustness of different methods to estimate the transformation between a camera frame and a map?
 \item Is localization on regular basis possible for circumstances encountered during the IMAV competition?
 \item How to construct an elevation map with a single ultrasound sensor?
@@ -114,7 +115,7 @@ This main research question is divided into several subquestions:
 \end{itemize}
 
 In order to perform (global) localization, a map of the environment has to be constructed.
-Considering the limited sensor suite of cheap quadrotors (e.g., AR.Drone), camera images are often the best information source for localization and mapping.
+Considering the limited sensor suite of affordable quadrotors (e.g., AR.Drone), camera images are often the best information source for localization and mapping.
 This poses the questions how to construct a map from camera frames.
 The AR.Drone is equipped with a very low-resolution camera, which poses the question if localization against a map is possible with such cameras.
 The recent developments in miniaturing high-resolution cameras enables MAVs to be equipped with high-resolution cameras.
@@ -125,7 +126,7 @@ Different transformation estimation methods can be used and have to be compared.
 The performance of the localization method is also depending on the environment.
 Circumstances encountered during the IMAV competition are challenging due to the repeating patterns (lines) and the lack of natural features.
 Therefore, the localization method is evaluated for such circumstances.
-Finally, an elevation map is constructed using a single airborne ultrasound.
+Finally, an elevation map is constructed using a single airborne ultrasound sensor.
 Since no method has been proposed by others, the question arises how to construct this map.
 
 
@@ -138,7 +139,7 @@ The framework contains an abstraction layer to abstract from the actual device a
 Therefore, a simulation model of the AR.Drone is developed in USARSim.
 The main contribution is a new approach that enables a MAV with a low-resolution down-looking camera to navigate in circumstances encountered during the IMAV competition.
 A pragmatic algorithm is presented to estimate the transformation between a camera frame and a map.
-In addition to the navigation capabilities, the approach generates a visual map, which can be used for human navigation.
+In addition to the navigation capabilities, the approach generates a texture map, which can be used for human navigation.
 Another contribution is a method to construct an elevation map with an airborne ultrasound sensor.
 
 	\section{Outline}

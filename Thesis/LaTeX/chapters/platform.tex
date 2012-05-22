@@ -141,7 +141,7 @@ A processor senses the proof mass’ displacement through capacitor plates locat
 The AR.Drone uses a IDG-500 Dual-Axis\footnote{\url{http://www.sparkfun.com/datasheets/Components/SMD/Datasheet_IDG500.pdf}} gyroscope for the pitch and roll angles of the drone.
 The IDG-500 gyro has two separate outputs per axis for higher speed motions (range: $500^{\circ}/s$, sensitivity: $2.0mV/^{\circ}/s$) and lower-speed precise movements (range: $110^{\circ}/s$, sensitivity: $9.1mV/^{\circ}/s$).
 The yaw orientation is measured using a high precision gyrometer, the Epson Toyocom XV-3500CB\footnote{\url{http://www.eea.epson.com/portal/pls/portal/docs/1/424992.PDF}}.
-%This sensor has a range of $100^{\circ}/s$
+This sensor has a range of $100^{\circ}/s$ and a sensitivity of $0.67mV/^{\circ}/s$.
 %Vibrating structure gyroscopes are simpler and cheaper than conventional rotating gyroscopes of similar accuracy
 %The output is a rate of rotation about the X and Y axis.
 
@@ -216,7 +216,7 @@ More details about the onboard intelligence can be found in Section \ref{sec:pla
 % Onboard intelligence
 \section{Onboard intelligence}
 \label{sec:platform_onboard_intelligence}
-Usually quadrotor remote controls have jmultiple joysticks and knobs for controlling pitch, roll, yaw and throttle.
+Usually quadrotor remote controls have multiple joysticks and knobs for controlling pitch, roll, yaw and throttle.
 It generally takes hours of practice to safely perform basic manoeuvres like take-off, trimming, hovering with constant altitude and landing.
 Thanks to the onboard computer and sensors, take-off, hovering, trimming and landing are now completely automatic and all manoeuvres are assisted.
 
@@ -299,6 +299,8 @@ This model is beyond the scope of this thesis.
 In summary, linear drag term exists from the interaction between the rigid body and the rotors and this term is reinforced by tilt phenomenon which changes a lift force component in drag.
 These induced-drag effects are non-negligible and they yield interesting information on the velocity of the system.
 The induced forces are directly measured by the accelerometers, and through the model, can be used to reliably estimate the velocities of the vehicle.
+
+Section \ref{sec:pose_estimation} describes how the estimated velocities can be used to estimate the position of the AR.Drone.
 
 
 
@@ -388,7 +390,7 @@ Its content can be summarized as following:
 
 Unfortunately, the AR.Drone API has some drawbacks.
 The API was mainly developed for the iPhone application.
-Support for other platforms (e.g., Linux and Windows) was added in an early release and but updated for a while.
+Support for other platforms (e.g., Linux and Windows) was added in an early release and not updated for a while.
 In order to make recent versions of the API working under Windows, a significant amount of fixes is required.
 Another drawback is the bulkiness.
 The API consists of many files and lines of undocumented code.
