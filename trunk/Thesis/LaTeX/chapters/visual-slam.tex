@@ -391,9 +391,10 @@ This transformation does not correspond with the actual translation and rotation
 
 Instead of computing a full perspective, affine or Euclidean transformation, a more pragmatic approach is used.
 Here, only the translation in $x$ and $y$ direction is estimated.
+The best translation is chosen with a modified RANSAC algorithm, which uses covariance between matches instead of the number inliers as quality measure.
 The rotation is estimated independently, as described at the end of this section.
-The translation is estimated by taking a subset of 3 random point pairs.
-The translation for those points is computed as follows:
+
+A translation hypothesis $T$ is computed by taking a subset of three random point pairs and calculating the mean translation:
 
 \begin{comment}
 $M_{train} = \begin{pmatrix}
@@ -439,25 +440,26 @@ T_x = \frac{\sum_{i}^{N} (x_{w, d_t, i} - x_{w, d_q, i})}{N}
 T_y = \frac{\sum_{i}^{N} (y_{w, d_t ,i} - y_{w, d_q, i})}{N}
 \end{equation}
 where $N = 3$ is the number of point pairs.
-
 The standard deviation of translation  $T$ is defined as:
-
 \begin{equation}
 \sigma_x = \sqrt{  \sum_{i}^{N}   ((x_{w, d_t} - x_{w, d_q}) - T_x)^{2}   }
 \end{equation}
 \begin{equation}
 \sigma_y = \sqrt{  \sum_{i}^{N}   ((y_{w, d_t} - y_{w, d_q}) - T_y)^{2}   }
 \end{equation}
-
 The confidence $c$ of translation $T$ is computed using the standard deviation:
-
 \begin{equation}
 c_{T} = 1 -   \sigma_x / \theta_{d} -  \sigma_y / \theta_{d}
 \end{equation}
 where $\theta_d$ = 200.
+Similar to RANSAC, this step is repeated $k$ times to test multiple hypotheses.
+After all repetitions are performed, the translation with highest confidence $T_{best}$ is used as final translation.
 
-After RANSAC has performed all iterations, the translation with highest confidence $T_{best}$ is used as final translation.
-A big advantage of this two degrees of freedom approach is that it is very efficient, allowing a great number of RANSAC iterations to find the optimal subset of point pairs.
+The advantages of this approach are threefold.
+By using the confidence, instead of the number of inliers (as mostly done in classic RANSAC), a more robust estimate of the translation can be made. 
+Furthermore, this approach eliminates the additional degrees of freedom that can results in incorrect transformations (as described above).
+An additional benefit of the two degrees of freedom approach is its efficiency, allowing a great number of RANSAC iterations to find the optimal subset of point pairs.
+
 If the confidence $c_{T}$ of the translation $T_{best}$ exceeds a threshold, the transformation $T$ is added to the estimated position $p^W$ to compute the corrected position $p^{W*}$. This corrected position is integrated in the EKF as measurement with low covariance.
 Please note this method requires that the estimated yaw of the vehicle is close to the actual yaw.
 A large difference between estimated and actual yaw results in low confidence $c_T$.

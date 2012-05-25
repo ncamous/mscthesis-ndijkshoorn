@@ -461,9 +461,12 @@ Therefore, an additional appearance-based method (like the AR.Drone uses) is req
 \clearpage
 \section{Accuracy w.r.t. pose recovery approaches}
 \label{sec:results-pose-recovery}
-Section \ref{sec:pose-recovery} proposed a new method to robustly recover the translation and rotation between \textit{two frames} (visual odometry) or \textit{a frame and a map} (localization).
+Section \ref{sec:pose-recovery} proposed a new method to robustly recover the translation and rotation between two frames (for visual odometry) or a frame and a map (for localization).
+This method features two improvements.
 Instead of computing a full perspective, affine or Euclidean transformation, a more pragmatic approach is used.
+Futhermore, the proposed approach uses covariance, instead of the number inliers, as quality measure.
 In this experiment, the proposed pose recovery approach is benchmarked against other pose recovery approaches.
+The proposed approach has been validated with the proposed covariance quality measure and with the classic \textit{inliers based} quality measure, in order to validate the contribution of the proposed quality measure.
 
 An approach similar to the position accuracy experiment from Section \ref{sec:results-position-accuracy} is used.
 The positions are estimated using the Visual Odometry (VO) method from Section \ref{sec:visual-slam-visual-odemetry}, which relies on pose recovery to determine the velocity.
@@ -487,6 +490,7 @@ The translation vector from the homography is used as velocity estimate.
 	Method & Mean absolute error (\small{mm}) & \parbox{5cm}{Mean relative error \\(percentage of trajectory length)} \\
         \hline
         visual odometry (VO) & 552 & 0.828\% \\
+        visual odometry (VO) - inliers based & 734 & 1.101\% \\
 	visual odometry (VO) - Euclidean transform & 967 & 1.449\% \\
 	visual odometry (VO) - affine transform & 3784 & 5.672\% \\
 	visual odometry (VO) - perspective transform & 8923 & 13.375\% \\
@@ -497,15 +501,30 @@ The translation vector from the homography is used as velocity estimate.
 \end{table}
 
 The results of this experiment can be found in Table \ref{tab:res_transform} and Figure \ref{fig:exp4-transform-error}.
-The proposed pose recovery approach outperforms the other pose recovery approaches.
-This approach reduces the degrees of freedom and is more robust against noise.
+These results show a relation between the degrees of freedom of an approach and the errors in the estimated positions.
+Reducing the degrees of freedom results in more robustness against noise.
 This corresponds with the observations made by Caballero et al (Section \ref{related-online-mosaicking}).
-OpenCV's pose recovery approaches use the percentage of inliers to determine the quality of a recovered pose.
+%As explained in Section \ref{sec:pose-recovery}, classic RANSAC uses the number of inliers as quality measure.
+%Because an incorrect transformation can result in a high percentage of inliers, incorrect transformations can be chosen by RANSAC.
+
+OpenCV's pose recovery approaches use the percentage of inliers as quality measure.
 However, the percentage of inliers may not reflect the actual quality of a recovered pose.
 For example, a faulty transformation (pose) can maximize the number of inliers, as described in Section \ref{sec:pose-recovery}.
-The proposed approach uses the covariance between the points of a hypothesis to determine the quality of a recovered pose.
-This approach is able to estimate the quality of a recovered pose more accurately, resulting in recovered poses that contain less errors.
-%This seems to be a beter measure to determine the quality, resulting in a reduced error.
+These faulty transformations produce sudden changes in error, as can be seen in Figure \ref{fig:exp4-transform-error}.
+
+The proposed pose recovery approach outperforms the other pose recovery approaches.
+The best performance is achieved when using the proposed convariance based quality measure.
+When the confidence based quality measure is replaced with classic inliers based quality measure, the performance decreases.
+However, the proposed method still outperforms the other methods.
+This improvement with respect to the Euclidean transform can be dedicated to the pragmatic approach, which reduces the degrees of freedom from four (translation and rotation) to two (translation).
+The additional improvement gained by the proposed approach can be dedicated to the covariance based quality measure.
+This quality measure is able to estimate the quality of a recovered pose more accurately, resulting in recovered poses that contain less errors.
+This is reflected by the reduced number of sudden changes in the plot.
+
+%This approach reduces the degrees of freedom and is more robust against noise.
+%The proposed approach uses the covariance between the points of a hypothesis to determine the quality of a recovered pose.
+%The proposed approach uses covariance, instead of the number inliers, as quality measure.
+%This approach is able to estimate the quality of a recovered pose more accurately, resulting in recovered poses that contain less errors.
 
 
 \begin{figure}[htb!]

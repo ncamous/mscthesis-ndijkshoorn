@@ -45,8 +45,8 @@ From these pairs, the 2D world coordinates are used to compute the mean translat
 The covariance describes the quality of a translation.
 These steps are repeated multiple times and the best translation is selected.
 If a translation is very good (i.e., low covariance), Kabsch algorithm is used to refine the AR.Drone's estimated rotation.
-Experiment show that the proposed method significantly outperforms OpenCV's implementation to estimate a perspective, affine or Euclidean transformation.
-By reducing the degrees of freedom, the robustness against noise increases.
+Experiments show that the proposed method significantly outperforms OpenCV's implementation to estimate a perspective, affine or Euclidean transformation.
+By reducing the degrees of freedom and using a beter quality measure, the robustness against noise increases.
 
 A slighly modified version of the localization approach is used to perform visual odometry (estimate the velocity from camera images).
 Instead of matching the last frame against the feature map, now the last frame is matched against the previous frame.
