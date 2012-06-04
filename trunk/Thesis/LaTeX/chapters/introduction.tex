@@ -9,11 +9,12 @@ Since no assumptions can be made about the environment, the robot has to learn f
 This ability has been identified as a fundamental problem in robotics.
 The process of incremental map construction and using it for localization is called \textbf{Simultaneous Localization and Mapping (SLAM)}.
 Its main function is to aggregate observations obtained by sensors in order to obtain information of the environment and store it in a map.
-This location information is used by other subsystems of the robot, such as interaction with the environment depending on the robot's task.
+This location information is used by other subsystems of the robot, such as interaction with the environment.
+%depending on the robot's task.
 %This process was inspired by the the human ability to learn maps of the surrounding environment and to use them for localization.
 
 A wide range of SLAM methods have been presented.
-These methods include various sensor configurations to obtain map information as well as knowledge about the robot's location.
+These methods include various sensor configurations to obtain map information as well as knowledge about the robots location.
 %A wide range of methods have been presented, depending on the application environment and the a-priori information about it.
 Available solutions for certain environments and sensor configurations are well understood.
 For other environments and sensor configurations, open problems remain.
@@ -24,15 +25,15 @@ One of them is SLAM with micro aerial vehicles (MAVs), which have a limited sens
 \begin{figure}[htb]
 \centering
 \includegraphics[width=11.0cm]{images/aeryon-scout-tablet.jpg}
-\caption{The Aeryon Scout is a unmanned micro aerial vehicle, used for tactical, over-the-hill aerial intelligence. The platform is controlled by a touchscreen interface and is able to fly pre-planned flight paths using GPS positioning.}
+\caption{The Aeryon Scout is an unmanned micro aerial vehicle, used for tactical, over-the-hill aerial intelligence. The platform is controlled by a touchscreen interface and is able to fly pre-planned flight paths using GPS positioning.}
 \label{fig:introduction_aeryon_scout}
 \end{figure}
 
 A \textbf{micro aerial vehicle (MAV)} is a class of unmanned aerial vehicles (UAV).
-Their small size allows a wide ringe of robotic applications, such as surveillance, inspection and search \& rescue.
+Their small size allows a wide range of robotic applications, such as surveillance, inspection and search \& rescue.
 An example of a MAV developed for surveillance and inspection is the Aeryon Scout\footnote{\url{http://www.aeryon.com/products/avs.html}} (Figure \ref{fig:introduction_aeryon_scout}), which is already being deployed in the field\footnote{\url{http://www.aeryon.com/news/pressreleases/271-libyanrebels.html}}.
 Particularly interesting are small quadrotor helicopters, which are lifted and propelled by four rotors.
-They offer great manouvrability and stability, making them ideal for indoor and urban flights.
+They offer great manoeuvrability and stability, making them ideal for indoor and urban flights.
 Due to technical developments in the last years, small quadrotors with on-board stabilization like the Parrot AR.Drone can be bought off-the-shelf.
 These quadrotors make it possible to shift the research from basic control of the platform towards intelligent applications that require information about the surrounding environment.
 However, the limited sensor suite and the fast movements make it quite a challenge to use SLAM methods for such platforms.
@@ -99,12 +100,12 @@ Furthermore, other researchers rely on expensive aerial vehicles
 %equipped
 with advanced sensors like a laser range finder.
 Focusing on realtime methods and affordable MAVs increases the employability of aerial vehicles in real world situations.
-In case of semi-autonomous robots, building and visualizing an elevated and textured map of the invironment offers additional feedback to the teleoperator of the vehicle.
+In case of semi-autonomous robots, building and visualizing an elevated and textured map of the environment offers additional feedback to the teleoperator of the vehicle.
 
 The main research question therefore is to determine a realtime Simultaneous Localization and Mapping approach that can be used for MAVs with a low-resolution down-pointing camera (e.g., AR.Drone).
 This main research question is divided into several subquestions:
 \begin{itemize}
-\item How to construct (visual) a map from camera frames?
+\item How to construct a texture map and a feature map from camera frames?
 %\item What camera resolution (e.g., $176 \times 144$ pixels) is required for localization against a map? What is the relationship between camera resolution and the localization performance?
 \item What is the relation between camera resolution and localization performance? Is a camera resolution of $176 \times 144$ pixels enough to localize against a map?
 \item What is the performance and robustness of different methods to estimate the transformation between a camera frame and a map?

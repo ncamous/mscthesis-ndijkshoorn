@@ -22,14 +22,14 @@ If a stereo camera setup is available, their system is able to learn visual elev
 If only one camera is carried by the vehicle, the system provides a visual map without elevation information.
 Steder uses a graph-based formulation of the SLAM problem, in which the poses of the vehicle are described by the nodes of a graph.
 Every time a new image is acquired, the current pose of the camera is computed based on both visual odometry and place revisiting.
-The corresponding node is augment the graph accordingly.
+The corresponding node is augmented to the graph accordingly.
 Edges between these nodes represent spatial constraints between them.
 The constructed graph serves as input to a TORO-based network optimizer (Section \ref{sec:prob-rob-toro}), which minimizes the error introduced by the constraints.
 The graph is optimized if the computed poses are contradictory.
 
 \begin{figure}[htb!]
   \begin{center}
-    \subfigure[Map constructed by a blimp]{\label{steder_blimp}\includegraphics[height=3.5cm]{images/steder_blimp.png}}
+    \subfigure[Map constructed by a blimp (non-rigid airship)]{\label{steder_blimp}\includegraphics[height=3.5cm]{images/steder_blimp.png}}
     \hspace{1cm}
     \subfigure[Map constucted by a stereo camera platform. A sensor platform was mounted on a rod to simulate a freely floating vehicle.]{\label{steder_outdoor}\includegraphics[height=3.5cm]{images/steder_outdoor.png}}
    
@@ -76,7 +76,7 @@ Feature correspondences between images are selected using a deterministic PROSAC
 PROSAC takes into account a quality measure (e.g., distance between feature descriptors) of the correspondences during sampling, where RANSAC draws the samples uniformly.
 
 Steder's article describes how to estimate the motion of a vehicle and perform place revisiting using a feature map.
-However, the article doesn't describe how the visual map is constructed (from poses and images) and visualized.
+However, this article and Steder's other publications don't describe how the visual map is constructed and visualized.
 Furthermore, it lacks how an elevation map is constructed and how this elevation map can be used to improve the position estimates (e.g., elevation constraints).
 A great disadvantage of the described method is the computational cost of the optimization method, which cannot be performed online (i.e. during flight). This reduces the number of practical applications.
 

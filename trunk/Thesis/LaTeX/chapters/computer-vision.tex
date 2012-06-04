@@ -28,7 +28,7 @@ Now, points are represented by \textit{equivalance classes}, where points are eq
 For example, $(x, y, z, 1)$ and $(2x, 2y, 2z, 2)$ represent the same point.
 Points at infinity are respresented using $(x, y, z, 0)$, because $(x/0, y/0, z/0)$ is infinite.
 In Euclidean geometry, one point is picked out as the \textit{origin}.
-A coordinate can be transformed to another coordinate by translating and rotating to a diffent position.
+A coordinate can be transformed to another coordinate by translating and rotating to a different position.
 This operation is know as a \textbf{Euclidian transformation}.
 A more general type of transformation is an \textbf{affine transformation}, which is a linear transformation (linear stretching), followed by a Euclidian transformation.
 The resulting transformation performs moving (translating), rotating and finally stretching linearly.
@@ -50,7 +50,7 @@ The relationship between the distance to an object $z$ and the distance behind t
 \end{equation}
 where $f$ is the focal length.
 
-The \textbf{pinhole camera} has been the first example of camera in history \cite{gernsheim1969history}.
+The \textbf{pinhole camera} has been the first known example of a camera \cite{gernsheim1969history}.
 %\footnote{\url{http://inventors.about.com/od/pstartinventions/a/stilphotography.htm}}
 It is a lightproof box with a very small aperture instead of a lens.
 Light from the scene passes through the aperture and projects an \textit{inverted image} on the opposite side of the box.
@@ -168,7 +168,7 @@ Another important aspect of a feature detector is \textit{distinctiveness}, whic
 This is important for robust feature matching.
 Good feature are \textit{invariant}, meaning that changes in camera viewpoint, illumination, rotation and scale do not affect a feature and its high-level description.
 
-\textbf{Scale-invariant feature transform (SIFT)} \cite{lowe1999object} is the most popular feature extractor.
+\textbf{Scale-invariant feature transform (SIFT)} \cite{lowe1999object} is probably the most popular feature extractor.
 It is invariant to scale, rotation, illumination and viewpoint.
 The algorithm can be outlined as follows.
 First, an internal representation of an image is computed to ensure scale invariance.
@@ -191,7 +191,9 @@ Initially, an integral image and Hessian matrix \cite{van1994complex} are comput
 The Hessian matrix is a square matrix of second-order partial derivatives of a function, describing the local curvature of a function.
 Blob-like structures are detected at locations where the determinant matrix is maximum.
 The images are repeatedly smoothed with a Gaussian kernel and then sub-sampled in order to create a pyramid of different resolutions.
-In order to find interest points in the image and over scales, a non-maximum suppression in a $3 \times 3 \times 3$ neighborhood is applied. 
+In order to find interest points in the image and over scales, a non-maximum suppression in a 
+%$3 \times 3 \times 3$
+neighborhood is applied. 
 The maxima of the determinant of the Hessian matrix are then interpolated in scale and image space.
 A descriptor is constructed that describes the distribution of the intensity content within the interest point neighborhood.
 First-order Haar wavelet \cite{stollnitz1995wavelets} responses in $x$ and $y$ direction are used rather than the gradient, exploiting integral images for speed. The size of the descriptor is reduced to $64$ dimensions.

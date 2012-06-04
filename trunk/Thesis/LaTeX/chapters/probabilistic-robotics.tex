@@ -5,9 +5,9 @@ A clear vocabulary and corresponding mathematical nomenclature will be establish
 Probabilistic robotics uses the notation of Thrun et al \cite{fox2005probabilistic}.
 %and computer vision uses the notation of Hartley and Zisserman \cite{Hartley2004}.
 
-Sensors are limited in what they can percieve (e.g., the range and resolution is subject to physical limitations).
+Sensors are limited in what they can perceive (e.g., the range and resolution is subject to physical limitations).
 Sensors are also subject to noise, which deviates sensor measurements in unpredictable ways.
-This noise limits the information that can be extraced from the sensor measurements.
+This noise limits the information that can be extracted from the sensor measurements.
 Robot actuators (e.g., motors) are also subject to noise, which introduces uncertainty.
 Another source of uncertainty is caused by the robot's software, which uses approximate models of the world.
 Model errors are a source of uncertainty that has often been ignored in robots.
@@ -47,7 +47,7 @@ State estimation tries to recover state variables from the data.
 Instead of computing a single state, a probability distribution is computed over possible world states.
 This probability distribution over possible world states is called \textit{belief} and is described on the next page.
 \begin{mydef}
-\textbf{State estimation} addresses the problem of estimating quantities from sensor data that are not directly observable, but can be inferred.
+\textbf{State estimation} addresses the problem of estimating quantities (state variables) from sensor data that are not directly observable, but can be inferred.
 A probability distribution is computed over possible world states.
 \end{mydef}
 
@@ -85,7 +85,7 @@ The process by which measurements are modelled is expressed by:
 \label{eq:background_measurement_prob}
 p(z_t | x_{0:t}, z_{1:t-1}, u_{1:t}) = p(z_t | x_t)
 \end{equation}
-where $p(z_t | x_t)$ is called \textit{measurement probability} and specified how measurements are generated from the environment state $x$.
+where $p(z_t | x_t)$ is called \textit{measurement probability} and specifies how measurements are generated from the environment state $x$.
 
 Another core idea of probabilistic robotics is \textbf{belief}, which reflects the robot's knowledge about the environment's state.
 Belief distributions are posterior probabilities over state variables conditioned on the available data.
@@ -182,9 +182,9 @@ A map $m$ of the environment is a list of objects and their locations:
 m = \{m_1, m_2, \hdots, m_N\}
 \end{equation}
 Where $N$ is the total number of objects in the environment.
-Maps are often \textit{Features-based Maps} or \textit{Location-based maps}.
+Maps are often \textit{Features-based maps} or \textit{Location-based maps}.
 Location-based maps are volumetric and offer a label for any location.
-Features-based Maps only describe the shape of the environment at specific locations, which are commonly objects.
+Features-based maps only describe the shape of the environment at specific locations, which are commonly objects.
 Features-based maps are more popular because the representation makes it easier to adjust (refine) the position of objects.
 \begin{mydef}
 A probabilistic \textbf{sensor model} describes the relation between a world state $x_t$ and a sensor reading $z_t$ given an environmental model $m$ in form of a posterior distribution $p (z_t | x_t, m)$.
