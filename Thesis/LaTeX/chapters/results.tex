@@ -588,13 +588,13 @@ In Figure \ref{fig:exp3-error}, the position error is plotted over time.
 	\hline
 	Resolution & Nr. frames processed & Nr. frames velocity extracted & Mean error (mm) \\
         \hline
-        33.3\% & 1600 & 5 & 9295 \\
-	66.6\% & 1598 & 247 & 528 \\
-	90.0\% & 1570 & 850 & 100 \\
-	100.0\% & 1365 & 841 & \textbf{73} \\
-	133.3\% & 1000 & 791 & 100 \\
-	166.6\% & 685 & 612 & 77 \\
-	200.0\% & 552 & 531 & 98 \\
+        33.3\% & 1600 & 10 & 15302 \\
+	66.6\% & 1580 & 266 & 601 \\
+	90.0\% & 1332 & 782 & 69 \\
+	100.0\% & 1383 & 1016 & \textbf{58} \\
+	133.3\% & 839 & 713 & 105 \\
+	166.6\% & 626 & 541 & 117 \\
+	200.0\% & 407 & 398 & 128 \\
 	\hline
     \end{tabular}
     \caption{Simulated AR.Drone (USARSim). Mean error of the estimation position for different camera resolutions. For each camera resolution, the number of processed frames is counted. A part of these frames can be used to extract the velocity of the AR.Drone.}
@@ -613,7 +613,6 @@ In Figure \ref{fig:exp3-error}, the position error is plotted over time.
   \caption{Mean error of the estimated position with respect to the image resolution. For each resolution, the number of processed frames is counted (green line). A part of these frames can be used to extract the velocity of the AR.Drone (red line).}
   \label{fig:exp3-error2}
 \end{figure}
-
 
 From Table \ref{tab:res-resolution-ar} can be seen that the original camera resolution is sufficient for frequent velocity updates.
 Out of the $2168$ processed frames, $1945$ frames ($90\%$) could be used to extract the velocity using the Visual Odometry method.
@@ -639,12 +638,6 @@ One would expect that an increased image resolution would result in a smaller er
 However, due to the increased computational time per frame, less frames can be processed resulting in less frequent velocity estimates.
 This results in a mean error that is not smaller than the original resolution.
 
-From these observations can be concluded that the AR.Drone's bottom camera resolution offers a good balance between image quality (usefulness) and processing time.
-An increased camera resolution is expected to yield improved position accuracy when the machine running the SLAM method is able to keep the same number of processed frames when the image resolution increases.
-
-
-
-
 \begin{figure}[htb!]
   \begin{center}
     \subfigure[Real AR.Drone]{\label{fig:exp3-a}%
@@ -660,62 +653,62 @@ An increased camera resolution is expected to yield improved position accuracy w
 
 
 
-\begin{comment}
-% USARSIM
-usar-33  = 5/1600
-usar-66  = 247/1598
-usar-90  = 850/1570
-usar-100 = 841/1365
-usar-133 = 791/1000
-usar-166 = 612/685
-usar-200 = 531/552
+
+%\subsubsection{Faster computer}
+\clearpage
+The experiment is repeated on a faster computer\footnote{The original experiment was performed on a Intel Core 2 Duo 2.2 GHz. The experiment is repeated on a faster Intel Core i7-2600 3.4 GHz. The Passmark CPU Mark benchmark indicates a score of $1259$ vs $8891$ (higher is better). \url{http://www.cpubenchmark.net/cpu_list.php}}, to verify that an increased camera resolution is yielding improved position accuracy when velocity estimates can be computed frequently.
+The results can be found in Table \ref{tab:res-resolution-usar-pcudk} and Figures \ref{fig:exp3-pcudk-res-error} and \ref{tab:res-resolution-usar-pcudk}.
+
+For each resolution, the faster computer is able to process more frames, resulting in more frequent velocity updates.
+Therefore, the mean error decreases.
+Similar to the previous experiment, the number of processed frames decreases when the camera resolution increases.
+This indicates that the faster computer is still unable to process all incoming frames.
+The video processing implementation, which uses a single thread, is unable to make full use of the CPU's processing power.
+Despite this fact, the faster computer is able to benefit from the increased image resolution.
+A camera resolution of $133.3\%$ is producing the smallest mean error, outperforming the mean error from the previous experiment.
+For this increased resolution, the faster computer is able to process the same amount of frames as the other computer running at the original resolution.
+When the resolution increases further ($166.6\%$ or $200.0\%$), the mean error increases due to the less frequent velocity estimates.
+
+From these observations can be concluded that the AR.Drone's bottom camera resolution offers a good balance between image quality (usefulness) and processing time.
+An increased camera resolution is yielding improved position accuracy when the computer is able to process sufficient frames when the image resolution increases.
+A multi-threaded implementation is expected to provide a performance boost.
+
+\begin{table}[htb!]
+    \centering
+    \begin{tabular}
+        { | l | l | l | l | } 
+	\hline
+	Resolution & Nr. frames processed & Nr. frames velocity extracted & Mean error (mm) \\
+        \hline
+	100.0\% & 1556 & 1145 & 69 \\
+	133.3\% & 1330 & 961 & \textbf{54} \\
+	166.6\% & 836 & 773 & 82 \\
+	200.0\% & 655 & 624 & 83 \\
+	\hline
+    \end{tabular}
+    \caption{(Simulated AR.Drone \& faster computer). Mean error of the estimation position for different camera resolutions. For each camera resolution, the number of processed frames is counted. A part of these frames can be used to extract the velocity of the AR.Drone.}
+    \label{tab:res-resolution-usar-pcudk}
+\end{table}
+
+
+\begin{figure}[htb!]
+\centering
+\includegraphics[width=0.55\linewidth]{images/exp3-us-pcudk2.eps}
+\caption{(Simulated AR.Drone \& faster computer) Mean error of the estimated position with respect to the image resolution. For each resolution, the number of processed frames is counted (green line). A part of these frames can be used to extract the velocity of the AR.Drone (red line).}
+\label{fig:exp3-pcudk-res-error}
+\end{figure}
+
+\begin{figure}[htb!]
+\centering
+\includegraphics[width=0.9\linewidth]{images/exp3-us-pcudk.eps}
+\caption{(Simulated AR.Drone \& faster computer) Error of the estimated position for different image resolutions.}
+\label{fig:exp3-pcudk-res-error2}
+\end{figure}
 
 
 
 
-[33]
-9294.523849, 6275.971701
 
-[66]
-528.011637, 264.881965
-
-[90]
-99.933571, 41.612158
-
-[100]
-73.188934, 31.546714
-
-[133.3]
-100.064949, 47.737359
-
-[166.6]
-77.383557, 41.207540
-
-[200]
-98.255163, 50.079516
-
-
-
-% REAL AR.DRONE
-ar-100 1945/2168
-ar-90  1847/2259
-ar-66  1346/2239
-ar-33  213/2275
-
-
-[33]
-11742.337124, 5503.479076
-
-[66]
-2166.391959, 1356.548951
-
-[90]
-531.474630, 251.091508
-
-[100]
-578.864016, 214.820721
-
-\end{comment}
 
 
 \clearpage
