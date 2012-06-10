@@ -3,7 +3,7 @@ In order to initialize a visual localization and mapping algorithm, a good estim
 Section \ref{sec:pose_estimation} describes how the pose is estimated.
 When an estimate of the pose is available, a map can be constructed using the method described in Section \ref{sec:mapping}.
 Section \ref{sec:localization} describes how this map is used by the AR.Drone to localize itself and reduce the error of the estimated pose.
-This localization method is extended in Section \ref{sec:visual-slam-visual-odemetry} to operate as a visual odometry algorithm .
+This localization method is extended in Section \ref{sec:visual-slam-visual-odemetry} to operate as a visual odometry algorithm.
 Finally, Section \ref{sec:elevation_map} describes an experimental method to build an elevation map using a single airborne ultrasound sensor.
 
 	\section{Pose estimation}
@@ -22,7 +22,7 @@ This estimate is based on the inertia measurements, aerodynamic model and visual
 %not documented by the manufacturer.
 The details of this algorithm are proprietary information of the manufacturer. 
 
-The information from the sensors are used in an Extended Kalman Filter (EKF) to estimate the current pose.
+The information from the sensors are used in an Extended Kalman Filter (EKF) (Section \ref{sec:prob-rob-ekf}) to estimate the current pose.
 An EKF has been considered~\cite{julier2004unscented} the facto standard in the theory of nonlinear state estimation.
 The EKF state vector comprises a position vector $p^{W}$, velocity vector $v^{W}$, acceleration vector $a^{W}$ and attitude (orientation) vector $q^{W}$.
 All vectors are 3-dimensional Cartesian coordinates.
@@ -78,20 +78,20 @@ When an estimate of the AR.Drone's pose is available, a map can be constructed t
 The map consists of a texture map and a feature map.
 The texture map is used for human navigation and the feature map is used by the AR.Drone to localize itself.
 
-	\subsection{Visual map}
+	\subsection{Texture map}
 \label{sec:texture_map}
-Now that we have an estimate of the AR.Drone's position and attitude in the world, we can use this information to build a visual map of the environment.
+Now that we have an estimate of the AR.Drone's position and attitude in the world, we can use this information to build a texture map of the environment.
 The AR.Drone is equipped with a down-looking camera that has a resolution of $176 \times 144$ pixels.
-The frames captured by this camera can be warped on a flat canvas to create a visual map.
+The frames captured by this camera can be warped on a flat canvas to create a texture map.
 Directly merging the frames on the canvas is not possible, because individual frames can be taken from a broad range of angles and altitudes.
 Instead, perspective correction is applied and all frames are normalized in size and orientation.
 
 An initial approach of the mapping algorithm was published \cite{Visser2011imav} and presented at the IMAV2011 conference.
-This approach uses image stitching \cite{levin2004seamless} to create a visual map.
+This approach uses image stitching \cite{levin2004seamless} to create a texture map.
 Knowledge about the AR.Drone estimated state is not used.
 %The propagation of stitching errors results in an increasing error.
 Because the transformations of all previous frames are used to compute the transformation of the recent frame, the method is sensitive to incorrect transformations.
-Therefore, a new mapping method is developped.
+Therefore, a new mapping method is developed.
 
 Before describing how a frame is warped, some basics about image formation are repeated. %the camera matrix are explained.
 The AR.Drone's camera is modeled using a pinhole camera model (Figure \ref{fig:mapping1}).
@@ -121,7 +121,7 @@ The $3 \times 4$ joint rotation-translation matrix $[R|t]$ includes the \textit{
 \begin{figure}[htb]
 \centering
 \includegraphics[width=10cm]{images/mapping1.png}
-\caption{Visual map: warping a camera frame on the map's canvas. The frame's corners ($\small{px}$) are mapped to 2D world coordinates that lie on the world's plane. The 2D world coordinates of the frame are mapped to the map's canvas coordinates ($\small{px}$). Equation \ref{eq:visual-slam-perspective-transformation} is used to compute the perspective transformation $H$ to transform all pixels of the frame to the corresponding positions on the map's canvas.}
+\caption{Texture map: warping a camera frame on the map's canvas. The frame's corners ($\small{px}$) are mapped to 2D world coordinates that lie on the world's plane. The 2D world coordinates of the frame are mapped to the map's canvas coordinates ($\small{px}$). Equation \ref{eq:visual-slam-perspective-transformation} is used to compute the perspective transformation $H$ to transform all pixels of the frame to the corresponding positions on the map's canvas.}
 \label{fig:mapping2}
 \end{figure}
 
@@ -213,7 +213,7 @@ The transformation is used to warp the frame on the map's canvas.
 By warping the frame on a flat canvas, implicit perspective correction is applied to the frames.
 OpenCV's \textit{warpPerspective}\footnote{\url{http://opencv.itseez.com/modules/imgproc/doc/geometric_transformations.html}} is used to warp the frame on the map's canvas.
 
-In this way a texture map can be built. This map consists of a set overlapping textures. The placement and discontinuities of the overlapping textures could be further optimized by map stitching, as described in \cite{Visser2011imav}. Here the texture map is used for human navigation.
+In this way a texture map can be built. This map consists of a set overlapping textures. The placement and discontinuities of the overlapping textures can be further optimized by map stitching, as described in \cite{Visser2011imav}. Here the texture map is used for human navigation.
 For
 %automatic navigation
 localization a feature map is used, as described in the next section.
@@ -225,7 +225,7 @@ localization a feature map is used, as described in the next section.
 
 		\subsection{Feature map}
 \label{sec:feature_map}
-In addition to the visual map described above, a grid of image features (feature map) is created using a method that is presented in this section.
+In addition to the texture map described above, a grid of image features (feature map) is created using a method that is presented in this section.
 This feature map will be used for localization purposes, as described in Section~\ref{sec:localization}.
 The inertia measurements provide frequent position estimates.
 %However, drift will increase the inaccuracy over time.
@@ -267,7 +267,7 @@ s_{bin}
 } \right]
 )
 \end{equation}
-where $s_{bin} = 0.01$.
+where $s_{bin} = 0.01$ for a cell size of $100 \times 100\small{mm}$.
 
 For each cell, only the best feature (e.g. with the highest response) is kept and the other features are dropped.
 %If a cell is already connected to a feature descriptor ($grid_{x,y} \neq \emptyset$), the cell is ignored.
@@ -292,9 +292,9 @@ The remaining (best) feature descriptors, including the corresponding world coor
 \begin{comment}
 \subsubsection{Processing time}
 
-Processing a single frame and adding it to the map requires approximately $130\small{ms}$ (visual mapping: $20\small{ms}$, feature mapping: $110\small{ms}$).
-The AR.Drone's framerate is fixed at 15fps, which is too high to process each single frame in realtime.
-In order to achieve realtime mapping, frames that are receiving while another frame is still being process, are dropped.
+Processing a single frame and adding it to the map requires approximately $130\small{ms}$ (texture mapping: $20\small{ms}$, feature mapping: $110\small{ms}$).
+The AR.Drone's framerate is fixed at 15fps, which is too high to process each single frame in real-time.
+In order to achieve real-time mapping, frames that are receiving while another frame is still being process, are dropped.
 However, the processing is sufficiently fast to enable seamlessly mapping.
 For example, when flying at $1\small{m}$ altitude, the camera (64 degree FOV) perceives $1.24\small{m}$ floor.
 The maximum horizontal speed to achieve seamlessly mapping at 15fps is 
@@ -494,7 +494,7 @@ When a camera frame $f_t$ is received, SURF features are extracted.
 Each feature consists of a center position in pixel coordinates ($x_f, y_f$) and a feature descriptor.
 A feature's center point ($x_f, y_f$) is transformed to its corresponding position in 2D world coordinates ($x_w, y_w$).
 This is done using ray-casting, as described in Section \ref{sec:texture_map}.
-Contrary to the previous sections, the origin of the ray is set to $(0, 0, z)$, such that the estimated position of the AR.Drone doesn't influence the visual odometry calculations.
+Contrary to the previous sections, the origin of the ray is set to $(0, 0, z)$, such that the estimated position of the AR.Drone does not influence the visual odometry calculations.
 % where the position of the AR.Drone is set to $(0, 0)$.
 
 The next step is matching the feature descriptors from the last frame $f_t$ against the feature descriptors from the previous frame $f_{t-1}$.
@@ -550,7 +550,7 @@ The fundamental limitations of an ultrasound sensor make it hard to build an ele
 Two issues are described below.
 
 %\subsection{Fundamental issues}
-The first issue is the unknow true altitude $z_{true}$ of the vehicle.
+The first issue is the unknown true altitude $z_{true}$ of the vehicle.
 When a MAV is flying above a perfectly flat floor, the measured altitude $z_{sensor}$ is equal to the true altitude $z_{true}$.
 However, when an obstacle comes in range of the ultrasound sensor, the measured distance $z_{sensor}$ decreases and is not equal to the true altitude $z_{true}$, meaning that $z_{true}$ cannot be derived from the ultrasound sensor directly.
 When the true altitude is unknown, it is impossible to determine the floor's elevation from the distance measurements using the following equation:
@@ -564,7 +564,7 @@ elevation = z_{true} - z_{sensor}
 
 Another limitation of using an ultrasound sensor for elevation mapping is the resolution of the sensor.
 As described in Section \ref{sec:ultrasound_altimeter}, an ultrasound sensor is unable to obtain precise directional information about objects.
-Sound progragates in a cone-like manner.
+Sound propagates in a cone-like manner.
 Due to this property, the sensor acquires entire regions of constant depth instead of discrete depth points.
 As a result, the ultrasound sensor can only tell there is an elevation at the measured distance somewhere within the measured cone.
 This makes it hard to accurately determine the contours of obstacles.
@@ -588,7 +588,7 @@ $\left \{ {
 \begin{array}{c c c} \text{NONE} & \text{UP} & \text{DOWN} \end{array}
 } \right \}$
 \end{comment}
-State NONE indicates no significant elevation changes are occuring, state UP indicates a significant increase of elevation is detected and state DOWN indicates a significant decrease of elevation is detected.
+State NONE indicates no significant elevation changes are occurring, state UP indicates a significant increase of elevation is detected and state DOWN indicates a significant decrease of elevation is detected.
 
 \begin{figure}[htb]
 \centering
@@ -604,7 +604,7 @@ The threshold $\gamma_{elevationEvent}$ was carefully chosen such that altitude 
 The second order derivative is filtered by adding it to the altitude vector $h^W$ of the EKF state vector.
 An elevation event ends when the sign of the second order derivative switches.
 This happens when the AR.Drone altitude stabilization starts to change the absolute altitude to compensate for the change in measured altitude.
-Now, the elevation change can be recovered by substracting the measured distance at the end of the elevation event from the measured distance before the elevation event was triggered:
+Now, the elevation change can be recovered by subtracting the measured distance at the end of the elevation event from the measured distance before the elevation event was triggered:
 \begin{equation}
 \Delta\delta_{t} = z_{sensor, t-\Delta t-1} - z_{sensor, t-1}
 \end{equation}
@@ -620,7 +620,7 @@ The total elevation is given by:
     \subfigure[Corresponding elevation]{\label{fig:elevation_method_area}\includegraphics[width=\linewidth]{images/elevation_map_area.eps}}
  \end{center}
 \caption{a) Response of the ultrasound sensor when flying over an object of approximately $(60,60,40)\small{mm}$. The lightgray lines indicate the threshold $\gamma_{elevationEvent}$ and null-line. When the second order derivative (magenta line) exceeds the threshold, an event is started (lightgrey rectangle). An event ends when the derivative swaps sign. Each arrow indicates the change in elevation caused by the event. The first event increases the elevation when entering an object and the second event decreases the elevation when leaving the object.
-Between both events, the AR.Drone performs an altitude correction, as can be seen by the relatively slow increasement of distance. This increasement is not infomative about the elevation and is ingnored by the elevation mapping method.\\ b) Elevation $\delta$ below the AR.Drone over time. The elevation increases to approximately $40\small{cm}$ when flying above an obstacle. The elevation is decreased when the obstacle is out of the ultrasound sensor's range. There is a small error between both elevation events, resulting in a small false elevation ($\pm 50\small{mm}$) after the AR.Drone flew over the obstacle and is flying above the floor again.}
+Between both events, the AR.Drone performs an altitude correction, as can be seen by the relatively slow increasement of distance. This increasement is not infomative about the elevation and is ignored by the elevation mapping method.\\ b) Elevation $\delta$ below the AR.Drone over time. The elevation increases to approximately $40\small{cm}$ when flying above an obstacle. The elevation is decreased when the obstacle is out of the ultrasound sensor's range. There is a small error between both elevation events, resulting in a small false elevation ($\pm 50\small{mm}$) after the AR.Drone flew over the obstacle and is flying above the floor again.}
   \label{visual-slam-elevation-method}
 \end{figure}
 
@@ -629,7 +629,7 @@ Between both events, the AR.Drone performs an altitude correction, as can be see
 \centering
 \includegraphics[width=\linewidth]{images/elevation_map.eps}
 \caption{Response of the ultrasound sensor when flying over an object of approximately $(60,60,40)\small{mm}$. The lightgray lines indicate the threshold $\gamma_{elevationEvent}$ and null-line. When the second order derivative (magenta line) exceeds the threshold, an event is started (lightgrey rectangle). An event ends when the derivative swaps sign. Each arrow indicates the change in elevation caused by the event. The first event increases the elevation when entering an object and the second event decreases the elevation when leaving the object.
-Between both events, the AR.Drone performs an altitude correction, as can be seen by the relatively slow increasement of distance. This increasement is not infomative about the elevation and is ingnored by the elevation mapping method.}
+Between both events, the AR.Drone performs an altitude correction, as can be seen by the relatively slow increasement of distance. This increasement is not informative about the elevation and is ingnored by the elevation mapping method.}
 \label{fig:elevation_method}
 \end{figure}
 \begin{figure}[htb]
@@ -641,7 +641,7 @@ Between both events, the AR.Drone performs an altitude correction, as can be see
 \end{comment}
 
 The elevation information is stored in a grid that is similar to the feature map described in Section \ref{sec:feature_map}.
-For each ultrasound distance measurement, elevation $\delta_t$ is computed and stored in the grid cells that corresponds to the world coordinates where a line perpendicular to the AR.Drone body intersects the world plane.
+For each ultrasound distance measurement, elevation $\delta_t$ is computed and stored in the grid cells that correspond to the world coordinates where a line perpendicular to the AR.Drone body intersects the world plane.
 These world coordinates are the position where the center of the ultrasound sensor's cone hits the floor.
 Because the exact size of an object is unknown, the elevation is written to all grid cells within a radius $\gamma_{elevationRadius}$ around the intersection point.
 This process is visualized in Figure \ref{visual-slam-elevation-map1} and \ref{visual-slam-elevation-map2}.
@@ -663,6 +663,6 @@ where $r$ is the radius of a cone of height $z_{sensor}$ and $\alpha_{ultrasound
     \subfigure[Obstacle in range]{\label{visual-slam-elevation-map2}\includegraphics[width=0.33\linewidth]{images/elevation_map2.png}}
     \subfigure[Obstacle out of range]{\label{visual-slam-elevation-map3}\includegraphics[width=0.33\linewidth]{images/elevation_map3.png}}
  \end{center}
-  \caption{Overview of the elevation map updates. The green cone indicates the range of the ultrasound sensor. The red line inside the cone respresents the center of the cone, perpendicular to the AR.Drone's body. In \ref{visual-slam-elevation-map1} and \ref{visual-slam-elevation-map2} an elevation is measured. All grid cells within a radius $\gamma_{elevationRadius}$ around the center of the cone (red line) are updated to store the measured elevation. \ref{visual-slam-elevation-map3} Describes the refinement step. When no elevation is measured, all grid cells within the cone (red cubes) are resetted to zero elevation.}
+  \caption{Overview of the elevation map updates. The green cone indicates the range of the ultrasound sensor. The red line inside the cone represents the center of the cone, perpendicular to the AR.Drone's body. In \ref{visual-slam-elevation-map1} and \ref{visual-slam-elevation-map2} an elevation is measured. All grid cells within a radius $\gamma_{elevationRadius}$ around the center of the cone (red line) are updated to store the measured elevation. \ref{visual-slam-elevation-map3} Describes the refinement step. When no elevation is measured, all grid cells within the cone (red cubes) are resetted to zero elevation.}
   \label{visual-slam-elevation-map}
 \end{figure}

@@ -8,7 +8,7 @@ However, this sensor has a number of problems (e.g., limited range, deal with dy
 Vision has long been advertised as a solution.
 A camera can make a robot perceive the world in a way similar to humans.
 
-\textbf{Computer vision} is a field that includes methods for acquiring, processing, analysing and understanding images.
+\textbf{Computer vision} is a field that includes methods for acquiring, processing, analyzing and understanding images.
 Since a camera is the AR.Drone's only sensor capable of retrieving detailed information of the environment, computer vision techniques are essential when performing robot localization with the AR.Drone.
 In addition, vision techniques can be used to calibrate other sensors of a robot.
 
@@ -24,12 +24,12 @@ A point in Euclidean 3-space is represented by an unordered pair of real numbers
 However, this coordinate system is unable to represent vanishing points.
 The \textit{Homogeneous coordinate system} is able to represent points at infinity.
 Homogeneous coordinates have an additional coordinate.
-Now, points are represented by \textit{equivalance classes}, where points are equivalant when they differ by a common multiple.
+Now, points are represented by \textit{equivalance classes}, where points are equivalent when they differ by a common multiple.
 For example, $(x, y, z, 1)$ and $(2x, 2y, 2z, 2)$ represent the same point.
-Points at infinity are respresented using $(x, y, z, 0)$, because $(x/0, y/0, z/0)$ is infinite.
+Points at infinity are represented using $(x, y, z, 0)$, because $(x/0, y/0, z/0)$ is infinite.
 In Euclidean geometry, one point is picked out as the \textit{origin}.
 A coordinate can be transformed to another coordinate by translating and rotating to a different position.
-This operation is know as a \textbf{Euclidian transformation}.
+This operation is known as a \textbf{Euclidian transformation}.
 A more general type of transformation is an \textbf{affine transformation}, which is a linear transformation (linear stretching), followed by a Euclidian transformation.
 The resulting transformation performs moving (translating), rotating and finally stretching linearly.
 % possibly by different ratios in different directions.
@@ -56,7 +56,7 @@ It is a lightproof box with a very small aperture instead of a lens.
 Light from the scene passes through the aperture and projects an \textit{inverted image} on the opposite side of the box.
 This principle has been adopted as a standard model for perspective cameras.
 In this model, \textit{optical center} $C$ (aperture) corresponds to the center of the lens.
-The intersection $O$ between the the optical axis and the image plane is called \textit{principal point}.
+The intersection $O$ between the optical axis and the image plane is called \textit{principal point}.
 The pinhole model is commonly described with the image plane between $C$ and the scene in order to preserve the same orientation as the object.
 
 The operation performed by the camera is called the \textbf{perspective transformation}.
@@ -103,7 +103,7 @@ From this equation can be seen that it is not possible to estimate the distance 
 A more realistic camera model is called the \textbf{general camera model}.
 It takes into account the rigid body transformation between the camera and the scene, and \textit{pixelization} (i.e., shape and position of the camera's sensor).
 Pixelization is addressed by replacing the focal length matrix with a \textit{camera intrinsic parameter matrix} $A$.
-The rigid body transformation is adressed by adding a combined rotation and translation matrix $[R|t]$, which are called the \textit{camera extrinsic parameters}.
+The rigid body transformation is addressed by adding a combined rotation and translation matrix $[R|t]$, which are called the \textit{camera extrinsic parameters}.
 \begin{equation}
 \lambda p = A [ R | t] P
 \end{equation}
@@ -134,16 +134,16 @@ P_z \\
 \end{equation}
 
 \textbf{Camera calibration} is the process of measuring the intrinsic and extrinsic parameters of the camera.
-As explained in the previous paragraph, these parameters are required to calculcate the mapping between 3D scene points to 2D points on the image plane.
+As explained in the previous paragraph, these parameters are required to calculate the mapping between 3D scene points to 2D points on the image plane.
 When scene points $P$ and image points $p$ are known, it is possible to compute $A$, $R$, $t$ by solving the perspective projection equation.
 Newer camera calibration techniques use a planar grid (e.g., chessboard-like pattern) instead of 3D points, to ease the extraction of corners.
 The method requires several pictures of the pattern shown at different positions and orientations.
-Because the 2D positions of the corners are known and matched between all images, the instrinsic and extrinsic parameters are determined simultaneously by applying a least-square minimization.
+Because the 2D positions of the corners are known and matched between all images, the intrinsic and extrinsic parameters are determined simultaneously by applying a least-square minimization.
 
 \section{Feature extraction and matching}
 \label{sec:computer-vision-feature-extraction-matching}
 In order to perform robot localization using vision sensors, the robot must be able to relate recent camera frames to previously received camera frames (map).
-However, all measurents have an error, which complicates the matching.
+However, all measurements have an error, which complicates the matching.
 A strategy to deal with uncertainty is by generating a higher-level description of the sensor data instead of using the raw sensor data.
 This process is called \textit{feature extraction}.
 
@@ -163,7 +163,7 @@ Choosing the appropriate features is a critical task when designing a mobile rob
 A local feature is a small image patch that is different than its immediate neighborhood.
 Difference can be in terms of intensity, color and texture.
 Commonly, features are edges, corners or junctions.
-The most important aspect of a feature detector is \textit{repeatability}, which means the detector is able to detect the same features, when multiple images (with different viewing and illumuniation conditions) of the same scene are used.
+The most important aspect of a feature detector is \textit{repeatability}, which means the detector is able to detect the same features, when multiple images (with different viewing and illumination conditions) of the same scene are used.
 Another important aspect of a feature detector is \textit{distinctiveness}, which means the information carried by a patch is distinctive as possible.
 This is important for robust feature matching.
 Good feature are \textit{invariant}, meaning that changes in camera viewpoint, illumination, rotation and scale do not affect a feature and its high-level description.
@@ -178,7 +178,7 @@ Fourth, bad keypoints (e.g., edges and low contrast regions) are eliminated.
 Fifth, an orientation is calculated for each keypoint.
 Any further calculations are done relative to this orientation, making it rotation invariant.
 Finally, a high-level representation is calculated to uniquely identify features.
-This \textit{feature descriptors} is a vector of 128 elements, containing orientation histograms.
+This \textit{feature descriptor} is a vector of 128 elements, containing orientation histograms.
 
 For some applications or mobile platforms, the SIFT extractor is too slow.
 Therefore, faster variants are proposed, like \textbf{Speeded Up Robust Feature (SURF)} \cite{Bay2008cviu}.
@@ -200,7 +200,7 @@ First-order Haar wavelet \cite{stollnitz1995wavelets} responses in $x$ and $y$ d
 
 Another feature extractor is the \textbf{GIST} descriptor \cite{oliva2001modeling}, which characterizes several important statistics about a scene.
 The GIST descriptor measures the global distribution of oriented line segments in an image.
-This makes the descriptor well-suited for determining the type of environment.
+This makes the descriptor well suited for determining the type of environment.
 The GIST feature is computed by convolving an oriented filter with the image at several different orientations and scales. 
 The scores of the convolution at each orientation and scale are stored in array.
 
@@ -209,7 +209,7 @@ The scores of the convolution at each orientation and scale are stored in array.
 To perform robot localization, extracted feature descriptors need to be matched against the feature descriptors that are part of the map.
 Ideally, each feature extracted from the current frame is correlated against the corresponding feature inside the map.
 
-A \textit{matching function} is used to compute the correspondance between two feature descriptors.
+A \textit{matching function} is used to compute the correspondence between two feature descriptors.
 The matching function usually depends on the type of feature descriptor.
 In general, a feature descriptor is a high-dimensional vector and matching features can be found by computing the distance using the $L_2$ norm, which is defined as:
 \begin{equation}
@@ -290,7 +290,7 @@ An iterative refinement procedure like \textit{windowed-bundle adjustment} can b
 The first step of VO is the extraction of image features $f_t$ from a new image $I_t$.
 In the second step, these features are matched with features $f_{t-1}$ from the previous image (multiple images can be used to recover 3D motion).
 The third step consists of computing the relative motion $T_t$ between time $t-1$ and $t$.
-For an accurate motion estimation, feature correspondences should not contain outliers, as described in Section \ref{sec:theory_feature_matching}.
+For accurate motion estimation, feature correspondences should not contain outliers, as described in Section \ref{sec:theory_feature_matching}.
 
 The geometric relations between two images $I_t$ and $I_{t-1}$ are described by the \textit{essential matrix} $E$:
 \begin{equation}
@@ -319,7 +319,7 @@ E = 0
 where $E = [e_1  e_2  e_3  e_4  e_5  e_6  e_7  e_8  e_9]^T$, 
 $\tilde{u}$ and $\tilde{v}$ are the $x$ and $y$ coordinates in the first image and $\tilde{u}'$ and $\tilde{v}'$ are the $x$ and $y$ coordinates in the second image.
 
-Stacking these constraints gives the linear equation $A E = 0$, where $A$ is the camera instrinsic matrix.
+Stacking these constraints gives the linear equation $A E = 0$, where $A$ is the camera intrinsic matrix.
 This equation can be solved by using singular value decomposition (SVD) \cite{klema1980singular}, which has the form $A = USV^T$.
 Now, the projected essential matrix $\overline{E}$ can be found as the last column of $V$:
 \begin{equation}

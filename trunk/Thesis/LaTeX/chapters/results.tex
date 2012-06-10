@@ -3,10 +3,10 @@ In Section \ref{sec:simulation_results}, the USARSim simulation model is validat
 I like to thank Carsten van Weelden for these experiments.
 He flew a set of maneuvers with the actual AR.Drone and simulated AR.Drone. The differences between the maneuvers are studied in detail.
 In Section \ref{sec:results-position-accuracy}, the accuracy of the estimated position is evaluated.
-A set of 8-shapes is flown with the AR.Drone and the estimated positions are compared against the groundtruth from a laser range finder.
+A set of 8-shapes is flown with the AR.Drone and the estimated positions are compared against the groundtruth from a laser rangefinder.
 In Section \ref{sec:results-pose-recovery}, the proposed pose recovery approach is benchmarked against other pose recovery approaches.
 In Section \ref{sec:res-cam-resolution}, the influence of the camera resolution is investigated.
-Finally, in Section \ref{sec:results-elevation-accuracy} the accurracy of the elevation map is evaluated in terms of elevation error and the error in the estimated size of objects.
+Finally, in Section \ref{sec:results-elevation-accuracy} the accuracy of the elevation map is evaluated in terms of elevation error and the error in the estimated size of objects.
 
 
 	\section{Simulation model}
@@ -177,28 +177,29 @@ As one can see, the acceleration shows for the real and simulated AR.Drone nearl
 \section{Position accuracy}
 \label{sec:results-position-accuracy}
 An experiment has been carried out to evaluate the accuracy of the AR.Drone's estimated position.
-This experiment is performed above a texture-rich floor (Section \ref{sec:exp1-texture-poor}), a texture-poor floor (Section \ref{sec:exp1-texture-poor}) and a floor that resembles the circumstances encountered during the IMAV competition.
+This experiment is performed above a texture-rich floor (Section \ref{sec:exp1-texture-rich}), a texture-poor floor (Section \ref{sec:exp1-texture-poor}) and a floor that resembles the circumstances encountered during the IMAV competition (Section \ref{sec:exp1-imav-circumstances}).
 The position can be estimated using different methods and the accuracy of all these methods are evaluated.
 To ensure fair comparison of the different estimation methods, a flight was recorded (Section \ref{sec:proposed-framework}) and played back to generate the same input for all methods.
 
 The first position estimation method integrates the AR.Drone's onboard velocity (AV) measurements to estimate the position (Section \ref{sec:pose_estimation}).
-Recent versions of the AR.Drone firmware calculcate an estimated position onboard\footnote{Firmware 1.7.4}, which is used as second estimation method.
+Recent versions of the AR.Drone firmware calculate an estimated position onboard\footnote{Firmware 1.7.4}, which is used as second estimation method.
 The third position estimation method uses the visual odometry method presented in this thesis (Section \ref{sec:visual-slam-visual-odemetry}).
 The final estimation method uses the AR.Drone's onboard velocity (AV) for frequent position updates and the presented localization method (Section \ref{sec:localization}) to localize against the map that is constructed during flight.
 
-The estimated position is compared against the groundtruth (real) position to calculcate the accuracy of the estimated position.
+The estimated position is compared against the groundtruth (real) position to calculate the accuracy of the estimated position.
 Much attention was paid to collect accurate groundtruth of the AR.Drone's position.
-A high-end laser range finder (LRF)\footnote{Hokuyo UTM-30LX, \url{http://www.hokuyo-aut.jp/02sensor/07scanner/utm_30lx.html}} was used to determine the position of the AR.Drone.
-The LRF measures distance to objects.
+A high-end laser rangefinder (LRF)\footnote{Hokuyo UTM-30LX, \url{http://www.hokuyo-aut.jp/02sensor/07scanner/utm_30lx.html}} was used to determine the position of the AR.Drone.
+The LRF accurately measures distance to objects.
+At a range of $10\small{m}$, the accuracy is $\pm30\small{mm}$.
 A window was placed on the measurements to filter out measurements that originate from the environment.
 All remaining distance measurements are assumed to originate from the AR.Drone.
 The mean position of the filtered distance measurements is used as center position of the AR.Drone.
-Futhermore, a white cylinder with a diameter of 9\begin{small}cm\end{small} and a height of 37\begin{small}cm\end{small} was added on top of the AR.Drone to improve its visability for the LRF.
+Furthermore, a white cylinder with a diameter of 9\begin{small}cm\end{small} and a height of 37\begin{small}cm\end{small} was added on top of the AR.Drone to improve its visibility for the LRF.
 
 \begin{figure}[htb]
 \centering
 \includegraphics[width=13cm]{images/exp1-floorplan-align.pdf}
-\caption{The alignment of the laser range finder and the AR.Drone. The laser range finder (LRF) is aligned against two poles. The takeoff position is marked with a green star. The red star indicates the marked heading direction of the AR.Drone. A laser pointer is used to align the heading direction of the AR.Drone to the marker position.}
+\caption{The alignment of the laser rangefinder and the AR.Drone. The laser rangefinder is aligned against two poles. The takeoff position is marked with a green star. The red star indicates the marked heading direction of the AR.Drone. A laser pointer is used to align the heading direction of the AR.Drone to the marker position.}
 \label{fig:exp1-floorplan-align}
 \end{figure}
 
@@ -222,14 +223,14 @@ Finally, a laser pointer is used to align the heading direction of the AR.Drone 
 \subsection{Texture-rich floor}
 \label{sec:exp1-texture-rich}
 The first experiment was performed above a texture-rich floor (Figure \ref{fig:exp1-floor}), to benchmark the methods in preferable circumstances.
-Magazines were spraid out on the floor to provide sufficient texture for the computer vision algorithms.
+Magazines were spread out on the floor to provide sufficient texture for the computer vision algorithms.
 The AR.Drone flew three 8-shapes above the magazines.
 An 8-shape was chosen to capture an intermediate loop.
 
 \begin{figure}[htb!]
 \centering
 \includegraphics[width=8cm]{images/exp1-floor.jpg}
-\caption{Photo of the texture-rich floor used for the first experiment. Magazine are spraid out on the floor to provide sufficient texture. The dimensions of the 8-shape are approximately $5\small{m} \times 2.5\small{m}$.}
+\caption{Photo of the texture-rich floor used for the first experiment. Magazine are spread out on the floor to provide sufficient texture. The dimensions of the 8-shape are approximately $5\small{m} \times 2.5\small{m}$.}
 \label{fig:exp1-floor}
 \end{figure}
 
@@ -268,11 +269,11 @@ An 8-shape was chosen to capture an intermediate loop.
 \begin{figure}[htb!]
 \centering
 \includegraphics[width=0.75\linewidth]{images/exp1-run13-map.jpg}
-\caption{Visual map created by the visual mapping method (Section \ref{sec:texture_map}). The map is constructed during the first 8-shape. The position estimates are based on the onboard velocity (AV) and the visual localization method (Section \ref{sec:localization}).}
+\caption{Texture map created by the texture mapping method (Section \ref{sec:texture_map}). The map is constructed during the first 8-shape. The position estimates are based on the onboard velocity (AV) and the visual localization method (Section \ref{sec:localization}).}
 \label{fig:exp1-texture-map}
 \end{figure}
 
-The results of this experiment can be found in Table \ref{tab:res_mapping} and Figures \ref{fig:exp1-texture-error} (errors), \ref{fig:exp1-texture-path} (trajectories) and \ref{fig:exp1-texture-map} (visual map).
+The results of this experiment can be found in Table \ref{tab:res_mapping} and Figures \ref{fig:exp1-texture-error} (errors), \ref{fig:exp1-texture-path} (trajectories) and \ref{fig:exp1-texture-map} (texture map).
 For the encountered circumstances, all methods are able to estimate the position quite accurately.
 Both the onboard velocity (AV) method and the onboard position (AP) method produce exactly the same trajectory and error, which implies the onboard position estimate (AP) is based on the velocity that is estimated by the AR.Drone.
 Therefore, the onboard position estimate is omitted from all plots.
@@ -282,7 +283,7 @@ An explanation could be that the AR.Drone features an additional optical flow al
 From Figure \ref{fig:exp1-texture-path} can be seen that the onboard velocity (AV) method has the largest error in the x-direction.
 Around $54\begin{small}s\end{small}$ the error is increasing rapidly.
 Analysis of the dataset pointed out that a small part of a magazine and a large part of a white line were in range of the camera.
-This resulted in a velocity thas was estimated in the wrong direction along the white line, which can be recognized by the small green loop on the right side of Figure \ref{fig:exp1-texture-path}.
+This resulted in a velocity that was estimated in the wrong direction along the white line, which can be recognized by the small green loop on the right side of Figure \ref{fig:exp1-texture-path}.
 
 The visual odometry (VO) method has the largest error in the y-direction.
 Around $80\begin{small}s\end{small}$ the error is increasing rapidly.
@@ -295,9 +296,9 @@ From Figure \ref{fig:exp1-texture-error} can be seen that the maximum error is n
 The repetitive error pattern suggests that the error of the estimated position largely depends on the quality (accuracy) of the map, if localization can be performed regularly.
 %Around $85\begin{small}s\end{small}$ the error increases rapidly. This error is caused by a false match %against the map. However, future localizations correct this mistake.
 
-The visual map (Figure \ref{fig:exp1-texture-map}) shows that the AR.Drone's onboard white balancing is reducing the contrast of the magazines, which affects the performance of the feature detector.
+The texture map (Figure \ref{fig:exp1-texture-map}) shows that the AR.Drone's onboard (uncontrollable) white balancing is reducing the contrast of the magazines, which affects the performance of the feature detector.
 This is a source of error for the visual odometry (VO) algorithm.
-Futhermore, errors in the ultrasound and IMU measurements are other sources that result in errors in the estimated velocities.
+Furthermore, errors in the ultrasound and IMU measurements are other sources that result in errors in the estimated velocities.
 
 % 66674 mm
 
@@ -347,12 +348,12 @@ The AR.Drone flew a single 8-shape.
 \begin{figure}[htb!]
 \centering
 \includegraphics[width=0.75\linewidth]{images/exp1-run2-map.jpg}
-\caption{Visual map created by the visual mapping method (Section \ref{sec:texture_map}). The position estimates are based on the onboard velocity (AV).}
+\caption{Texture map created by the texture mapping method (Section \ref{sec:texture_map}). The position estimates are based on the onboard velocity (AV).}
 \label{fig:exp1-notexture-map}
 \end{figure}
 
 
-The results of this experiment can be found in Table \ref{tab:res_mapping-poor} and Figures \ref{fig:exp1-notexture-error} (errors), \ref{fig:exp1-notexture-path} (trajectories) and \ref{fig:exp1-notexture-map} (visual map).
+The results of this experiment can be found in Table \ref{tab:res_mapping-poor} and Figures \ref{fig:exp1-notexture-error} (errors), \ref{fig:exp1-notexture-path} (trajectories) and \ref{fig:exp1-notexture-map} (texture map).
 For the encountered circumstances, all methods are unable to estimate the position accurately.
 Again, both the onboard velocity (AV) method and the onboard position (AP) method produce exactly the same trajectory.
 Localization was not possible and therefore omitted from the plots.
@@ -365,7 +366,7 @@ One would expect that the onboard aerodynamic model should correct this (i.e., t
 
 From Figure \ref{fig:exp1-notexture-path} can be seen that the visual odometry (VO) method underestimates the velocities.
 At places where the AR.Drone changes direction, the method was able to track sufficient features (due to the presence of corners) and estimate the velocities.
-At these places, the AR.Drone's velocity was below the average speed due to deaccelerations.
+At these places, the AR.Drone's velocity was below the average speed due to de-accelerations.
 Along most straight parts of the trajectory insufficient features were tracked and the (higher) velocity could not be updated.
 Therefore, the lower velocities during the direction changes are maintained when flying along the straight parts of the trajectory.
 
@@ -386,7 +387,7 @@ This allows the camera to capture sufficient visual clues (i.e., lines and inter
 \begin{figure}[htb!]
 \centering
 \includegraphics[width=8cm]{images/exp1-imav-floor.jpg}
-\caption{Photo of the sports floor, which resambles the circumstances encountered during the IMAV competition.}
+\caption{Photo of the sports floor, which resembles the circumstances encountered during the IMAV competition.}
 \label{fig:exp1-floor}
 \end{figure}
 
@@ -425,11 +426,11 @@ This allows the camera to capture sufficient visual clues (i.e., lines and inter
 \begin{figure}[htb!]
 \centering
 \includegraphics[width=0.75\linewidth]{images/exp1-imav-map.png}
-\caption{Visual map created by the visual mapping method (Section \ref{sec:texture_map}). The map is constructed during the first 8-shape. The position estimates are based on the onboard velocity (AV) and the visual localization method (Section \ref{sec:localization}). The red ellipse indicaties an area for which the visual odometry method is unable to estimate the velocity.}
+\caption{Texture map created by the texture mapping method (Section \ref{sec:texture_map}). The map is constructed during the first 8-shape. The position estimates are based on the onboard velocity (AV) and the visual localization method (Section \ref{sec:localization}). The red ellipse indicates an area for which the visual odometry method is unable to estimate the velocity.}
 \label{fig:exp1-imav-map}
 \end{figure}
 
-The results of this experiment can be found in Table \ref{tab:res_mapping_imav} and Figures \ref{fig:exp1-imav-error} (errors), \ref{fig:exp1-imav-path} (trajectories) and \ref{fig:exp1-imav-map} (visual map).
+The results of this experiment can be found in Table \ref{tab:res_mapping_imav} and Figures \ref{fig:exp1-imav-error} (errors), \ref{fig:exp1-imav-path} (trajectories) and \ref{fig:exp1-imav-map} (texture map).
 %As noted before, both the onboard velocity (AV) method and the onboard position (AP) method produce exactly the same trajectory.
 For the encountered circumstances, not all methods are able to estimate the position accurately.
 The AR.Drone's onboard velocity (AV) method is able to estimate the position quite well, with an average error of $1\small{m}$.
@@ -464,7 +465,7 @@ Therefore, an additional appearance-based method (like the AR.Drone uses) is req
 Section \ref{sec:pose-recovery} proposed a new method to robustly recover the translation and rotation between two frames (for visual odometry) or a frame and a map (for localization).
 This method features two improvements.
 Instead of computing a full perspective, affine or Euclidean transformation, a more pragmatic approach is used.
-Futhermore, the proposed approach uses covariance, instead of the number inliers, as quality measure.
+Furthermore, the proposed approach uses covariance, instead of the number inliers, as quality measure.
 In this experiment, the proposed pose recovery approach is benchmarked against other pose recovery approaches.
 The proposed approach has been validated with the proposed covariance quality measure and with the classic \textit{inliers based} quality measure, in order to validate the contribution of the proposed quality measure.
 
@@ -513,7 +514,7 @@ For example, a faulty transformation (pose) can maximize the number of inliers, 
 These faulty transformations produce sudden changes in error, as can be seen in Figure \ref{fig:exp4-transform-error}.
 
 The proposed pose recovery approach outperforms the other pose recovery approaches.
-The best performance is achieved when using the proposed convariance based quality measure.
+The best performance is achieved when using the proposed covariance based quality measure.
 When the confidence based quality measure is replaced with classic inliers based quality measure, the performance decreases.
 However, the proposed method still outperforms the other methods.
 This improvement with respect to the Euclidean transform can be dedicated to the pragmatic approach, which reduces the degrees of freedom from four (translation and rotation) to two (translation).
@@ -542,7 +543,7 @@ This is reflected by the reduced number of sudden changes in the plot.
 \section{Accuracy w.r.t. camera resolution}
 \label{sec:res-cam-resolution}
 The AR.Drone is equipped with a low resolution down-looking camera.
-The recent developments in miniature high-resolution cameras enables MAVs to be equipped with high-resolution cameras.
+The recent developments in miniaturizing high-resolution cameras enables MAVs to be equipped with high-resolution cameras.
 This poses the question if the proposed method benefits from an increased image resolution.
 
 In this experiment, the accuracy of the estimated position is evaluated for various camera resolutions.
@@ -621,7 +622,7 @@ Algorithm such as the SURF feature extractor requires less processing time, allo
 However, only $82\%$ of these frames could be used to extract the velocity.
 When the resolution decreases further, the number of processed frames remains stable, which indicates the processing time is not significantly decreasing.
 However, the number of frames that could be used to extract the velocity is decreasing.
-This indicates that the camera images with lower resolution are less usefull for the Visual Odometry method.
+This indicates that the camera images with lower resolution are less useful for the Visual Odometry method.
 This is reflected by the mean error of the different camera resolutions.
 In general, a lower camera resolution results in a larger error in the estimated position (Figure \ref{fig:exp3-2-a}).
 An exception is the camera resolution of $90\%$, which has a slightly lower error than the original resolution.
@@ -632,7 +633,7 @@ The overall mean errors are smaller than the real AR.Drone, due to the lack of n
 Similar to the real AR.Drone, a reduced resolution results in more frames being processed, but less frames that could be used to extract the velocity.
 When the resolution increases, the number of processed frames decreases due to the increased computational time per frame.
 However, the percentage of frames that could be used to extract the velocity increases.
-This indicates that the camera images with a higher resolution are more usefull for the Visual Odometry method.
+This indicates that the camera images with a higher resolution are more useful for the Visual Odometry method.
 For the original resolution, $62\%$ of the processed frames could be used to extract the velocity. When the resolution is doubled, $96\%$ of the frames could be used to extract the velocity.
 One would expect that an increased image resolution would result in a smaller error.
 However, due to the increased computational time per frame, less frames can be processed resulting in less frequent velocity estimates.
@@ -714,7 +715,7 @@ A multi-threaded implementation is expected to provide a performance boost.
 \clearpage
 \section{Elevation accuracy}
 \label{sec:results-elevation-accuracy}
-The accurracy of the elevation map is evaluated in terms of elevation error and the error in the estimated dimensions of objects.
+The accuracy of the elevation map is evaluated in terms of elevation error and the error in the estimated dimensions of objects.
 
 \subsubsection{Elevation map of a staircase}
 
@@ -736,7 +737,7 @@ The shape of the measured elevation (Figure \ref{fig:exp2-results}) corresponds 
 However, the approach underestimates the elevation.
 When traversing the staircase, the AR.Drone's altitude stabilization increases the altitude smoothly, which causes a continuous altitude increase.
 Therefore, the observed altitude difference within an elevation event is smaller than the actual altitude different caused by an object.
-Another explaination of the underestimation is the error in the triggering of elevation events (due to thresholds).
+Another explanation of the underestimation is the error in the triggering of elevation events (due to thresholds).
 When an elevation event is triggered at a suboptimal timestamp, the full altitude difference is not observed.
 Ideally, an elevation UP event is triggered right before an object is detected by the ultrasound sensor, and an elevation NONE event is triggered right after the full height of the object is observed by the ultrasound sensor.
 

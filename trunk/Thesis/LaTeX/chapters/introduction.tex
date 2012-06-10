@@ -33,7 +33,7 @@ A \textbf{micro aerial vehicle (MAV)} is a class of unmanned aerial vehicles (UA
 Their small size allows a wide range of robotic applications, such as surveillance, inspection and search \& rescue.
 An example of a MAV developed for surveillance and inspection is the Aeryon Scout\footnote{\url{http://www.aeryon.com/products/avs.html}} (Figure \ref{fig:introduction_aeryon_scout}), which is already being deployed in the field\footnote{\url{http://www.aeryon.com/news/pressreleases/271-libyanrebels.html}}.
 Particularly interesting are small quadrotor helicopters, which are lifted and propelled by four rotors.
-They offer great manoeuvrability and stability, making them ideal for indoor and urban flights.
+They offer great maneuverability and stability, making them ideal for indoor and urban flights.
 Due to technical developments in the last years, small quadrotors with on-board stabilization like the Parrot AR.Drone can be bought off-the-shelf.
 These quadrotors make it possible to shift the research from basic control of the platform towards intelligent applications that require information about the surrounding environment.
 However, the limited sensor suite and the fast movements make it quite a challenge to use SLAM methods for such platforms.
@@ -95,15 +95,15 @@ One of the main prerequisites of an autonomous robot is the ability to know its 
 Since no assumptions can be made about the environment, the robot has to learn from its environment.
 
 Simultaneous Localization and Mapping using aerial vehicles is an active research area in robotics.
-However, current approaches use estimation and optimization algorithms that are computationally expensive and cannot be applied for realtime navigation problems.
+However, current approaches use estimation and optimization algorithms that are computationally expensive and cannot be applied for real-time navigation problems.
 Furthermore, other researchers rely on expensive aerial vehicles
 %equipped
-with advanced sensors like a laser range finder.
-Focusing on realtime methods and affordable MAVs increases the employability of aerial vehicles in real world situations.
+with advanced sensors like a laser rangefinder.
+Focusing on real-time methods and affordable MAVs increases the employability of aerial vehicles in real world situations.
 In case of semi-autonomous robots, building and visualizing an elevated and textured map of the environment offers additional feedback to the teleoperator of the vehicle.
 
-The main research question therefore is to determine a realtime Simultaneous Localization and Mapping approach that can be used for MAVs with a low-resolution down-pointing camera (e.g., AR.Drone).
-This main research question is divided into several subquestions:
+The main research question therefore is to determine a real-time Simultaneous Localization and Mapping approach that can be used for MAVs with a low-resolution down-pointing camera (e.g., AR.Drone).
+This main research question is divided into several sub-questions:
 \begin{itemize}
 \item How to construct a texture map and a feature map from camera frames?
 %\item What camera resolution (e.g., $176 \times 144$ pixels) is required for localization against a map? What is the relationship between camera resolution and the localization performance?
@@ -119,7 +119,7 @@ In order to perform (global) localization, a map of the environment has to be co
 Considering the limited sensor suite of affordable quadrotors (e.g., AR.Drone), camera images are often the best information source for localization and mapping.
 This poses the questions how to construct a map from camera frames.
 The AR.Drone is equipped with a very low-resolution camera, which poses the question if localization against a map is possible with such cameras.
-The recent developments in miniaturing high-resolution cameras enables MAVs to be equipped with high-resolution cameras.
+The recent developments in miniaturizing high-resolution cameras enables MAVs to be equipped with high-resolution cameras.
 This leads to the question how the (increasing) image resolution will affect the localization performance.
 When a map is constructed, the camera frames are matched against the map to perform (global) localization.
 A robust transformation is computed to describe the relation between the vehicle's position and the map.
@@ -147,7 +147,7 @@ Another contribution is a method to construct an elevation map with an airborne 
 \textbf{Chapter \ref{chapter:probabilistic-robotics} and \ref{chapter:computer-vision}} give an overview of the background theory that is part of the presented methods.
 This theory includes probabilistic robotics (Chapter \ref{chapter:probabilistic-robotics}) and computer vision techniques (Chapter \ref{chapter:computer-vision}).
 In \textbf{Chapter \ref{chapter:related-research}}, an overview of related research is given.
-This reseach is divided into three segments: SLAM methods for building visual maps, elevation mapping with ultrasound sensors and research conducted with the AR.Drone.
+This research is divided into three segments: SLAM methods for building texture maps, elevation mapping with ultrasound sensors and research conducted with the AR.Drone.
 An extensive overview of the AR.Drone platform is presented in \textbf{Chapter \ref{chapter:platform}}.
 The platform overview covers the hardware, the basics of the quadrotor flight control and finally its Application Programming Interface (API).
 This API lacks functionalities to employ a SLAM method.
@@ -155,6 +155,6 @@ Therefore, it is extended to a development framework in \textbf{Chapter \ref{cha
 In addition to this framework, a realistic simulation model of the AR.Drone is developed.
 This simulation model allows safe and efficient development and testing of algorithms.
 \textbf{Chapter \ref{chapter:visual-slam}} presents the Visual SLAM method for the AR.Drone.
-It includes pose estimation, realtime  mapping, localization using the map and building an elevation map using a single ultrasound sensor.
+It includes pose estimation, real-time mapping, localization using the map and building an elevation map using a single ultrasound sensor.
 \textbf{Chapter \ref{chapter:results}} describes the conducted experiments and presents the results.
 In \textbf{Chapter \ref{chapter:conclusions}}, this thesis concludes by answering the research questions and summarizing directions for future research.

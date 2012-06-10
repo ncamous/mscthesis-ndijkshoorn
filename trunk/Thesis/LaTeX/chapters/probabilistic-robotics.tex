@@ -36,9 +36,9 @@ The state at time $t$ is denoted $x_t$.
 \end{mydef}
 Common state variables are:
 \begin{itemize}
-\item The robot \textit{pose}, which is its location and orientation relative to a global coodinate frame.
+\item The robot \textit{pose}, which is its location and orientation relative to a global coordinate frame.
 \item The \textit{robot velocity}, consisting of a velocity for each pose variable.%A change in attitude is called \textit{angular velocity}.
-\item The \textit{location and features of surrounding objects in the environment}. The objects can be either \textit{static} or \textit{dynamic}. For some problems, the objects are modelled as \textit{landmarks}, which are distinct, stationary features that provide reliable recognition.
+\item The \textit{location and features of surrounding objects in the environment}. The objects can be either \textit{static} or \textit{dynamic}. For some problems, the objects are modeled as \textit{landmarks}, which are distinct, stationary features that provide reliable recognition.
 \end{itemize}
 
 A core idea of probabilistic robotics is the estimation of the state from sensor data.
@@ -80,7 +80,7 @@ where $p(x_t | x_{t-1}, u_t)$ is called \textit{state transition probability} an
 The \textbf{Markov Assumption} states that past and future data are independently if one knows the current state $x$. This means the values in any state are only influenced by the values of the state that directly preceded it.
 \end{mydef}
 
-The process by which measurements are modelled is expressed by:
+The process by which measurements are modeled is expressed by:
 \begin{equation}
 \label{eq:background_measurement_prob}
 p(z_t | x_{0:t}, z_{1:t-1}, u_{1:t}) = p(z_t | x_t)
@@ -111,7 +111,7 @@ Belief over state variable $x_t$ is denoted by $bel(x_t)$.
 
 \subsection{Algorithms}
 \label{sec:prob-rob-bayes}
-The most general algorithm for calculcating beliefs is the \textbf{Bayes filter}.
+The most general algorithm for calculating beliefs is the \textbf{Bayes filter}.
 The input of the algorithm is the (initial) belief $bel$ at time $t-1$, the most recent control $u_t$ and measurement $z_t$.
 First, a \textit{prediction} for the new belief is computed based on control $u_t$ (the measurement is ignored):
 \begin{equation}
@@ -133,7 +133,7 @@ The density (probability) over the state space $x$ is characterized by two param
 The dimension of the covariance matrix is the dimensionality of the state $x$ squared.
 Representing the posterior by a Gaussian has some important consequences.
 First, Gaussians are unimodel and have a single maximum.
-However, this is characterisic for many tracking problems, where the posterior is focussed around the true state with a certain margin of uncertainty.
+However, this is characteristic for many tracking problems, where the posterior is focused around the true state with a certain margin of uncertainty.
 
 In order to implement the filter described above, two additional components are required.
 In Section \ref{sec:motion_model}, the \textit{motion model} is described.
@@ -175,7 +175,7 @@ For example, the AR.Drone uses a down-pointing camera to recover odometry inform
 		\label{sec:measurement_model}
 Probabilistic measurement models describe the relationship between the world state $x_t$ and how a sensor reading (observation) $z_t$ is formed.
 Based on the estimated world state $x_t$, a belief over possible measurements is generated.
-Noise in the sensor measurements is modelled explicitly, inherent to the the uncertainty of the robot's sensors.
+Noise in the sensor measurements is modeled explicitly, inherent to the uncertainty of the robot's sensors.
 To express the process of generating measurements, a specification of the environment is required.
 A map $m$ of the environment is a list of objects and their locations:
 \begin{equation}
@@ -196,7 +196,7 @@ A probabilistic \textbf{sensor model} describes the relation between a world sta
 \textit{Robot localization} is the problem of estimating the robot's pose (state) relative to a map of the environment.
 Localization is an important building block for successful navigation of a robot, together with \textit{perception}, \textit{cognition} and \textit{motion control}.
 
-When a robot is moving in a known enviroment and starting at a known location, it can keep track of its location by integrating local position estimates (e.g., odometry).
+When a robot is moving in a known environment and starting at a known location, it can keep track of its location by integrating local position estimates (e.g., odometry).
 Due to uncertainty of these local estimates, the uncertainty of the robot's absolute location increases over time.
 In order to reduce the growing uncertainty, the robot has to retrieve its absolute location by localizing itself in relation to a map.
 To do so, the robot uses its sensors to make observations of its environment and relate these observations to a map of the environment.
@@ -241,17 +241,17 @@ Due to the absence of ambiguity, the trackers fail to model ambiguities adequate
 \textbf{Multi-hypothesis trackers} represent belief not just as a single world state, but as a possibly infinite set of states.
 The main advantage of the multi-hypothesis representation is that the robot can explicitly maintain uncertainty regarding its state.
 This allows a robot to believe in multiple poses simultaneously, allowing the robot to track and reject different hypotheses independently.
-One of the main disadvantages of a multi-hypothesis representation involves decision making.
+One of the main disadvantages of a multi-hypothesis representation involves decision-making.
 If the robot represents its position as a set of points, it becomes less obvious to compute a next action.
 
-Futhermore, solution techniques can be divided in two branches of time constraints: \textit{online computing} and \textit{offline computing}.
+Furthermore, solution techniques can be divided in two branches of time constraints: \textit{online computing} and \textit{offline computing}.
 \textbf{Online} techniques solve a problem in real-time and must guarantee response within strict time constraints.
-One advantage of online techniques is the ability to use the response as input for decision making (e.g., navigation), which is essential for autonomous robots.
+One advantage of online techniques is the ability to use the response as input for decision-making (e.g., navigation), which is essential for autonomous robots.
 Due to the strict time constraints, a limited amount of computations can be performed, which limits the complexity of solution techniques.
 
 \textbf{Offline} techniques have less strict time constraints, which allow increased complexity.
 For example, additional refinements or optimizations can be performed that would be too slow for online techniques.
-One of the main disadvantages of offline techniques involves decision making.
+One of the main disadvantages of offline techniques involves decision-making.
 Because a response is not available in real-time, the robot has to wait or make a decision without incorporating the response.
 
 
@@ -285,13 +285,14 @@ The measurement is not yet included, because it is a predicted belief.
 The update step transforms the predicted belief ($\overline{\mu}_t$, $\overline{\Sigma}_t$) into the desired belief ($\mu_t$, $\Sigma_t$), by incorporating the measurement $z_t$.
 The Kalman gain $K_t$ specifies the degree to which the measurement is incorporated into the new state estimate.
 The key concept used for Kalman Filtering is the \textit{innovation}, which is the difference between the actual measurement $z_t$ and the expected measurement $C_t \overline{\mu}_t$, which is derived from the predicted state.
-A measurement $z_t$ which is far off the predicted measurement, is less reliable, thus less incorporated in the new state estimate.
+A measurement $z_t$ that is far off the predicted measurement, is less reliable, thus less incorporated in the new state estimate.
 
 The standard Kalman Filter requires a linear system (i.e., a linear combination of Gaussians results in another Gaussian), which is insufficient to describe many real-life problems.
 Therefore, variations of the original algorithm have been proposed that can cope with different levels of non-linearity.
 These variations approximate the motion and sensor models in a way to make them linear again.
 
 \subsubsection{Extended Kalman Filter (EKF)}
+\label{sec:prob-rob-ekf}
 The Extended Kalman Filter is a variant on the Kalman Filter that can be used for non-linear systems.
 It tries to approximate \textit{non-linear} motion and sensor models to make them linear.
 The state transition probability and the measurement probabilities are governed by the non-linear functions $g$ and $h$:
@@ -346,7 +347,7 @@ The direction of $\Delta x$ is computed from the residual (opposite of the error
 In practice, GD decomposes the overall problem into many smaller problems by optimizing the constraints individually.
 \end{comment}
 
-The TORO algorithm uses a tree based parameterization for describing the configuration of the nodes in the graph.
+The TORO algorithm uses a tree-based parameterization for describing the configuration of the nodes in the graph.
 %Such a tree can be obtained by computing a spanning tree from a graph.
 Such a tree can be constructed from trajectory of the robot.
 The first node is the root of the tree.
@@ -429,7 +430,7 @@ The measurement is not yet included, because its a predicted belief.
 The update step transforms the predicted belief ($\overline{\mu}_t$, $\overline{\Sigma}_t$) into the desired belief ($\mu_t$, $\Sigma_t$), by incorporating the measurement $z_t$.
 The Kalman gain $K_t$ specifies the degree to which the measurement is incorporated into the new state estimate.
 The key concept used for Kalman Filtering is the \textit{innovation}, which is the difference between the actual measurement $z_t$ and the expected measurement $C_t \overline{\mu}_t$, which is derived from the predicted state.
-A measurement $z_t$ which is far off the predicted measurement, is less reliable, thus less incorporated in the new state estimate.
+A measurement $z_t$ that is far off the predicted measurement, is less reliable, thus less incorporated in the new state estimate.
 
 The standard Kalman Filter requires a linear system (.i.e, a linear combination of Gaussians results in another Gaussian), which is insufficient to describe many real-life problems.
 Therefore, variations of the original algorithm have been proposed that can cope with different levels of non-linearity.
@@ -517,7 +518,7 @@ The particles (samples) are denoted
 \end{equation}
 Each particle $x_t^{[m]}$ is a state hypothesis at time $t$.
 Ideally, the likelihood for a state hypothesis $x_t$ to be in $\chi$, should be proportional to $bel(x_t)$.
-The denser a subregion of the the space is populated with particles, the more likely it is that the true state falls into this region.
+The denser a subregion of the space is populated with particles, the more likely it is that the true state falls into this region.
 In the prediction step, the motion model is applied to each particle $x_{t-1}^{[m]}$ to generate a prediction $x_t^{[m]}$.
 When observation $z_t$ is made, the \textit{importance factor} $w_t^{[m]}$ is computed.
 \begin{equation}
@@ -531,7 +532,7 @@ This changes the distribution of the particle from $\overline{bel}(x_t)$ to $bel
 Particle filters overcome the limitations of using a Gaussian to represent a probability distribution.
 With sufficient samples, they approach the Bayesian optimal estimate, so they can be made more accurate than either the EKF or UKF.
 The increased representational power of particle filters comes at the cost of higher computational complexity.
-And, when the number of particles is unsufficient, the particle filter might suffer from sample impoverishment.
+And, when the number of particles is insufficient, the particle filter might suffer from sample impoverishment.
 \end{comment}
 
 The theory described in this chapter is used in the work presented in Section \ref{chapter:visual-slam}.

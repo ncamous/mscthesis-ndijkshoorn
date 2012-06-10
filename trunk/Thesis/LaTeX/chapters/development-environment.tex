@@ -74,7 +74,7 @@ The camera is modeled by creating a viewpoint in the Unreal engine.
 %The sensors field of view property controls the camera's focal length.
 The field of view is set to $64^\circ$ and the resolution is set to $176 \times 144$ pixels, matching the specifications of the AR.Drone's bottom camera.
 Camera calibration of the virtual camera was performed using OpenCV's Calibration tool\footnote{\url{http://opencv.willowgarage.com/documentation/camera_calibration_and_3d_reconstruction.html}}.
-The calibration pattern was placed in a virtual environment and the AR.Drone manoeuvred above it.
+The calibration pattern was placed in a virtual environment and the AR.Drone maneuvered above it.
 
 \begin{figure}[htb!]
 \centering
@@ -84,7 +84,7 @@ The calibration pattern was placed in a virtual environment and the AR.Drone man
 \end{figure}
 
 USARSim supports dynamic lightning to produce realistic images and shadows.
-However, the camera sensor lacks a noise model and doesn't emulate the effect of automatic white balancing that is performed in most cameras (including the AR.Drone's camera).
+However, the camera sensor lacks a noise model and does not emulate the effect of automatic white balancing that is performed in most cameras (including the AR.Drone's camera).
 An article of the early developments during this thesis \cite{Visser2011imav} describes the influence of white balancing on image stitching and how to mimic the real images as close as possible.
 
 
@@ -122,18 +122,18 @@ The main functionalities of the framework can be summarized as follows:
 \item Queued sensor data and camera frame processing;
 \item Keyboard and 3D mouse controls;
 \item Autonomous waypoint navigation;
-\item Realtime 3D map visualization with freeflight
+\item Real-time 3D map visualization with freeflight
 \end{itemize}
 
 \begin{figure}[htb!]
 \centering
 \includegraphics[width=\linewidth]{images/framework.pdf}
-\caption{Schematic overview of the proposed framework. Each node respresents an object. A light gray node indicates the object is running in a dedicated thread. A dark gray node indicates an interface to a device.} 
+\caption{Schematic overview of the proposed framework. Each node represents an object. A light gray node indicates the object is running in a dedicated thread. A dark gray node indicates an interface to a device.} 
 \label{fig:proposed_framework_schematic}
 \end{figure}
 
 A schematic overview of the framework is given in Figure \ref{fig:proposed_framework_schematic}.
-A central component of the framework is the Bot object, which respresents a robot.
+A central component of the framework is the Bot object, which represents a robot.
 Multiple robots can be controlled simultaneous (e.g., a real and simulated AR.Drone).
 The framework is limited to a single real AR.Drone's due to the lack of multirobot support in the ARDroneLib.
 A robot is controlled by calling member functions of the corresponding bot object.
@@ -148,14 +148,14 @@ Playback of a dataset is a valuable asset for testing.
 All control commands sent to the drone and data received from the drone (i.e., navdata and camera frames) can be recorded to a dataset.
 The data is stored in YAML\footnote{\url{http://en.wikipedia.org/wiki/YAML}} format.
 When playing back a dataset, the data is pushed to the bot object in a way similar to data that is received from a live robot.
-A timer is used to push the data at the appropriate timestamps, mimicing the original data as closely as possible.
+A timer is used to push the data at the appropriate timestamps, mimicking the original data as closely as possible.
 
 An abstraction layer is used to abstract a bot from the actual device.
 This enables the control of both a real and simulated AR.Drone in the same manner.
 \textit{Interfaces} are used to map a bot object to a (simulated) device.
 When a bot object is created, an interface has to be selected.
 This can be either a real AR.Drone (using the ARDroneLib), simulated AR.Drone (USARSim) or use no interface at all for dataset playback (i.e., there is no communication with a robot).
-The interface is responsible for transforming data received in device-specific format to a generic datastructure used by the framework.
+The interface is responsible for transforming data received in device-specific format to a generic data-structure used by the framework.
 Also, the control commands that are sent to the robot are transformed from generic format to device-specific format.
 
 The data received from a robot (i.e., navdata and camera frames) is pushed to the SLAM object, which implements the SLAM system presented in Chapter \ref{chapter:visual-slam}.
@@ -183,7 +183,7 @@ The extracted information (i.e., velocities or global position) is used to gener
 Elements of the measurement matrix that cannot be extracted from the camera frames (e.g., altitude), are extracted from the predicted state and added to the measurement matrix with a higher covariance (uncertainty).
 Finally, the measurement is used to update the state of the EKF.
 
-Processing a single frame may take up to $200 \small{ms}$ and causes a delay between input and updating the state.
+The average processing time of a single frame is $60 \small{ms}$ and causes a delay between input and updating the state.
 This introduces a synchronization issue between state updates: when a update from the Frame module is applied, the estimated state is already updated by the Sensor module with more recent information that originates from the navdata.
 This issue is solved by pausing the Sensor module (processing) while a frame is being processed.
 After the state update by the Frame module is applied, the Sensor module is resumed and the queued navdata information is processed.
@@ -197,7 +197,7 @@ The code is based on the work by Chad Vernon \footnote{\url{http://www.chadverno
 The estimated position of the AR.Drone is visualized with a red arrow.
 \begin{figure}[htb!]
 \centering
-\includegraphics[width=6cm]{images/3dterrain_map.png}
-\caption{Textured elevation map rendered by the Terrain3D object. TODO: update example + red arrow} 
+\includegraphics[width=8cm]{images/terrain3d.png}
+\caption{Textured elevation map rendered by the Terrain3D object. The red arrow indicates the position and orientation of the AR.Drone.} 
 \label{fig:terrain3d_map}
 \end{figure}

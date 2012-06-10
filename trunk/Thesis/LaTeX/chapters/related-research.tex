@@ -3,7 +3,7 @@ This problem arises when the robot does not have access to a map of the environm
 This knowledge is critical for robots to operate autonomously.
 SLAM is an active research area in robotics.
 A variety of solutions have been developed.
-Most solutions rely on large and heavy sensors that have a high range and accuracy (e.g., SICK laser range finder).
+Most solutions rely on large and heavy sensors that have a high range and accuracy (e.g., SICK laser rangefinder).
 However, these sensors cannot be used on small (flying) vehicles.
 As a result, researchers focused on using vision sensors, which offer a good balance in terms of weight, accuracy and power consumption.
 Lightweight cameras are especially attractive for small flying vehicles (AUVs).
@@ -16,7 +16,7 @@ An exception is the research by Steder, which builds a visual map of the environ
 
 \subsubsection{Visual SLAM for flying vehicles}
 \label{sec:realted-visual-slam-steder}
-The approach presented in this thesis was inspired by Steder et al. \cite{steder2008visual}, who presented a system to learn large visual maps of the ground using flying vehicles.
+The approach presented in this thesis is inspired by Steder et al. \cite{steder2008visual}, who presented a system to learn large visual maps of the ground using flying vehicles.
 The setup used is comparable to the AR.Drone, with an inertial sensor and a low-quality camera pointing downward.
 If a stereo camera setup is available, their system is able to learn visual elevation maps of the ground.
 If only one camera is carried by the vehicle, the system provides a visual map without elevation information.
@@ -41,7 +41,7 @@ The graph is optimized if the computed poses are contradictory.
 Each node models a 6 degree of freedom camera pose.
 The spatial constraints between two poses are computed from the camera images and the inertia measurements.
 %The camera images are used to estimate the relative motion of the camera.
-To do so, visual features are extracted from the images obtained from downlooking cameras.
+To do so, visual features are extracted from the images obtained from down-looking cameras.
 Steder uses Speeded-Up Robust Features (SURF) (Section \ref{sec:background-feature-extraction}) that are invariant with respect to rotation and scale.
 By matching features in current image to the ones stored in the previous $n$ nodes, one can estimate the relative motion of the camera (Section \ref{sec:background-visual-odometry}).
 The inertia sensor provides the roll and pitch angle of the camera.
@@ -168,7 +168,7 @@ However, the problem is addressed using advanced (e.g., multibeam) ultrasound se
 These advanced ultrasound sensors are commonly used for obstacle detection and navigation by underwater robots.
 %are popular for underwater navigation \cite{majumder2001multisensor}.
 Underwater robots observe the seabed from above, very similar to the way airborne vehicles observe the floor from above.
-This similarity suggests that methods developped for underwater mapping can be used for airborne mapping.
+This similarity suggests that methods developed for underwater mapping can be used for airborne mapping.
 
 \subsubsection{Seabed mapping}
 Seabed mapping is a research area in which ultrasound sensors have been used for building elevation maps. Some examples are \cite{johnson1996seafloor,strauss1999multibeam,zerr1996three,evans2002three}.
@@ -196,9 +196,9 @@ A particularly interesting application of sonar-based elevation mapping is prese
 The article presents a SLAM system that uses information from the on-board sonar and vision system of an Unmanned Underwater Vehicle (UUV).
 The system estimates the vehicle's motion and generates a model of the structure of the underlying reefs.
 This work shows correspondences to the methods used in this thesis.
-Unlike the AR.Drone, the pencil beam scanning sonar of the UUV returns high-resolution images instead of a single distance measurents.
+Unlike the AR.Drone, the pencil beam scanning sonar of the UUV returns high-resolution images instead of a single distance measurement.
 
-In cases where a priori maps are not available, a mechanism must exist for building a map while simultaneously using that map for the purposes of localisation.
+In cases where a priori maps are not available, a mechanism must exist for building a map while simultaneously using that map for the purposes of localization.
 During motion, the vehicle builds a complete map of landmarks and uses these to provide continuous estimates of the vehicle location.
 By tracking the relative position between the vehicle and identifiable features in the environment, both the position of the vehicle and the position of the features can be estimated simultaneously.
 An Extended Kalman Filter is used for stochastic estimation of the vehicle's position and map feature locations.
@@ -234,7 +234,7 @@ Ultrasound and vision information can be combined to aid in the identification a
 For maximum overlap of both sensors the ultrasound sensor is mounted directly above the high-resolution vision system.
 The ultrasound sensor scans the seabed directly below the vehicle and is used to generate
 profiles of the surface.
-The distance measurements received by the ultrasound are then processed to identify distinctive shapes which are used to initialise new features in the SLAM map.
+The distance measurements received by the ultrasound are then processed to identify distinctive shapes which are used to initialize new features in the SLAM map.
 The observation of range $R$ and bearing $\theta$ are combined with the estimated value of the vehicle pose $\hat{x}_v(t)$ and the measured position
 $\left[ \begin{array}{ccc} \textit{x}_s & \textit{y}_s & \textit{z}_s \end{array}\right]^T$ of the sonar relative to the camera frame.
 \begin{equation}
@@ -251,8 +251,8 @@ $\left[ \begin{array}{ccc} \textit{x}_s & \textit{y}_s & \textit{z}_s \end{array
 \end{equation}
 
 Once the ultrasound features have been initialized, they are tracked using observations from the vision system.
-When a new feature is initialised, the sonar footprint is projected into the visual frame of the camera.
-The centre of this footprint is then used to identify a high contrast feature in the image within the area covered by the sonar.
+When a new feature is initialized, the sonar footprint is projected into the visual frame of the camera.
+The center of this footprint is then used to identify a high contrast feature in the image within the area covered by the sonar.
 These visual features are tracked from frame to frame using the Lucas and Kanade feature tracking technique \cite{lucas1998application}.
 Observation of elevation $z_e$ and azimuth $z_a$ (orientation) are provided to the SLAM algorithm.
 The estimated elevation and azimuth are computed using the current estimate of the vehicle pose and feature position:
@@ -269,23 +269,23 @@ The estimated elevation and azimuth are computed using the current estimate of t
 \end{equation}
 The difference between the actual observation received from the camera and the predicted observation is the innovation, which is used in computing the posterior state estimate.
 The current implementation makes use of very simple features.
-These features are sufficient for tracking puroposes, but are not applicable to detect loop-closures.
+These features are sufficient for tracking purposes, but are not applicable to detect loop-closures.
 
 
-\section{Research using the AR.Drone}
+\section{Research based on the AR.Drone}
 Because the AR.Drone is a quite recent development, the number of studies based on this platform is limited.
 
 \subsubsection{Autonomous corridor and staircase flights}
 
 A recent publication is from Cornell University \cite{Bills2011icra}, where an AR.Drone is used to automatically navigate corridors and staircases based on visual clues.
-Their method method classifies the type of indoor environment (e.g., corridors, staircases, rooms and corners) and then uses vision algorithms based on perspective cues to estimate the desired direction to fly.
+Their method classifies the type of indoor environment (e.g., corridors, staircases, rooms and corners) and then uses vision algorithms based on perspective cues to estimate the desired direction to fly.
 This method requires little computational power and can be used directly without building a 3D model of the environment.
 
 \begin{figure}[htb!]
   \begin{center}
     \subfigure[(Top) Original corridor image. (Bottom) Corridor processed with Canny edge detector and Hough transform to find the vanishing point (blue circle).]{\label{fig:cornell-corridor}\includegraphics[height=6cm]{images/ardrone-corridor.jpg}}
 \hspace{1cm}
-    \subfigure[(Top) Original image of staircase. (Bottom) Image with bold red line marking location of staircase.]{\label{fig:cornell-staircase}\includegraphics[height=6cm]{images/ardrone-staircase.jpg}}
+    \subfigure[(Top) Original image of staircase. (Bottom) Processed image where the bold red line marks the location of the staircase.]{\label{fig:cornell-staircase}\includegraphics[height=6cm]{images/ardrone-staircase.jpg}}
    
   \end{center}
   \caption{Autonomous corridor and staircase flights based on line detection (Courtesy Bills et al. \cite{Bills2011icra}).}
@@ -294,7 +294,7 @@ This method requires little computational power and can be used directly without
 
 The type of environment is determined using two algorithms.
 The first method uses GIST features \cite{oliva2001modeling} (Section \ref{sec:background-feature-extraction}) with a Support Vector Machine (SVM) learning algorithm for classification.
-GIST features are well-suited for this task because they directly measure the global distribution of oriented line segments in an image, which takes advantage of the long lines found in indoor images.
+GIST features are well suited for this task because they directly measure the global distribution of oriented line segments in an image, which takes advantage of the long lines found in indoor images.
 The second method computes a confidence estimate from both the staircase and corridor vision algorithms.
 The confidence values are compared and the highest is used to select the environment type.
 
@@ -302,9 +302,9 @@ When navigating corridors, parallel lines appear to converge.
 The points where lines appear to converge are called vanishing points.
 Vanishing points are used to locate the end of the corridor. 
 The Canny edge detector \cite{canny1986computational} is used to detected edges and a probabilistic Hough transform \cite{kiryati1991probabilistic} is used to find lines.
-The vanishing points (end of the corridor) are found by searching for the image region which has the highest density of pair-wise line intersections.
+The vanishing points (end of the corridor) are found by searching for the image region that has the highest density of pair-wise line intersections.
 A probabilistic model with Gaussians is constructed to model the noise in the location of a vanishing point.
-Staircases can be nagivated by finding the center of the staircase, so the AR.Drone can follow the staircase using its onboard intelligence (i.e., altitude stabilization).
+Staircases can be navigated by finding the center of the staircase, so the AR.Drone can follow the staircase using its onboard intelligence (i.e., altitude stabilization).
 Lines that represent the staircase are found by classifying the line segments as horizontal or vertical and looking for the largest horizontal-line cluster in the Hough transform space.
 Once the cluster of horizontal lines is detected, the mean of the lines' endpoints is calculated to retrieve the desired direction.
 
@@ -322,7 +322,7 @@ When entering a segment, the robot is rotated to match the rotation during the m
 During the navigation along a segment, the robot establishes correspondences of the currently seen and previously mapped landmarks and computes differences in the expected and recognized positions for each such correspondence.
 The robot steers in a direction that reduces those differences while moving straight at a constant speed until its odometry indicates that the current segment has been traversed.
 The heading is determined by a histogram voting procedure.
-This navigation method is provably stable for nondegenerate polygonal paths, since the heading corrections can suppress the position uncertainty originating from the dead reckoning.
+This navigation method is provably stable for non-degenerate polygonal paths, since the heading corrections can suppress the position uncertainty originating from the dead reckoning.
 %The distance traveled along a segment is estimated purely by dead reckoning.
 %Due to the low precision of the IMU based distance estimation, the localization error is high.
 %However, the localization error does not diverge and is kept within sufficient limits allowing the drone to autonomously navigate along the learned path.
