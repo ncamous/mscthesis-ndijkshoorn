@@ -9,10 +9,10 @@ The validation effort of the hovering and the forward movement shows that the dy
 
 A framework is proposed to perform high-level tasks with the AR.Drone.
 This framework includes an abstraction layer to abstract from the actual device, which allows to use both the real and simulated AR.Drone to test the proposed methods.
-The framework stores video frames and sensor measurements from the AR.Drone in queue's, such that algorithms can operate on the data.
-Futhermore, the framework includes a 3D map visualization and provides functionalities to record and playback data.
+The framework stores video frames and sensor measurements from the AR.Drone in queues, such that algorithms can operate on the data.
+Furthermore, the framework includes a 3D map visualization and provides functionalities to record and playback data.
 
-This thesis proposed a realtime Simultaneous Localization and Mapping approach that can be used for micro aerial vehicle with a low-resolution down-pointing camera (e.g., AR.Drone).
+This thesis proposed a real-time Simultaneous Localization and Mapping approach that can be used for micro aerial vehicle with a low-resolution down-pointing camera (e.g., AR.Drone).
 The information from the sensors are used in an Extended Kalman Filter (EKF) to estimate the AR.Drone's pose.
 The position of the AR.Drone cannot be estimated directly and is derived from the velocity estimates from the AR.Drone.
 This estimate is based on the inertia measurements, aerodynamic model and visual odometry obtained from the relative motion between camera frames.
@@ -20,7 +20,7 @@ When an estimate of the AR.Drone's pose is available, a map can be constructed t
 The map consists of a texture map and a feature map.
 The texture map is used for human navigation and the feature map is used by the AR.Drone to localize itself.
 
-The visual map is constructed by warping a camera frame's on a flat canvas.
+The texture map is constructed by warping a camera frame on a flat canvas.
 A homography matrix describes how each frame has to be transformed (warped) in order to generate a seamless texture map without perspective distortion.
 For each frame, the estimated pose and camera matrix are used to determine the area of the world which is observed by the camera.
 This area is described by four 2D coordinates (a flat world is assumed).
@@ -48,18 +48,18 @@ If a translation is very good (i.e., low covariance), Kabsch algorithm is used t
 Experiments show that the proposed method significantly outperforms OpenCV's implementation to estimate a perspective, affine or Euclidean transformation.
 By reducing the degrees of freedom and using a beter quality measure, the robustness against noise increases.
 
-A slighly modified version of the localization approach is used to perform visual odometry (estimate the velocity from camera images).
+A slightly modified version of the localization approach is used to perform visual odometry (estimate the velocity from camera images).
 Instead of matching the last frame against the feature map, now the last frame is matched against the previous frame.
 This estimated velocity can be used instead 
 % or in combination with
  the AR.Drone's onboard velocity estimate.
 Experiments show that the accuracy of the proposed visual odometry method is comparable to the AR.Drone's onboard velocity estimate.
 
-Experiment show the AR.Drone down-pointing's camera offers good balance between image quality and computational performance.
+Experiments show the AR.Drone down-pointing's camera offers good balance between image quality and computational performance.
 When the resolution of the AR.Drone's camera is reduced, the accuracy of the estimated position decreases.
 The reduced image quality results in less frames that could be used to robustly recover the velocity.
 A simulated AR.Drone was used to investigate an increased camera resolution.
-An increased image resolution does not necessarily produce more accuracate estimated positions.
+An increased image resolution does not necessarily produce more accurately estimated positions.
 While relatively more frames could be used to used to robustly recover the velocity, the absolute number of processed frames decreased due to the increased computational complexity.
 Therefore, the velocities are estimated less frequent.
 
@@ -89,7 +89,7 @@ The framework contains an abstraction layer to abstract from the actual device a
 Therefore, a simulation model of the AR.Drone is developed in USARSim.
 The main contribution is a novel approach that enables a MAV with a low-resolution down-looking camera to navigate in circumstances encountered during the IMAV competition.
 An algorithm is presented to estimate the transformation between a camera frame and a map.
-In addition to the navigation capabilities, the approach generates a visual map, which can be used for human navigation.
+In addition to the navigation capabilities, the approach generates a texture map, which can be used for human navigation.
 Another contribution is a method to construct an elevation with a single airborne ultrasound sensor.
 
 \section{Future research}
@@ -101,11 +101,11 @@ Further improvements would require more system identifications (e.g., rotational
 The current sensor model uses a set of default USARSim sensors, which do not model noise accurately.
 This research would benefit from a realistic modeling of the noise in the sensors.
 
-The proposed SLAM method is able to construct a map and localize the AR.Drone in realtime.
+The proposed SLAM method is able to construct a map and localize the AR.Drone in real-time.
 However, the proposed method lacks a global map optimization method, which reduces the error in the map when a loop-closure is detected.
-An interesting research direction is to develop a global map optimization that is able to optimize both the feature map and visual map in realtime.
+An interesting research direction is to develop a global map optimization that is able to optimize both the feature map and texture map in real-time.
 
-Experiments have shown that the proposed visual odometry method is unable to accurately estimate the velocity when unsufficient texture is visible on the floor.
+Experiments have shown that the proposed visual odometry method is unable to accurately estimate the velocity when insufficient texture is visible on the floor.
 In these circumstances, the AR.Drone's onboard optical-flow based visual odometry method is able to estimate the velocity more accurately.
 However, salient lines on the floor cause the AR.Drone's optical-flow method to estimate the velocity in the wrong direction.
 This problem can be solved by integrating additional information (e.g., aerodynamic model) into the optical-flow method, to correct the direction of the estimated velocity.
@@ -126,4 +126,4 @@ Just as stereo vision can be used to create a depth map of the environment, the 
 
 The proposed framework uses a single thread to process the camera frames.
 Therefore, the proposed SLAM method is unable to benefit from an increased image resolution.
-This issue can be solved by processing multiple frames in parallel (using multiple video processing threads), to make beter use of a multicore CPU.
+This issue can be solved by processing multiple frames in parallel (using multiple video processing threads), to make better use of a multicore CPU.

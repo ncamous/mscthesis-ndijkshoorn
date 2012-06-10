@@ -1,7 +1,7 @@
 A preliminary step is to find a suitable robot platform that enables both the development and testing of indoor aerial SLAM methods.
 A straightforward choice is to use a \textit{quadrotor helicopter}, commonly designed to be unmanned aerial vehicles (UAVs).
 Their small size and extremely maneuverability allows both indoor and outdoor flights.
-Furthermore, quadrotors don't require mechanical linkages to vary the rotor blade pitch angle, which simplifies the design.
+Furthermore, quadrotors do not require mechanical linkages to vary the rotor blade pitch angle, which simplifies the design.
 
 Nowadays, small quadrotors with on-board stabilization can be bought off-the-shelf.
 These quadrotors make it possible to shift the research from basic control of the platform towards intelligent applications.
@@ -39,7 +39,7 @@ Each rotor produces both a thrust $T$ and torque $\tau$ about its center of rota
 The accelerated mass will cause a force of equal magnitude but opposite direction on that system.
 \textit{Torque} $\tau$ is the tendency of a force to rotate an object about an axis.
 Drag $D_b$ is the force that opposes the motion of an aircraft through the air.
-This force depends on velocity of the vehicle and deaccelerates the vehicle if insufficient thrust is generated.
+This force depends on velocity of the vehicle and de-accelerates the vehicle if insufficient thrust is generated.
 Together the motors should generate sufficient vertical thrust to stay airborne, which is indicated by the gravity force $mg$ in the direction $e_D$.
 
 \begin{figure}[htb]
@@ -79,19 +79,19 @@ Increasing thrust for one rotor while decreasing thrust for the other will maint
 \caption{The AR.Drone quadrotor helicopter with protection hull attached.}
 \label{fig:ardrone_hull}
 \end{figure}
-The AR.Drone (Figure \ref{fig:ardrone_hull}) is remote-controlled consumer quadrotor helicoptor developed by Parrot SA\footnote{\url{www.parrot.com}}.
+The AR.Drone (Figure \ref{fig:ardrone_hull}) is remote-controlled consumer quadrotor helicopter developed by Parrot SA\footnote{\url{www.parrot.com}}.
 The body is made of a carbon fiber tube structure and high resistance 
 %PA66
 plastic.
 A protection hull is made of Expanded Polypropylene (EPP) foam\footnote{\url{http://en.wikipedia.org/wiki/Polypropylene}}, which is durable, light in weight and recyclable.
 The hull provides protection during indoor flights.
-The propellors are powered by four brushless motors (35,000 rpm, power: 15W).
+The propellers are powered by four brushless motors (35,000 rpm, power: 15W).
 Energy is provided by a Lithium polymer battery with a capacity of 1000 mAh, which allows a flight time of approximately 10 minutes.
 
 The AR.Drone carries an internal computer with a 468MHz ARM9-processor and 128MB of RAM, running a custom Linux operating system.
 A mini-USB connector is included for software flashing purposes and to attach add-ons (e.g., GPS sensor).
 An integrated 802.11g wireless card provides network connectivity with an external device that controls the vehicle.
-A remote-control is not included. Instead, a regular wifi-enabled device can be used to control the AR.Drone.
+A remote control is not included. Instead, a regular WiFi-enabled device can be used to control the AR.Drone.
 The AR.Drone was initially designed for Apple platforms (e.g., iPhone, iPod and iPad) and became available on other platforms during 2011.
 It is also possible to control the AR.Drone from a Linux or Windows PC with the software designed for application developers.
 
@@ -164,7 +164,7 @@ A limitation is the small range in which the sensor is able to operate.
 The ultrasound sensor in the AR.Drone has an effective range of approximately $20\small{cm}$ to $6\small{m}$.
 %The minimum range is approximately $20\small{cm}$, meaning that the AR.Drone is \textit{unable to determine its altitude} when flying close to the floor.
 Another limitation is that the ultrasound sensor is unable to obtain precise directional information about objects.
-Sound progragates in a cone-like manner, where opening angles are commonly between 20 to 40 degrees.
+Sound propagates in a cone-like manner, where opening angles are commonly between 20 to 40 degrees.
 Due to this property, the sensor acquires entire regions of constant depth instead of discrete depth points.
 So, the ultrasound sensor can only tell there is an object at the measured distance somewhere within the measured cone.
 
@@ -172,7 +172,7 @@ Another limitation is the influence of the surface's orientation on the sensor's
 When the ultrasoundwave is emitted toward a parallel surface of an obstacle, most of the sound energy is reflected perpendicular to the surface and will be detected by the sensor.
 However, if the surface of the obstacle is tilted relative to the sensor, then only an undetectably small amount of energy will be reflected toward the sensor.
 Also, the acoustic properties of the material in range have direct impact on the sensor's performance (e.g., foam can acoustically absorb the soundwaves).
-A final limition is the limited operating frequency.
+A final limitation is the limited operating frequency.
 Before a soundwave can be emitted, the previously emitted soundwave has to be detected by the sensor.
 This reduces the minimal operating speed of the AR.Drone's ultrasound sensor to $300 / (2 \times 6) = 25\small{Hz}$.
 
@@ -195,9 +195,9 @@ The following (first degree) polynomial fit describes the relation between the a
 
 
 
-\subsubsection{Camera's}
-The AR.Drone is equipped with two CMOS camera's: a front camera and a bottom camera.
-Both camera's support live video streaming at 15 frames per second.
+\subsubsection{Cameras}
+The AR.Drone is equipped with two CMOS cameras: a front camera and a bottom camera.
+Both cameras support live video streaming at 15 frames per second.
 
 The front camera has a resolution of $640 \times 480$ pixels (VGA) and a wide $93^{\circ}$ field of view.
 This front camera is used to automatically detect other drones during multiplayer games or to provide video feedback on a screen (e.g., smartphone).
@@ -217,8 +217,8 @@ More details about the onboard intelligence can be found in Section \ref{sec:pla
 \section{Onboard intelligence}
 \label{sec:platform_onboard_intelligence}
 Usually quadrotor remote controls have multiple joysticks and knobs for controlling pitch, roll, yaw and throttle.
-It generally takes hours of practice to safely perform basic manoeuvres like take-off, trimming, hovering with constant altitude and landing.
-Thanks to the onboard computer and sensors, take-off, hovering, trimming and landing are now completely automatic and all manoeuvres are assisted.
+It generally takes hours of practice to safely perform basic maneuvers like take-off, trimming, hovering with constant altitude and landing.
+Thanks to the onboard computer and sensors, take-off, hovering, trimming and landing are now completely automatic and all maneuvers are assisted.
 
 Because the quadrotor system is unstable, feedback from the sensors to the control system is required.
 This raises the issue of state estimation.
@@ -242,7 +242,7 @@ where $Y_m$ is the measurement and $Y_v$ the true value of the sensed variable.
 
 Not all errors are compensated during the factory calibration.
 The AR.Drone's navigation board is mounted on damping foam.
-To further compensate the misaligment, \textit{onboard calibration} is performed.
+To further compensate the misalignment, \textit{onboard calibration} is performed.
 This is done by considering that the mean acceleration of the UAV must be equal to zero on a stationary flight.
 A least-squares minimization method is used to determine the micro-rotation.
 After each landing, this onboard calibration is automatically performed to compensate for the misalignment due to the displacement of the damping foam during the landing shock.
@@ -296,7 +296,7 @@ Alternatively, when vision-based velocity is unavailable, only the aerodynamics 
 The dynamic behavior of a quadrotor is quite complex.
 In particular, the aerodynamics of the propellers and the motion of the rigid frame can interfere to produce a coupled dynamical model.
 This model is beyond the scope of this thesis.
-In summary, linear drag term exists from the interaction between the rigid body and the rotors and this term is reinforced by tilt phenomenon which changes a lift force component in drag.
+In summary, linear drag term exists from the interaction between the rigid body and the rotors and this term is reinforced by tilt phenomenon, which changes a lift force component in drag.
 These induced-drag effects are non-negligible and they yield interesting information on the velocity of the system.
 The induced forces are directly measured by the accelerometers, and through the model, can be used to reliably estimate the velocities of the vehicle.
 
@@ -360,7 +360,7 @@ The API does not include software that is embedded on the AR.Drone.
 Communication with the AR.Drone is done through four main \textit{communication services}, which are implemented in the SDK.
 \begin{enumerate}
 \item Controlling and configuring the drone is done by sending \textit{AT commands} on regular basis;
-\item Information about the drone (e.g., status, attitude, speed) is called \textit{navdata}.
+\item Information about the drone (e.g., status, altitude, attitude, speed) is called \textit{navdata}.
 The navdata also includes filtered and raw sensor measurements.
 This information is sent by the drone to its client at a frequency of approximately 30 (demo mode) or 200 times per second;
 \item A video stream is sent by the AR.Drone to the client device.
@@ -394,7 +394,7 @@ Support for other platforms (e.g., Linux and Windows) was added in an early rele
 In order to make recent versions of the API working under Windows, a significant amount of fixes is required.
 Another drawback is the bulkiness.
 The API consists of many files and lines of undocumented code.
-This makes it difficult to comprehend what's happening inside the code.
+This makes it difficult to comprehend what is happening inside the code.
 
 For these reasons, custom software libraries have been released by developers.
 ARDrone-Control-.NET\footnote{\url{https://github.com/shtejv/ARDrone-Control-.NET}} provides a .Net SDK for Windows.
