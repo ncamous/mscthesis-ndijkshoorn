@@ -36,8 +36,8 @@ The state at time $t$ is denoted $x_t$.
 \end{mydef}
 Common state variables are:
 \begin{itemize}
-\item The robot \textit{pose}, which is its location and orientation relative to a global coordinate frame.
-\item The \textit{robot velocity}, consisting of a velocity for each pose variable.%A change in attitude is called \textit{angular velocity}.
+\item The robot \textit{pose}, which is its location and orientation relative to a global coordinate frame;
+\item The \textit{robot velocity}, consisting of a velocity for each pose variable; %A change in attitude is called \textit{angular velocity};
 \item The \textit{location and features of surrounding objects in the environment}. The objects can be either \textit{static} or \textit{dynamic}. For some problems, the objects are modeled as \textit{landmarks}, which are distinct, stationary features that provide reliable recognition.
 \end{itemize}
 
@@ -62,7 +62,7 @@ The control data conveys information regarding the change of state.
 For example, setting a robot's velocity at $1 \small{m/s}$, suggests that the robot's new position after $2$ seconds is approximately $2$ meters ahead of its position before the command was executed.
 As a result of noise, $1.9$ or $2.1$ meters ahead are also likely new positions.
 Generally, measurements provide information about the environment's state, increasing the robot's knowledge.
-Motion tends to induce a loss of knowledge due to the inherent noise in robot actuation and the stochasticity of the environment.
+Motion tends to induce a loss of knowledge due to the inherent noise in robot actuation. % and the stochasticity of the environment.
 
 The evolution of state and measurements is performed by \textbf{probabilistic laws}.
 State $x_t$ is generated stochastically from the state $x_{t-1}$.
@@ -125,7 +125,7 @@ bel(x_t) = \eta p(z_t | x_t) \overline{bel}(x_t)
 \end{equation}
 Where $\eta$ is a normalization constant to ensure a valid probability.
 Now, $bel(x_t)$ is the robot's belief about the state after the measurement and control data are used to improve the robot's knowledge.
-Both steps of the algorithm are performed recursively for all measurements and controls.
+Both steps of the algorithm are performed recursively for all measurements and control commands.
 
 The most popular family of recursive state estimators are the \textbf{Gaussian filters}.
 Gaussian filters represent belief by multivariate normal distributions (approximated by a Gaussian function).
@@ -199,7 +199,7 @@ Localization is an important building block for successful navigation of a robot
 When a robot is moving in a known environment and starting at a known location, it can keep track of its location by integrating local position estimates (e.g., odometry).
 Due to uncertainty of these local estimates, the uncertainty of the robot's absolute location increases over time.
 In order to reduce the growing uncertainty, the robot has to retrieve its absolute location by localizing itself in relation to a map.
-To do so, the robot uses its sensors to make observations of its environment and relate these observations to a map of the environment.
+To do so, the robot uses its sensors to make observations of its environment and relates these observations to a map of the environment.
 
 A probabilistic approach to localization uses belief to represent the estimated global location.
 Again, updating the robot's position involves two steps.
@@ -242,7 +242,7 @@ Due to the absence of ambiguity, the trackers fail to model ambiguities adequate
 The main advantage of the multi-hypothesis representation is that the robot can explicitly maintain uncertainty regarding its state.
 This allows a robot to believe in multiple poses simultaneously, allowing the robot to track and reject different hypotheses independently.
 One of the main disadvantages of a multi-hypothesis representation involves decision-making.
-If the robot represents its position as a set of points, it becomes less obvious to compute a next action.
+If the robot represents its position as a set of points, it becomes less obvious to compute the best action.
 
 Furthermore, solution techniques can be divided in two branches of time constraints: \textit{online computing} and \textit{offline computing}.
 \textbf{Online} techniques solve a problem in real-time and must guarantee response within strict time constraints.
@@ -250,7 +250,8 @@ One advantage of online techniques is the ability to use the response as input f
 Due to the strict time constraints, a limited amount of computations can be performed, which limits the complexity of solution techniques.
 
 \textbf{Offline} techniques have less strict time constraints, which allow increased complexity.
-For example, additional refinements or optimizations can be performed that would be too slow for online techniques.
+For example, additional refinements %or optimizations
+can be performed that would be too slow for online techniques.
 One of the main disadvantages of offline techniques involves decision-making.
 Because a response is not available in real-time, the robot has to wait or make a decision without incorporating the response.
 
@@ -259,7 +260,7 @@ Because a response is not available in real-time, the robot has to wait or make 
 \label{sec:prob-rob-kf}
 The most popular technique for implementing a Bayes filter is probably the Kalman Filter (1960) \cite{kalman1960new}, often used for improving vehicle navigation.
 The filter has a Single-hypothesis belief representation and can be performed in real-time.
-The Kalman Filter is based on the assumption that the system is linear and both the motion model and measurement model are affected by white Gaussian noise.
+The Kalman Filter is based on the assumption that the system is linear and both the motion model and measurement model are affected by Gaussian noise.
 Belief at time $t$ is represented by a multivariate Gaussian distribution defined by its mean $\mu_t$ and covariance $\Sigma_t$.
 This means the $x_t$ from the Bayes filter (Equations \eqref{eq:background-theory-bayes-predict} and \eqref{eq:background-theory-bayes-measurement}) has been replaced by $\mu_t$ and $\Sigma_t$.
 %This representation limits the filter to continuous states.
@@ -279,7 +280,7 @@ K_t & = & \overline{\Sigma}_t C_t^T (C_t \overline{\Sigma}_t C_t^T + Q_t)^{-1} &
 \end{equation}
 
 The Kalman Filter represents the belief $bel(x_t)$ at time $t$ by the mean $\mu_t$ and covariance $\Sigma_t$.
-When a measurement is received, a new belief $bel(x_t)$ is predicted based on the previous belief bel($x_{t-1}$), the control data $u_t$ and both the state transition model and motion model.
+When a measurement is received, a new belief $bel(x_t)$ is predicted based on the previous belief $bel(x_{t-1})$, the control data $u_t$ and both the state transition model and motion model.
 This predicted belief describes the most likely state $\overline{\mu}_t$ at time $t$ and the covariance $\overline{\Sigma}_t$.
 The measurement is not yet included, because it is a predicted belief.
 The update step transforms the predicted belief ($\overline{\mu}_t$, $\overline{\Sigma}_t$) into the desired belief ($\mu_t$, $\Sigma_t$), by incorporating the measurement $z_t$.
@@ -536,4 +537,4 @@ And, when the number of particles is insufficient, the particle filter might suf
 \end{comment}
 
 The theory described in this chapter is used in the work presented in Section \ref{chapter:visual-slam}.
-Section \ref{sec:pose_estimation} describes the Kalman Filter and both the motion model and measurement model.
+%Section \ref{sec:pose_estimation} describes the Kalman Filter and both the motion model and measurement model.

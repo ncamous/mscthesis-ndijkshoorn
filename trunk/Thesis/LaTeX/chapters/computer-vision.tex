@@ -7,10 +7,9 @@ Laser range scanners are often used for robot localization.
 However, this sensor has a number of problems (e.g., limited range, deal with dynamic environments).
 Vision has long been advertised as a solution.
 A camera can make a robot perceive the world in a way similar to humans.
-
 \textbf{Computer vision} is a field that includes methods for acquiring, processing, analyzing and understanding images.
 Since a camera is the AR.Drone's only sensor capable of retrieving detailed information of the environment, computer vision techniques are essential when performing robot localization with the AR.Drone.
-In addition, vision techniques can be used to calibrate other sensors of a robot.
+%In addition, vision techniques can be used to calibrate other sensors of a robot.
 
 \section{Projective geometry}
 \label{sec:background-projective-geometry}
@@ -30,8 +29,10 @@ Points at infinity are represented using $(x, y, z, 0)$, because $(x/0, y/0, z/0
 In Euclidean geometry, one point is picked out as the \textit{origin}.
 A coordinate can be transformed to another coordinate by translating and rotating to a different position.
 This operation is known as a \textbf{Euclidian transformation}.
-A more general type of transformation is an \textbf{affine transformation}, which is a linear transformation (linear stretching), followed by a Euclidian transformation.
-The resulting transformation performs moving (translating), rotating and finally stretching linearly.
+A more general type of transformation is the \textbf{affine transformation}, which is a linear transformation (linear stretching), followed by a Euclidian transformation.
+The resulting transformation performs moving (translating), rotating and
+%finally
+stretching linearly.
 % possibly by different ratios in different directions.
 
 In computer vision problems, projective space is used as a convenient way of representing the real 3D world.
@@ -55,7 +56,7 @@ The \textbf{pinhole camera} has been the first known example of a camera \cite{g
 It is a lightproof box with a very small aperture instead of a lens.
 Light from the scene passes through the aperture and projects an \textit{inverted image} on the opposite side of the box.
 This principle has been adopted as a standard model for perspective cameras.
-In this model, \textit{optical center} $C$ (aperture) corresponds to the center of the lens.
+In this model, the \textit{optical center} $C$ (aperture) corresponds to the center of the lens.
 The intersection $O$ between the optical axis and the image plane is called \textit{principal point}.
 The pinhole model is commonly described with the image plane between $C$ and the scene in order to preserve the same orientation as the object.
 
@@ -154,7 +155,7 @@ They are extracted from measurements and described in a mathematical way.
 \end{mydef}
 
 Features play an essential role %
-in the software of for mobile robots.
+in the software of mobile robots.
 They enable more compact and robust descriptions of the environment.
 Choosing the appropriate features is a critical task when designing a mobile robot.
 
@@ -163,10 +164,10 @@ Choosing the appropriate features is a critical task when designing a mobile rob
 A local feature is a small image patch that is different than its immediate neighborhood.
 Difference can be in terms of intensity, color and texture.
 Commonly, features are edges, corners or junctions.
-The most important aspect of a feature detector is \textit{repeatability}, which means the detector is able to detect the same features, when multiple images (with different viewing and illumination conditions) of the same scene are used.
+The most important aspect of a feature detector is \textit{repeatability}, which means the detector is able to detect the same features when multiple images (with different viewing and illumination conditions) of the same scene are used.
 Another important aspect of a feature detector is \textit{distinctiveness}, which means the information carried by a patch is distinctive as possible.
 This is important for robust feature matching.
-Good feature are \textit{invariant}, meaning that changes in camera viewpoint, illumination, rotation and scale do not affect a feature and its high-level description.
+A good feature is \textit{invariant}, meaning that changes in camera viewpoint, illumination, rotation and scale do not affect a feature and its high-level description.
 
 \textbf{Scale-invariant feature transform (SIFT)} \cite{lowe1999object} is probably the most popular feature extractor.
 It is invariant to scale, rotation, illumination and viewpoint.
@@ -210,7 +211,7 @@ To perform robot localization, extracted feature descriptors need to be matched 
 Ideally, each feature extracted from the current frame is correlated against the corresponding feature inside the map.
 
 A \textit{matching function} is used to compute the correspondence between two feature descriptors.
-The matching function usually depends on the type of feature descriptor.
+The matching function depends on the type of feature descriptor.
 In general, a feature descriptor is a high-dimensional vector and matching features can be found by computing the distance using the $L_2$ norm, which is defined as:
 \begin{equation}
 L2(a,b) =\sqrt { \sum_{i=1}^{N} \left| a_i - b_i \right| ^2 }
@@ -219,11 +220,11 @@ where $N$ is the dimensionality of the descriptor vector.
 
 The matching function is used to find matches between two sets of descriptors.
 A popular matcher is the \textit{Brute-force descriptor matcher}. For each descriptor in the first set, this matcher finds the closest descriptor in the second set by trying each one.
-However, the brute-force matcher becomes very slow for large descriptors sets, due to the complexity of $O(n^2)$.
+However, the brute-force matcher becomes slow for large descriptors sets, due to the complexity of $O(n^2)$.
 For large descriptor sets, the \textit{Fast Library for Approximate Nearest Neighbors (FLANN)} \cite{muja2009flann} matcher performs more efficient matching.
 It uses an Approximate Nearest Neighbors algorithm to find similar descriptors efficiently.
 The authors state that the approximation has proven to be good-enough in most practical applications.
-In most cases it is orders of magnitude faster than performing the exact searches.
+In most cases it is orders of magnitude faster than performing exact searches.
 
 In this thesis, the Brute-force descriptor matcher is used.
 The estimated pose of the vehicle is used to select a part of the map (descriptor set), which reduces the size of the descriptor set.
@@ -247,12 +248,12 @@ Different types of homographies can be used to describe the transformation betwe
 The homography $\boldsymbol{H}$ cannot be computed from all feature matches directly.
 False matches would reduce the accuracy of the estimated homography.
 Instead, a robust estimation procedure is applied.
-\textbf{RANSAC (Random Sample Consensus)} \cite{fischler1981random} is a robust estimation procedure that uses a minimal set of randomly sampled correspondences to estimate image transformation parameters, and finds a solution that has the best consensus with the data.
+\textbf{RANSAC (Random Sample Consensus)} \cite{fischler1981random} is a robust estimation procedure that uses a minimal set of randomly sampled correspondences to estimate image transformation parameters, finding a solution that has the best consensus with the data.
 Commonly, four random feature correspondences are used to compute the homography $\boldsymbol{H}$ of an image pair.
 This step is repeated $N$ trials and the solution that has the maximum number of inliers (whose projections are consistent with $\boldsymbol{H}$ within a tolerance $\epsilon$ pixels) is selected.
 
 When the homographies of all image pairs are estimated, a global optimization method can be applied to reduce drift or other sources of error.
-Finally, the images are transformed according to the corresponding homographies, resulting in a seamless panorama or high-resolution images. 
+Finally, the images are transformed according to the corresponding homographies, resulting in a seamless panorama or high-resolution image. 
 
 
 \section{Visual Odometry}
