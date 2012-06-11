@@ -74,7 +74,7 @@ Another effort to promote research and development in robotics is RoboCup \cite{
 The RoboCup competions have as goal to stimulate research by providing standard problems where wide range of technologies can be integrated and examined.
 Unlike the IMAV competitions, the RoboCup competitions are not limited to MAVs.
 
-The RoboCup Rescue league \cite{kitano1999robocup} is part of the RoboCup initiative.
+The RoboCup Rescue league \cite{kitano1999robocup} is part of the RoboCup competitions.
 This league aims at the development of robotic technology that could 
 %effectively
 help human rescuers in the aftermath of disasters like earthquakes, terroristic attacks and other extreme situations.
@@ -95,7 +95,7 @@ One of the main prerequisites of an autonomous robot is the ability to know its 
 Since no assumptions can be made about the environment, the robot has to learn from its environment.
 
 Simultaneous Localization and Mapping using aerial vehicles is an active research area in robotics.
-However, current approaches use estimation and optimization algorithms that are computationally expensive and cannot be applied for real-time navigation problems.
+However, current approaches use algorithms that are computationally expensive and cannot be applied for real-time navigation problems.
 Furthermore, other researchers rely on expensive aerial vehicles
 %equipped
 with advanced sensors like a laser rangefinder.
@@ -136,10 +136,10 @@ Since no method has been proposed by others, the question arises how to construc
 
 \section{Contributions}
 The first contribution of this thesis is a framework that aids in the development of (intelligent) applications for the AR.Drone.
-The framework contains an abstraction layer to abstract from the actual device and use a simulated AR.Drone in a way similar to the real AR.Drone.
+The framework contains an abstraction layer to abstract from the actual device, which allows to use a simulated AR.Drone in a way similar to the real AR.Drone.
 Therefore, a simulation model of the AR.Drone is developed in USARSim.
 The main contribution is a new approach that enables a MAV with a low-resolution down-looking camera to navigate in circumstances encountered during the IMAV competition.
-A pragmatic algorithm is presented to estimate the transformation between a camera frame and a map.
+An algorithm is presented to robustly estimate the transformation between a camera frame and a map.
 In addition to the navigation capabilities, the approach generates a texture map, which can be used for human navigation.
 Another contribution is a method to construct an elevation map with an airborne ultrasound sensor.
 
@@ -149,7 +149,7 @@ This theory includes probabilistic robotics (Chapter \ref{chapter:probabilistic-
 In \textbf{Chapter \ref{chapter:related-research}}, an overview of related research is given.
 This research is divided into three segments: SLAM methods for building texture maps, elevation mapping with ultrasound sensors and research conducted with the AR.Drone.
 An extensive overview of the AR.Drone platform is presented in \textbf{Chapter \ref{chapter:platform}}.
-The platform overview covers the hardware, the basics of the quadrotor flight control and finally its Application Programming Interface (API).
+The platform overview covers the hardware, the quadrotor flight control and finally its Application Programming Interface (API).
 This API lacks functionalities to employ a SLAM method.
 Therefore, it is extended to a development framework in \textbf{Chapter \ref{chapter:development-environment}}.
 In addition to this framework, a realistic simulation model of the AR.Drone is developed.
