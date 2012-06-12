@@ -1,6 +1,6 @@
 In this chapter, the performance of both the simulation model and visual SLAM method are analyzed in a series of experiments.
 In Section \ref{sec:simulation_results}, the USARSim simulation model is validated.
-I like to thank Carsten van Weelden for these experiments.
+I like to thank Carsten van Weelden for performing these experiments.
 He flew a set of maneuvers with the actual AR.Drone and simulated AR.Drone. The differences between the maneuvers are studied in detail.
 In Section \ref{sec:results-position-accuracy}, the accuracy of the estimated position is evaluated.
 A set of 8-shapes is flown with the AR.Drone and the estimated positions are compared against the groundtruth from a laser rangefinder.
@@ -20,7 +20,7 @@ described as a set of time points (milliseconds since initialization) each coupl
 Orientation, altitude and horizontal speed are recorded at a frequency of $200\hertz$ during the maneuvers. These are gathered through the AR.Drone's internal sensors and the onboard algorithms, which are
 also used by the controller to operate the drone. The filtered output of the gyroscope is used
 to estimate the orientation. The filtered output of the ultrasound distance sensor is used to estimate
-the altitude. The onboard visual odometry algorithm is used to estimate the horizontal (linear
+the altitude. The onboard velocity estimates are used as the horizontal (linear
 and lateral) speeds. The simulator has equivalent sensors. In addition, simulation can provide ground-truth data. 
 Also for the real maneuvers an attempt was made to generate ground truth via an external reference system; the movements were recorded with a synchronized video system consisting of four firewire cameras, capturing images at 20 frames per second at a resolution of $1024 \times 768$ pixels. The position of the AR.Drone 
 in each frame has been annotated by hand. 
@@ -49,8 +49,8 @@ maintains a stable hover when no other commands are given, which is accomplished
 %ad-hoc tests was able to recover from major attitude disturbances up to $\sim45^o$. However, in this section we
 %are concerned with the hovering behavior with minor disturbances. 
 So, the hovering experiment is performed  
-indoors
-with an underground chosen to have enough texture for the onboard visual odometry estimation algorithm.
+indoor
+with an underground chosen to have enough texture for the onboard velocity estimation algorithm.
 
 As experiment the AR.Drone maintained a hover for $35$ seconds. This experiment was repeated $10$ times,
 collecting $60.000$ movement samples for a total of $350$ seconds. Over all samples the mean absolute error in horizontal
@@ -169,7 +169,8 @@ signal until it reaches the commanded pitch. The result is illustrated in Figure
 \label{fig:ComparisonOfResponse}
 \end{figure}
 
-As one can see, the acceleration shows for the real and simulated AR.Drone nearly the same slope. The deceleration of the simulated AR.Drone is slightly lower. In the real AR.Drone the feedback loop (based on the onboard visual odometry of the ground camera) actively decelerates the system. Overall, the dynamic behavior of the simulator closely resembles the dynamic behavior of the real system. Additionally, tests with more complex maneuvers (horizontal and vertical square) have been recorded, but unfortunately not analyzed in detail.
+As one can see, the acceleration shows for the real and simulated AR.Drone nearly the same slope. The deceleration of the simulated AR.Drone is slightly lower. In the real AR.Drone the feedback loop (based on the onboard visual odometry of the ground camera) actively decelerates the system. Overall, the dynamic behavior of the simulator closely resembles the dynamic behavior of the real system.
+%Additionally, tests with more complex maneuvers (horizontal and vertical square) have been recorded, but unfortunately not analyzed in detail.
 
 
 
@@ -194,7 +195,7 @@ At a range of $10\small{m}$, the accuracy is $\pm30\small{mm}$.
 A window was placed on the measurements to filter out measurements that originate from the environment.
 All remaining distance measurements are assumed to originate from the AR.Drone.
 The mean position of the filtered distance measurements is used as center position of the AR.Drone.
-Furthermore, a white cylinder with a diameter of 9\begin{small}cm\end{small} and a height of 37\begin{small}cm\end{small} was added on top of the AR.Drone to improve its visibility for the LRF.
+Furthermore, a white cylinder with a diameter of $9\begin{small}cm\end{small}$ and a height of $37\begin{small}cm\end{small}$ was added on top of the AR.Drone to improve its visibility for the LRF.
 
 \begin{figure}[htb]
 \centering
@@ -477,7 +478,7 @@ The pose recovery approach is benchmarked against OpenCV's robust \textit{Euclid
 The \textbf{Euclidean transformation} is computed using OpenCV's \textit{estimateRigidTransform}\footnote{\url{http://opencv.itseez.com/modules/video/doc/motion_analysis_and_object_tracking.html?highlight=estimateRigidTransform}} with the parameter \textit{fullAffine} off to compute a Euclidean transformation.
 The translation vector from the transformation matrix is used as velocity estimate.
 The maximum allowed reprojection error is set to $10\small{mm}$.
-Additional filtering is required to remove bad transformation.
+Additional filtering is required to remove faulty transformations.
 A recovered transformation is rejected if the percentage of inliers is below $50\%$ or if the translation is too large ($T \geq 500\small{mm}$).
 The \textbf{affine transformation} is computed using OpenCV's \textit{estimateRigidTransform}\footnote{\url{http://opencv.itseez.com/modules/video/doc/motion_analysis_and_object_tracking.html?highlight=estimateRigidTransform}} with the parameter \textit{fullAffine} on.
 The \textbf{perspective transformation} is computed using OpenCV's \textit{findHomography}\footnote{\url{http://opencv.itseez.com/modules/video/doc/motion_analysis_and_object_tracking.html?highlight=findhomography}} with a RANSAC-based robust method.
@@ -629,7 +630,7 @@ An exception is the camera resolution of $90\%$, which has a slightly lower erro
 This exception is probably caused by a coincidental drift that reduces the error.
 
 The results of the simulated AR.Drone can be found in Table \ref{tab:res-resolution-usar} and Figure \ref{fig:exp3-2-b}.
-The overall mean errors are smaller than the real AR.Drone, due to the lack of noise generated by the IMU and ultrasound sensor.
+The overall mean errors are smaller than the real AR.Drone, due to the lack of noise generated by the IMU and ultrasound sensors.
 Similar to the real AR.Drone, a reduced resolution results in more frames being processed, but less frames that could be used to extract the velocity.
 When the resolution increases, the number of processed frames decreases due to the increased computational time per frame.
 However, the percentage of frames that could be used to extract the velocity increases.
@@ -759,7 +760,7 @@ Ideally, an elevation UP event is triggered right before an object is detected b
 In the second experiment, the elevation mapping approach is evaluated in terms of error in the estimated dimensions of objects.
 Objects with different dimensions were laid out on a flat floor.
 A photo of the floorplan can be found in Figure \ref{fig:exp2-setup}.
-The AR.Drone's trajectory, which covers all objects, is indicated with a red line.
+The AR.Drone's trajectory is indicated with a red line and covers all objects.
 % and the object's dimensions 
 %The AR.Drone flew the marked trajectory over all objects.
 
@@ -800,7 +801,7 @@ Another explanation could be that the visual odometry methods assume a flat worl
 Between both boxes, a false elevation is detected (clearly visible in Figure \ref{fig:exp2-elevation-plot}).
 This elevation is probably triggered by a fast descent, caused by the AR.Drone's altitude stabilization, after the white box is passed.
 
-The brown box is not detected due its limited height.
+The brown box is not detected due to its limited height.
 Therefore, the measured (ultrasound) acceleration is not sufficient to trigger an elevation event.
 As expected, the ramp was not detected.
 The gradual elevation change does not produce a significant acceleration.

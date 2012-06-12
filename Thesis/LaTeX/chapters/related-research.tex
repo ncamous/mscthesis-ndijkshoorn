@@ -6,7 +6,7 @@ A variety of solutions have been developed.
 Most solutions rely on large and heavy sensors that have a high range and accuracy (e.g., SICK laser rangefinder).
 However, these sensors cannot be used on small (flying) vehicles.
 As a result, researchers focused on using vision sensors, which offer a good balance in terms of weight, accuracy and power consumption.
-Lightweight cameras are especially attractive for small flying vehicles (AUVs).
+Lightweight cameras are especially attractive for small flying vehicles (MAVs).
 
 Almost all publications related to this research describe a methodology that is able to learn the environment, but do not produce a visual map.
 An exception is the research by Steder, which builds a visual map of the environment.
@@ -22,7 +22,7 @@ If a stereo camera setup is available, their system is able to learn visual elev
 If only one camera is carried by the vehicle, the system provides a visual map without elevation information.
 Steder uses a graph-based formulation of the SLAM problem, in which the poses of the vehicle are described by the nodes of a graph.
 Every time a new image is acquired, the current pose of the camera is computed based on both visual odometry and place revisiting.
-The corresponding node is augmented to the graph accordingly.
+The corresponding node is augmented to the graph.
 Edges between these nodes represent spatial constraints between them.
 The constructed graph serves as input to a TORO-based network optimizer (Section \ref{sec:prob-rob-toro}), which minimizes the error introduced by the constraints.
 The graph is optimized if the computed poses are contradictory.
@@ -70,13 +70,13 @@ First, these correspondences are ordered according to the Euclidean distance of 
 The transformation $T_{c_a,c_b}$is determined for each correspondence pair.
 This transformation is then evaluated based on the other features in both sets using a score function.
 The score function calculates the relative displacement between the image features and the map features projected into the current camera image.
-The solution with the highest score is returned as the assumption for the transformation.
+The solution with the highest score is used as estimated transformation.
 
 Feature correspondences between images are selected using a deterministic PROSAC \cite{chum2005matching} algorithm.
 PROSAC takes into account a quality measure (e.g., distance between feature descriptors) of the correspondences during sampling, where RANSAC draws the samples uniformly.
 
 Steder's article describes how to estimate the motion of a vehicle and perform place revisiting using a feature map.
-However, this article and Steder's other publications don't describe how the visual map is constructed and visualized.
+However, this article and Steder's other publications do not describe how the visual map is constructed and visualized.
 Furthermore, it lacks how an elevation map is constructed and how this elevation map can be used to improve the position estimates (e.g., elevation constraints).
 A great disadvantage of the described method is the computational cost of the optimization method, which cannot be performed online (i.e. during flight). This reduces the number of practical applications.
 
@@ -93,7 +93,7 @@ A set of matches between two views can be used to estimate a homographic model f
 \begin{figure}[htb]
 \centering
 \includegraphics[width=6cm]{images/Caballero_map.png}
-\caption{Mosaic constructed with a KARMA autonomous airship flying at $22\small{m}$ (Courtesy Caballero et al. \cite{caballero2009unmanned}).}
+\caption{Mosaic constructed with a KARMA autonomous airship flying at $22\small{m}$ altitude (Courtesy Caballero et al. \cite{caballero2009unmanned}).}
 \label{fig:Caballero_map}
 \end{figure}
 
@@ -115,7 +115,7 @@ If the selected hierarchy level is not constrained enough (e.g., the M-Estimator
 Once the homography is computed, it is necessary to obtain a measure of the estimation accuracy.
 Caballero uses a $9 \times 9$ covariance matrix of the homography matrix, which is explained in \cite{Hartley2004}.
 
-The (ego-) motion of the vehicle is computed using the estimated homographies.
+The motion of the vehicle is computed using the estimated homographies.
 This method assumes that the terrain is approximately flat and that cameras are calibrated.
 $H_{12}$ is the homography that relates the first and the second view of the planar scene.
 Both projections can be related to the camera motion as:
@@ -137,7 +137,7 @@ This estimation will drift along time, but can be compensated by building a mosa
 By comparing the current image with images previously stored in the mosaic, loop-closures can be detected and used to eliminate the accumulated drift.
 The crossover detection consists of finding one image whose Mahalanobis distance is within a certain empirical range.
 Once an image is detected, a feature matching is used to compute the alignment between both images. 
-\textit{In the general case, the task of matching images taken from very different viewpoints is difficult and computationally costly.}
+In the general case, the task of matching images taken from very different viewpoints is difficult and computationally costly.
 For this reason, the image is warped to match the image from the mosaic, which simplifies the problem.
 The computed homography is used to obtain the correct alignment.
 Now, the relations among the most recent image and the corresponding image from the mosaic can be updated.
@@ -147,13 +147,13 @@ The state vector including the mean and covariance of all images is defined as:
 \begin{equation}
 x^{-} = [x_1, x_2, ..., x_n]^T = [h_{01}, x_1 \cdot h_{12}, ..., x_{(n-1)n} \cdot h_{(n-1)n}]^T
 \end{equation}
-The correction obtained when a loop-closing is detected is employed to update the state.
+The correction obtained when a loop-closing is detected is used to update the state.
 All states affected by the correction are now updated by the Extended Kalman Filter.
 
 Similar to Steder's research, Caballero uses a probabilistic representation of the estimated poses.
 Both approaches optimize the map after a loop-closure event is detected, but use different optimization methods.
 Unfortunately, these optimization methods are computationally expensive and difficult to perform while flying.
-Steder exploits the information from the inertia sensor to reduce the complexity of pose estimation, without decreasing the accuracy (degree of freedom) of the estimated pose.
+Steder exploits the information from the inertia sensor to reduce the complexity of the pose estimation problem, without decreasing the degree of freedom of the estimated pose.
 
 
 
@@ -174,31 +174,33 @@ This similarity suggests that methods developed for underwater mapping can be us
 Seabed mapping is a research area in which ultrasound sensors have been used for building elevation maps. Some examples are \cite{johnson1996seafloor,strauss1999multibeam,zerr1996three,evans2002three}.
 Kenny et al. \cite{kenny2003overview} give an overview of seabed-mapping technologies.
 Elevation mapping is essential for an autonomous underwater vehicle designed to navigate close to the seabed.
-The map is being used for obstacle avoidance, path planning and self-localization.
+The map is being used for obstacle avoidance, path planning and localization.
 
-Given the limited range and applicability of visual imaging systems in the underwater environment,
+Given the limited range and applicability of visual imaging systems in an underwater environment,
 sonar has been the preferred solution \cite{blondel1997handbook} for observing the seabed.
 Most approaches use a side scan sonar system that returns an image instead of a single distance measurements.
 Side scan uses a sonar device that emits conical or fan-shaped pulses down toward the seabed.
-The intensity of the acoustic reflections from the seabed of this beam is recorded in multiple transducers.
+The intensity of the acoustic reflections are recorded in multiple transducers.
 When stitched together along the direction of motion, these slices form an image of the sea bottom within the coverage of the beam.
-Modern side scan devices offer high-resolution images of the seabed on which objects of at least 10\begin{small}cm\end{small} may be detected at a range of up to 100\begin{small}m\end{small}.
+Modern side scan devices offer high-resolution images of the seabed on which objects of at least $10\begin{small}cm\end{small}$ may be detected at a range of up to $100\begin{small}m\end{small}$.
 
 \begin{figure}[htb]
 \centering
 \includegraphics[width=7.5cm]{images/williams_seabed_map.jpg}
 \caption{Seabed terrain model built by projecting the texture of the visual images onto a surface model generated by the sonar data.
-The grey areas represent portions of the terrain only observed by the sonar. (Courtesy Williams and Mahon \cite{williams2004simultaneous}).}
+The grey areas represent portions of the terrain that are only observed by the sonar. (Courtesy Williams and Mahon \cite{williams2004simultaneous}).}
 \label{fig:williams_seabed_map}
 \end{figure}
 
 A particularly interesting application of sonar-based elevation mapping is presented in \cite{williams2004simultaneous}.
 The article presents a SLAM system that uses information from the on-board sonar and vision system of an Unmanned Underwater Vehicle (UUV).
 The system estimates the vehicle's motion and generates a model of the structure of the underlying reefs.
-This work shows correspondences to the methods used in this thesis.
+%This work shows correspondences to the methods used in this thesis.
 Unlike the AR.Drone, the pencil beam scanning sonar of the UUV returns high-resolution images instead of a single distance measurement.
 
-In cases where a priori maps are not available, a mechanism must exist for building a map while simultaneously using that map for the purposes of localization.
+In cases where a priori maps are not available, a mechanism must exist for building a map while simultaneously using that map for
+%the purposes of
+localization.
 During motion, the vehicle builds a complete map of landmarks and uses these to provide continuous estimates of the vehicle location.
 By tracking the relative position between the vehicle and identifiable features in the environment, both the position of the vehicle and the position of the features can be estimated simultaneously.
 An Extended Kalman Filter is used for stochastic estimation of the vehicle's position and map feature locations.
@@ -219,7 +221,7 @@ The covariance matrix for the state at time $t$ is defined as:
 \textbf{P}^+_t = E[(x_t - \hat{x}^+_t)(x_t - \hat{x}^+_t)^T | \textbf{Z}^k]
 \end{equation}
 It was assumed that the roll and pitch of the vehicle were negligible, based on observations of the vehicle performance during in-water tests and results from the design of the vehicle.
-The vehicle pose at time step $k$ is represented by
+The vehicle pose at time step $t$ is represented by
 \begin{equation}
 \hat{x}^+_v(t) = \left[ \begin{array}{cccc} \hat{\textit{x}}^+_v(t) & \hat{\textit{y}}^+_v(t) & \hat{\textit{z}}^+_v(t) & \hat{\psi}^+_v(t) \end{array}\right]^T
 \end{equation}
@@ -234,7 +236,7 @@ Ultrasound and vision information can be combined to aid in the identification a
 For maximum overlap of both sensors the ultrasound sensor is mounted directly above the high-resolution vision system.
 The ultrasound sensor scans the seabed directly below the vehicle and is used to generate
 profiles of the surface.
-The distance measurements received by the ultrasound are then processed to identify distinctive shapes which are used to initialize new features in the SLAM map.
+The distance measurements received by the ultrasound sensor are then processed to identify distinctive shapes which are used to initialize new features in the SLAM map.
 The observation of range $R$ and bearing $\theta$ are combined with the estimated value of the vehicle pose $\hat{x}_v(t)$ and the measured position
 $\left[ \begin{array}{ccc} \textit{x}_s & \textit{y}_s & \textit{z}_s \end{array}\right]^T$ of the sonar relative to the camera frame.
 \begin{equation}
@@ -278,7 +280,7 @@ Because the AR.Drone is a quite recent development, the number of studies based 
 \subsubsection{Autonomous corridor and staircase flights}
 
 A recent publication is from Cornell University \cite{Bills2011icra}, where an AR.Drone is used to automatically navigate corridors and staircases based on visual clues.
-Their method classifies the type of indoor environment (e.g., corridors, staircases, rooms and corners) and then uses vision algorithms based on perspective cues to estimate the desired direction to fly.
+Their method classifies the type of indoor environment (e.g., corridors, staircases, rooms and corners) and then uses vision algorithms based on perspective clues to estimate the desired direction to fly.
 This method requires little computational power and can be used directly without building a 3D model of the environment.
 
 \begin{figure}[htb!]
@@ -304,7 +306,9 @@ Vanishing points are used to locate the end of the corridor.
 The Canny edge detector \cite{canny1986computational} is used to detected edges and a probabilistic Hough transform \cite{kiryati1991probabilistic} is used to find lines.
 The vanishing points (end of the corridor) are found by searching for the image region that has the highest density of pair-wise line intersections.
 A probabilistic model with Gaussians is constructed to model the noise in the location of a vanishing point.
-Staircases can be navigated by finding the center of the staircase, so the AR.Drone can follow the staircase using its onboard intelligence (i.e., altitude stabilization).
+Staircases can be navigated by flying to the center of the staircase. %
+The AR.Drone's onboard intelligence will automatically stabilize the altitude.
+%, so the AR.Drone can follow the staircase using its onboard intelligence (i.e., altitude stabilization).
 Lines that represent the staircase are found by classifying the line segments as horizontal or vertical and looking for the largest horizontal-line cluster in the Hough transform space.
 Once the cluster of horizontal lines is detected, the mean of the lines' endpoints is calculated to retrieve the desired direction.
 
@@ -322,7 +326,7 @@ When entering a segment, the robot is rotated to match the rotation during the m
 During the navigation along a segment, the robot establishes correspondences of the currently seen and previously mapped landmarks and computes differences in the expected and recognized positions for each such correspondence.
 The robot steers in a direction that reduces those differences while moving straight at a constant speed until its odometry indicates that the current segment has been traversed.
 The heading is determined by a histogram voting procedure.
-This navigation method is provably stable for non-degenerate polygonal paths, since the heading corrections can suppress the position uncertainty originating from the dead reckoning.
+%This navigation method is provably stable for non-degenerate polygonal paths, since the heading corrections can suppress the position uncertainty originating from the dead reckoning.
 %The distance traveled along a segment is estimated purely by dead reckoning.
 %Due to the low precision of the IMU based distance estimation, the localization error is high.
 %However, the localization error does not diverge and is kept within sufficient limits allowing the drone to autonomously navigate along the learned path.

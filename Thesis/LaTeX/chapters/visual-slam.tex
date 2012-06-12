@@ -22,7 +22,7 @@ This estimate is based on the inertia measurements, aerodynamic model and visual
 %not documented by the manufacturer.
 The details of this algorithm are proprietary information of the manufacturer. 
 
-The information from the sensors are used in an Extended Kalman Filter (EKF) (Section \ref{sec:prob-rob-ekf}) to estimate the current pose.
+The information from the sensors are used in an Extended Kalman Filter (EKF, Section \ref{sec:prob-rob-ekf}) to estimate the current pose.
 An EKF has been considered~\cite{julier2004unscented} the facto standard in the theory of nonlinear state estimation.
 The EKF state vector comprises a position vector $p^{W}$, velocity vector $v^{W}$, acceleration vector $a^{W}$ and attitude (orientation) vector $q^{W}$.
 All vectors are 3-dimensional Cartesian coordinates.
@@ -62,8 +62,8 @@ In theory, the velocity can be estimated by integrating the body acceleration me
 However, the low-cost acceleration sensor from the AR.Drone provides unreliable data, which would result in large velocity errors.
 Therefore, the body acceleration measurements are not written to the EKF's measurement matrix.
 
-Similar to the estimated position, the vertical velocity estimate is used to estimate the vehicle's altitude (vertical position).
-However, the ultrasound's altitude measurement can be integrated into the EKF's measurement matrix to improve the altitude estimate.
+Similar to the estimated position, the vertical velocity estimate is used to estimate the vehicle's altitude.
+However, the ultrasound altitude measurement can be integrated into the EKF's measurement matrix to improve the altitude estimate.
 The ultrasound sensor is not sensitive to drift because it provides an absolute altitude measurement.
 Relying only on the ultrasound sensor is not optimal since the measurements are affected by the material and structure of the floor (Section \ref{sec:ultrasound_altimeter}).
 
@@ -227,7 +227,7 @@ localization a feature map is used, as described in the next section.
 \label{sec:feature_map}
 In addition to the texture map described above, a grid of image features (feature map) is created using a method that is presented in this section.
 This feature map will be used for localization purposes, as described in Section~\ref{sec:localization}.
-The inertia measurements provide frequent position estimates.
+The inertia measurements and visual odometry provide frequent position estimates.
 %However, drift will increase the inaccuracy over time.
 %However, drift will decrease the accuracy over time.
 If the AR.Drone is able to relate a video frame to a position inside the feature map, the vehicle is able to correct this drift long enough to build a map 
@@ -246,7 +246,7 @@ A 2D grid with a fixed resolution of $100 \times 100mm$ per cell is used.
 From each camera frame the method extracts Speeded-Up Robust Features (SURF) \cite{Bay2008cviu} that are invariant with respect to rotation and scale.
 % SURF features are scale- and rotation-invariant. See Bay2008cviu
 Each feature is an abstract description of an interesting part of an image (Section \ref{sec:computer-vision-feature-extraction-matching}).
-A SURF feature is described by a center point in image sub-pixel coordinates and a descriptor vector that consists of 64 floats.
+A SURF feature is described by a center point in image sub-pixel coordinates and a descriptor vector that consists of 64 floating point numbers.
 
 Each feature that is detected in a camera frame is mapped to the corresponding cell of the feature map.
 A feature's center point ($x_f, y_f$) is transformed to its corresponding position in 2D world coordinates ($x_w, y_w$), visible in the top of Figure \ref{fig:mapping3}.
@@ -309,7 +309,7 @@ $9.55\small{m/s}$, which is significantly faster than the AR.Drone's default max
 	\section{Localization}
 \label{sec:localization}
 
-The feature map created in the previous section can be used for absolute position estimates, at the moment of loop-closure (when the AR.Drone observes a location where it has observed before).
+The feature map created in the previous section can be used for absolute position estimates, at the moment of loop-closure (when the AR.Drone observes a location it has observed before).
 This allows to correct the drift that originates from the internal sensors of the AR.Drone.
 The
 %inertia
@@ -354,7 +354,7 @@ Each query descriptor (frame) is matched against the descriptor from the trainin
 Please note it is possible that multiple descriptors from the frame are matched against a single descriptor from the map.
 
 For each match $C(d_q, d_t)$ the 2D world coordinates $(x_{w, d_q}, y_{w, d_q})$ and $(x_{w, d_t}, y_{w, d_t})$ of both descriptors are already computed.
-These point pairs can be used to calculate a transformation between the query points (frame) and training (map) points.
+These point pairs can be used to calculate a transformation between the query points (frame) and the training points (map).
 This transformation describes the relation between the EKF estimated vehicle position (described in Section~\ref{sec:pose_estimation}) and the position according to the feature map.
 
 \begin{figure}[htb]
@@ -375,9 +375,9 @@ This transformation describes the relation between the EKF estimated vehicle pos
 \label{sec:pose-recovery}
 Different types of transformations can be used to describe the relation between the point pairs (e.g., perspective transformation or affine transformation).
 However, if not all of the point pairs fit the transformation (due to outliers), the initial transformation estimate will be poor.
-Random Sample Consensus (RANSAC) \cite{fischler1981random} is used to filter the set of matches in order to detect and eliminate erroneous matches (point pairs).
+Random Sample Consensus (RANSAC) \cite{fischler1981random} is used to filter the set of matches in order to detect and eliminate faulty matches (point pairs).
 RANSAC tries different random subsets of corresponding point pairs.
-It estimates the transformation using this subset and then computes the quality of the computed transformation by counting the number of inliers.
+It estimates the transformation using this subset and then computes the quality of a transformation by counting the number of inliers.
 
 Since the point pairs are normalized,
 %,(i.e., all pixel coordinates are transformed to 2D world coordinates),
@@ -389,7 +389,7 @@ For example, this may happen when multiple query descriptors (from the frame) ar
 In that case, a perspective or affine transformation is found that scales all points to a single position.
 This transformation does not correspond with the actual translation and rotation, but is a valid transformation according to the RANSAC algorithm.
 
-Instead of computing a full perspective, affine or Euclidean transformation, a more pragmatic approach is used.
+Instead of computing a full perspective, affine or Euclidean transformation, a more pragmatic approach is used in this thesis.
 Here, only the translation in $x$ and $y$ direction is estimated.
 The best translation is chosen with a modified RANSAC algorithm, which uses covariance between matches instead of the number inliers as quality measure.
 The rotation is estimated independently, as described at the end of this section.
@@ -464,11 +464,11 @@ If the confidence $c_{T}$ of the translation $T_{best}$ exceeds a threshold, the
 Please note this method requires that the estimated yaw of the vehicle is close to the actual yaw.
 A large difference between estimated and actual yaw results in low confidence $c_T$.
 %Localization on regular basis should sufficiently correct errors in the estimated yaw, when using the method described below.
-Therefore, the next paragraph describes a method to reduce the error in the estimated yaw.
-Performing this optimization on regular basis should sufficiently correct errors in the estimated yaw.
+Therefore, the next paragraph describes a method to reduce the drift in the estimated yaw.
+Performing this optimization on regular basis should sufficiently correct for drift in the estimated yaw.
 
 
-If the confidence is exceptionally high (i.e., good matches are found), the selected point pairs are used to determine the rotation between the estimated yaw and the real yaw of the vehicle. This rotation is used to correct the drift in yaw.
+If the confidence is exceptionally high (i.e., good matches are found), the selected point pairs are used to determine the rotation between the estimated yaw and the real yaw of the vehicle. This rotation is used to correct the drift of the yaw.
 The rotation is computed using Kabsch algorithm \cite{Kabsch:a12999}.
 This method computes the optimal rotation matrix that minimizes the RMSD (root mean squared deviation) between two sets of points.
 % (in this case the sets that are used to determine the translation).
@@ -487,7 +487,7 @@ The AR.Drone's onboard intelligence estimates the velocity using two complementa
 However, its limited processing power requires the use of lightweight features and algorithms, which may affect the accuracy of the estimated velocities.
 Running a visual odometry algorithm offboard relaxes the computational limitations, allowing more complex (better) features and algorithms.
 In this section, the localization method presented in the previous section is modified to operate as a visual odometry algorithm.
-Instead of matching the last frame against the feature map, now the last frame is matched against the previous frame.
+Instead of matching the last frame against the feature map, the last frame is matched against the previous frame.
 The resulting velocity estimates can be merged with the onboard velocity estimates to improve the accuracy of estimated velocity.
 
 When a camera frame $f_t$ is received, SURF features are extracted.
@@ -599,8 +599,8 @@ State NONE indicates no significant elevation changes are occurring, state UP in
 
 Elevation changes are detected using a filtered second order derivative (acceleration) of the ultrasound measurement $z_{sensor}$.
 Obstacles that enter or leave the range of the ultrasound sensor result in sudden changes in measured ultrasound distance.
-These changes are detected when the second order derivative exceeds a certain threshold $\gamma_{elevationEvent}$ and an elevation event is triggered.
-The threshold $\gamma_{elevationEvent}$ was carefully chosen such that altitude corrections performed by the AR.Drone altitude stabilization are not detected as being elevation events.
+These changes are detected when the second order derivative exceeds a certain threshold $\gamma_{elevationEvent}$, triggering an elevation event.
+The threshold $\gamma_{elevationEvent}$ was carefully chosen such that altitude corrections performed by the AR.Drone's altitude stabilization are not detected as being elevation events.
 The second order derivative is filtered by adding it to the altitude vector $h^W$ of the EKF state vector.
 An elevation event ends when the sign of the second order derivative switches.
 This happens when the AR.Drone altitude stabilization starts to change the absolute altitude to compensate for the change in measured altitude.
