@@ -258,7 +258,7 @@ Finally, the images are transformed according to the corresponding homographies,
 
 \section{Visual Odometry}
 \label{sec:background-visual-odometry}
-An interesting combination of computer vision and mobile robotics is \textit{Visual Odometry (VO)}, which is the process of estimating the egomotion of a mobile robot using one or more onboard cameras.
+An interesting combination of computer vision and mobile robotics is \textit{Visual Odometry (VO)}, which is the process of estimating the motion of a mobile robot using one or more onboard cameras.
 Below,
 %only
 the case of a single camera and 2D feature coordinates is described.
@@ -270,7 +270,7 @@ Therefore, parts of the localization code can be reused for a Visual Odometry al
 %Therefore, this thesis focusses on feature-based methods and the remainder of this section describes Visual Odometry using the feature-based approach.
 
 The set of images taken at time $t$ is denoted by $I_{0:n} = \{I_0, \hdots, I_n\}$.
-Two camera positions at consecutive time instants $k-1$ and $k$ are related by a rigid body transformation:
+Two camera positions at consecutive time instants $t-1$ and $t$ are related by a rigid body transformation:
 \begin{equation}
 \label{eq:computer-vision-visual-odometry-T}
 T_t = T_{t,t-1} = 
@@ -283,7 +283,7 @@ where $R_{t,t-1}$ is the rotation matrix and $t_{t,t-1}$ is the translation matr
 The set $T_{1:n} = \{T_1, \hdots, T_n\}$ contains all subsequent motions.
 The set of camera poses $C_{0:n} = \{C_0, \hdots, C_n\}$ contains the transformation of the camera with respect to the initial coordinate frame at time $t = 0$.
 
-The objective of Visual Odometry is to recover the full trajectory of the camera $C_{0:n}$ (egomotion).
+The objective of Visual Odometry is to recover the full trajectory of the camera $C_{0:n}$.
 This is achieved by computing the relative transformation $T_t$ from images $I_t$ and $I_{t-1}$.
 When all relative transformation are concatenated, the full trajectory of the camera $C_{0:n}$ is recovered.
 An iterative refinement procedure like \textit{windowed-bundle adjustment} can be performed to obtain a more accurate estimate of the local trajectory.

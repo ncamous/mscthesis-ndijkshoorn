@@ -79,7 +79,7 @@ Increasing thrust for one rotor while decreasing thrust for the other will maint
 \caption{The AR.Drone quadrotor helicopter with protection hull attached.}
 \label{fig:ardrone_hull}
 \end{figure}
-The AR.Drone (Figure \ref{fig:ardrone_hull}) is remote-controlled consumer quadrotor helicopter developed by Parrot SA\footnote{\url{www.parrot.com}}.
+The AR.Drone (Figure \ref{fig:ardrone_hull}) is a remote-controlled consumer quadrotor helicopter developed by Parrot SA\footnote{\url{www.parrot.com}}.
 The body is made of a carbon fiber tube structure and high resistance 
 %PA66
 plastic.
@@ -101,7 +101,7 @@ It is also possible to control the AR.Drone from a Linux or Windows PC with the 
 \subsection{Sensors}
 The AR.Drone has different types of sensors.
 These sensors are used for automatic stabilization.
-In addition, a front camera is present to provide the user visual feedback from the vehicle.
+In addition, a front camera provides the user with visual feedback from the vehicle.
 
 
 \subsubsection{Inertial measurement unit}
@@ -110,7 +110,7 @@ It provides the onboard software with pitch, roll and yaw measurements.
 %Pitch, roll and yaw are often used in flight dynamics and indicate the angles of rotation in three dimensions about the vehicle's center of mass.
 These measurements are used for automatic pitch, roll and yaw stabilization and assisted tilting control.
 The measurement unit is a \textit{micro electro-mechanical system} (MEMS) and contains
-a 3 axis accelerometer, a 2 axis roll and pitch gyrometer and a 1 axis yaw precision gyrometer.
+a 3 axis accelerometer, a 2 axis roll and pitch gyrometer and a single axis yaw gyrometer.
 
 The \textbf{accelerometer} is a BMA150\footnote{\url{http://www.bosch-sensortec.com/content/language1/downloads/BMA150_DataSheet_Rev.1.5_30May2008.pdf}} made by Bosch Sensortec.
 %It provides three sensitivity ranges (i.e., maximum g-force it can report): $\pm 2g / \pm 4g / \pm 8g$.
@@ -125,18 +125,18 @@ An accelerometer at rest relative to the Earth's surface will indicate approxima
 To obtain the acceleration due to motion with respect to the Earth, this gravity offset must be subtracted and corrected for effects caused by the Earth's rotation relative to the inertial frame.
 Since the accelerometer can measure gravity, it can be used as a tilt sensor.
 
-The AR.Drone has a 2 axis roll and pitch \textbf{gyrometer} and a 1 axis yaw precision gyrometer.
+The AR.Drone has a 2 axis roll and pitch \textbf{gyrometer} and a single axis yaw gyrometer.
 The gyrometer measures angular velocity in degrees per second, based on the principles of angular momentum.
 In order to estimate the absolute angle $\theta$, the angular velocity signal $\Omega$ needs to be integrated with respect to time.
 A major problem with this method is that bias errors in the angular velocity signal will cause the integrated angle value to drift over time, since all gyroscopes have at least a small amount of bias error in their angular rate signal.
 
 Regular gyroscopes use a spinning wheel.
-However, a small device like the AR.Drone can't afford to have a spinning wheel.
+However, a small device like the AR.Drone cannot afford to have a spinning wheel.
 Instead, a tiny MEMS gyroscope is used. 
 %In a MEMS gyroscope, two proof masses vibrate in plane at certain frequency.
 It comprises of a plate, called the \textit{proof mass}, that vibrates (oscillates).
 %when a drive signal is applied to set of drive capacitor plates.
-When the vehicle rotates, the proof mass gets displaced in the X, Y, and Z directions by Coriolis forces.
+When the vehicle rotates, the proof mass gets displaced in the $x$, $y$, and $z$ directions by Coriolis forces.
 A processor senses the proof mass’ displacement through capacitor plates located underneath the proof mass, as well as finger capacitors at the edges of the package.
 The AR.Drone uses a IDG-500 Dual-Axis\footnote{\url{http://www.sparkfun.com/datasheets/Components/SMD/Datasheet_IDG500.pdf}} gyroscope for the pitch and roll angles of the drone.
 The IDG-500 gyro has two separate outputs per axis for higher speed motions (range: $500^{\circ}/s$, sensitivity: $2.0mV/^{\circ}/s$) and lower-speed precise movements (range: $110^{\circ}/s$, sensitivity: $9.1mV/^{\circ}/s$).
@@ -149,7 +149,7 @@ This sensor has a range of $100^{\circ}/s$ and a sensitivity of $0.67mV/^{\circ}
 \subsubsection{Ultrasound altimeter}
 \label{sec:ultrasound_altimeter}
 An ultrasound sensor provides altitude measures for automatic altitude stabilization and assisted vertical speed control.
-The ultrasound sensor is attached on the bottom of the AR.Drone and points downwards in order to measure the distance to the floor.
+The ultrasound sensor is attached on the bottom of the AR.Drone and points downward in order to measure the distance to the floor.
 A packet of ultrasonic soundwaves is transmitted towards the floor, which reflects the sound back to the sensor.
 The system then measures the time $t$ for the echo to return to the sensor and computes the distance $d$ to the target using the speed of sound:
 \begin{equation}
@@ -164,7 +164,7 @@ A limitation is the small range in which the sensor is able to operate.
 The ultrasound sensor in the AR.Drone has an effective range of approximately $20\small{cm}$ to $6\small{m}$.
 %The minimum range is approximately $20\small{cm}$, meaning that the AR.Drone is \textit{unable to determine its altitude} when flying close to the floor.
 Another limitation is that the ultrasound sensor is unable to obtain precise directional information about objects.
-Sound propagates in a cone-like manner, where opening angles are commonly between 20 to 40 degrees.
+Sound propagates in a cone-like manner, where opening angles are commonly between $20$ to $40$ degrees.
 Due to this property, the sensor acquires entire regions of constant depth instead of discrete depth points.
 So, the ultrasound sensor can only tell there is an object at the measured distance somewhere within the measured cone.
 
@@ -186,7 +186,7 @@ A small experiment was performed to measure the effect of the AR.Drone's angle o
 This experiment was performed above a flat floor.
 The angle of attack $\alpha$ was changed slowly while keeping the AR.Drone at a fixed altitude.
 A relation between the angle $\alpha$ and measured altitude was observed.
-The following (first degree) polynomial fit describes the relation between the angle $\alpha$ and error $\epsilon$ of the measured altitude:
+The following (first degree) polynomial fit describes the relation between the angle $\alpha$ in degrees and error $\epsilon$ of the measured altitude:
 \begin{equation}
 \epsilon = 0.2214 \times \alpha \hspace{0.2cm} \begin{small}cm\end{small}
 \end{equation}
@@ -257,7 +257,7 @@ Finally, the de-biased accelerometer gives a precise body velocity from an aerod
 To address the problem of state estimation, the AR.Drone is equipped with embedded sensors that are described in the previous section.
 When combining the sensor measurements in data fusion algorithms, relatively good state estimates are obtained.
 Multiple techniques form a tightly integrated vision and inertial navigation filter that can be summarized as described hereafter.
-After inertial sensors calibration, sensors are used inside a complementary filter to estimate the attitude and de-bias the gyroscopes.
+After the inertial sensors are calibrated, the sensors are used inside a complementary filter to estimate the attitude and de-bias the gyroscopes.
 The de-biased gyroscopes are used for vision-based velocity information provided by the vertical camera.
 The vision-based velocity is used to de-bias the accelerometers. This estimated accelerometer bias is used to increase the accuracy of the attitude estimation algorithm.
 Eventually, the de-biased accelerometer gives a precise body velocity from an aerodynamics model.
@@ -284,7 +284,7 @@ When the scene is deemed suitable for the corner detector and the flight speed i
 
 The inertial sensors are used to compensate for the small rotation between consecutive camera frames.
 This is a significant help for the determination of the optical flow in the vision algorithm.
-A specific linear data fusion algorithm combining sonar and accelerometer information is implemented to give accurate vertical velocity and position estimates above the obstacle.
+A specific linear data fusion algorithm combining sonar and accelerometer information is implemented to give accurate vertical velocity and position estimates. % above the obstacle.
 
 \subsubsection{Aerodynamics model}
 Unfortunately, the vision-based velocity is noisy and relatively slowly updated compared to the vehicle dynamics.
@@ -362,7 +362,7 @@ Communication with the AR.Drone is done through four main \textit{communication 
 \item Controlling and configuring the drone is done by sending \textit{AT commands} on regular basis;
 \item Information about the drone (e.g., status, altitude, attitude, speed) is called \textit{navdata}.
 The navdata also includes filtered and raw sensor measurements.
-This information is sent by the drone to its client at a frequency of approximately 30 (demo mode) or 200 times per second;
+This information is sent by the drone to its client at a frequency of approximately $30$ (demo mode) or $200$ times per second;
 \item A video stream is sent by the AR.Drone to the client device.
 Images from this video stream are decoded using the codecs (decoders) included in the SDK.
 \item Critical data is communicated over a channel called the \textit{control port}.

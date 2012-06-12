@@ -8,11 +8,11 @@ This simulation model consists of a motion model, visual model and sensor model.
 The validation effort of the hovering and the forward movement shows that the dynamic behavior of the simulated AR.Drone closely resembles the dynamic behavior of the real AR.Drone.
 
 A framework is proposed to perform high-level tasks with the AR.Drone.
-This framework includes an abstraction layer to abstract from the actual device, which allows to use both the real and simulated AR.Drone to test the proposed methods.
+This framework includes an abstraction layer to abstract from the actual device, which allows to use both the real and simulated AR.Drone to validate the proposed methods.
 The framework stores video frames and sensor measurements from the AR.Drone in queues, such that algorithms can operate on the data.
 Furthermore, the framework includes a 3D map visualization and provides functionalities to record and playback data.
 
-This thesis proposed a real-time Simultaneous Localization and Mapping approach that can be used for micro aerial vehicle with a low-resolution down-pointing camera (e.g., AR.Drone).
+This thesis proposed a real-time Simultaneous Localization and Mapping approach that can be used for micro aerial vehicles with a low-resolution down-pointing camera (e.g., AR.Drone).
 The information from the sensors are used in an Extended Kalman Filter (EKF) to estimate the AR.Drone's pose.
 The position of the AR.Drone cannot be estimated directly and is derived from the velocity estimates from the AR.Drone.
 This estimate is based on the inertia measurements, aerodynamic model and visual odometry obtained from the relative motion between camera frames.
@@ -55,7 +55,7 @@ This estimated velocity can be used instead
  the AR.Drone's onboard velocity estimate.
 Experiments show that the accuracy of the proposed visual odometry method is comparable to the AR.Drone's onboard velocity estimate.
 
-Experiments show the AR.Drone down-pointing's camera offers good balance between image quality and computational performance.
+Others experiments show the AR.Drone down-pointing camera offers good balance between image quality and computational performance.
 When the resolution of the AR.Drone's camera is reduced, the accuracy of the estimated position decreases.
 The reduced image quality results in less frames that could be used to robustly recover the velocity.
 A simulated AR.Drone was used to investigate an increased camera resolution.
@@ -64,14 +64,14 @@ While relatively more frames could be used to used to robustly recover the veloc
 Therefore, the velocities are estimated less frequent.
 
 Another experiment shows that localization is possible for circumstances encountered during the IMAV competition.
-When flying the figure-8 shape three times, the maximum error was $1\small{m}$.
-During a flight of $x\small{s}$, the visual odometry was recovered $x$ times, and localization against a map was performed $x$ times.
+When flying the figure-8 shape three times, the maximum position error was $1\small{m}$.
+%During a flight of $x\small{s}$, the visual odometry was recovered $x$ times, and localization against a map was performed $x$ times.
 
 In addition to the texture and feature map, this thesis proposed a method to construct an elevation map using a single airborne ultrasound sensor.
 Elevations are detected through sudden changes in ultrasound measurements.
 These sudden changes are detected when the filtered second order derivative exceeds a certain threshold.
 Experiments show that the relative error when flying over small objects is below $20\%$.
-When flying over a large staircase, the relative error in estimated altitude was $35\%$.
+When flying over a large staircase, the relative error of the estimated altitude was $35\%$.
 
 
 
@@ -85,7 +85,8 @@ When flying over a large staircase, the relative error in estimated altitude was
 \label{sec:conclusions-contributions}
 
 The first contribution of this thesis is a framework that aids in the development of (intelligent) applications for the AR.Drone.
-The framework contains an abstraction layer to abstract from the actual device and use a simulated AR.Drone in a way similar to the real AR.Drone.
+The framework contains an abstraction layer to abstract from the actual device.
+This enables to use a simulated AR.Drone in a way similar to the real AR.Drone.
 Therefore, a simulation model of the AR.Drone is developed in USARSim.
 The main contribution is a novel approach that enables a MAV with a low-resolution down-looking camera to navigate in circumstances encountered during the IMAV competition.
 An algorithm is presented to estimate the transformation between a camera frame and a map.
@@ -99,7 +100,7 @@ Another contribution is a method to construct an elevation with a single airborn
 The proposed simulation model of the AR.Drone is validated in terms of hovering and forward movements. 
 Further improvements would require more system identifications (e.g., rotational movements, wind-conditions) and include the characteristics of the Parrot's proprietary controller into the simulation model. 
 The current sensor model uses a set of default USARSim sensors, which do not model noise accurately.
-This research would benefit from a realistic modeling of the noise in the sensors.
+This research would benefit from a realistic modeling of sensor noise.
 
 The proposed SLAM method is able to construct a map and localize the AR.Drone in real-time.
 However, the proposed method lacks a global map optimization method, which reduces the error in the map when a loop-closure is detected.

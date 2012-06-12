@@ -9,7 +9,7 @@ This abstraction layer is part of the framework proposed in Section \ref{sec:pro
 
 	\section{Simulation model}
 The simulation environment selected is USARSim \cite{Balakirsky2009iros,carpin2007usarsim}, which is based on the Unreal Tournament game engine\footnote{\url{http://www.unrealengine.com}}.
-It allows physical realistic simulations and includes a versatile environment editor.
+It allows realistic simulations and includes a versatile environment editor.
 
 		\subsection{USARSim simulation environment}
 USARSim is an open source high fidelity robot simulator that can be used both for research and education.
@@ -34,7 +34,8 @@ The details needed for an experiment or competition can be easily added (e.g., r
 
 
 		\subsection{Motion model}
-The AR.Drone is a stabilized aerial system (Section \ref{sec:platform_onboard_intelligence}). When no control signals are given the quadrotor hovers on the same location, which is accomplished by a feedback loop which uses the ultrasound sensor (for altitude) and the bottom camera (for horizontal position). The simulation makes use of this assumption. When no control signal is given, the AR.Drone stays at the same location.
+The AR.Drone is a stabilized aerial system (Section \ref{sec:platform_onboard_intelligence}). When no control signals are given the quadrotor hovers on the same location.
+This accomplished by a feedback loop which uses the ultrasound sensor (for altitude) and the bottom camera (for horizontal position). The simulation makes use of this assumption. When no control signal is given, the AR.Drone stays at the same location.
 When a control signal for a linear (forward) or lateral (sideward) velocity is given, it calculates the force needed to reach that velocity (assuming that the drag force $D_b$ increases linearly with the velocity). When the control signal stops, the drag force $D_b$ slows the quadrotor down until it hovers again.
 The USARSim quadrotor model uses the Karma physics engine (part of the Unreal Engine \cite{Carpin2006}) to simulate the force and torque acting on the aircraft. Yet, only the overall thrust is calculated, the differential thrust is not used.
 When moving in the horizontal plane, a real quadrotor changes its angle of attack (which is the defined as the angle between direction of motion $e_V$ and the body frame $e_N$ \cite{Yechout2003}). 
@@ -48,7 +49,7 @@ The result is a simulation model which maneuvers in a way similar to the actual 
 
 		\subsection{Sensor model}
 The USARSim simulator has a set of configurable sensors, which include all the sensors used on the AR.Drone.
-Each mounted sensor is triggered at fixed time intervals (every $200\small{ms}$ by default).
+Each sensor is triggered at fixed time intervals (every $200\small{ms}$ by default).
 The AR.Drone's time interval is reduced to $5\small{ms}$, producing up to 200 sensor measurements per second.
 
 The ultrasound sensor emits a number of traces, which in combination form a cone.
@@ -100,7 +101,7 @@ Both the simulated and real system have the same dimensions $(0.525,0.515,0.115)
 \begin{figure}[htb!]
 \centering
 \includegraphics[width=6cm]{images/ardrone_blender_final.png}
-\caption{3D model of the Parrot AR.Drone. This is a model optimized for simulation, based on the highly detailed model provided by Parrot SA.} 
+\caption{3D model of the Parrot AR.Drone. This is a model optimized for simulation and is based on the highly detailed model provided by Parrot SA.} 
 \label{fig:3Dmodel}
 \end{figure}
 
@@ -122,7 +123,7 @@ The main functionalities of the framework can be summarized as follows:
 \item Queued sensor data and camera frame processing;
 \item Keyboard and 3D mouse controls;
 \item Autonomous waypoint navigation;
-\item Real-time 3D map visualization with freeflight
+\item Real-time 3D map visualization with freeflight over the map
 \end{itemize}
 
 \begin{figure}[htb!]
