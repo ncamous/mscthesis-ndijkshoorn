@@ -34,6 +34,8 @@ A state can be either \textbf{static state} (non-changing) or \textbf{dynamic st
 A state is denoted $x$.
 The state at time $t$ is denoted $x_t$.
 \end{mydef}
+
+\clearpage
 Common state variables are:
 \begin{itemize}
 \item The robot \textit{pose}, which is its location and orientation relative to a global coordinate frame;
@@ -182,7 +184,7 @@ A map $m$ of the environment is a list of objects and their locations:
 m = \{m_1, m_2, \hdots, m_N\}
 \end{equation}
 Where $N$ is the total number of objects in the environment.
-Maps are often \textit{Features-based maps} or \textit{Location-based maps}.
+Maps are often \textit{features-based maps} or \textit{location-based maps}.
 Location-based maps are volumetric and offer a label for any location.
 Features-based maps only describe the shape of the environment at specific locations, which are commonly objects.
 Features-based maps are more popular because the representation makes it easier to adjust (refine) the position of objects.
@@ -231,7 +233,7 @@ In practice, it is not possible to compute a robot's belief (posterior probabili
 Therefore, a number of approximation techniques exist. 
 This section describes the most popular solution techniques for SLAM problems.
 
-Solution techniques can be divided in two major branches of belief representation: \textit{Single-hypothesis belief} and \textit{Multi-hypothesis belief}.
+Solution techniques can be divided in two major branches of belief representation: \textit{single-hypothesis belief} and \textit{multi-hypothesis belief}.
 \textbf{Single-hypothesis trackers} represent belief by a single world state.
 This estimate is associated by a measure of certainty (or variance), allowing the tracker to broaden or narrow the estimated region in the state space.
 The main advantage of the single-hypothesis representation is the absence of ambiguity, simplifying decision-making at the robot's cognitive level (e.g., pathplanning).
@@ -303,7 +305,7 @@ x_t & = & g(u_t, x_{t-1}) \\
 z_t & = & h(x_t) + \delta_t
 \end{array}
 \end{equation}
-These functions replace $A$, $B$ and $C$ of the regular Kalman Filter (Equation \ref{eq:KF}).
+These functions replace the matrix operations $A$, $B$ and $C$ of the regular Kalman Filter (Equation \ref{eq:KF}).
 
 They key idea of the EKF approximation is called \textit{linearization}.
 A first-order linear Taylor approximation is calculated at the mean of the current belief (Gaussian), resulting in a linear function.
@@ -324,12 +326,13 @@ K_t & = & \overline{\Sigma}_t \boldsymbol{H_t^T} (\boldsymbol{H_t} \overline{\Si
 
 \subsubsection{TORO}
 \label{sec:prob-rob-toro}
+An example of a recent algorithm, especially designed for visual slam, is TORO \cite{grisetti2007efficient}.
 As stated in Section \ref{sec:probabilistic-robotics-slam}, both the estimated path and constructed map are affected by noise.
 Both of them become increasingly inaccurate during travel.
 However, when a place that has been mapped is revisited (loop-closure), the uncertainty can be reduced and the map can be optimized to reduce its error.
 This optimization procedure is computationally expensive since it needs to search for a configuration that minimizes the error of the map.
 
-A solution technique for the map optimization problem is TORO \cite{grisetti2007efficient}. This technique is used in a comparable setting (visual SLAM with a MAV), as described in Section \ref{sec:realted-visual-slam-steder}.
+A solution technique for the map optimization problem is TORO. This technique is used in a comparable setting (visual SLAM with a MAV), as described in Section \ref{sec:realted-visual-slam-steder}.
 The TORO algorithm operates on a graph-based formulation of the SLAM problem, in which the poses of the robot are modeled by nodes in a graph.
 Constraints between poses resulting from observations or from odometry are encoded in the edges between the nodes.
 The goal of TORO is to find a configuration of the nodes that maximizes the observation likelihood encoded in the constraints.
@@ -393,6 +396,7 @@ This fraction depends on the uncertainty of the individual constraints (encoded 
 Despite TORO is presented as an efficient estimation method, it cannot solve realistic problems in real-time \cite{grisetti2007efficient}, which makes it an offline solution technique.
 All work presented in this thesis has a strong emphasis on online techniques, which allows the work to be used for navigation tasks like the IMAV Pylon challenge (Section \ref{sec:introduction-imav}).
 For this reason, a TORO-based optimization algorithm was not used in this thesis.
+Nevertheless, the TORO algorithm is described here, because it is being used by Steder's work (as described in Section \ref{sec:realted-visual-slam-steder}).
 Furthermore, a single-hypothesis belief representation was chosen for its simplicity.
 
 

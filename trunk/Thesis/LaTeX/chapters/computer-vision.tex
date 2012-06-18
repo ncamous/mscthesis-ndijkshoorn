@@ -19,7 +19,7 @@ This transformation preserves straightness.
 Multiple geometrical systems can be used to describe geometry.
 
 \textbf{Euclidean geometry} is a popular mathematical system.
-A point in Euclidean 3-space is represented by an unordered pair of real numbers, $(x, y, z)$.
+A point in Euclidean 3D space is represented by an unordered pair of real numbers, $(x, y, z)$.
 However, this coordinate system is unable to represent vanishing points.
 The \textit{Homogeneous coordinate system} is able to represent points at infinity.
 Homogeneous coordinates have an additional coordinate.
@@ -286,7 +286,7 @@ The set of camera poses $C_{0:n} = \{C_0, \hdots, C_n\}$ contains the transforma
 The objective of Visual Odometry is to recover the full trajectory of the camera $C_{0:n}$.
 This is achieved by computing the relative transformation $T_t$ from images $I_t$ and $I_{t-1}$.
 When all relative transformation are concatenated, the full trajectory of the camera $C_{0:n}$ is recovered.
-An iterative refinement procedure like \textit{windowed-bundle adjustment} can be performed to obtain a more accurate estimate of the local trajectory.
+An iterative refinement procedure like \textit{windowed-bundle adjustment} \cite{engels2006bundle} can be performed to obtain a more accurate estimate of the local trajectory.
 
 The first step of VO is the extraction of image features $f_t$ from a new image $I_t$.
 In the second step, these features are matched with features $f_{t-1}$ from the previous image (multiple images can be used to recover 3D motion).
