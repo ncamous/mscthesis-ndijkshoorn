@@ -120,6 +120,9 @@
     <ClInclude Include="slam_visual_map.h" />
     <ClInclude Include="usarsim_msgparser.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

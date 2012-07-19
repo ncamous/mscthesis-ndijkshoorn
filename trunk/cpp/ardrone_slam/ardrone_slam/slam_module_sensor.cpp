@@ -7,6 +7,9 @@
 using namespace cv;
 
 
+#define ELEV_ACCEL_THRESHOLD 2400000.0f
+
+
 slam_module_sensor::slam_module_sensor(slam *controller):
 	measurement(15, 1, CV_32F),
 
@@ -78,6 +81,9 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	}
 	*/
 
+	//if (m->altitude > 1300)
+	//	m->altitude = 200;
+
 
 
 	/* set initial position: module_frame is not used before position is known */
@@ -131,19 +137,10 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 	memcpy_s(measurement.data, 60, EKF->statePre.data, 60);
 
 
-
+	measurement.at<float>(12) = (float) m->altitude; // alt, also used for behavior
 	/* altitude measurement */
 	if (use_elev)
 	{
-		/*
-		if (prev_altitude == 0.0f)
-		{
-			prev_altitude			= (float) m->altitude;
-			stable_altitude			= prev_altitude;
-			state->at<float>(12)	= prev_altitude;
-		}
-		*/
-		measurement.at<float>(12) = (float) m->altitude; // alt
 		measurement.at<float>(13) = (measurement.at<float>(12) - state->at<float>(12)) / difftime; // vel
 		measurement.at<float>(14) = (measurement.at<float>(13) - state->at<float>(13)) / difftime; // accel
 	}
@@ -279,8 +276,13 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 		update_elevation_map(elevation, state->at<float>(12)); // return sonar measured distance
 
 
-	if (counter++ % 2 == 0)
+	//if (counter++ % 50 == 0)
+		//printf("Elevation: %f\n", elevation);
+
+	if (counter++ % 5 == 0)
 	{
+		//printf("Elevation: %f\n", elevation);
+
 		/*
 		printf("error: %f, %f, %f\n", 
 			abs(state->at<float>(0) - m->gt_loc[0]),
@@ -290,14 +292,37 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 		*/
 
 		fprintf(error_log, "%f,%f,%f,%f,%f\n",
-			(float) m->time,
+			(float) m->time_pc,
+			//GetTickCount(),
+			state->at<float>(0),
+			state->at<float>(1),
+			/*
 			(float) m->altitude,
+			(float) state->at<float>(12),
+			(float) state->at<float>(13),
+			(float) state->at<float>(14),
+			-elevation
+			*/
+			(float) m->gt_loc[0],
+			(float) m->gt_loc[1]
+			/*
+			(float) m->altitude,
+			(float) m->accel[0]
+			*/
+			/*
+			state->at<float>(0),
+			state->at<float>(1),
+			*/
+			/*
 			state->at<float>(12),
 			state->at<float>(13),
 			state->at<float>(14)
+			*/
 		);
 
-		fflush(error_log);
+		//if (counter % 5 == 0)
+			fflush(error_log);
+			//printf("flush\n");
 	}
 }
 
@@ -305,6 +330,7 @@ void slam_module_sensor::process(bot_ardrone_measurement *m)
 float slam_module_sensor::process_altitude_elevation(float sonar_raw, float vel, float accel)
 {
 	float delta = sonar_raw - prev_altitude;
+	double dt;
 	prev_altitude = sonar_raw;
 
 
@@ -312,21 +338,26 @@ float slam_module_sensor::process_altitude_elevation(float sonar_raw, float vel,
 	switch (elevation_mode)
 	{
 	case ELEVATION_STATE_NONE:
-		if (abs(accel) < 5000.0f)
+		//if (abs(accel) < 8000.0f)
+		if (abs(vel) < 500.0f)
 			stable_altitude = sonar_raw;
 
-		if (accel < -800000.0f)
+		if (accel < -ELEV_ACCEL_THRESHOLD)
+		//if (vel < -1000.0f)
 		{
-			printf("ELEVATION MODE: UP (%f)\n", delta);
+			printf("ELEVATION MODE: UP\n");
 			elevation_mode	= ELEVATION_STATE_UP;
 			elevation_start	= stable_altitude;
+			elevation_time	= clock();
 			return stable_altitude;
 		}
-		else if (accel > 800000.0f)
+		else if (accel > ELEV_ACCEL_THRESHOLD)
+		//else if (vel > 1000.0f)
 		{
 			printf("ELEVATION MODE: DOWN (%f)\n", delta);
 			elevation_mode	= ELEVATION_STATE_DOWN;
 			elevation_start	= stable_altitude;
+			elevation_time	= clock();
 			return stable_altitude;
 		}
 		else
@@ -336,34 +367,52 @@ float slam_module_sensor::process_altitude_elevation(float sonar_raw, float vel,
 		break;
 
 	case ELEVATION_STATE_UP:
-		if (accel > 0.0f)
+		dt = ((double) (clock() - elevation_time)) / CLOCKS_PER_SEC;
+
+		if (accel > 0.0f || dt >= 0.6)
+		//if (vel >= 0.0f || dt >= 0.3)
 		{
 			elevation_mode	= ELEVATION_STATE_NONE;
-			elevation		-= elevation_start - prev_altitude;
+
+			float delta = elevation_start - prev_altitude;
+			if (delta < 0.0f)
+				delta = 0.0f;
+
+			//elevation		-= elevation_start - prev_altitude;
+			elevation		-= delta;
 			if (elevation > 0.0f)
 				elevation = 0.0f;
 			stable_altitude	= sonar_raw;
-			printf("ELEVATION MODE: NONE (%f, %f, %f)\n", -sonar_raw, elevation, -sonar_raw + elevation);
+			printf("ELEVATION MODE: NONE (%f)\n", delta);
 			return -sonar_raw + elevation;
 		}
 		break;
 
 	case ELEVATION_STATE_DOWN:
-		if (accel < 0.0f)
+		dt = ((double) (clock() - elevation_time)) / CLOCKS_PER_SEC;
+
+		if (accel < 0.0f || dt >= 0.6)
+		//if (vel <= 0.0f || dt >= 0.3)
 		{
 			elevation_mode	= ELEVATION_STATE_NONE;
-			elevation		-= elevation_start - prev_altitude;
+
+			float delta = elevation_start - prev_altitude;
+			if (delta > 0.0f)
+				delta = 0.0f;
+
+			//elevation		-= elevation_start - prev_altitude;
+			elevation		-= delta;
 			if (elevation > 0.0f)
 				elevation = 0.0f;
 			stable_altitude	= sonar_raw;
-			printf("ELEVATION MODE: NONE (%f, %f, %f)\n", -sonar_raw, elevation, -sonar_raw + elevation);
+			printf("ELEVATION MODE: NONE (%f)\n", -sonar_raw, elevation, -sonar_raw + elevation);
 			return -sonar_raw + elevation;
 		}
 		break;
 
 	}
 
-	return state->at<float>(2);
+	return state->at<float>(2); // -sonar_raw + elevation; //
 }
 
 
@@ -395,14 +444,19 @@ void slam_module_sensor::update_elevation_map(float elevation, float sonar_dista
 	//CalcLinePositionAtDistance(sonar_pos, sonar_normal, (double) sonar_distance, hit);
 	CalcLinePlaneIntersection(world_plane, world_plane_normal, sonar_pos, sonar_normal, hit);
 
+	hit = sonar_pos;
+
 	if (abs(elevation) >= 50.0f)
 	{
-		map->elevation_map.update(hit.at<float>(0), hit.at<float>(1), elevation, 1, 100);
+		
+		map->elevation_map.update(hit.at<float>(0), hit.at<float>(1), elevation, 1, 70);
 	}
 	else
 	{
 		float r_mm = (float) (tan((BOT_ARDRONE_SONAR_FOV / 180.0f) * M_PI) * sonar_distance);
-
+		//float r_mm = (float) (tan((BOT_ARDRONE_SONAR_FOV / 180.0f) * M_PI) * state->at<float>(2));
+		//r_mm *= 1.8f;
+		//printf("flatten: %f\n", r_mm);
 		map->elevation_map.update(hit.at<float>(0), hit.at<float>(1), 0.0, 2, r_mm);
 	}
 }
@@ -459,7 +513,7 @@ void slam_module_sensor::calibrate(bot_ardrone_measurement *m)
 
 void slam_module_sensor::get_sonar_state(Mat& pos, Mat& or)
 {
-	pos.at<float>(0) = state->at<float>(0);
+	pos.at<float>(0) = state->at<float>(0) + 0.0f;
 	pos.at<float>(1) = state->at<float>(1);
 	pos.at<float>(2) = state->at<float>(2);
 

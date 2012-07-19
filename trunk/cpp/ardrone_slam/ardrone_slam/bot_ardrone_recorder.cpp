@@ -33,6 +33,7 @@ void bot_ardrone_recorder::record_measurement(bot_ardrone_measurement *m)
 	fprintf (file, "---\n");
 	fprintf (file, "e: %i\n", BOT_EVENT_MEASUREMENT);
 	fprintf (file, "t: %f\n", m->time);
+	fprintf (file, "t_pc: %f\n", m->time_pc);
 	fprintf (file, "s: %i\n", m->state);
 	fprintf (file, "alt: %i\n", m->altitude);
 
@@ -122,11 +123,12 @@ void yaml_float_seq(yaml_document_t &document, yaml_node_t *node, float *f)
 
 void bot_ardrone_recorder::playback(char *dataset)
 {
-	char filename[25];
+	bool map_saved = false;
+	char filename[40];
 	last_event_time = DBL_MAX; // play first event without delay
 
-	sprintf_s(dataset_dir, 25, "dataset/%s", dataset);
-	sprintf_s(filename, 25, "%s/output.yaml", dataset_dir);
+	sprintf_s(dataset_dir, 40, "dataset/%s", dataset);
+	sprintf_s(filename, 40, "%s/output.yaml", dataset_dir);
 
 	int event_type = -1;
 
@@ -205,6 +207,27 @@ void bot_ardrone_recorder::playback(char *dataset)
 						wait_for_event(m->time);
 						//printf("time: %f\n", m->time);
 					}
+					if (strcmp(key_s, "t_pc") == 0)
+					{
+						m->time_pc = atof(value_s);
+
+						/*
+						if (m->time_pc >= 8311.0 && m->time_pc <= 8312.0)
+						{
+							bot->get_slam()->on(SLAM_MODE_VISUALLOC);
+							//map_saved = true;
+						}
+						
+						if (m->time_pc >= 8323.0 && !map_saved)
+						{
+							//bot->get_slam()->map.visual_map.save_canvas();
+							bot->get_slam()->off(SLAM_MODE_MAP);
+							map_saved = true;
+						}
+						*/
+
+						//printf("time: %f\n", m->time);
+					}
 					else if (strcmp(key_s, "s") == 0)
 					{
 						m->state = atoi(value_s);
@@ -245,8 +268,8 @@ void bot_ardrone_recorder::playback(char *dataset)
 					}
 					else if (strcmp(key_s, "f") == 0)
 					{
-						char filename[30];
-						sprintf_s(filename, 30, "%s/%s", dataset_dir, value_s);
+						char filename[50];
+						sprintf_s(filename, 50, "%s/%s", dataset_dir, value_s);
 
 						FILE *frame_in;
 						frame_in = fopen(filename, "rb");
@@ -258,21 +281,44 @@ void bot_ardrone_recorder::playback(char *dataset)
 						fread(f->data, 1, f->data_size, frame_in);
 						fclose(frame_in);
 
+						//Mat img_bgra(144, 176, CV_8UC4);
+						//img_bgra.data		= (unsigned char*) f->data;
+
+						//Mat img_resized(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC4);
+
+						//resize(img_bgra, img_resized, Size(BOT_ARDRONE_FRAME_W, BOT_ARDRONE_FRAME_H));
+
+						// add noise
+						//slam_module_frame::add_noise(img_bgra);
+
+						//memcpy_s(f->data, BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE, img_bgra.data, BOT_ARDRONE_FRAME_W * BOT_ARDRONE_FRAME_H * 4);
+
+/*
+	char filename2[100];
+	sprintf_s(filename2, 100, "%s.noise",filename);
+
+	printf("write: %s\n", filename2);
+
+		FILE *frame_out;
+		frame_out = fopen(filename2, "wb");
+		fwrite(f->data, 1, f->data_size, frame_out);
+		fclose(frame_out);
+*/
+
 						//Mat img_bgr(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC3, NULL, 0);
 						//Mat img_bgr(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC4, NULL, 0);
 						//Mat img_bgra(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC4);
 
 						//Mat img_bgra(BOT_ARDRONE_FRAME_H, BOT_ARDRONE_FRAME_W, CV_8UC4, NULL, 0);
 
-						//img_bgr.data		= (unsigned char*) f->data;
+						//img_bgra.data		= (unsigned char*) f->data;
 						//cvtColor(img_bgr, img_bgra, CV_BGR2BGRA, 4);
 
 						//memcpy_s(f->data, BOT_ARDRONBOT_EVENT_FRAME_BUFSIZE, img_bgra.data, img_bgra.rows * img_bgra.cols * 4);
-
-						/*
-						imshow("Image:", img_bgra);
-						cvWaitKey(4);
-						*/
+						
+						//imshow("Image:", img_bgra);
+						//cvWaitKey(4);
+						
 					}
 
 					break;
@@ -323,7 +369,7 @@ void bot_ardrone_recorder::playback(char *dataset)
 
     yaml_parser_delete(&parser);
 
-	Sleep(999999); // keep UI open
+	//Sleep(999999); // keep UI open
 }
 
 
@@ -372,5 +418,5 @@ void bot_ardrone_recorder::wait_for_event(double time)
 	last_event_time = time;
 
 	if (wait > 0)
-		Sleep(wait);
+		Sleep(wait * 1);
 }

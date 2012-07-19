@@ -57,6 +57,7 @@ void slam::init_ekf()
 {
 	// Initial state
 	//randn(EKF.statePost, Scalar::all(0), Scalar::all(0.001));
+	//EKF.statePost.at<float>(0) = -5000.0f;
 
 
 	// F vector

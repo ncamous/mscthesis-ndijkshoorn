@@ -276,12 +276,12 @@ void terrain3d::ProcessInput( long xDelta, long yDelta, long zDelta, BOOL* pMous
     }
     if ( pPressedKeys[DIK_Q] )
     {
-        m_terrain.ScaleRel( 0.0f, -0.5f * elapsedTime, 0.0f );
+        m_terrain.ScaleRel( 0.0f, -0.1f * elapsedTime, 0.0f );
 		updated = true;
     }
     if ( pPressedKeys[DIK_E] )
     {
-        m_terrain.ScaleRel( 0.0f , 0.5f * elapsedTime, 0.0f  );
+        m_terrain.ScaleRel( 0.0f , 0.1f * elapsedTime, 0.0f  );
 		updated = true;
     }
     if ( pPressedKeys[DIK_F5] )

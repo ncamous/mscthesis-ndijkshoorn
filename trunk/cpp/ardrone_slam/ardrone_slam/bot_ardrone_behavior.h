@@ -17,8 +17,10 @@ public:
 	~bot_ardrone_behavior();
 	void map();
 	void waypoint();
+	void fixed_height();
 	void forcefield();
 	void stop();
+	void circle();
 
 	bool flyto(float x, float y, float speed = 700.0f);
 	bool heightto(float z);
