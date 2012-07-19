@@ -110,6 +110,7 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 	bot_ardrone_measurement *m = new bot_ardrone_measurement;
 	m->time = (double) (n->navdata_time.time >> 21);
 	m->time += (n->navdata_time.time & 0x001FFFFF) * 0.000001; // microseconds to decimals
+	m->time_pc = GetTickCount() / 1000.0;
 
 	last_measurement = m->time;
 
@@ -124,7 +125,7 @@ void bot_ardrone_ardronelib::process_measurement(navdata_unpacked_t *n)
 
 	m->altitude = n->navdata_altitude.altitude_raw;
 
-	m->navdata_euler_angles[0] = (float) n->navdata_altitude.altitude_raw;
+	m->navdata_euler_angles[0] = (float) n->navdata_demo.altitude;
 
 	m->or[0] = n->navdata_demo.phi;
 	m->or[1] = n->navdata_demo.theta;

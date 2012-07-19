@@ -58,7 +58,7 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 				{
 					bot_ardrone_keyboard::bots[i]->get_slam()->off(SLAM_MODE_MAP);
 					bot_ardrone_keyboard::bots[i]->get_slam()->off(SLAM_MODE_ACCEL);
-					bot_ardrone_keyboard::bots[i]->get_slam()->off(SLAM_MODE_VEL);
+					//bot_ardrone_keyboard::bots[i]->get_slam()->off(SLAM_MODE_VEL);
 					bot_ardrone_keyboard::bots[i]->get_slam()->off(SLAM_MODE_VISUALMOTION);
 					bot_ardrone_keyboard::bots[i]->get_slam()->on(SLAM_MODE_VISUALLOC);
 				}

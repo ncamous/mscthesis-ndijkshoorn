@@ -39,6 +39,7 @@ struct bot_ardrone_control {
 struct bot_ardrone_measurement {
 	unsigned char bot_id;
 	double time;
+	double time_pc;
 	unsigned char state;
 	int altitude;		// mm
 

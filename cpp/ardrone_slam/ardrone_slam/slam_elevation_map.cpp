@@ -57,8 +57,8 @@ void slam_elevation_map::update(float w_x, float w_y, float w_h, unsigned char c
 		for (int x2 = -r; x2 <= r; x2++)
 		{
 
-			if (x2*x2*y2*y2 <= r2)
-				update_cell(x+x2, y+y2, h, 20);
+			if (conf == 2 || (x2*x2*y2*y2 <= r2))
+				update_cell(x+x2, y+y2, h, conf);
 
 		}
 	}
@@ -72,7 +72,7 @@ void slam_elevation_map::update_cell(int x, int y, short h, unsigned char conf)
 		x >= 2 * SLAM_ELEVATION_MAP_DEFAULT_SIZE || y >= 2 * SLAM_ELEVATION_MAP_DEFAULT_SIZE)
 		return;
 
-	if (map.at<short>(x, y) == h || map_p.at<char>(x, y) >= conf)
+	if (map.at<short>(x, y) == h || map_p.at<char>(x, y) > conf)
 		return;
 
 	map.at<short>(x, y) = h;
@@ -130,4 +130,24 @@ void slam_elevation_map::update_roi(int x, int y)
 
 	if (roi[3] == -1 || y > roi[3])
 		roi[3] = y;
+}
+
+void slam_elevation_map::save_map()
+{
+	FILE *log;
+	fopen_s (&log, "dataset/elevation_log.txt" , "w");
+
+	for (unsigned int y = 0; y < w; y++)
+	{
+		for (unsigned int x = 0; x < h; x++)
+		{
+			fprintf(log, "%i", map.at<short>(x, y));
+			if (x < 399)
+				fprintf(log, ",");
+
+		}
+
+		fprintf(log, "\n");
+	}
+
 }

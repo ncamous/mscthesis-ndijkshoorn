@@ -13,6 +13,7 @@ public:
 	short* get_array();
 	bool is_updated(int* dst, bool reset_roi = false);
 	void worldpos_to_cell(float *pos);
+	void save_map();
 
 	float resolution;
 

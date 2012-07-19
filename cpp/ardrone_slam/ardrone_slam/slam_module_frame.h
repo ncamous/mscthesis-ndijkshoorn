@@ -31,6 +31,9 @@ public:
 	bool process_map(Mat& frame_state);
 
 	double find_robust_translation_rotation(InputArray p1, InputArray p2, InputArray t, vector<DMatch>& matches, vector<short>& inliers, cv::Mat& T, float& R, double maxInlierDist = 3.0);
+	int find_robust_translation_rotation_inliers(InputArray p1, InputArray p2, InputArray t, vector<DMatch>& matches, vector<short>& inliers, cv::Mat& T, float& R, double maxInlierDist = 3.0);
+	int slam_module_frame::find_robust_perspective_transformation(InputArray p1, InputArray p2, vector<DMatch>& matches, vector<short>& mask, int max, Mat& H, double maxInlierDist);
+	int slam_module_frame::find_robust_affine_transformation(InputArray p1, InputArray p2, vector<DMatch>& matches, vector<short>& mask, int max, Mat& H, double maxInlierDist);
 
 	void get_features(Mat& frame, vector<KeyPoint> &v);
 	void get_descriptors(Mat& frame, vector<KeyPoint> &v, Mat& descriptors);
@@ -50,9 +53,10 @@ public:
 
 	void localvelocity_to_world(Mat& v);
 
+	static void add_noise(Mat &img);
+
 	// testing/experiments
 	/*
-	void add_noise(IplImage *img);
 	void descriptor_map_quality();
 	void get_local_descriptors(int x, int y, Mat& map_descriptors, int radius);
 	*/
@@ -117,5 +121,6 @@ private:
 
 	// tmp
 	FILE *loc_log;
+	int nr_visual_motion, nr_visual_motion_success;
 };
 

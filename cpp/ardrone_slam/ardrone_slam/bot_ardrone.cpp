@@ -173,7 +173,7 @@ void bot_ardrone::take_off()
 
 void bot_ardrone::land()
 {
-	i->land();
+ 	i->land();
 	control.state = BOT_STATE_LANDED;
 }
 

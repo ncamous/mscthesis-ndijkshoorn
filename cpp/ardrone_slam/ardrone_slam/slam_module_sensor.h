@@ -3,6 +3,7 @@
 #include "opencv2/core/types_c.h"
 #include "opencv_ekf.h"
 #include "opencv2/features2d/features2d.hpp"
+#include <time.h>
 
 struct bot_ardrone_measurement;
 
@@ -63,5 +64,6 @@ private:
 	float elevation_start;
 	float prev_altitude;
 	float stable_altitude;
+	clock_t elevation_time;
 };
 

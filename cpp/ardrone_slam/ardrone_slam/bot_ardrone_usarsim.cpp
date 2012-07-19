@@ -23,8 +23,8 @@ bot_ardrone_usarsim::bot_ardrone_usarsim(bot_ardrone *bot):
 	/* sockets */
 	printf("Connecting to USARSim\n");
 	control_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_CONTROL, USARSIM_PORT, USARSIM_IP, NULL, BOT_ARDRONE_USARSIM_CONTROL_BUFSIZE, (botinterface*) this);
-	printf("Connecting to UPIS\n");
-	frame_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_FRAME, UPIS_PORT, USARSIM_IP, frame_buffer, BOT_ARDRONE_USARSIM_FRAME_BLOCKSIZE, (botinterface*) this);
+	//printf("Connecting to UPIS\n");
+	//frame_socket = new mysocket(BOT_ARDRONE_USARSIM_SOCKET_FRAME, UPIS_PORT, USARSIM_IP, frame_buffer, BOT_ARDRONE_USARSIM_FRAME_BLOCKSIZE, (botinterface*) this);
 }
 
 
@@ -35,13 +35,16 @@ bot_ardrone_usarsim::~bot_ardrone_usarsim(void)
 
 void bot_ardrone_usarsim::init(void)
 {
+	// UDK test
+	control_send("INIT {ClassName USARBot.AirRobot} {Name Test} {Location 0.0,0.0,-1.0}\r\n");
+
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,0.0,1.28}\r\n");
 
 	// doolhof
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -51.7,5.9,-4.4}\r\n");
 
 	// doolhof: 8-experiment
-	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -54.2,-6.05,-6.6}\r\n");
+	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -51.6,-4.2,-6.3}\r\n");
 
 	// zebrapad
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -19.3,57.1,-1.1}\r\n");
@@ -50,7 +53,7 @@ void bot_ardrone_usarsim::init(void)
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,10.0,-3.0}\r\n");
 
 	// gym
-	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,1.0,1.64}\r\n");
+	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,1.0,1.64}\r\n");
 
 	control_send("SET {Type Viewports} {Config SingleView} {Viewport1 Camera2}\r\n");
 	//control_send("SET {Type Camera} {Robot ARDrone} {Name Camera2} {Client 10.0.0.2}\r\n");
@@ -140,6 +143,7 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 			{
 				m = new bot_ardrone_measurement;
 				m->time = get_time();
+				m->time_pc = GetTickCount() / 1000.0;
 				//m->type = BOT_ARDRONBOT_EVENT_MEASUREMENT_SEN;
 			}
 
@@ -180,8 +184,6 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 				}
 
 				case BOT_ARDRONE_SENSOR_ACCEL:
-					//printf("%s\n", line.c_str());
-
 					// Accelerations are received in m/s2
 					// a = dv/dt = (vfinal - vinitial) / (tfinal - tinitial) 
 					usarsim_msgparser_float3(&line, "{Acceleration", m->accel);
@@ -189,16 +191,12 @@ void bot_ardrone_usarsim::process_measurement(char *message, int bytes)
 					m->accel[1] = usarsim_msgparser_ms2_to_mg(m->accel[1]);
 					m->accel[2] = usarsim_msgparser_ms2_to_mg(m->accel[2]);
 
-					/*
 					usarsim_msgparser_float3(&line, "{Velocity", m->vel);
-					m->vel[0] *= 1000.0f; // cm -> mm
+					m->vel[0] *= 1000.0f; // m -> mm
 					m->vel[1] *= 1000.0f;
 					m->vel[2] *= 1000.0f;
-					*/
 
-					// get orientation from GT
 					usarsim_msgparser_float3(&line, "{Orientation", m->or);
-
 					// rad to mili-degrees
 					m->or[0] = usarsim_msgparser_rad_to_mildeg(m->or[0]); // x
 					m->or[1] = usarsim_msgparser_rad_to_mildeg(m->or[1]); // y
@@ -248,6 +246,8 @@ void bot_ardrone_usarsim::process_frame(char *message, int bytes)
 				img_bgr.data = (uchar*) frame_buffer + 9;
 				img_bgra.data = (uchar*) frame->data;
 				cvtColor(img_bgr, img_bgra, CV_BGR2BGRA, 4);
+				//blur(img_bgra, img_bgra, cv::Size(3,3));
+				//slam_module_frame::add_noise(img_bgra);
 				frame->data_size = BOT_ARDRONE_FRAME_W * BOT_ARDRONE_FRAME_H * 4;
 
 				bot->frame_received(frame);

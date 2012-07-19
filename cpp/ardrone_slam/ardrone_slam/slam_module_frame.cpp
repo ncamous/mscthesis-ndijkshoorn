@@ -77,6 +77,7 @@ slam_module_frame::slam_module_frame(slam *controller):
 	last_loc = clock();
 
 	fopen_s (&loc_log, "dataset/loc_log.txt" , "w");
+	nr_visual_motion = nr_visual_motion_success = 0;
 }
 
 
@@ -102,6 +103,8 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 	this->f = f;
 	frame.data = (unsigned char*) f->data;
+	//blur(frame, frame, cv::Size(3,3));
+	//add_noise(frame); // TMP
 	cvtColor(frame, frame_gray, CV_BGRA2GRAY);
 
 
@@ -116,12 +119,18 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 
 	/* process */
 	if (controller->mode(SLAM_MODE_VISUALLOC))
+	{
+		clock_t start = clock();
 		loc = process_visual_loc();
+		//printf("loc time: %f\n", (clock() - start) / (double)CLOCKS_PER_SEC);
+	}
 
 
 	if (controller->mode(SLAM_MODE_VISUALMOTION) && !loc)
+	{
+		printf("getting motion\n");
 		process_visual_motion();
-
+	}
 
 	Mat frame_state = state->clone (); // store updated state
 	controller->sensor_resume(); // state not updated anymore
@@ -130,7 +139,7 @@ void slam_module_frame::process(bot_ardrone_frame *f)
 	if (controller->mode(SLAM_MODE_MAP))
 		process_map(frame_state);
 	else
-		Sleep(50); // some time before processing next frame. In order to process all sensor measurements
+		Sleep(10); // some time before processing next frame. In order to process all sensor measurements
 }
 
 
@@ -140,6 +149,11 @@ bool slam_module_frame::process_visual_motion()
 
 	if (state->at<float>(2) > -300.0f)
 		return false;
+
+	nr_visual_motion++;
+
+
+	printf("nr_visual_motion: %i/%i\n", nr_visual_motion_success, nr_visual_motion);
 
 
 	/* find features */
@@ -172,6 +186,7 @@ bool slam_module_frame::process_visual_motion()
 		vector<DMatch> matches;
 		get_matches(descriptors, prev_frame_descriptors, matches, true, 0.18);
 
+		//if (matches.size() < 4)
 		if (matches.size() < 3)
 		{
 			prev_frame_exists = false; // do not use this frame for visual motion
@@ -180,14 +195,76 @@ bool slam_module_frame::process_visual_motion()
 		}
 
 
+
+
+
 		vector<short> inliers;
 		Mat T(1, 1, CV_32FC3);
 		float R = -1.0f;
 
-		double confidence = find_robust_translation_rotation(imagepoints_wc, prev_frame_wc, Mat(), matches, inliers, T, R, 50.0);
+
+		//double confidence = find_robust_translation_rotation(imagepoints_wc, prev_frame_wc, Mat(), matches, inliers, T, R, 50.0);
+
+		int nr_inliers = find_robust_translation_rotation_inliers(imagepoints_wc, prev_frame_wc, Mat(), matches, inliers, T, R, 20.0);
+		if (nr_inliers < 6)
+		{
+			printf("Not enough inliers found (%i): dropping frame\n", nr_inliers);
+			//return;
+		}
+		else
+		{
+			printf("Inliers: %i/%i\n", nr_inliers, matches.size());
+		}
+
+		double confidence = 0.0;
+		Mat tmp;
+		drawMatches(frame_gray, keypoints, prev_frame_gray, prev_keypoints, matches, tmp);
+		imshow("Image:", tmp);
+        cvWaitKey(6);
+		Sleep(2000);
+		
+		/*
+		vector<short> mask;
+		Mat H;
+		int nr_inliers = find_robust_perspective_transformation(imagepoints_wc, prev_frame_wc, matches, mask, 20, H, 10.0);
 
 
-		if (confidence >= 0.7)
+		if (nr_inliers < 6)
+		{
+			printf("Not enough inliers found (%i): dropping frame\n", nr_inliers);
+			//return;
+		}
+
+		Mat p1m = Mat::zeros(1, 1, CV_32FC2);
+		//printf("# %f,%f\n", p1m.at<Vec2f>(0)[0], p1m.at<Vec2f>(0)[1]);
+		//Mat p1mt;
+		//perspectiveTransform(p1m, T, H);
+		T.at<Vec2f>(0)[0] = (float) H.at<double>(0, 2);
+		T.at<Vec2f>(0)[1] = (float) H.at<double>(1, 2);
+		//printf("## %f,%f\n", p1mt.at<Vec2f>(0)[0], p1mt.at<Vec2f>(0)[1]);
+		*/
+		/*
+		vector<short> mask;
+		Mat H;
+		int nr_inliers = find_robust_affine_transformation(imagepoints_wc, prev_frame_wc, matches, mask, 20, H, 10.0);
+		if (nr_inliers < 4)
+		{
+			printf("Not enough inliers found (%i): dropping frame\n", nr_inliers);
+			//return;
+		}
+
+		T.at<Vec2f>(0)[0] = (float) H.at<double>(0, 2);
+		T.at<Vec2f>(0)[1] = (float) H.at<double>(1, 2);
+
+	
+
+
+		double confidence = 0.0;
+		*/
+
+		//if (confidence >= 0.7)
+		if (((double)nr_inliers / (double)matches.size()) >= 0.5 && abs(T.at<Vec3f>(0)[0]) < 500.0f && abs(T.at<Vec3f>(0)[1]) < 500.0f)
+		//if (((double)nr_inliers / (double)matches.size()) >= 0.5 && abs(T.at<Vec2f>(0)[0]) < 500.0f && abs(T.at<Vec2f>(0)[1]) < 500.0f)
 		{
 			vector<DMatch> matches_f;
 
@@ -207,6 +284,8 @@ bool slam_module_frame::process_visual_motion()
 
 			/* lock KF */
 			EKF->lock();
+
+			printf("nr_visual_motion: %i/%i\n", ++nr_visual_motion_success, nr_visual_motion);
 
 
 #ifdef SLAM_VISUALMOTION_WRITE_STATE_DIRECTLY
@@ -249,8 +328,8 @@ bool slam_module_frame::process_visual_motion()
 
 			// Rk vector
 			float MNC[15] = {
-				300.0f, 300.0f, 300.0f,	// p: mm
-				50.0f, 50.0f, 50.0f,	// v (mm/s)
+				300.0f, 300.0f, 200.0f,	// p: mm
+				2.1f, 2.1f, 10.0f,	// v (mm/s)
 				50.0f, 50.0f, 50.0f,	// a (mm/s2)
 				0.02f, 0.02f, 0.02f,	// or (rad)
 				0.01f, 0.01f, 0.01f		// ω (rad/s)
@@ -310,8 +389,9 @@ bool slam_module_frame::process_visual_motion()
 bool slam_module_frame::process_visual_loc()
 {
 	double dt = ((double)clock() - last_loc) / CLOCKS_PER_SEC;
-	if (dt < 0.5)
+	if (dt < 0.75)
 		return false;
+
 
 	SLAM_LOC_START
 
@@ -326,7 +406,7 @@ bool slam_module_frame::process_visual_loc()
 	Mat map_keypoints_wc;
 	Mat map_keypoints_t;
 
-	float radius = 3000.0f;
+	float radius = 2500.0f;
 	//float radius = max(cov->at<float>(0, 0), cov->at<float>(1, 1));
 	//radius += RectRadius(image_corners_wc); // should be dynamic and basic on the state cov
 
@@ -369,6 +449,8 @@ bool slam_module_frame::process_visual_loc()
 	vector<DMatch> matches;
 	get_matches(descriptors, map_descriptors, matches, true);
 
+	//printf("nr matches: %i\n", matches.size());
+
 	if (matches.size() < 3)
 	{
 		SLAM_LOC_END
@@ -378,9 +460,11 @@ bool slam_module_frame::process_visual_loc()
 
 	vector<short> inliers;
 	Mat T(1, 1, CV_32FC3);
-	float R = 0.0f;
+	float R = -1.0f;
 
 	double confidence = find_robust_translation_rotation(imagepoints_wc, map_keypoints_wc, map_keypoints_t, matches, inliers, T, R, 100.0);
+
+	//printf("conf: %f\n", confidence);
 
 	/*
 	vector<DMatch> matches3;
@@ -463,7 +547,7 @@ bool slam_module_frame::process_visual_loc()
 
 		// Rk vector
 		float MNC[15] = {
-			30000.0f, 30000.0f, 30000.0f,	// p: mm
+			10.0f, 10.0f, 200.0f,	// p: mm
 			50.0f, 50.0f, 50.0f,	// v (mm/s)
 			50.0f, 50.0f, 50.0f,	// a (mm/s2)
 			0.02f, 0.02f, 0.02f,	// or (rad)
@@ -480,6 +564,7 @@ bool slam_module_frame::process_visual_loc()
 
 		/* position measurement */
 		memcpy_s(measurement.data, 8, cam_pos.data, 8);
+		/*
 		EKF->measurementNoiseCov.at<float>(0, 0) = 10.0f;
 		EKF->measurementNoiseCov.at<float>(1, 1) = 10.0f;
 
@@ -488,7 +573,7 @@ bool slam_module_frame::process_visual_loc()
 			measurement.at<float>(i) = 0.0;
 			EKF->measurementNoiseCov.at<float>(0, 0) = 0.0001f;
 		}
-
+		*/
 
 
 		/* correct */
@@ -502,19 +587,20 @@ bool slam_module_frame::process_visual_loc()
 		printf("VISUAL LOC (%f, %f) [%f]\n", cam_pos.at<float>(0), cam_pos.at<float>(1), confidence);
 #endif
 
+		return true;
 	}
 
 
 	SLAM_LOC_END
 
-	return true;
+	return false;
 }
 
 
 bool slam_module_frame::process_map(Mat& frame_state)
 {
 	// flying too low, dont add to map (dark image)
-	if (state->at<float>(2) > -200.0f)
+	if (state->at<float>(12) < 350.0f)
 		return false;
 
 
@@ -523,6 +609,7 @@ bool slam_module_frame::process_map(Mat& frame_state)
 
 
 	map->visual_map.update(frame, image_corners, image_corners_wc);
+
 
 	/* features map (not-transformed image) */
 	if (!features_extracted)
@@ -609,7 +696,7 @@ double slam_module_frame::find_robust_translation_rotation(InputArray p1, InputA
 	best_time = FLT_MAX;
 	int subset_idx[3];
 
-	for (int i = 0; i < 800; i++)
+	for (int i = 0; i < 700; i++)
 	{
 		if (!getMatSubset(p1m, p2m, p1s, p2s, 300, rng, subset_idx))
 			continue;
@@ -677,6 +764,176 @@ double slam_module_frame::find_robust_translation_rotation(InputArray p1, InputA
 	}
 
 	return best_confidence;
+}
+
+
+
+int slam_module_frame::find_robust_translation_rotation_inliers(InputArray p1, InputArray p2 /*map*/, InputArray t, vector<DMatch>& matches, vector<short>& inliers, Mat& T, float& R, double maxInlierDist)
+{
+	size_t nr_matches = matches.size();
+
+	bool use_time = !t.empty();
+
+	Mat _p1 = p1.getMat();
+	Mat _p2 = p2.getMat();
+	Mat _p2time = t.getMat();
+
+	Mat p1m(nr_matches, 1, CV_32FC3);
+	Mat p2m(nr_matches, 1, CV_32FC3);
+	Mat p2time(nr_matches, 1, CV_32S); // time
+
+	for (size_t i = 0; i < matches.size(); i++)
+	{
+		p1m.at<Vec3f>(i) = _p1.at<Vec3f>(matches[i].queryIdx);
+		p2m.at<Vec3f>(i) = _p2.at<Vec3f>(matches[i].trainIdx);
+	}
+
+	Mat p1s(3, 1, CV_32FC3);
+	Mat p2s(3, 1, CV_32FC3);
+
+	Mat p1s_best(3, 1, CV_32FC3);
+	Mat p2s_best(3, 1, CV_32FC3);
+
+
+	/** RANSAC **/
+	Mat T_temp = Mat(1, 1, CV_32FC3);
+	Scalar mean, stddev;
+	double confidence, best_confidence;
+	double time, best_time;
+	CvRNG rng = cvRNG(-1); // not very nice place here
+
+	best_confidence = 0.0;
+	best_time = FLT_MAX;
+	int subset_idx[3];
+	int best_inliers = 0;
+
+	for (int i = 0; i < 700; i++)
+	{
+		if (!getMatSubset(p1m, p2m, p1s, p2s, 300, rng, subset_idx))
+			continue;
+
+		meanStdDev(p2s - p1s, mean, stddev);
+
+		// get 2D translation
+		T_temp.at<Vec3f>(0)[0] = (float) mean[0];
+		T_temp.at<Vec3f>(0)[1] = (float) mean[1];
+		T_temp.at<Vec3f>(0)[2] = 0.0f;
+
+		Point3f Tpoint(mean[0], mean[1], 0.0f);
+
+		Mat p1mt;
+		p1mt = p1m + T_temp;
+
+
+		int inliers = 0;
+		for (size_t i = 0; i < nr_matches; i++)
+		{
+				Point3f tmp1 = p2m.at<Point3f>(i);
+				Point3f tmp2 = p1m.at<Point3f>(i) + Tpoint;
+
+				//printf("z: %f, %f\n", tmp1.z, tmp2.z);
+
+				if (norm(tmp1 - tmp2) <= maxInlierDist)
+				{
+					inliers++;
+				}
+		}
+
+		if (inliers > best_inliers)
+		{
+			memcpy_s(T.data, sizeof(float) * 2, T_temp.data, sizeof(float) * 2); // currently, only x and y used
+			best_inliers = inliers;
+		}
+	}
+
+	return best_inliers;
+}
+
+
+
+int slam_module_frame::find_robust_perspective_transformation(InputArray p1, InputArray p2, vector<DMatch>& matches, vector<short>& mask, int max, Mat& H, double maxInlierDist)
+{
+	size_t nr_matches = matches.size();
+
+	Mat _p1 = p1.getMat();
+	Mat _p2 = p2.getMat();
+
+	Mat p1m(nr_matches, 1, CV_32FC2);
+	Mat p2m(nr_matches, 1, CV_32FC2);
+
+    for (size_t i = 0; i < matches.size(); i++)
+    {
+                p1m.at<Vec2f>(i)[0] = _p1.at<Vec3f>( matches[i].queryIdx )[0]; //p1[matches[i].queryIdx].x;
+                p1m.at<Vec2f>(i)[1] = _p1.at<Vec3f>( matches[i].queryIdx )[1]; //p1[matches[i].queryIdx].y;
+
+                p2m.at<Vec2f>(i)[0] = _p2.at<Vec3f>( matches[i].trainIdx )[0]; //p2[matches[i].trainIdx].x;
+                p2m.at<Vec2f>(i)[1] = _p2.at<Vec3f>( matches[i].trainIdx )[1]; //p2[matches[i].trainIdx].y;
+    }
+
+        H = findHomography(p1m, p2m, CV_RANSAC, maxInlierDist);
+        //memcpy_s(H.data, sizeof(double) * 9, homography.data, sizeof(double) * 9);
+
+        Mat p1mt;
+        perspectiveTransform(p1m, p1mt, H);
+
+        int nr_inliers = 0;
+        for (size_t i = 0; i < nr_matches; i++)
+        {
+                if (norm(p2m.at<Point2f>(i) - p1mt.at<Point2f>(i)) <= maxInlierDist)
+                {
+                        mask.push_back((short) i);
+                        ++nr_inliers;
+                }
+        }
+
+	return nr_inliers;
+}
+
+
+int slam_module_frame::find_robust_affine_transformation(InputArray p1, InputArray p2, vector<DMatch>& matches, vector<short>& mask, int max, Mat& H, double maxInlierDist)
+{
+	size_t nr_matches = matches.size();
+
+	Mat _p1 = p1.getMat();
+	Mat _p2 = p2.getMat();
+
+	Mat p1m(1, nr_matches, CV_32FC2);
+	Mat p2m(1, nr_matches, CV_32FC2);
+
+	//Mat tmp_outliers;
+	vector<uchar> tmp_inliers; 
+
+    for (size_t i = 0; i < matches.size(); i++)
+    {
+                p1m.at<Vec2f>(i)[0] = _p1.at<Vec3f>( matches[i].queryIdx )[0]; //p1[matches[i].queryIdx].x;
+                p1m.at<Vec2f>(i)[1] = _p1.at<Vec3f>( matches[i].queryIdx )[1]; //p1[matches[i].queryIdx].y;
+				//p1m.at<Vec3f>(i)[2] = 0.0f;
+
+                p2m.at<Vec2f>(i)[0] = _p2.at<Vec3f>( matches[i].trainIdx )[0]; //p2[matches[i].trainIdx].x;
+                p2m.at<Vec2f>(i)[1] = _p2.at<Vec3f>( matches[i].trainIdx )[1]; //p2[matches[i].trainIdx].y;
+				//p2m.at<Vec3f>(i)[2] = 0.0f;
+    }
+
+	H = estimateRigidTransform(p1m, p2m, false);
+
+
+        Mat p1mt;
+        //perspectiveTransform(p1m, p1mt, H);
+		transform(p1m, p1mt, H);
+
+        int nr_inliers = 0;
+        for (size_t i = 0; i < nr_matches; i++)
+        {
+                if (norm(p2m.at<Point2f>(i) - p1mt.at<Point2f>(i)) <= maxInlierDist)
+                {
+                        mask.push_back((short) i);
+                        ++nr_inliers;
+                }
+        }
+
+	//int nr_inliers = countNonZero(tmp_inliers);
+
+	return nr_inliers;
 }
 
 
@@ -795,7 +1052,7 @@ void slam_module_frame::get_features(Mat& frame, vector<cv::KeyPoint> &v)
 
 	for(size_t i = 0; i < tmp.size(); i++)
 	{
-		if (tmp[i].response > 1000.0f)
+		if (tmp[i].response > SLAM_SURF_MIN_RESPONSE)
 			v.push_back(tmp[i]);
 	}
 
@@ -865,9 +1122,19 @@ void slam_module_frame::set_camera()
 			break;
 
 		// UvA AR.Drone
+		/*
+		case 0x01: // 66% size, 1.500000000000150000000000015
+			camera_matrix = 0.0f;
+			camera_matrix.at<float>(0, 0) = 161.0499991006940328f;
+			camera_matrix.at<float>(1, 1) = 196.184482080725745f;
+			camera_matrix.at<float>(2, 2) = 1.f;
+			camera_matrix.at<float>(0, 2) = 76.3469783848513134f;
+			camera_matrix.at<float>(1, 2) = 65.5339900608514809f;
+			break;
+		*/
 		case 0x01:
 			camera_matrix = 0.0f;
-			camera_matrix.at<float>(0, 0) = 198.82715938357288f;
+			camera_matrix.at<float>(0, 0) = 178.944443445215592f;
 			camera_matrix.at<float>(1, 1) = 217.98275786747305f;
 			camera_matrix.at<float>(2, 2) = 1.f;
 			camera_matrix.at<float>(0, 2) = 84.829975983168126f;
@@ -879,15 +1146,17 @@ void slam_module_frame::set_camera()
 
 	}
 
+	//camera_matrix *= 0.333333;
+	//camera_matrix.at<float>(2, 2 ) = 1.0f;
+
 	camera_matrix_inv = camera_matrix.inv();
 }
 
 
-/*
-void slam_module_frame::add_noise(IplImage *img)
+void slam_module_frame::add_noise(Mat &img)
 {
 
-	unsigned char* imagedata = (unsigned char*) img->imageData;
+	unsigned char* imagedata = (unsigned char*) img.data;
 	unsigned char tmp;
 	double value;
 	unsigned int sum;
@@ -897,27 +1166,27 @@ void slam_module_frame::add_noise(IplImage *img)
 
 	double contrast_random;
 
-	contrast_random = 0.4 + (0.5 * rand() / RAND_MAX);
+	contrast_random = 0.25 + (0.4 * rand() / RAND_MAX);
 
 	if (((double)rand() / (double)RAND_MAX) > 0.5)
-		brightness = 0.12 * ((double)rand() / (double)RAND_MAX);
+		brightness = 0.1 * ((double)rand() / (double)RAND_MAX);
 	else
-		brightness = -0.12 * ((double)rand() / (double)RAND_MAX);
+		brightness = -0.1 * ((double)rand() / (double)RAND_MAX);
 
 
-	for (int i = 0; i < img->width * img->height; i++)
+	for (int i = 0; i < img.cols * img.rows; i++)
 	{
 		sum = 0;
 
 		for (int j = 0; j < 3; j++)
 		{
-			sum += imagedata[i * 3 + j];
+			sum += imagedata[i * 4 + j];
 		}
 
 
 		for (int j = 0; j < 3; j++)
 		{
-			tmp = (unsigned char)imagedata[i * 3 + j];
+			tmp = (unsigned char)imagedata[i * 4 + j];
 			value = (double)tmp / 255.0;
 
 			if (brightness < 0.0)
@@ -930,7 +1199,7 @@ void slam_module_frame::add_noise(IplImage *img)
 			if (sum > 250)
 				value = value + (1.0 - value) * contrast_random;
 
-			imagedata[i * 3 + j] = unsigned char(value * 255.0);
+			imagedata[i * 4 + j] = unsigned char(value * 255.0);
 		}
 	}
 
@@ -938,7 +1207,6 @@ void slam_module_frame::add_noise(IplImage *img)
 
 	return;
 }
-*/
 
 /*
 void slam_module_frame::descriptor_map_quality()
