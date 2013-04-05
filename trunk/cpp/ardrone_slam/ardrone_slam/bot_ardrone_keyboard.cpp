@@ -125,7 +125,7 @@ LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 		case VK_SPACE:
 			if (wParam == WM_KEYDOWN)
 			{
-				for(i=0; i<bot_ardrone_keyboard::nr_bots; i++)
+ 				for(i=0; i<bot_ardrone_keyboard::nr_bots; i++)
 				{
 					if (bot_ardrone_keyboard::bots[i]->control.state == BOT_STATE_LANDED)
 						bot_ardrone_keyboard::bots[i]->take_off();

@@ -5,9 +5,17 @@
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -15,7 +23,13 @@
     <RootNamespace>ardone_slam</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <!-- <Import Project="C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\Microsoft.Cpp.Default.props" /> -->
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
@@ -26,10 +40,21 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <!-- <Import Project="C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\Microsoft.Cpp.props" /> -->
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(SolutionDir)/solution_properties.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(SolutionDir)/solution_properties.props" />
   </ImportGroup>
@@ -37,12 +62,25 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(SolutionDir)/solution_properties.props" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(SolutionDir)/solution_properties.props" />
+  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(VCInstallDir)include;C:\Program Files\Microsoft DirectX SDK %28June 2010%29\Include;C:\WinDDK\7600.16385.1\inc\api;$(IncludePath)</IncludePath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(VCInstallDir)include;C:\Program Files\Microsoft DirectX SDK %28June 2010%29\Include;C:\WinDDK\7600.16385.1\inc\api;$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LibraryPath>C:\WinDDK\7600.16385.1\lib\win7\i386;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LibraryPath>C:\WinDDK\7600.16385.1\lib\win7\i386;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -60,6 +98,23 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NO_ARDRONE_MAINLOOP;YAML_DECLARE_STATIC;WIN32;_DEBUG;AUTOPYLOT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(YAMLDir)\include;$(ARDroneLibDir);$(ARDroneWin32Dir);$(ARDroneLibDir)\Soft\Common;$(ARDroneLibDir)\Soft\Lib;$(ARDroneLibDir)\VP_SDK;$(OpenCVDir)\include\opencv;$(OpenCVDir)\include;$(SolutionDir)\terrain3d\include;C:\Program Files\Microsoft DirectX SDK (June 2010)\Include;C:\Program Files (x86)\Windows Kits\8.0\Include\shared</AdditionalIncludeDirectories>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>yaml.lib;ArDroneAPI.lib;opencv_core231.lib;opencv_highgui231.lib;opencv_features2d231.lib;opencv_imgproc231.lib;opencv_calib3d231.lib;opencv_video231.lib;ws2_32.lib;ardronewin32.lib;terrain3d.lib;hid.lib;dinput8.lib;dxerr.lib;dxguid.lib;d3dx9.lib;d3d9.lib;winmm.lib;comctl32.lib;avcodec.lib;avutil.lib;swscale.lib;libpgm.lib;Iphlpapi.lib;Setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <StackReserveSize>10000000</StackReserveSize>
+      <AdditionalLibraryDirectories>$(OutDir);$(SDLDir)\lib;$(OpenCVDir)\x64\vc10\lib;$(MatlabDir)\lib\win32\microsoft;$(SolutionDir)\$(Platform)\$(Configuration)\;C:\Program Files (x86)\Windows Kits\8.0\Lib\win8\um\x64;C:\Program Files\Microsoft DirectX SDK (June 2010)\Lib\x64;C:\svn\ARdroneMap\ARDrone_SDK_2_0\ARDroneLib\FFMPEG\ffmpeg-20120708-git-299387e-win64-dev\lib;C:\src\libpgm-5.1.118\openpgm\pgm\build\lib\Release;C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\Lib\x64</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>libcmt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -71,6 +126,24 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>C:\svn\ARdroneMap\cpp\ardrone_slam\ardrone_slam;C:\Programs\OpenCV\build\include\opencv;C:\Programs\OpenCV\build\include;C:\svn\ARdroneMap\ARDrone_SDK_2_0\ARDroneLib\Soft\Common;C:\svn\ARdroneMap\ARDrone_SDK_2_0\ARDroneLib\VP_SDK;C:\svn\ARdroneMap\ARDrone_SDK_2_0\ARDroneLib;C:\svn\ARdroneMap\cpp\ardrone_slam\terrain3d\include;C:\svn\ARdroneMap\cpp\ardrone_slam\yaml-0.1.4\include;C:\svn\ARdroneMap\cpp\ardrone_slam\ardronewin32;C:\svn\ARdroneMap\ARDrone_SDK_2_0\ARDroneLib\Soft\Lib;C:\Program Files\Microsoft DirectX SDK (June 2010)\Include;C:\Program Files (x86)\Windows Kits\8.0\Include\shared</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NO_ARDRONE_MAINLOOP;YAML_DECLARE_STATIC;WIN32;%(PreprocessorDefinitions);_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>C:\svn\ARdroneMap\cpp\LcmProxy\x64\Release;C:\Programs\opencv\build\x64\vc10\lib;C:\svn\ARdroneMap\cpp\ardrone_slam\x64\Release;C:\svn\ARdroneMap\ARDrone_SDK_2_0\ARDroneLib\FFMPEG\ffmpeg-20120708-git-299387e-win64-dev\lib;C:\Program Files (x86)\Windows Kits\8.0\Lib\win8\um\x64;C:\Program Files\Microsoft DirectX SDK (June 2010)\Lib\x64;C:\src\libpgm-5.1.118\openpgm\pgm\build64\lib\Release;C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\Lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>yaml.lib;ardrone_slam.lib;ArDroneAPI-2.0.lib;opencv_core231.lib;opencv_highgui231.lib;opencv_features2d231.lib;opencv_imgproc231.lib;opencv_calib3d231.lib;opencv_video231.lib;ws2_32.lib;ardronewin32.lib;terrain3d.lib;hid.lib;dinput8.lib;dxerr.lib;dxguid.lib;d3dx9.lib;d3d9.lib;winmm.lib;comctl32.lib;avcodec.lib;avutil.lib;swscale.lib;libpgm.lib;Iphlpapi.lib;%(AdditionalDependencies);kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;Setupapi.lib</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
