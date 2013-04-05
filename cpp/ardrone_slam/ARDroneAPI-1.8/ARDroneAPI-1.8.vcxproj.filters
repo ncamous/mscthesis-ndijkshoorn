@@ -728,5 +728,6 @@
     <None Include="$(ARDroneLibDir)\Soft\Lib\iniparser3.0b\html\index.html" />
     <None Include="$(ARDroneLibDir)\Soft\Lib\iniparser3.0b\html\iniparser_8h.html" />
     <None Include="$(ARDroneLibDir)\Soft\Lib\iniparser3.0b\html\iniparser_8main.html" />
+    <None Include="..\ARDroneAPI-2.0\ARDroneAPI-2.0.vcxproj" />
   </ItemGroup>
 </Project>

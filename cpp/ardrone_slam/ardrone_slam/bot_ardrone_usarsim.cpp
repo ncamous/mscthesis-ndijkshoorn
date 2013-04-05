@@ -36,7 +36,7 @@ bot_ardrone_usarsim::~bot_ardrone_usarsim(void)
 void bot_ardrone_usarsim::init(void)
 {
 	// UDK test
-	control_send("INIT {ClassName USARBot.AirRobot} {Name Test} {Location 0.0,0.0,-1.0}\r\n");
+	//control_send("INIT {ClassName USARBot.AirRobot} {Name Test} {Location 0.0,0.0,-1.0}\r\n");
 
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,0.0,1.28}\r\n");
 
@@ -47,7 +47,7 @@ void bot_ardrone_usarsim::init(void)
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -51.6,-4.2,-6.3}\r\n");
 
 	// zebrapad
-	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -19.3,57.1,-1.1}\r\n");
+	control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location -19.3,57.1,-1.1}\r\n");
 
 	// 0,0,0
 	//control_send("INIT {ClassName USARBot.ARDrone} {Name ARDrone} {Location 0.0,10.0,-3.0}\r\n");
