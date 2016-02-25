@@ -1,0 +1,1 @@
+The research log can be found at http://nickd.nl/wiki/thesis
